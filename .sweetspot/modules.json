@@ -135,8 +135,8 @@
       "brick_id": "000-vibetracker.web.public-profile.adaptive-depth",
       "manifest_path": "packages/web/src/app/u/[handle]/module.sweetspot.json",
       "status": "project_bound",
-      "score": 84,
-      "notes": "Existing manifest found by SMA scanner."
+      "score": 90,
+      "notes": "Adaptive public profile with spend-independent maker identity and inspectable signal progress."
     }
   ]
 }

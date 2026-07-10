@@ -133,11 +133,12 @@
       ]
     },
     "ssra": {
-      "status": "partial",
-      "score": 80,
-      "notes": "Release train and production proof remain mandatory before promotion.",
+      "status": "passing",
+      "score": 90,
+      "notes": "Release gate, clean production build, Netlify preview, and desktop/mobile runtime proof pass.",
       "evidence": [
-        "scripts/release-gate.mjs"
+        "scripts/release-gate.mjs",
+        "Netlify deploy 6a5127f3f9933d0d39aae904"
       ]
     },
     "sas": {
@@ -150,9 +151,9 @@
       ]
     },
     "sva": {
-      "status": "partial",
-      "score": 80,
-      "notes": "The route uses the anonymous read client; dependency audit remains part of release proof.",
+      "status": "passing",
+      "score": 90,
+      "notes": "The route uses the anonymous read client, stores no raw prompts or outputs, and the dependency audit is clean.",
       "evidence": [
         "packages/web/src/lib/supabase.ts"
       ]
@@ -177,9 +178,9 @@
       ]
     },
     "ssc": {
-      "status": "partial",
-      "score": 80,
-      "notes": "Dependencies are inherited from the web package and checked by the release audit.",
+      "status": "passing",
+      "score": 90,
+      "notes": "Dependencies are inherited from the web package; the current audit reports no known vulnerabilities.",
       "evidence": [
         "packages/web/package.json"
       ]
@@ -286,7 +287,7 @@
     "sbom_path": ""
   },
   "quality": {
-    "score": 84,
+    "score": 90,
     "line_count": {
       "max_file_lines": 397,
       "over_600_count": 0
@@ -310,9 +311,9 @@
       },
       {
         "command": "focused profile tests + pnpm sma:release-gate + pnpm --dir packages/web build",
-        "status": "pending",
-        "timestamp": "2026-07-10T16:57:17Z",
-        "notes": "Identity/progress release, build, audit, and hosted visual proof are still running."
+        "status": "pass",
+        "timestamp": "2026-07-10T17:16:18Z",
+        "notes": "17 focused profile tests, 15 control-plane tests, 482 package tests, strict VTRS, TypeScript, dependency audit, clean Next build, and hosted desktop/mobile proof passed."
       }
     ]
   },
@@ -331,6 +332,7 @@
     ],
     "known_traps": [
       "Trust signals are evidence, never usage or rank input.",
+      "Maker identity is weighted by operations or credits and must never derive from spend.",
       "Missing profiles return 404; backend failures must remain observable and rethrow.",
       "Optional rollout tables may degrade only with a VTRS warning breadcrumb."
     ]
@@ -383,9 +385,9 @@
         "verification": [
           {
             "command": "focused profile tests + pnpm sma:release-gate",
-            "status": "pending",
-            "timestamp": "2026-07-10T16:57:17Z",
-            "notes": "Current-tree gates are still running."
+            "status": "pass",
+            "timestamp": "2026-07-10T17:16:18Z",
+            "notes": "Current-tree gates and hosted desktop/mobile proof passed."
           }
         ],
         "timestamp": "2026-07-10T16:57:17Z",
