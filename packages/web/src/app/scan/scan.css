@@ -1,0 +1,191 @@
+/* /scan — calm "Make your scan" page. Route-scoped, everything namespaced
+   .vscan*. Class patterns (panel geometry, mono panel titles, --panel-i mount
+   cascade, copy-chip states, focus ring) are copied from the committed profile
+   system in u/[handle]/profile.css — not imported. Palette is locked repo hexes
+   + base tokens only. Motion is transform/opacity, disabled for reduced motion. */
+
+.vscan {
+  --vs-mono: var(--font-data), ui-monospace, SFMono-Regular, Menlo, monospace;
+  display: grid; gap: 14px; max-width: 1160px; margin: 0 auto; padding: 24px 20px 80px;
+}
+
+.vscan > * {
+  min-width: 0;
+  animation: vscan-in 0.5s ease-out both;
+  animation-delay: calc(var(--panel-i, 0) * 90ms);
+}
+
+@keyframes vscan-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.vscan-slot { min-width: 0; }
+
+.vscan :is(a, button, [tabindex]):focus-visible { outline: 2px solid #2ee8d6; outline-offset: 2px; }
+
+/* ---- panel base ---- */
+
+.vscan-panel {
+  background: #0d1419; border: 1px solid rgba(46, 232, 214, 0.14);
+  border-radius: 10px; padding: 18px 20px; min-width: 0;
+}
+
+.vscan-panel-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin: 0 0 14px;
+}
+
+.vscan-panel-title {
+  margin: 0; font: 600 12px/1.2 var(--vs-mono); text-transform: uppercase;
+  letter-spacing: 0.08em; color: rgba(217, 255, 242, 0.55);
+}
+
+.vscan-panel-sub { font: 500 11px/1.2 var(--vs-mono); color: rgba(217, 255, 242, 0.4); white-space: nowrap; }
+
+/* ---- hero ---- */
+
+.vscan-hero { display: grid; gap: 14px; }
+
+.vscan-hero-title {
+  margin: 0; color: var(--fg); overflow-wrap: anywhere;
+  font: 600 clamp(1.6rem, 3.4vw, 2.3rem) / 1.1 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+.vscan-hero-lede {
+  margin: 0; max-width: 60ch; color: rgba(217, 255, 242, 0.8);
+  font: 500 14px/1.6 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+.vscan-hero-cmds { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-top: 2px; }
+
+/* ---- copy chips ---- */
+
+.vscan-chip-wrap { display: grid; gap: 4px; }
+
+.vscan-chip {
+  appearance: none; cursor: pointer; display: inline-flex; align-items: center; gap: 10px;
+  padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(46, 232, 214, 0.3);
+  background: #040607; font: 500 12px/1 var(--vs-mono); color: #d9fff2;
+}
+
+.vscan-chip code { background: transparent; border: 0; padding: 0; font: inherit; color: #2ee8d6; }
+
+.vscan-chip span { color: rgba(217, 255, 242, 0.5); }
+.vscan-chip[data-state="copied"] span { color: #36e39b; }
+.vscan-chip[data-state="blocked"] span { color: #ff7768; }
+
+.vscan-chip-secondary .vscan-chip { border-color: rgba(217, 255, 242, 0.14); }
+
+.vscan-chip-sub { font: 500 11px/1.3 var(--vs-mono); color: rgba(217, 255, 242, 0.45); }
+
+/* ---- shared inline link ---- */
+
+.vscan-link {
+  font: 500 12px/1.3 var(--vs-mono); color: #2ee8d6;
+  border-bottom: 1px solid rgba(46, 232, 214, 0.35); padding-bottom: 1px;
+}
+
+/* ---- signature scan demo ---- */
+
+.vscan-demo { display: grid; gap: 14px; }
+
+.vscan-demo-stream { display: grid; gap: 8px; }
+
+.vscan-demo-line {
+  margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px;
+  font: 500 13px/1.4 var(--vs-mono);
+}
+
+.vscan-demo-verb { color: rgba(217, 255, 242, 0.85); }
+.vscan-demo-detail { color: rgba(217, 255, 242, 0.45); }
+
+.vscan-demo-divider { height: 1px; background: rgba(46, 232, 214, 0.14); }
+
+.vscan-demo-result { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+
+.vscan-demo-card {
+  display: grid; gap: 6px; align-content: start; padding: 12px 14px;
+  border: 1px solid rgba(46, 232, 214, 0.14); border-radius: 8px; background: #040607;
+}
+
+.vscan-demo-card-label {
+  font: 600 11px/1.2 var(--vs-mono); text-transform: uppercase;
+  letter-spacing: 0.08em; color: rgba(217, 255, 242, 0.5);
+}
+
+.vscan-demo-card-value {
+  font: 600 clamp(1.05rem, 2.2vw, 1.3rem) / 1.1 var(--vs-mono);
+  color: var(--fg); overflow-wrap: anywhere;
+}
+
+.vscan-demo-note { margin: 0; font: 500 12px/1.5 var(--vs-mono); color: rgba(217, 255, 242, 0.45); }
+
+.vscan-demo-replay {
+  appearance: none; cursor: pointer; justify-self: start; padding: 0;
+  background: transparent; border: 0; border-bottom: 1px solid rgba(46, 232, 214, 0.35);
+  font: 500 12px/1.3 var(--vs-mono); color: #2ee8d6;
+}
+
+/* Staged reveal: armed on mount only; default (no-JS / reduced-motion) shows all. */
+.vscan-demo.is-armed :is(.vscan-demo-line, .vscan-demo-card, .vscan-demo-note, .vscan-demo-divider) {
+  transition: opacity 0.34s ease, transform 0.34s ease;
+}
+
+.vscan-demo.is-armed :is(.vscan-demo-line, .vscan-demo-card, .vscan-demo-note, .vscan-demo-divider)[data-shown="false"] {
+  opacity: 0; transform: translateY(6px);
+}
+
+/* ---- what the scan reads ---- */
+
+.vscan-reads-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+
+.vscan-read-card {
+  display: grid; gap: 8px; align-content: start; padding: 14px 16px;
+  border: 1px solid rgba(217, 255, 242, 0.1); border-radius: 8px; background: #040607;
+}
+
+.vscan-read-title {
+  margin: 0; font: 600 13px/1.2 var(--vs-mono); text-transform: uppercase;
+  letter-spacing: 0.04em; color: #d9fff2;
+}
+
+.vscan-read-body { margin: 0; font: 500 13px/1.6 var(--vs-mono); color: rgba(217, 255, 242, 0.7); }
+
+.vscan-reads-foot { margin-top: 14px; }
+
+/* ---- privacy ---- */
+
+.vscan-privacy-copy {
+  margin: 0 0 14px; max-width: 68ch; color: rgba(217, 255, 242, 0.8);
+  font: 500 13px/1.6 var(--vs-mono);
+}
+
+.vscan-privacy-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+/* ---- reduced motion ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  .vscan > * { animation: none; }
+  .vscan-demo :is(.vscan-demo-line, .vscan-demo-card, .vscan-demo-note, .vscan-demo-divider) {
+    opacity: 1 !important; transform: none !important; transition: none !important;
+  }
+}
+
+/* ---- responsive ---- */
+
+@media (max-width: 900px) {
+  .vscan-reads-grid { grid-template-columns: 1fr; }
+  .vscan-demo-result { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .wrap:has(> .vscan)::before {
+    overflow-wrap: anywhere;
+    white-space: normal;
+    line-height: 1.35;
+    letter-spacing: 0;
+  }
+  .vscan-demo-result { grid-template-columns: 1fr; }
+  .vscan-hero-cmds { flex-direction: column; align-items: stretch; }
+}

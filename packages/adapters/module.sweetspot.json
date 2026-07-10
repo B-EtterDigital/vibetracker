@@ -49,7 +49,8 @@
       "packages/adapters"
     ],
     "public_paths": [
-      "packages/adapters/README.md"
+      "packages/adapters/README.md",
+      "packages/adapters/src/index.ts"
     ],
     "private_paths": [],
     "forbidden_imports": [
@@ -142,7 +143,8 @@
   },
   "interfaces": {
     "public_api": [
-      "packages/adapters/README.md"
+      "packages/adapters/README.md",
+      "packages/adapters/src/index.ts"
     ],
     "adapters": [],
     "forbidden_dependencies": [

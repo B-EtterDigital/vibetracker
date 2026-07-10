@@ -1,0 +1,243 @@
+{
+  "schema_version": "1.0.0",
+  "brick": {
+    "id": "000-vibetracker.web.ai-life-practice",
+    "name": "AI Life Practice",
+    "kind": "module",
+    "status": "project_bound",
+    "version": "0.1.0",
+    "language": ["typescript", "tsx", "css"],
+    "frameworks": ["next", "react"],
+    "domain": ["usage-analytics", "practice-map", "local-first"]
+  },
+  "hierarchy": {
+    "level": "brick",
+    "group_id": "000-vibetracker:packages/web/src/app",
+    "contains": ["route", "component", "style", "test"],
+    "component_policy": "internal_by_default",
+    "notes": "A compact route that keeps usage, trust, local-only activity, and publishing visibly separate."
+  },
+  "source": {
+    "project": "000-vibetracker",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "aa3b9e3",
+    "paths": [
+      "packages/web/src/app/life",
+      "packages/web/src/lib/__tests__/life-route.test.ts"
+    ]
+  },
+  "owner": {
+    "primary": "Cyrill",
+    "team": "Better Digital",
+    "reviewers": []
+  },
+  "boundaries": {
+    "owned_paths": [
+      "packages/web/src/app/life",
+      "packages/web/src/lib/__tests__/life-route.test.ts"
+    ],
+    "public_paths": [
+      "packages/web/src/app/life/page.tsx",
+      "packages/web/src/app/life/life-chips.tsx",
+      "packages/web/src/app/life/life.css"
+    ],
+    "private_paths": [
+      "packages/web/src/lib/__tests__/life-route.test.ts"
+    ],
+    "forbidden_imports": [
+      "packages/web/src/lib/supabase-admin.ts",
+      "client-side service-role keys",
+      "undocumented cross-brick private imports"
+    ],
+    "allowed_side_effects": [
+      "copy_local_cli_command"
+    ]
+  },
+  "classification": {
+    "data_classes": ["public"],
+    "risk": "low",
+    "notes": "The route renders static public guidance and copies local CLI commands; it does not load or publish user data."
+  },
+  "sweetspot": {
+    "ssa_v2": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Route composition, clipboard interaction, and styling are isolated and every owned file is below 120 lines.",
+      "evidence": ["packages/web/src/app/life/page.tsx", "packages/web/src/app/life/life-chips.tsx", "packages/web/src/app/life/life.css"]
+    },
+    "ssi": {
+      "status": "passing",
+      "score": 95,
+      "notes": "The server route passes command strings into one route-local client component.",
+      "evidence": ["packages/web/src/app/life/life-chips.tsx"]
+    },
+    "sstf": {
+      "status": "passing",
+      "score": 95,
+      "notes": "The focused contract and complete package suite pass on the current tree.",
+      "evidence": ["packages/web/src/lib/__tests__/life-route.test.ts"]
+    },
+    "spe": {
+      "status": "passing",
+      "score": 95,
+      "notes": "The route renders six bounded static rails and no unbounded data collection.",
+      "evidence": ["packages/web/src/app/life/page.tsx"]
+    },
+    "srs": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Clipboard failures become a visible copy-blocked state instead of being swallowed.",
+      "evidence": ["packages/web/src/app/life/life-chips.tsx"]
+    },
+    "ssra": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Release gate, production build, Netlify preview deploy, and desktop/mobile visual proof pass.",
+      "evidence": ["scripts/release-gate.mjs", "Netlify deploy 6a511bdf543222192e491be3"]
+    },
+    "sas": {
+      "status": "passing",
+      "score": 95,
+      "notes": "The route has an explicit owned-path manifest and a route-local client boundary.",
+      "evidence": ["packages/web/src/app/life/module.sweetspot.json"]
+    },
+    "sva": {
+      "status": "passing",
+      "score": 95,
+      "notes": "No privileged client, secret, user record, or network request is present.",
+      "evidence": ["packages/web/src/app/life/page.tsx", "packages/web/src/app/life/life-chips.tsx"]
+    },
+    "srls": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick does not access a database.",
+      "evidence": []
+    },
+    "sev": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick requires no environment variables.",
+      "evidence": []
+    },
+    "ssc": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Next and React are inherited from the web package; the current dependency audit reports no known vulnerabilities.",
+      "evidence": ["packages/web/package.json"]
+    },
+    "sai": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Lease, intent, source commit, and touched paths are recorded.",
+      "evidence": [".smarch/agent-context/dirty-packages-web.ndjson", ".smarch/agent-context/vibetracker-sma-life-scan-boundaries.ndjson"]
+    }
+  },
+  "interfaces": {
+    "public_api": ["GET /life", "<CopyChip command={command} />"],
+    "adapters": [],
+    "required_dependencies": ["next", "react"],
+    "forbidden_dependencies": ["service-role client", "raw prompt or output storage", "automatic upload"]
+  },
+  "security": {
+    "rls": {
+      "required": false,
+      "status": "not_applicable",
+      "negative_tests": []
+    },
+    "env": {
+      "required": false,
+      "status": "not_applicable",
+      "variables": []
+    },
+    "vulnerability_findings": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "report_paths": []
+    }
+  },
+  "supply_chain": {
+    "dependencies": [
+      { "name": "next", "version": "^16.1.1", "purpose": "Server-rendered AI Life route.", "risk": "low" },
+      { "name": "react", "version": "^19.0.0", "purpose": "Clipboard status interaction.", "risk": "low" }
+    ],
+    "licenses": ["MIT"],
+    "checksums": [],
+    "sbom_path": ""
+  },
+  "quality": {
+    "score": 87,
+    "line_count": {
+      "max_file_lines": 122,
+      "over_600_count": 0
+    },
+    "code_budget": {
+      "status": "acceptable",
+      "feature_lines": 312,
+      "file_count": 4,
+      "dependency_count": 2,
+      "notes": "The former 479-line route is now a 91-line server surface plus a focused client component, stylesheet, and contract test."
+    },
+    "test_commands": [
+      "node --test packages/web/src/lib/__tests__/life-route.test.ts"
+    ],
+    "verification": [
+      {
+        "command": "focused life test + pnpm sma:release-gate + pnpm --dir packages/web build",
+        "status": "pass",
+        "timestamp": "2026-07-10T16:25:57Z",
+        "notes": "2 focused route tests, 15 control-plane tests, 481 package tests, strict VTRS, TypeScript, dependency audit, Next build, and Netlify desktop/mobile proof passed."
+      }
+    ]
+  },
+  "clone": {
+    "readiness": "project_bound",
+    "adaptation_points": ["practice rail labels", "CLI commands", "route shell"],
+    "install_steps": ["Copy owned paths.", "Confirm every displayed command against CLI help.", "Run the focused test and release gate."],
+    "known_traps": [
+      "Never mix usage, trust, local-only, and publish into one total.",
+      "Displayed commands must exist in the current CLI.",
+      "Clipboard failure must remain visible to the user."
+    ]
+  },
+  "provenance": {
+    "created_by": {
+      "actor_kind": "agent",
+      "actor_id": "bdd-main@019f4b2d",
+      "provider": "OpenAI",
+      "model": "gpt-5-codex",
+      "role": "architect",
+      "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+      "commit": "aa3b9e3",
+      "files_touched": ["packages/web/src/app/life/module.sweetspot.json"],
+      "verification": [
+        {
+          "command": "focused life test + pnpm sma:release-gate",
+          "status": "pass",
+          "timestamp": "2026-07-10T16:25:57Z",
+          "notes": "Current-tree gates and hosted visual proof passed."
+        }
+      ],
+      "timestamp": "2026-07-10T16:03:44Z",
+      "summary": "Declared the compact AI Life practice route as an explicit project brick.",
+      "intent": "Keep whole-practice usage guidance clear without restoring the former oversized theatre.",
+      "decision_rationale": "A server route, route-local copy component, route-local CSS, and one contract test are the minimum responsible boundary.",
+      "lease_id": "lease-1783699086995-89bbfc1e",
+      "context_event_ids": ["ctx-1783699087206-b6d85b50", "ctx-1783699034295-fd009b97"],
+      "attestation": { "method": "git_commit", "reference": "aa3b9e3" }
+    },
+    "touched_by": [],
+    "reviewed_by": [],
+    "source_chain": [
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.ai-life-practice",
+        "commit": "aa3b9e3",
+        "path": "packages/web/src/app/life",
+        "event": "created",
+        "timestamp": "2026-07-10T16:03:44Z"
+      }
+    ]
+  }
+}

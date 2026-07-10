@@ -45,7 +45,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </summary>
               <nav aria-label="Product menu">
                 <a href="/sources"><span>01</span>Sources</a>
-                <a href="/scan"><span>02</span>Scan room</a>
+                <a href="/scan"><span>02</span>Scan</a>
                 <a href="/proof"><span>03</span>Proof center</a>
                 <a href="/score"><span>04</span>Score lab</a>
                 <a href="/wizard"><span>05</span>Wizard</a>

@@ -183,14 +183,6 @@ test("providers route opens with the provider directory before metric cards", ()
   assert.match(page, /Vibers Unite/);
   assert.match(page, /c0vibe\.app/);
 
-  assert.match(styles, /\.provider-world-ignition/);
-  assert.match(styles, /\.provider-world-ignition__terminal/);
-  assert.match(styles, /\.provider-world-ignition__zones/);
-  assert.match(styles, /\.provider-world-ignition-zone--local_only/);
-  assert.match(styles, /\.provider-world-ignition-zone--trust/);
-  assert.match(styles, /\.provider-world-ignition-zone--publish/);
-  assert.match(styles, /\.provider-world-ignition-zone__screen pre:first-child/);
-  assert.match(styles, /\.provider-world-ignition-zone footer i::before/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
   assert.match(styles, /@media \(max-width: 1040px\)/);
 });
@@ -467,15 +459,6 @@ test("providers route ships the theatre encore collapsed and drops the freshness
   assert.match(providerScan, /providerCalls=0/);
   assert.match(providerScan, /ledgerWrites=0/);
   assert.match(providerScan, /hiddenUpload=0/);
-  assert.match(styles, /\.provider-freshness-radar/);
-  assert.match(styles, /\.provider-freshness-radar__terminal/);
-  assert.match(styles, /\.provider-freshness-lanes/);
-  assert.match(styles, /\.provider-freshness-lane--planned/);
-  assert.match(styles, /\.provider-freshness-lane--local_only/);
-  assert.match(styles, /\.provider-freshness-lane__screen pre:first-child/);
-  assert.match(styles, /\.provider-freshness-lane__meter i/);
-  assert.match(styles, /@media \(max-width: 1120px\)/);
-  assert.match(styles, /@media \(max-width: 720px\)/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
 });
 

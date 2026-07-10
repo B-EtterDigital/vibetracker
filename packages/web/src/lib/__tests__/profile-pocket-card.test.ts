@@ -134,23 +134,6 @@ test("public profile route retires the pocket deck for the calm dashboard", () =
   assert.doesNotMatch(page, /profile-wallet-pass/);
   assert.doesNotMatch(page, /dangerouslySetInnerHTML/);
 
-  assert.match(styles, /\.profile-pocket-card/);
-  assert.match(styles, /\.profile-pocket-card__terminal/);
-  assert.match(styles, /\.profile-pocket-card__metrics/);
-  assert.match(styles, /\.profile-pocket-metric/);
-  assert.match(styles, /\.profile-pocket-metric__screen pre:first-child/);
-  assert.match(styles, /\.profile-pocket-metric\[data-impact="NOT USAGE"\]/);
-  assert.match(styles, /\.profile-wallet-pass/);
-  assert.match(styles, /\.profile-wallet-pass__terminal/);
-  assert.match(styles, /\.profile-wallet-pass__matrix/);
-  assert.match(styles, /\.profile-wallet-pass__chips/);
-  assert.match(styles, /WALLET PASS/);
   assert.match(styles, /@media \(max-width: 1040px\)/);
-  assert.match(styles, /\.profile-pocket-card__metrics \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/);
-  assert.match(styles, /\.profile-wallet-pass__chips \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/);
-  assert.match(styles, /@media \(max-width: 760px\)[\s\S]*\.profile-wallet-pass__card \{ grid-template-columns: 1fr; min-height: auto; \}/);
-  assert.match(styles, /@media \(max-width: 460px\)[\s\S]*\.profile-wallet-pass__chips \{ grid-template-columns: 1fr; \}/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(styles, /\.profile-pocket-metric__screen pre:first-child \{ opacity: 1; \}/);
-  assert.match(styles, /\.profile-wallet-pass__terminal::after, \.profile-wallet-pass__card::after \{ transform: none; \}/);
 });

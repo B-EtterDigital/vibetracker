@@ -118,6 +118,20 @@
       "notes": "Calm primary leaderboard instrument with separate trust tiers."
     },
     {
+      "brick_id": "000-vibetracker.web.ai-life-practice",
+      "manifest_path": "packages/web/src/app/life/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 87,
+      "notes": "Compact whole-practice route with labelled usage, trust, local-only, and publish rails."
+    },
+    {
+      "brick_id": "000-vibetracker.web.local-scan-demo",
+      "manifest_path": "packages/web/src/app/scan/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 87,
+      "notes": "Local-first scan route with a deterministic, no-network preview."
+    },
+    {
       "brick_id": "000-vibetracker.web.public-profile.adaptive-depth",
       "manifest_path": "packages/web/src/app/u/[handle]/module.sweetspot.json",
       "status": "project_bound",

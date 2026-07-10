@@ -1,0 +1,122 @@
+/* AI Life — calm whole-practice overview. Everything namespaced .vlife*.
+   Mirrors the committed profile instrument system: identical panel tokens,
+   the --panel-i staggered transform/opacity reveal, and the copy-chip pattern.
+   Motion is transform/opacity only, disabled for prefers-reduced-motion. */
+
+.vlife {
+  --vl-mono: var(--font-data), ui-monospace, SFMono-Regular, Menlo, monospace;
+  display: grid; gap: 14px; max-width: 1160px; margin: 0 auto; padding: 24px 20px 80px;
+}
+
+.vlife > * {
+  min-width: 0;
+  animation: vlife-in 0.5s ease-out both;
+  animation-delay: calc(var(--panel-i, 0) * 90ms);
+}
+
+@keyframes vlife-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vlife > * { animation: none; }
+}
+
+.vlife :is(a, button, [tabindex]):focus-visible { outline: 2px solid #2ee8d6; outline-offset: 2px; }
+
+/* ---- panel base ---- */
+
+.vlife-panel {
+  background: #0d1419; border: 1px solid rgba(46, 232, 214, 0.14);
+  border-radius: 10px; padding: 18px 20px; min-width: 0;
+}
+
+/* ---- hero ---- */
+
+.vlife-hero { display: grid; gap: 10px; padding: 22px 24px; }
+
+.vlife-hero h1 {
+  margin: 0; color: var(--fg); overflow-wrap: anywhere;
+  font: 600 clamp(1.6rem, 3.4vw, 2.3rem) / 1.12 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+.vlife-hero p {
+  margin: 0; max-width: 62ch;
+  font: 500 15px/1.55 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  color: rgba(217, 255, 242, 0.7);
+}
+
+/* ---- rails grid ---- */
+
+.vlife-rails { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+
+.vlife-card { display: grid; gap: 10px; align-content: start; }
+
+.vlife-card-label {
+  font: 600 11px/1.2 var(--vl-mono); text-transform: uppercase;
+  letter-spacing: 0.08em; color: rgba(217, 255, 242, 0.5);
+}
+
+.vlife-card-line {
+  margin: 0; overflow-wrap: anywhere;
+  font: 500 13.5px/1.55 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  color: rgba(217, 255, 242, 0.72);
+}
+
+/* ---- copy chip (mirrors the committed profile command chip) ---- */
+
+.vlife-chip {
+  appearance: none; cursor: pointer; justify-self: start;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(46, 232, 214, 0.3);
+  background: #040607; font: 500 12px/1 var(--vl-mono); color: #d9fff2;
+}
+
+.vlife-chip code { background: transparent; border: 0; padding: 0; font: inherit; color: #2ee8d6; }
+.vlife-chip span { color: rgba(217, 255, 242, 0.5); }
+.vlife-chip[data-state="copied"] span { color: #36e39b; }
+.vlife-chip[data-state="blocked"] span { color: #ff7768; }
+
+/* ---- rails strip ---- */
+
+.vlife-strip { padding: 12px 20px; }
+
+.vlife-strip p {
+  margin: 0; text-align: center;
+  font: 500 12px/1.4 var(--vl-mono); color: rgba(217, 255, 242, 0.5);
+}
+
+/* ---- CTA ---- */
+
+.vlife-cta { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+
+.vlife-cta-title {
+  margin: 0; color: var(--fg);
+  font: 600 15px/1.2 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+.vlife-cta-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.vlife-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(46, 232, 214, 0.3);
+  font: 500 12px/1 var(--vl-mono); color: #d9fff2;
+}
+
+/* ---- responsive ---- */
+
+@media (max-width: 1020px) {
+  .vlife-rails { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 680px) {
+  .wrap:has(> .vlife)::before {
+    overflow-wrap: anywhere;
+    white-space: normal;
+    line-height: 1.35;
+    letter-spacing: 0;
+  }
+  .vlife-rails { grid-template-columns: 1fr; }
+  .vlife-cta { flex-direction: column; align-items: flex-start; }
+}
