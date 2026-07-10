@@ -1,9 +1,9 @@
-// Pure complexity/persona engine: maps a public ProfileView onto a signal tier and a
-// deterministic panel reveal plan. Zero I/O, zero side effects, no clock — the read is a pure
-// function of (profile, registry) so the profile page and its tests always agree exactly.
+// Pure complexity/persona engine: maps a public ProfileView onto a signal tier, a deterministic
+// panel reveal plan, tier progress, and a maker identity. Zero I/O, zero side effects, no clock —
+// every read is a pure function of (profile, registry) so the profile page and its tests agree.
 
 import type { ProfileView } from "./data";
-import type { ProviderDescriptor } from "../../../adapters/src/registry";
+import type { ProviderDescriptor } from "../../../adapters/src/index";
 
 export type SignalTier = "fresh" | "operator" | "supernova";
 
@@ -32,20 +32,13 @@ export interface ComplexityRead {
   facts: ComplexityFacts;
   reveal: RevealPlan;
   hint: string;
+  progress: { pct: number; nextTier: SignalTier | null; pointsToNext: number | null; unlocksNext: string[]; grow: string[] };
+  identity: { kind: "specialist" | "dual" | "allrounder" | "forming"; label: string; topCategory: string | null; topShare: number; fields: number };
 }
 
 // Local-runner ids that read as $0 / GPU-time signals even when their registry row carries no
 // dedicated category tag. "llama-cpp" is the live registry id; "llamacpp" stays as a spec alias.
-const LOCAL_IDS: ReadonlySet<string> = new Set([
-  "ollama",
-  "lmstudio",
-  "comfyui",
-  "llamacpp",
-  "llama-cpp",
-  "vllm",
-  "jan",
-  "gpt4all",
-]);
+const LOCAL_IDS: ReadonlySet<string> = new Set(["ollama", "lmstudio", "comfyui", "llamacpp", "llama-cpp", "vllm", "jan", "gpt4all"]);
 
 // Primary categories that read as generative media (drives the media reveal + score nudge).
 const MEDIA_PRIMARY: ReadonlySet<string> = new Set(["image", "video", "music", "audio", "3d"]);
@@ -55,6 +48,22 @@ const HINTS: Readonly<Record<SignalTier, string>> = {
   operator: "operator signal: steady, multi-source AI usage.",
   supernova: "supernova signal: deep, multi-domain AI usage. Full instrumentation unlocked.",
 };
+
+const NEXT_TIER: Readonly<Record<SignalTier, "operator" | "supernova" | null>> = { fresh: "operator", operator: "supernova", supernova: null };
+
+// Score floors where each upgraded tier begins (must mirror tierForScore's edges).
+const TIER_FLOOR: Readonly<Record<"operator" | "supernova", number>> = { operator: 30, supernova: 65 };
+
+// Panels the next tier turns on, phrased for the profile page's progress rail.
+const NEXT_UNLOCKS: Readonly<Record<"operator" | "supernova", readonly string[]>> = {
+  operator: ["usage insights", "category mix"],
+  supernova: ["sync rhythm", "trust signals"],
+};
+
+interface MatchedProvider {
+  usage: ProfileView["providers"][number];
+  descriptor: ProviderDescriptor;
+}
 
 // Primary category = the descriptor's first category, or "other" when the row lists none.
 function primaryCategory(descriptor: ProviderDescriptor): string {
@@ -73,30 +82,26 @@ function isLocalDescriptor(descriptor: ProviderDescriptor): boolean {
 }
 
 // Join each profile provider to its registry descriptor by id. Unmatched providers drop out here,
-// so they contribute no categories and are never counted as local or media.
-function matchedDescriptors(
-  profile: ProfileView,
-  registry: readonly ProviderDescriptor[],
-): ProviderDescriptor[] {
-  return profile.providers
-    .map((provider) => registry.find((descriptor) => descriptor.id === provider.provider))
-    .filter((descriptor): descriptor is ProviderDescriptor => descriptor !== undefined);
+// so they contribute no categories, carry no identity weight, and are never local or media.
+function matchProviders(profile: ProfileView, registry: readonly ProviderDescriptor[]): MatchedProvider[] {
+  return profile.providers.flatMap((usage) => {
+    const descriptor = registry.find((candidate) => candidate.id === usage.provider);
+    return descriptor ? [{ usage, descriptor }] : [];
+  });
 }
 
-function readFacts(profile: ProfileView, registry: readonly ProviderDescriptor[]): ComplexityFacts {
-  const matched = matchedDescriptors(profile, registry);
-  const distinctPrimary = new Set(matched.map(primaryCategory));
-
+function readFacts(profile: ProfileView, matched: readonly MatchedProvider[]): ComplexityFacts {
+  const descriptors = matched.map((pair) => pair.descriptor);
   return {
     providers: profile.providers.length,
-    categories: distinctPrimary.size,
+    categories: new Set(descriptors.map(primaryCategory)).size,
     days: profile.usageDays.length,
     // usd/ops prefer the reviewed submission totals; the provider sum is the fallback and spans
     // every provider row (matched or not) because spend is spend regardless of registry coverage.
     usd: profile.latest?.total_usd ?? sumBy(profile.providers, (provider) => provider.usd),
     ops: profile.latest?.record_count ?? sumBy(profile.providers, (provider) => provider.ops),
-    hasLocal: matched.some(isLocalDescriptor),
-    hasMedia: matched.some((descriptor) => MEDIA_PRIMARY.has(primaryCategory(descriptor))),
+    hasLocal: descriptors.some(isLocalDescriptor),
+    hasMedia: descriptors.some((descriptor) => MEDIA_PRIMARY.has(primaryCategory(descriptor))),
   };
 }
 
@@ -142,10 +147,76 @@ function planReveal(tier: SignalTier, facts: ComplexityFacts, trustCount: number
   return { chart: facts.days >= 7, providerMix: true, categoryMix: false, insights: false, rhythm: false, trust: false };
 }
 
+// Growth hints are breadth/consistency only, fixed breadth-first priority (days, sources, categories), capped at two. Spend-based
+// hints (usd/ops) are deliberately excluded: tier progress must never be a pay-to-rank incentive.
+function growHints(facts: ComplexityFacts): string[] {
+  const grow: string[] = [];
+  if (facts.days < 30) grow.push("more days of history");
+  if (facts.providers < 6) grow.push("more connected sources");
+  if (facts.categories < 3) grow.push("more categories of making");
+  return grow.slice(0, 2);
+}
+
+function readProgress(tier: SignalTier, score: number, facts: ComplexityFacts): ComplexityRead["progress"] {
+  const nextTier = NEXT_TIER[tier];
+  return {
+    pct: score,
+    nextTier,
+    pointsToNext: nextTier === null ? null : TIER_FLOOR[nextTier] - score,
+    unlocksNext: nextTier === null ? [] : [...NEXT_UNLOCKS[nextTier]],
+    grow: growHints(facts),
+  };
+}
+
+// Per-primary-category totals for the identity read. Zero amounts never open a bucket, so the
+// bucket count is exactly the number of categories carrying weight (`fields`).
+function bucketByPrimary(matched: readonly MatchedProvider[], pick: (usage: MatchedProvider["usage"]) => number): Map<string, number> {
+  const totals = new Map<string, number>();
+  for (const { usage, descriptor } of matched) {
+    const amount = pick(usage);
+    if (amount > 0) {
+      const key = primaryCategory(descriptor);
+      totals.set(key, (totals.get(key) ?? 0) + amount);
+    }
+  }
+  return totals;
+}
+
+// Maker identity from where the weight actually sits. USD buckets lead; an all-$0 board (e.g.
+// local-only) falls back to ops weight so it still resolves instead of reading as empty.
+function readIdentity(matched: readonly MatchedProvider[]): ComplexityRead["identity"] {
+  const usdBuckets = bucketByPrimary(matched, (usage) => usage.usd);
+  const buckets = usdBuckets.size > 0 ? usdBuckets : bucketByPrimary(matched, (usage) => usage.ops);
+  if (buckets.size === 0) {
+    return { kind: "forming", label: "signal forming", topCategory: null, topShare: 0, fields: 0 };
+  }
+
+  // Rank by total descending, alphabetical on ties, so top/dual picks are fully deterministic.
+  const ranked = [...buckets.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+  const totalAll = sumBy(ranked, ([, total]) => total);
+  const share = (total: number) => Math.round((total / totalAll) * 100);
+  const [topCategory, topTotal] = ranked[0];
+  const topShare = share(topTotal);
+  const fields = ranked.length;
+  const runnerUp = ranked[1];
+  const base = { topCategory, topShare, fields };
+
+  if (topShare >= 60) return { kind: "specialist", label: `${topCategory} specialist`, ...base };
+  if (runnerUp && topShare >= 35 && share(runnerUp[1]) >= 35) {
+    return { kind: "dual", label: `dual-wield: ${topCategory} + ${runnerUp[0]}`, ...base };
+  }
+  if (fields >= 3) return { kind: "allrounder", label: `allrounder across ${fields} fields`, ...base };
+  // Defensive floor so every profile still resolves to a presentable label: a single field always
+  // reads specialist (its 100% share short-circuits above); any other low-spread split reads dual.
+  if (!runnerUp) return { kind: "specialist", label: `${topCategory} specialist`, ...base };
+  return { kind: "dual", label: `dual-wield: ${topCategory} + ${runnerUp[0]}`, ...base };
+}
+
 export function readComplexity(profile: ProfileView, registry: readonly ProviderDescriptor[]): ComplexityRead {
-  const facts = readFacts(profile, registry);
+  const matched = matchProviders(profile, registry);
+  const facts = readFacts(profile, matched);
   const score = scoreFacts(facts);
   const tier = tierForScore(score);
   const reveal = planReveal(tier, facts, profile.trustSignals.length);
-  return { tier, score, facts, reveal, hint: HINTS[tier] };
+  return { tier, score, facts, reveal, hint: HINTS[tier], progress: readProgress(tier, score, facts), identity: readIdentity(matched) };
 }

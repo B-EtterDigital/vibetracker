@@ -19,7 +19,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vprofile > * { animation: none; }
+  .vprofile > *, .vprofile-progress__fill { animation: none; }
 }
 
 .vprofile :is(a, button, [tabindex]):focus-visible,
@@ -95,7 +95,49 @@
   border-radius: 6px; font: 700 9px/1 var(--vp-mono); font-style: normal; letter-spacing: 0;
 }
 
-.vprofile-mark-sm { width: 18px; height: 18px; border-radius: 5px; }
+.vprofile-mark-lg { width: 22px; height: 22px; border-radius: 6px; font-size: 10px; }
+
+.vprofile-identity {
+  margin: 0;
+  font: 600 clamp(0.95rem, 1.6vw, 1.15rem) / 1.2 var(--vp-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.vprofile-identity span { font-weight: 500; color: rgba(217, 255, 242, 0.45); }
+
+/* ---- signal progress ---- */
+
+.vprofile-progress__track { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
+
+.vprofile-progress__fill {
+  display: block; height: 100%; border-radius: 3px; background: #2ee8d6;
+  transform-origin: left; animation: vprofile-fill 0.6s ease-out both;
+}
+
+@keyframes vprofile-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.vprofile-progress__tiers { position: relative; height: 14px; margin-top: 6px; }
+
+.vprofile-progress__tier {
+  position: absolute; top: 2px; font: 600 10px/1 var(--vp-mono);
+  text-transform: uppercase; letter-spacing: 0.06em; color: rgba(217, 255, 242, 0.4);
+}
+
+.vprofile-progress__next { margin: 10px 0 0; font: 500 12px/1.5 var(--vp-mono); color: rgba(217, 255, 242, 0.5); }
+
+.vprofile-stack-tag {
+  font: 500 10px/1 var(--vp-mono); font-style: normal; text-transform: uppercase;
+  letter-spacing: 0.04em; color: rgba(217, 255, 242, 0.4); white-space: nowrap;
+}
+
+.vprofile-top-tag {
+  font: 700 10px/1 var(--vp-mono); font-style: normal; text-transform: uppercase;
+  letter-spacing: 0.06em; white-space: nowrap;
+}
 
 /* ---- stat cards ---- */
 

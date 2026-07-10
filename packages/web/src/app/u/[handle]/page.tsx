@@ -1,16 +1,17 @@
 import { notFound } from "next/navigation";
-import type { CSSProperties, ReactNode } from "react";
+import { cache, type CSSProperties, type ReactNode } from "react";
 import { getProfile } from "../../../lib/data";
 import { formatInt, formatUsd, type Tier } from "../../../lib/leaderboard";
 import { providerBrand } from "../../../lib/provider-brand";
 import { readComplexity } from "../../../lib/profile-complexity";
 import { trustSignalMark, trustSignalMetric, trustSignalTitle, trustSignalWindow } from "../../../lib/profile-trust";
-import { PROVIDERS } from "../../../../../adapters/src/registry";
+import { PROVIDERS } from "../../../../../adapters/src/index";
 import {
   CategoryMix,
   MixRow,
   ProfileHeader,
   RhythmStrip,
+  SignalProgress,
   StatCards,
   TrackYours,
   TrustRow,
@@ -24,18 +25,11 @@ export const revalidate = 60;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-// Every metric on the page is labelled; categories carry fixed honest colors.
-const CATEGORY_COLORS: Record<string, string> = {
-  coding: "#2ee8d6",
-  llm: "#36e39b",
-  image: "#ff4fd8",
-  video: "#9f7cff",
-  music: "#ffc64d",
-  audio: "#ffc64d",
-  "3d": "#ff7768",
-  local: "#36e39b",
-  other: "#7a8a93",
-};
+// One profile fetch per request, shared by generateMetadata and the page.
+const loadProfile = cache(async (handle: string) => {
+  const profile = await getProfile(handle);
+  return profile;
+});
 
 function fmtDate(iso: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
@@ -53,9 +47,24 @@ function providerLabel(id: string): string {
   return PROVIDERS.find((d) => d.id === id)?.label ?? id;
 }
 
+function primaryCategory(id: string): string {
+  return PROVIDERS.find((d) => d.id === id)?.categories[0] ?? "other";
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }) {
+  const { handle } = await params;
+  const profile = await loadProfile(handle);
+  if (!profile) return {};
+  const read = readComplexity(profile, PROVIDERS);
+  return {
+    title: `${profile.handle} — ${read.identity.label} · VibeUsage`,
+    description: `${read.identity.label}, ${read.tier} signal. ${read.facts.providers} sources across ${read.facts.categories} categories on VibeUsage.`,
+  };
+}
+
 export default async function Profile({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
-  const profile = await getProfile(handle);
+  const profile = await loadProfile(handle);
   if (!profile) notFound();
 
   const read = readComplexity(profile, PROVIDERS);
@@ -102,12 +111,13 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       return {
         id: p.provider,
         label: providerLabel(p.provider),
-        amount: `${formatUsd(p.usd)} · ${shareLabel(p.usd, usdTotal)}%`,
+        amount: `${formatUsd(p.usd)} · ${formatInt(p.credits)} cr · ${formatInt(p.ops)} ops`,
         share: usdTotal > 0 ? (p.usd / usdTotal) * 100 : 0,
         mark: brand.mark,
         from: brand.from,
         to: brand.to,
         ink: brand.ink,
+        tag: primaryCategory(p.provider),
       };
     }),
     more: rest.length ? `+${rest.length} more · ${formatUsd(restUsd)}` : null,
@@ -131,7 +141,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
 
   const categoryTotals = new Map<string, number>();
   for (const p of profile.providers) {
-    const category = PROVIDERS.find((d) => d.id === p.provider)?.categories[0] ?? "other";
+    const category = primaryCategory(p.provider);
     categoryTotals.set(category, (categoryTotals.get(category) ?? 0) + p.usd);
   }
   const categoryUsd = [...categoryTotals.values()].reduce((sum, usd) => sum + usd, 0);
@@ -143,7 +153,6 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       label: category,
       amount: `${formatUsd(usd)} · ${shareLabel(usd, categoryUsd)}%`,
       share: categoryUsd > 0 ? (usd / categoryUsd) * 100 : 0,
-      color: CATEGORY_COLORS[category] ?? "#7a8a93",
     }));
 
   const trustChips = profile.trustSignals.map((signal) => ({
@@ -157,13 +166,15 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const sections: ReactNode[] = [
     <ProfileHeader
       handle={profile.handle}
-      joined={fmtDate(profile.created_at)}
+      since={fmtDate(profile.created_at)}
       tierChip={tierRaw}
       signalTier={read.tier}
       signalHint={read.hint}
+      identity={read.identity}
       brands={brands}
       key="header"
     />,
+    <SignalProgress tier={read.tier} progress={read.progress} key="progress" />,
     <StatCards cards={cards} key="stats" />,
   ];
   const revealed: ReactNode[] = [];
@@ -172,7 +183,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   if (showProviderMix || reveal.insights) {
     revealed.push(<MixRow mix={showProviderMix ? mix : null} insights={reveal.insights ? insights : null} key="mix" />);
   }
-  if (reveal.categoryMix) revealed.push(<CategoryMix rows={categories} key="categories" />);
+  if (reveal.categoryMix) revealed.push(<CategoryMix rows={categories} sub={read.identity.label} key="categories" />);
   if (reveal.rhythm) {
     revealed.push(<RhythmStrip days={profile.usageDays.map((d) => ({ date: d.date, ops: d.ops }))} key="rhythm" />);
   }

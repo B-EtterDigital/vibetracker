@@ -6,11 +6,42 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { TrustBadge } from "../../../components/TrustBadge";
+import type { ComplexityRead, SignalTier } from "../../../lib/profile-complexity";
 import { GITHUB_LEVEL_COLORS } from "../../../lib/profile-trust";
 import type { Tier } from "../../../lib/leaderboard";
 import { ProfileUsageChart, type ChartDay } from "./profile-chart";
 
 const DAY_MS = 86_400_000;
+
+// Committed category palette — single source for category bars, top tags, and
+// the identity headline color. Unknown categories stay honestly grey.
+export const CATEGORY_COLORS: Record<string, string> = {
+  coding: "#2ee8d6",
+  llm: "#36e39b",
+  image: "#ff4fd8",
+  video: "#9f7cff",
+  music: "#ffc64d",
+  audio: "#ffc64d",
+  "3d": "#ff7768",
+  local: "#36e39b",
+  other: "#7a8a93",
+};
+
+export type SignalTierName = SignalTier;
+export type IdentityRead = ComplexityRead["identity"];
+export type ProgressRead = ComplexityRead["progress"];
+
+const TIER_MARKS: Array<{ id: SignalTierName; at: number }> = [
+  { id: "fresh", at: 0 },
+  { id: "operator", at: 30 },
+  { id: "supernova", at: 65 },
+];
+
+function identityColor(identity: IdentityRead): string {
+  if (identity.kind === "allrounder") return "#2ee8d6";
+  if (identity.kind === "forming") return "#ffc64d";
+  return CATEGORY_COLORS[identity.topCategory ?? "other"] ?? "#7a8a93";
+}
 
 export interface BrandChip {
   id: string;
@@ -37,6 +68,8 @@ export interface MixBar {
   to?: string;
   ink?: string;
   color?: string;
+  tag?: string;
+  top?: boolean;
 }
 
 export interface KeyValueRow {
@@ -63,17 +96,19 @@ function PanelHead({ title, sub }: { title: string; sub?: string }) {
 
 export function ProfileHeader({
   handle,
-  joined,
+  since,
   tierChip,
   signalTier,
   signalHint,
+  identity,
   brands,
 }: {
   handle: string;
-  joined: string;
+  since: string;
   tierChip: string;
-  signalTier: "fresh" | "operator" | "supernova";
+  signalTier: SignalTierName;
   signalHint: string;
+  identity: IdentityRead;
   brands: BrandChip[];
 }) {
   return (
@@ -82,12 +117,16 @@ export function ProfileHeader({
         <span className="vprofile-monogram" aria-hidden="true">{handle.slice(0, 2)}</span>
         <div className="vprofile-header-id">
           <h1 className="vprofile-handle">@{handle}</h1>
+          <p className="vprofile-identity" style={{ color: identityColor(identity) }}>
+            {identity.label}
+            <span> · {signalTier} signal</span>
+          </p>
           <div className="vprofile-header-chips">
             <span className="vprofile-chip vprofile-chip-tier">{tierChip}</span>
             <span className={`vprofile-chip vprofile-chip-signal vprofile-signal-${signalTier}`} title={signalHint}>
               <i>signal read</i> {signalTier}
             </span>
-            <span className="vprofile-joined">joined {joined}</span>
+            <span className="vprofile-joined">viber since {since}</span>
           </div>
         </div>
       </div>
@@ -125,6 +164,35 @@ export function StatCards({ cards }: { cards: StatCard[] }) {
   );
 }
 
+export function SignalProgress({ tier, progress }: { tier: SignalTierName; progress: ProgressRead }) {
+  const pct = Math.min(100, Math.max(0, progress.pct));
+  let next = "top signal reached. full instrumentation live.";
+  if (progress.nextTier) {
+    next = `${progress.pointsToNext ?? 0} points to ${progress.nextTier}: unlocks ${progress.unlocksNext.join(" + ")}.`;
+    if (progress.grow.length) next += ` grow by ${progress.grow.join(" · ")}.`;
+  }
+  return (
+    <section className="vprofile-panel vprofile-progress">
+      <PanelHead title="signal progress" sub="usage builds your profile" />
+      <div className="vprofile-progress__track" role="img" aria-label={`signal progress ${Math.round(pct)} percent`}>
+        <span className="vprofile-progress__fill" style={{ width: `${pct}%` }} />
+      </div>
+      <div className="vprofile-progress__tiers" aria-hidden="true">
+        {TIER_MARKS.map((markpoint) => (
+          <span
+            className={`vprofile-progress__tier${tier === markpoint.id ? ` vprofile-signal-${markpoint.id}` : ""}`}
+            style={{ left: `${markpoint.at}%` }}
+            key={markpoint.id}
+          >
+            {markpoint.id}
+          </span>
+        ))}
+      </div>
+      <p className="vprofile-progress__next">{next}</p>
+    </section>
+  );
+}
+
 export function UsagePanel({ days }: { days: ChartDay[] }) {
   return (
     <section className="vprofile-panel vprofile-usage">
@@ -141,7 +209,7 @@ function BarRow({ bar }: { bar: MixBar }) {
       <div className="vprofile-bar-line">
         {bar.mark ? (
           <i
-            className="vprofile-mark vprofile-mark-sm"
+            className="vprofile-mark vprofile-mark-lg"
             style={{ background: `linear-gradient(135deg, ${bar.from}, ${bar.to})`, color: bar.ink }}
             aria-hidden="true"
           >
@@ -149,6 +217,8 @@ function BarRow({ bar }: { bar: MixBar }) {
           </i>
         ) : null}
         <span className="vprofile-bar-label">{bar.label}</span>
+        {bar.tag ? <em className="vprofile-stack-tag">{bar.tag}</em> : null}
+        {bar.top ? <em className="vprofile-top-tag" style={{ color: bar.color }}>top</em> : null}
         <span className="vprofile-bar-amount">{bar.amount}</span>
       </div>
       <div className="vprofile-bar-track" aria-hidden="true">
@@ -182,8 +252,8 @@ export function MixRow({
     <div className="vprofile-cols">
       {mix ? (
         <section className="vprofile-panel">
-          <PanelHead title="Provider mix" />
-          <div className="vprofile-bars">
+          <PanelHead title="Your stack" sub="(by spend)" />
+          <div className="vprofile-bars" role="group" aria-label="Provider mix by spend">
             {mix.rows.map((bar) => <BarRow bar={bar} key={bar.id} />)}
             {mix.more ? <p className="vprofile-bar-more">{mix.more}</p> : null}
           </div>
@@ -199,12 +269,17 @@ export function MixRow({
   );
 }
 
-export function CategoryMix({ rows }: { rows: MixBar[] }) {
+export function CategoryMix({ rows, sub }: { rows: MixBar[]; sub: string }) {
   return (
     <section className="vprofile-panel">
-      <PanelHead title="Where the usage lives" sub="(by primary category)" />
-      <div className="vprofile-bars">
-        {rows.map((bar) => <BarRow bar={bar} key={bar.id} />)}
+      <PanelHead title="Specialization" sub={sub} />
+      <div className="vprofile-bars" role="group" aria-label="Where the usage lives, by primary category">
+        {rows.map((bar, index) => (
+          <BarRow
+            bar={{ ...bar, color: CATEGORY_COLORS[bar.id] ?? "#7a8a93", top: index === 0 }}
+            key={bar.id}
+          />
+        ))}
       </div>
     </section>
   );

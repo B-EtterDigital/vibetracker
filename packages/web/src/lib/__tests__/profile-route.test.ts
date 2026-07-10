@@ -8,10 +8,17 @@ const chart = readFileSync("packages/web/src/app/u/[handle]/profile-chart.tsx", 
 const styles = readFileSync("packages/web/src/app/u/[handle]/profile.css", "utf8");
 
 test("public profile route reveals panels from deterministic signal depth", () => {
+  assert.match(page, /import \{ PROVIDERS \} from "\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/adapters\/src\/index"/);
+  assert.doesNotMatch(page, /adapters\/src\/registry/);
+  assert.match(page, /const loadProfile = cache/);
+  assert.match(page, /export async function generateMetadata/);
+  assert.match(page, /read\.identity\.label/);
   assert.match(page, /readComplexity\(profile, PROVIDERS\)/);
   assert.match(page, /const \{ facts, reveal \} = read/);
   assert.match(page, /signalTier=\{read\.tier\}/);
   assert.match(page, /signalHint=\{read\.hint\}/);
+  assert.match(page, /identity=\{read\.identity\}/);
+  assert.match(page, /<SignalProgress tier=\{read\.tier\} progress=\{read\.progress\}/);
   assert.match(page, /if \(reveal\.chart\)/);
   assert.match(page, /const showProviderMix = reveal\.providerMix && mix\.rows\.length > 0/);
   assert.match(page, /if \(showProviderMix \|\| reveal\.insights\)/);
@@ -27,6 +34,13 @@ test("public profile route reveals panels from deterministic signal depth", () =
 test("profile panels keep public aggregates, trust, and local-first onboarding explicit", () => {
   assert.match(panels, /ProfileHeader/);
   assert.match(panels, /signal read/);
+  assert.match(panels, /export function SignalProgress/);
+  assert.match(panels, /usage builds your profile/);
+  assert.match(panels, /role="img" aria-label=\{`signal progress/);
+  assert.match(panels, /progress\.unlocksNext\.join/);
+  assert.match(panels, /progress\.grow\.join/);
+  assert.match(panels, /CATEGORY_COLORS/);
+  assert.match(panels, /title="Specialization"/);
   assert.match(panels, /Usage over time/);
   assert.match(panels, /Provider mix/);
   assert.match(panels, /Usage insights/);
@@ -61,6 +75,10 @@ test("profile route-local styling stays responsive and motion-safe", () => {
   assert.match(styles, /\.vprofile :is\(a, button, \[tabindex\]\):focus-visible/);
   assert.match(styles, /\.vprofile-trust-row/);
   assert.match(styles, /\.vprofile-unlock-note/);
+  assert.match(styles, /\.vprofile-progress__track/);
+  assert.match(styles, /\.vprofile-progress__fill/);
+  assert.match(styles, /@keyframes vprofile-fill/);
+  assert.match(styles, /\.vprofile-progress__tiers/);
   assert.match(styles, /@media \(max-width: 1020px\)/);
   assert.match(styles, /@media \(max-width: 900px\)/);
   assert.match(styles, /@media \(max-width: 640px\)/);

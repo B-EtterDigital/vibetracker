@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readComplexity } from "../profile-complexity.ts";
-import type { ProviderDescriptor } from "../../../../adapters/src/registry.ts";
+import type { ProviderDescriptor } from "../../../../adapters/src/index.ts";
 import type { ProfileView } from "../data.ts";
 
 // --- fixture builders (fake descriptors only; the real registry is never imported) ---
@@ -57,6 +57,8 @@ test("fresh tier: empty and sparse profiles stay fresh with the chart gated unde
   assert.equal(empty.hint, HINT.fresh);
   assert.deepEqual(empty.facts, { providers: 0, categories: 0, days: 0, usd: 0, ops: 0, hasLocal: false, hasMedia: false });
   assert.deepEqual(empty.reveal, { chart: false, providerMix: true, categoryMix: false, insights: false, rhythm: false, trust: false });
+  // Progress: days hint leads the grow list (fixed breadth-first priority (days, sources, categories)), capped at two, no usd/ops hints.
+  assert.deepEqual(empty.progress, { pct: 0, nextTier: "operator", pointsToNext: 30, unlocksNext: ["usage insights", "category mix"], grow: ["more days of history", "more connected sources"] });
 
   const sparse = readComplexity(profile({ providers: [usage("openai", 4, 2), usage("mistral", 3, 1)], usageDays: days(5) }), REGISTRY);
   assert.equal(sparse.tier, "fresh");
@@ -76,6 +78,7 @@ test("operator tier: a four-provider, two-category, twenty-day, $50 profile scor
   assert.deepEqual(read.facts, { providers: 4, categories: 2, days: 20, usd: 50, ops: 400, hasLocal: false, hasMedia: false });
   assert.deepEqual(read.reveal, { chart: true, providerMix: true, categoryMix: true, insights: true, rhythm: false, trust: false });
   assert.equal(read.hint, HINT.operator);
+  assert.deepEqual(read.progress, { pct: 45, nextTier: "supernova", pointsToNext: 20, unlocksNext: ["sync rhythm", "trust signals"], grow: ["more days of history", "more connected sources"] });
 });
 
 test("supernova tier: seven providers with local, media, deep history, spend, ops, and a trust signal max out with every panel", () => {
@@ -86,6 +89,8 @@ test("supernova tier: seven providers with local, media, deep history, spend, op
   assert.deepEqual(read.facts, { providers: 7, categories: 4, days: 40, usd: 250, ops: 1500, hasLocal: true, hasMedia: true });
   assert.deepEqual(read.reveal, { chart: true, providerMix: true, categoryMix: true, insights: true, rhythm: true, trust: true });
   assert.equal(read.hint, HINT.supernova);
+  // Top tier with every fact strong: nothing left to unlock and no grow hints.
+  assert.deepEqual(read.progress, { pct: 100, nextTier: null, pointsToNext: null, unlocksNext: [], grow: [] });
 });
 
 test("trust reveal gate: a supernova profile with zero trust signals keeps trust hidden while every other panel opens", () => {
@@ -145,6 +150,8 @@ test("score boundaries and clamp: tiers flip at 30 and 65, and the richest reach
   const op60 = readComplexity(profile({ providers: sixMix, usageDays: days(3), latest: latest(120, 500) }), mixRegistry);
   assert.equal(op60.score, 60); // 25 providers + 20 categories + 15 usd
   assert.equal(op60.tier, "operator");
+  assert.equal(op60.progress.nextTier, "supernova");
+  assert.equal(op60.progress.pointsToNext, 5); // 65 - 60
 
   const nova65 = readComplexity(profile({ providers: [...sixMix, usage("ollama")], usageDays: days(3), latest: latest(120, 500) }), mixRegistry);
   assert.equal(nova65.score, 65); // +5 for the local runner tips it across the 65 edge
@@ -158,4 +165,32 @@ test("score boundaries and clamp: tiers flip at 30 and 65, and the richest reach
   );
   assert.equal(maxed.score, 100); // 25+20+20+15+10+5+5 = 100, held at the ceiling by the clamp
   assert.equal(maxed.tier, "supernova");
+});
+
+test("maker identity: weight distribution resolves specialist, dual, allrounder, ops fallback, and forming", () => {
+  // (a) 70/30 across two primary categories (image/llm) -> specialist at 60%+.
+  const specialist = readComplexity(profile({ providers: [usage("higgsfield", 10, 70), usage("openai", 10, 30)] }), REGISTRY);
+  assert.deepEqual(specialist.identity, { kind: "specialist", label: "image specialist", topCategory: "image", topShare: 70, fields: 2 });
+
+  // (b) 45/40/15 -> dual-wield; the higher share is listed first.
+  const dual = readComplexity(
+    profile({ providers: [usage("higgsfield", 10, 45), usage("openai", 10, 40), usage("claude-code", 10, 15)] }),
+    REGISTRY,
+  );
+  assert.deepEqual(dual.identity, { kind: "dual", label: "dual-wield: image + llm", topCategory: "image", topShare: 45, fields: 3 });
+
+  // (c) 30/25/25/20 across four categories -> allrounder (top under 60, second under 35).
+  const spread = readComplexity(
+    profile({ providers: [usage("higgsfield", 10, 30), usage("openai", 10, 25), usage("claude-code", 10, 25), usage("replicate", 10, 20)] }),
+    REGISTRY,
+  );
+  assert.deepEqual(spread.identity, { kind: "allrounder", label: "allrounder across 4 fields", topCategory: "image", topShare: 30, fields: 4 });
+
+  // (d) every usd is 0 -> identity falls back to ops weight, so local-heavy boards still resolve.
+  const opsOnly = readComplexity(profile({ providers: [usage("ollama", 80, 0), usage("higgsfield", 20, 0)] }), REGISTRY);
+  assert.deepEqual(opsOnly.identity, { kind: "specialist", label: "llm specialist", topCategory: "llm", topShare: 80, fields: 2 });
+
+  // (e) empty profile -> forming, with the always-presentable label.
+  const forming = readComplexity(profile(), REGISTRY);
+  assert.deepEqual(forming.identity, { kind: "forming", label: "signal forming", topCategory: null, topShare: 0, fields: 0 });
 });
