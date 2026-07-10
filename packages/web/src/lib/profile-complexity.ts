@@ -182,11 +182,11 @@ function bucketByPrimary(matched: readonly MatchedProvider[], pick: (usage: Matc
   return totals;
 }
 
-// Maker identity from where the weight actually sits. USD buckets lead; an all-$0 board (e.g.
-// local-only) falls back to ops weight so it still resolves instead of reading as empty.
+// Maker identity comes from activity, never spend. Operations lead; providers that expose
+// credits instead of operation counts fall back to credit weight so their work still resolves.
 function readIdentity(matched: readonly MatchedProvider[]): ComplexityRead["identity"] {
-  const usdBuckets = bucketByPrimary(matched, (usage) => usage.usd);
-  const buckets = usdBuckets.size > 0 ? usdBuckets : bucketByPrimary(matched, (usage) => usage.ops);
+  const opsBuckets = bucketByPrimary(matched, (usage) => usage.ops);
+  const buckets = opsBuckets.size > 0 ? opsBuckets : bucketByPrimary(matched, (usage) => usage.credits);
   if (buckets.size === 0) {
     return { kind: "forming", label: "signal forming", topCategory: null, topShare: 0, fields: 0 };
   }

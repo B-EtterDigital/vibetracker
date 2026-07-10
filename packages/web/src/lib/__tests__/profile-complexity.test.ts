@@ -10,8 +10,8 @@ function descriptor(id: string, categories: ProviderDescriptor["categories"]): P
   return { id, label: id.toUpperCase(), domain: "ai", categories, tier: "ledger", auth: "apiKey", status: "built", verified: false, method: "test fixture" };
 }
 
-function usage(provider: string, ops = 0, usd = 0): ProfileView["providers"][number] {
-  return { provider, ops, credits: 0, usd };
+function usage(provider: string, ops = 0, usd = 0, credits = 0): ProfileView["providers"][number] {
+  return { provider, ops, credits, usd };
 }
 
 function latest(total_usd: number, record_count: number): ProfileView["latest"] {
@@ -167,28 +167,28 @@ test("score boundaries and clamp: tiers flip at 30 and 65, and the richest reach
   assert.equal(maxed.tier, "supernova");
 });
 
-test("maker identity: weight distribution resolves specialist, dual, allrounder, ops fallback, and forming", () => {
-  // (a) 70/30 across two primary categories (image/llm) -> specialist at 60%+.
-  const specialist = readComplexity(profile({ providers: [usage("higgsfield", 10, 70), usage("openai", 10, 30)] }), REGISTRY);
+test("maker identity: activity distribution resolves specialist, dual, allrounder, credits fallback, and forming without spend influence", () => {
+  // (a) 70/30 ops across image/llm -> specialist, even though spend points the other way.
+  const specialist = readComplexity(profile({ providers: [usage("higgsfield", 70, 1), usage("openai", 30, 999)] }), REGISTRY);
   assert.deepEqual(specialist.identity, { kind: "specialist", label: "image specialist", topCategory: "image", topShare: 70, fields: 2 });
 
-  // (b) 45/40/15 -> dual-wield; the higher share is listed first.
+  // (b) 45/40/15 ops -> dual-wield; the higher activity share is listed first.
   const dual = readComplexity(
-    profile({ providers: [usage("higgsfield", 10, 45), usage("openai", 10, 40), usage("claude-code", 10, 15)] }),
+    profile({ providers: [usage("higgsfield", 45, 1), usage("openai", 40, 999), usage("claude-code", 15, 500)] }),
     REGISTRY,
   );
   assert.deepEqual(dual.identity, { kind: "dual", label: "dual-wield: image + llm", topCategory: "image", topShare: 45, fields: 3 });
 
-  // (c) 30/25/25/20 across four categories -> allrounder (top under 60, second under 35).
+  // (c) 30/25/25/20 ops across four categories -> allrounder.
   const spread = readComplexity(
-    profile({ providers: [usage("higgsfield", 10, 30), usage("openai", 10, 25), usage("claude-code", 10, 25), usage("replicate", 10, 20)] }),
+    profile({ providers: [usage("higgsfield", 30, 1), usage("openai", 25, 999), usage("claude-code", 25, 500), usage("replicate", 20, 250)] }),
     REGISTRY,
   );
   assert.deepEqual(spread.identity, { kind: "allrounder", label: "allrounder across 4 fields", topCategory: "image", topShare: 30, fields: 4 });
 
-  // (d) every usd is 0 -> identity falls back to ops weight, so local-heavy boards still resolve.
-  const opsOnly = readComplexity(profile({ providers: [usage("ollama", 80, 0), usage("higgsfield", 20, 0)] }), REGISTRY);
-  assert.deepEqual(opsOnly.identity, { kind: "specialist", label: "llm specialist", topCategory: "llm", topShare: 80, fields: 2 });
+  // (d) no operation counts -> credits carry the activity distribution without consulting USD.
+  const creditsOnly = readComplexity(profile({ providers: [usage("ollama", 0, 999, 80), usage("higgsfield", 0, 1, 20)] }), REGISTRY);
+  assert.deepEqual(creditsOnly.identity, { kind: "specialist", label: "llm specialist", topCategory: "llm", topShare: 80, fields: 2 });
 
   // (e) empty profile -> forming, with the always-presentable label.
   const forming = readComplexity(profile(), REGISTRY);

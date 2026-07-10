@@ -5,7 +5,7 @@
     "name": "Adaptive Public Profile",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "language": [
       "typescript",
       "tsx",
@@ -37,7 +37,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "2e22947e2b39996de9bc09d367d2485b37228343",
+    "commit": "bb4a030",
     "paths": [
       "packages/web/src/app/u/[handle]",
       "packages/web/src/lib/profile-complexity.ts",
@@ -101,10 +101,11 @@
     },
     "ssi": {
       "status": "passing",
-      "score": 90,
-      "notes": "Profile inputs and disclosure outputs are typed and deterministic.",
+      "score": 95,
+      "notes": "Profile inputs, maker identity, tier progress, and disclosure outputs share one typed deterministic contract.",
       "evidence": [
-        "packages/web/src/lib/__tests__/profile-complexity.test.ts"
+        "packages/web/src/lib/__tests__/profile-complexity.test.ts",
+        "packages/web/src/app/u/[handle]/panels.tsx"
       ]
     },
     "sstf": {
@@ -141,10 +142,11 @@
     },
     "sas": {
       "status": "passing",
-      "score": 90,
-      "notes": "Owned, public, and private paths plus dependencies are explicit.",
+      "score": 95,
+      "notes": "Owned, public, and private paths are explicit, and the provider catalog is consumed through the declared adapters barrel.",
       "evidence": [
-        "packages/web/src/app/u/[handle]/module.sweetspot.json"
+        "packages/web/src/app/u/[handle]/module.sweetspot.json",
+        "packages/adapters/src/index.ts"
       ]
     },
     "sva": {
@@ -185,9 +187,10 @@
     "sai": {
       "status": "passing",
       "score": 90,
-      "notes": "Lease, intent, decision, and source commit are recorded.",
+      "notes": "Lease, intent, decision, source commit, and identity/progress edit plan are recorded.",
       "evidence": [
-        ".smarch/agent-context/adaptive-profile-depth.ndjson"
+        ".smarch/agent-context/adaptive-profile-depth.ndjson",
+        ".smarch/agent-context/public-profile-identity-progress.ndjson"
       ]
     }
   },
@@ -198,14 +201,16 @@
     ],
     "adapters": [
       "Supabase public aggregate views",
-      "provider registry"
+      "packages/adapters/src/index.ts#PROVIDERS"
     ],
     "required_dependencies": [
       "next",
       "react",
-      "@supabase/supabase-js"
+      "@supabase/supabase-js",
+      "000-vibetracker.package.packages-adapters.3ab3a775"
     ],
     "forbidden_dependencies": [
+      "packages/adapters/src/registry.ts",
       "service-role client",
       "raw prompt or output storage"
     ]
@@ -283,12 +288,12 @@
   "quality": {
     "score": 84,
     "line_count": {
-      "max_file_lines": 357,
+      "max_file_lines": 397,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1450,
+      "feature_lines": 1655,
       "file_count": 9,
       "dependency_count": 3,
       "notes": "The route is split by responsibility; no owned implementation file exceeds 500 lines."
@@ -302,6 +307,12 @@
         "status": "pass",
         "timestamp": "2026-07-10T14:55:19Z",
         "notes": "15 control-plane tests, 476 package tests, strict VTRS audit, and the real package-local TypeScript compiler passed."
+      },
+      {
+        "command": "focused profile tests + pnpm sma:release-gate + pnpm --dir packages/web build",
+        "status": "pending",
+        "timestamp": "2026-07-10T16:57:17Z",
+        "notes": "Identity/progress release, build, audit, and hosted visual proof are still running."
       }
     ]
   },
@@ -357,7 +368,40 @@
         "reference": "2e22947e2b39996de9bc09d367d2485b37228343"
       }
     },
-    "touched_by": [],
+    "touched_by": [
+      {
+        "actor_kind": "agent",
+        "actor_id": "bdd-main@019f4b2d",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "commit": "bb4a030",
+        "files_touched": [
+          "packages/web/src/app/u/[handle]/module.sweetspot.json"
+        ],
+        "verification": [
+          {
+            "command": "focused profile tests + pnpm sma:release-gate",
+            "status": "pending",
+            "timestamp": "2026-07-10T16:57:17Z",
+            "notes": "Current-tree gates are still running."
+          }
+        ],
+        "timestamp": "2026-07-10T16:57:17Z",
+        "summary": "Extended the adaptive profile contract with deterministic maker identity and tier progress.",
+        "intent": "Make a public usage profile immediately legible while keeping every score and unlock rule inspectable.",
+        "decision_rationale": "Identity and progress stay pure in profile-complexity; the client panels only render serializable outputs.",
+        "lease_id": "lease-1783702461119-ec3e9c6b",
+        "context_event_ids": [
+          "ctx-1783702461358-aa6f98a4"
+        ],
+        "attestation": {
+          "method": "git_commit",
+          "reference": "bb4a030"
+        }
+      }
+    ],
     "reviewed_by": [],
     "source_chain": [
       {
@@ -367,6 +411,14 @@
         "path": "packages/web/src/app/u/[handle]",
         "event": "created",
         "timestamp": "2026-07-10T14:35:26Z"
+      },
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.public-profile.adaptive-depth",
+        "commit": "bb4a030",
+        "path": "packages/web/src/app/u/[handle]",
+        "event": "updated",
+        "timestamp": "2026-07-10T16:57:17Z"
       }
     ]
   }
