@@ -293,7 +293,7 @@
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1655,
+      "feature_lines": 1663,
       "file_count": 9,
       "dependency_count": 3,
       "notes": "The route is split by responsibility; no owned implementation file exceeds 500 lines."

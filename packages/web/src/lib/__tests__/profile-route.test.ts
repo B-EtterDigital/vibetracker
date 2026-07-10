@@ -79,6 +79,8 @@ test("profile route-local styling stays responsive and motion-safe", () => {
   assert.match(styles, /\.vprofile-progress__fill/);
   assert.match(styles, /@keyframes vprofile-fill/);
   assert.match(styles, /\.vprofile-progress__tiers/);
+  assert.match(styles, /\.wrap:has\(> \.vprofile\)::before/);
+  assert.match(styles, /white-space: normal/);
   assert.match(styles, /@media \(max-width: 1020px\)/);
   assert.match(styles, /@media \(max-width: 900px\)/);
   assert.match(styles, /@media \(max-width: 640px\)/);
