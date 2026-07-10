@@ -7,15 +7,14 @@ const home = readFileSync("packages/web/src/app/page.tsx", "utf8");
 const dock = readFileSync("packages/web/src/components/UsageSignalDock.tsx", "utf8");
 const css = readFileSync("packages/web/src/app/globals.css", "utf8");
 
-test("root layout stays route-neutral while home owns the usage signal dock", () => {
+test("root layout and home stay route-neutral while the legacy signal dock remains reusable", () => {
   assert.doesNotMatch(layout, /buildAppShellStatus/);
   assert.doesNotMatch(layout, /UsageSignalDock/);
   assert.doesNotMatch(layout, /app-shell-dock/);
   assert.match(layout, /<main className="wrap">\{children\}<\/main>/);
 
-  assert.match(home, /import \{ UsageSignalDock \}/);
-  assert.match(home, /<UsageSignalDock \/>/);
-  assert.ok(home.indexOf("<UsageSignalDock />") < home.indexOf('<section className="hero">'));
+  assert.doesNotMatch(home, /UsageSignalDock|app-shell-dock/);
+  assert.match(home, /<LeaderboardConsole boards=\{\[verified, selfReported\]\} \/>/);
 });
 
 test("home signal dock preserves separated usage rails with compact diagnostics", () => {

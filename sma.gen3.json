@@ -23,6 +23,7 @@
       "packages/core/src/store/module.sweetspot.json",
       "packages/plugins/module.sweetspot.json",
       "packages/web/module.sweetspot.json",
+      "packages/web/src/app/home/module.sweetspot.json",
       "packages/web/src/app/providers/module.sweetspot.json",
       "packages/web/src/app/u/[handle]/module.sweetspot.json",
       "packages/web/src/lib/__tests__/module.sweetspot.json",

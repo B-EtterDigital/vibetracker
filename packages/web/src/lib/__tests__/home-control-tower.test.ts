@@ -63,53 +63,9 @@ test("home control tower terminal labels routes, side effects, and c0vibe relay"
   assert.equal(tower.terminalLines.every((line) => line.length === 66), true);
 });
 
-test("home route exposes the control tower before the mission spine", () => {
+test("home route retires the control tower from the default leaderboard instrument", () => {
   const page = readFileSync("packages/web/src/app/page.tsx", "utf8");
-  const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
-  assert.match(page, /buildHomeControlTower/);
-  assert.match(page, /function HomeBootPanoramaPanel/);
-  assert.match(page, /className="home-boot-panorama"/);
-  assert.match(page, /VTK:\/\/HOME-BOOT-PANORAMA\/\/LIVE-SHELL\/\/NO-FAKE-USAGE/);
-  assert.match(page, /boot@vibetracker/);
-  assert.match(page, /Terminal handoff/);
-  assert.match(page, /Branded scan theatre/);
-  assert.match(page, /Proof boundary/);
-  assert.match(page, /Trust side rail/);
-  assert.match(page, /C0VIBE public relay/);
-  assert.match(page, /trust cannot change spend, rank, score totals, or verified usage/);
-  assert.match(page, /No prompt text, output text, secrets, or raw files move/);
-  assert.match(page, /Vibers Unite/);
-  assert.match(page, /C0vibe\.app/);
-  assert.match(page, /providerCalls \{tower\.totals\.providerCalls\}/);
-  assert.match(page, /hiddenUpload \{tower\.totals\.hiddenUploads\}/);
-  assert.match(page, /function HomeControlTowerPanel/);
-  assert.match(page, /className="home-control-tower"/);
-  assert.match(page, /tower@vibetracker/);
-  assert.match(page, /href=\{deck\.href\}/);
-  assert.match(page, /tower\.totals\.hiddenUploads/);
-  assert.ok(page.indexOf("<HomeBootPanoramaPanel") < page.indexOf("<HomeControlTowerPanel tower={controlTower} />"));
-  assert.ok(page.indexOf("<HomeControlTowerPanel tower={controlTower} />") < page.indexOf("<HomeMissionSpinePanel spine={missionSpine} />"));
-
-  assert.match(styles, /\.home-boot-panorama/);
-  assert.match(styles, /\.home-boot-panorama__terminal/);
-  assert.match(styles, /\.home-boot-panorama__radar/);
-  assert.match(styles, /\.home-boot-panorama__rails/);
-  assert.match(styles, /\.home-boot-rail/);
-  assert.match(styles, /\.home-boot-rail__screen pre:first-child/);
-  assert.match(styles, /\.home-boot-rail\[data-impact="NOT USAGE"\]/);
-  assert.match(styles, /\.home-boot-panorama__rails \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/);
-  assert.match(styles, /\.home-boot-panorama__rails \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /\.home-boot-rail__screen pre:first-child \{ opacity: 1; \}/);
-  assert.match(styles, /\.home-control-tower/);
-  assert.match(styles, /\.home-control-tower__decks/);
-  assert.match(styles, /\.home-control-deck__screen pre:first-child/);
-  assert.match(styles, /\.home-control-ledger/);
-  assert.match(styles, /WIZARD \/ MOTION \/ SCAN \/ SOURCES \/ SCORE \/ LIFE \/ PROOF \/ PROFILE/);
-  assert.match(styles, /prefers-reduced-motion: reduce/);
-  assert.match(styles, /\.home-control-deck__screen pre:first-child \{ opacity: 1; \}/);
-  assert.match(styles, /@media \(max-width: 760px\)/);
-  assert.match(styles, /\.home-control-tower__decks \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
-  assert.match(styles, /@media \(max-width: 460px\)/);
-  assert.match(styles, /\.home-control-tower__decks \{ grid-template-columns: 1fr; \}/);
+  assert.match(page, /LeaderboardConsole/);
+  assert.doesNotMatch(page, /buildHomeControlTower|HomeBootPanoramaPanel|HomeControlTowerPanel|home-control-tower/);
 });

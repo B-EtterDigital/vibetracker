@@ -1,0 +1,227 @@
+"use client";
+
+import { useMemo, useState, type CSSProperties } from "react";
+
+export type HomeBoardTier = "verified" | "self_reported";
+
+export interface HomeBoardRow {
+  handle: string;
+  rank: number;
+  medal: string;
+  usd: number;
+  usdLabel: string;
+  creditsLabel: string;
+  opsLabel: string;
+}
+
+export interface HomeBoardSnapshot {
+  tier: HomeBoardTier;
+  label: string;
+  signal: string;
+  blurb: string;
+  status: "live" | "waiting" | "error";
+  rows: HomeBoardRow[];
+  totals: {
+    operators: string;
+    usd: string;
+    credits: string;
+    ops: string;
+  };
+}
+
+const COMMAND = "npx vibetrack init --gui";
+const PAGE_SIZE = 25;
+
+function statusCopy(status: HomeBoardSnapshot["status"]): string {
+  if (status === "live") return "LIVE BOARD";
+  if (status === "error") return "BOARD DEGRADED";
+  return "WAITING FOR SIGNAL";
+}
+
+export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) {
+  const [tier, setTier] = useState<HomeBoardTier>("verified");
+  const [query, setQuery] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "blocked">("idle");
+
+  const active = boards.find((board) => board.tier === tier) ?? boards[0];
+  const filteredRows = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return active.rows;
+    return active.rows.filter((row) => row.handle.toLowerCase().includes(normalized));
+  }, [active.rows, query]);
+  const chartRows = active.rows.slice(0, 10);
+  const maxUsd = Math.max(...chartRows.map((row) => row.usd), 1);
+  const visibleRows = expanded ? filteredRows : filteredRows.slice(0, PAGE_SIZE);
+
+  function selectTier(nextTier: HomeBoardTier) {
+    setTier(nextTier);
+    setQuery("");
+    setExpanded(false);
+  }
+
+  async function copyCommand() {
+    try {
+      await navigator.clipboard.writeText(COMMAND);
+      setCopyState("copied");
+    } catch {
+      setCopyState("blocked");
+    }
+  }
+
+  return (
+    <section className="home-board" aria-labelledby="home-board-title">
+      <header className="home-board__mast">
+        <div>
+          <p className="home-board__eyebrow">PUBLIC AI USAGE LEDGER</p>
+          <h1 id="home-board-title">VibeUsage</h1>
+          <p className="home-board__dek">
+            Ranked AI spend with verified and self-reported signals kept in separate lanes.
+          </p>
+        </div>
+        <div className="home-board__status" data-state={active.status} aria-live="polite">
+          <i aria-hidden="true" />
+          <span>{statusCopy(active.status)}</span>
+          <code>ISR 60S</code>
+        </div>
+      </header>
+
+      <div className="home-board__controls">
+        <div className="home-board__tiers" role="group" aria-label="Leaderboard trust tier">
+          {boards.map((board) => (
+            <button
+              type="button"
+              aria-pressed={tier === board.tier}
+              onClick={() => selectTier(board.tier)}
+              key={board.tier}
+            >
+              <span>{board.label}</span>
+              <small>{board.signal}</small>
+            </button>
+          ))}
+        </div>
+        <button
+          className="home-board__copy"
+          type="button"
+          data-state={copyState}
+          onClick={copyCommand}
+          aria-label="Copy VibeTRACKER GUI install command"
+        >
+          <span aria-hidden="true">[+]</span>
+          <code>{COMMAND}</code>
+          <b>{copyState === "copied" ? "COPIED" : copyState === "blocked" ? "COPY BLOCKED" : "COPY"}</b>
+        </button>
+      </div>
+
+      <div className="home-board__boundary" data-tier={active.tier}>
+        <div>
+          <span>ACTIVE LANE</span>
+          <b>{active.label}</b>
+        </div>
+        <p>{active.blurb}</p>
+        <strong>TRUST +0 // MIXED RANKS 0</strong>
+      </div>
+
+      <dl className="home-board__metrics" aria-label={`${active.label} leaderboard totals`}>
+        <div><dt>Ranked operators</dt><dd>{active.totals.operators}</dd></div>
+        <div><dt>Spend signal</dt><dd>{active.totals.usd}</dd></div>
+        <div><dt>Credits</dt><dd>{active.totals.credits}</dd></div>
+        <div><dt>Operations</dt><dd>{active.totals.ops}</dd></div>
+      </dl>
+
+      <section className="home-board__chart" aria-labelledby="home-chart-title">
+        <div className="home-board__section-head">
+          <div>
+            <p>TOP SIGNAL</p>
+            <h2 id="home-chart-title">Spend runway</h2>
+          </div>
+          <span>ESTIMATED USD // RANKED USAGE</span>
+        </div>
+        {active.status === "error" ? (
+          <div className="home-board__empty" role="status">
+            <b>Board temporarily unavailable.</b>
+            <span>The diagnostic is recorded; no fallback usage is invented.</span>
+          </div>
+        ) : chartRows.length ? (
+          <ol className="home-board__runway">
+            {chartRows.map((row) => (
+              <li key={row.handle}>
+                <a href={`/u/${row.handle}`}>
+                  <span className="home-board__rank">{row.medal}</span>
+                  <b>@{row.handle}</b>
+                  <span className="home-board__bar" aria-hidden="true">
+                    <i style={{ "--bar": `${Math.max((row.usd / maxUsd) * 100, 1.5)}%` } as CSSProperties} />
+                  </span>
+                  <strong>{row.usdLabel}</strong>
+                </a>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <div className="home-board__empty" role="status">
+            <b>No ranked operators yet.</b>
+            <span>This lane stays empty until reviewed aggregate usage arrives.</span>
+          </div>
+        )}
+      </section>
+
+      <section className="home-board__directory" aria-labelledby="home-directory-title">
+        <div className="home-board__section-head home-board__section-head--directory">
+          <div>
+            <p>PUBLIC DIRECTORY</p>
+            <h2 id="home-directory-title">All ranked operators</h2>
+          </div>
+          <label>
+            <span>Search handle</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setExpanded(false);
+              }}
+              placeholder="type a handle"
+            />
+          </label>
+        </div>
+        <div className="home-board__table-shell">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Operator</th><th>Spend</th><th>Credits</th><th>Ops</th><th aria-label="Open profile" /></tr>
+            </thead>
+            <tbody>
+              {visibleRows.map((row) => (
+                <tr key={row.handle}>
+                  <td data-label="Rank">{row.medal}</td>
+                  <td data-label="Operator"><a href={`/u/${row.handle}`}>@{row.handle}</a></td>
+                  <td data-label="Spend">{row.usdLabel}</td>
+                  <td data-label="Credits">{row.creditsLabel}</td>
+                  <td data-label="Ops">{row.opsLabel}</td>
+                  <td><a href={`/u/${row.handle}`} aria-label={`Open @${row.handle} profile`}>-&gt;</a></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!visibleRows.length && active.status !== "error" ? (
+            <p className="home-board__no-match">No handles match &quot;{query}&quot;.</p>
+          ) : null}
+        </div>
+        {filteredRows.length > PAGE_SIZE ? (
+          <button className="home-board__more" type="button" onClick={() => setExpanded((value) => !value)}>
+            {expanded ? "Show top 25" : `Show all ${filteredRows.length}`}
+          </button>
+        ) : null}
+      </section>
+
+      <details className="home-board__encore">
+        <summary>Open signal discipline</summary>
+        <div>
+          <span><b>USAGE</b> feeds spend, credits, ops, and rank.</span>
+          <span><b>NOT USAGE</b> trust evidence explains context and adds zero.</span>
+          <span><b>LOCAL ONLY</b> stays on-machine until explicit review.</span>
+          <span><b>PUBLISH</b> is manual; hidden uploads remain zero.</span>
+        </div>
+      </details>
+    </section>
+  );
+}

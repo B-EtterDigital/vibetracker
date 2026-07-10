@@ -298,17 +298,11 @@ test("home datastream reactor shows the reviewed stream feeding score profile he
   });
 });
 
-test("home route renders the mission spine before the command palette", () => {
+test("home route retires the mission-spine theatre from the default leaderboard surface", () => {
   const page = readFileSync("packages/web/src/app/page.tsx", "utf8");
 
-  assert.match(page, /buildHomeMissionSpine/);
-  assert.match(page, /buildHomeDatastreamReactor/);
-  assert.match(page, /function HomeDatastreamReactorPanel/);
-  assert.match(page, /className="home-datastream-reactor"/);
-  assert.ok(page.indexOf("<HomeDatastreamReactorPanel reactor={datastreamReactor} />") < page.indexOf("<HomeControlTowerPanel tower={controlTower} />"));
-  assert.match(page, /function HomeMissionSpinePanel/);
-  assert.match(page, /className="home-mission-spine"/);
-  assert.ok(page.indexOf("<HomeMissionSpinePanel spine={missionSpine} />") < page.indexOf("<HomeCommandPalettePanel palette={commandPalette} />"));
+  assert.match(page, /LeaderboardConsole/);
+  assert.doesNotMatch(page, /buildHomeMissionSpine|buildHomeDatastreamReactor|HomeMissionSpinePanel|HomeCommandPalettePanel/);
 });
 
 test("home signal tape makes the first-screen terminal feel alive without mixing proof rails", () => {
@@ -336,36 +330,19 @@ test("home signal tape makes the first-screen terminal feel alive without mixing
   assert.match(relay?.note ?? "", /c0vibe\.app/);
 });
 
-test("home hero keeps the five separated proof rails behind an inspectable disclosure", () => {
-  const page = readFileSync("packages/web/src/app/page.tsx", "utf8");
-  const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
+test("home keeps signal discipline behind one compact disclosure", () => {
+  const consoleSource = readFileSync("packages/web/src/app/home/leaderboard-console.tsx", "utf8");
+  const styles = readFileSync("packages/web/src/app/home/home.css", "utf8");
 
-  assert.match(page, /const heroLaunchSpine/);
-  assert.match(page, /<details className="hero-diagnostics">/);
-  assert.match(page, /Inspect the five proof rails/);
-  assert.match(page, /className="hero-launch-spine"/);
-  assert.match(page, /First-screen launch spine: usage, trust, local, privacy, publish/);
-  assert.match(page, /Spend heat/);
-  assert.match(page, /Trust sidecar/);
-  assert.match(page, /Local loop/);
-  assert.match(page, /Redaction gate/);
-  assert.match(page, /C0VIBE relay/);
-  assert.match(page, /hiddenUpload=0/);
-  assert.match(page, /Vibers Unite/);
-  assert.match(page, /c0vibe\.app/);
-  assert.ok(page.indexOf("hero-launch-spine") > page.indexOf("hero-signal-tape"));
-  assert.ok(page.indexOf("hero-launch-spine") < page.indexOf("console-feed"));
-
-  assert.match(styles, /\.hero-launch-spine/);
-  assert.match(styles, /\.hero-diagnostics/);
-  assert.match(styles, /\.hero-launch-rail--trust/);
-  assert.match(styles, /\.hero-launch-rail--privacy/);
-  assert.match(styles, /\.hero-launch-rail__grid span/);
-  assert.match(styles, /USAGE \/ TRUST \/ LOCAL \/ PRIVACY \/ PUBLISH/);
-  assert.match(styles, /@media \(max-width: 1180px\)[\s\S]*\.hero-launch-spine \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/);
-  assert.match(styles, /@media \(max-width: 760px\)[\s\S]*\.hero-launch-spine \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
-  assert.match(styles, /@media \(max-width: 460px\)[\s\S]*\.hero-launch-spine \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /prefers-reduced-motion: reduce[\s\S]*\.hero-launch-rail__grid span \{ transform: none; \}/);
+  assert.match(consoleSource, /<details className="home-board__encore">/);
+  assert.match(consoleSource, /Open signal discipline/);
+  assert.match(consoleSource, /USAGE/);
+  assert.match(consoleSource, /NOT USAGE/);
+  assert.match(consoleSource, /LOCAL ONLY/);
+  assert.match(consoleSource, /PUBLISH/);
+  assert.match(consoleSource, /hidden uploads remain zero/);
+  assert.match(styles, /\.home-board__encore/);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
 test("home operator constellation maps usage, trust, local, privacy, and publish rails", () => {

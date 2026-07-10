@@ -111,6 +111,13 @@
       "notes": "Existing manifest found by SMA scanner."
     },
     {
+      "brick_id": "000-vibetracker.web.home-leaderboard-console",
+      "manifest_path": "packages/web/src/app/home/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 88,
+      "notes": "Calm primary leaderboard instrument with separate trust tiers."
+    },
+    {
       "brick_id": "000-vibetracker.web.public-profile.adaptive-depth",
       "manifest_path": "packages/web/src/app/u/[handle]/module.sweetspot.json",
       "status": "project_bound",

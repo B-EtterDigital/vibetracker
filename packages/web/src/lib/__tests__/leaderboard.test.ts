@@ -318,50 +318,17 @@ test("buildLeaderboardProofTower has a safe waiting state", () => {
   });
 });
 
-test("home leaderboard route renders the podium waveform with SFF hooks", () => {
+test("home leaderboard route retires the multi-theatre board for one calm instrument", () => {
   const page = readFileSync("packages/web/src/app/page.tsx", "utf8");
-  const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
+  const consoleSource = readFileSync("packages/web/src/app/home/leaderboard-console.tsx", "utf8");
 
-  assert.match(page, /buildLeaderboardPodiumWave/);
-  assert.match(page, /buildLeaderboardHeatgrid/);
-  assert.match(page, /BOARD_HEATGRID_COLORS/);
-  assert.match(page, /LeaderboardPodiumWavePanel/);
-  assert.match(page, /LeaderboardHeatgridPanel/);
-  assert.match(page, /className="leaderboard-podium-wave"/);
-  assert.match(page, /className="leaderboard-heatgrid"/);
-  assert.match(page, /aria-label=\{`\$\{wave\.headline\} visual-only public podium waveform`\}/);
-  assert.match(page, /aria-label=\{`\$\{heatgrid\.headline\} official GitHub color usage heatgrid`\}/);
-  assert.match(page, /wave\.totals\.hiddenTrustBoost/);
-  assert.match(page, /wave\.totals\.mixedRanks/);
-  assert.match(page, /heatgrid\.totals\.hiddenTrustBoost/);
-  assert.match(page, /heatgrid\.totals\.mixedRanks/);
-  assert.match(page, /heatgrid\.totals\.providerCalls/);
-  assert.match(page, /operator\.bars\.map/);
-  assert.match(page, /heatgrid\.cells\.map/);
-  assert.match(page, /Official GitHub contribution color levels/);
-  assert.match(page, /LeaderboardPodiumWavePanel wave=\{podiumWave\}/);
-  assert.match(page, /LeaderboardHeatgridPanel heatgrid=\{boardHeatgrid\}/);
-
-  assert.match(styles, /\.leaderboard-podium-wave/);
-  assert.match(styles, /\.leaderboard-heatgrid/);
-  assert.match(styles, /\.leaderboard-podium-wave__terminal/);
-  assert.match(styles, /\.leaderboard-heatgrid__terminal/);
-  assert.match(styles, /\.leaderboard-podium-wave__operators/);
-  assert.match(styles, /\.leaderboard-heatgrid__grid/);
-  assert.match(styles, /\.leaderboard-podium-wave-operator__bars/);
-  assert.match(styles, /\.leaderboard-heatgrid-cell/);
-  assert.match(styles, /\.leaderboard-heatgrid-cell\[data-level="4"\]/);
-  assert.match(styles, /\.leaderboard-heatgrid__legend/);
-  assert.match(styles, /\.leaderboard-heatgrid-lane/);
-  assert.match(styles, /PODIUM WAVEFORM \/\/ VISUAL ONLY \/\/ NO TRUST BOOST/);
-  assert.match(styles, /BOARD HEATGRID \/\/ OFFICIAL GH COLORS \/\/ VISUAL ONLY/);
-  assert.match(styles, /prefers-reduced-motion: reduce/);
-  assert.match(styles, /leaderboard-podium-wave-operator__bars i/);
-  assert.match(styles, /leaderboard-heatgrid-cell/);
-  assert.match(styles, /@media \(max-width: 1040px\)[\s\S]*leaderboard-podium-wave__body/);
-  assert.match(styles, /@media \(max-width: 1040px\)[\s\S]*leaderboard-heatgrid__body/);
-  assert.match(styles, /@media \(max-width: 760px\)[\s\S]*leaderboard-podium-wave__operators/);
-  assert.match(styles, /@media \(max-width: 760px\)[\s\S]*leaderboard-heatgrid__grid/);
-  assert.match(styles, /@media \(max-width: 460px\)[\s\S]*leaderboard-podium-wave-operator__bars/);
-  assert.match(styles, /@media \(max-width: 460px\)[\s\S]*leaderboard-heatgrid-cell/);
+  assert.match(page, /buildLeaderboardArena/);
+  assert.match(page, /loadBoard\("verified"\)/);
+  assert.match(page, /loadBoard\("self_reported"\)/);
+  assert.match(page, /LeaderboardConsole/);
+  assert.doesNotMatch(page, /buildLeaderboardPodiumWave|buildLeaderboardHeatgrid|buildLeaderboardBroadcastWall|buildLeaderboardProofTower/);
+  assert.doesNotMatch(page, /LeaderboardPodiumWavePanel|LeaderboardHeatgridPanel|LeaderboardBroadcastWallPanel|LeaderboardProofTowerPanel/);
+  assert.match(consoleSource, /TRUST \+0 \/\/ MIXED RANKS 0/);
+  assert.match(consoleSource, /className="home-board__runway"/);
+  assert.match(consoleSource, /className="home-board__table-shell"/);
 });
