@@ -1,0 +1,102 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { renderShowcase, renderShowcaseHtml } from "../showcase.ts";
+
+test("showcase renders an offline first-run product tour with proof boundaries", () => {
+  const text = renderShowcase();
+
+  assert.match(text, /VTK:\/\/SHOWCASE\/\/VIBETRACKER\/\/VIBERS-UNITE/);
+  assert.match(text, /offline demo; no calls, no upload, no secrets read/);
+  assert.match(text, /npx vibetrack init --gui/);
+  assert.match(text, /vibetracker upload --dry-run/);
+  assert.match(text, /not_usage\s+GitHub\/creator cadence; never spend/);
+  assert.match(text, /Vibers Unite \/\/ c0vibe\.app/);
+  assert.match(text, /VTK:\/\/SHOWCASE\/\/SCAN-REPLAY\/\/CLI-TO-GUI/);
+  assert.match(text, /LIVE TURN 01\/04 HF PRISM/);
+  assert.match(text, /LIVE TURN 02\/04 CX TRUST/);
+  assert.match(text, /static GUI mirrors terminal cadence; no scripts/);
+  assert.match(text, /VTK:\/\/SHOWCASE\/\/OSS-MOTION-CREDITS\/\/LOCAL-ONLY/);
+  assert.match(text, /ascii-globe MIT global source-field cue/);
+  assert.match(text, /VTK:\/\/SHOWCASE\/\/SOURCE-TO-SCORE-PASSPORT\/\/OFFLINE/);
+  assert.match(text, /daily aggregate -> GitHub-color heatgrid/);
+  assert.match(text, /usage factors -> vibe score receipt/);
+  assert.match(text, /NO trust side rail -> NOT USAGE, no rank impact/);
+  assert.match(text, /profile\/heatgrid\/score\/badge share reviewed aggregates/);
+  assert.match(text, /no raw prompts, outputs, or secrets leave this demo/);
+  assert.match(text, /VTK:\/\/SHOWCASE\/\/SCORE-REACTOR\/\/NO-TRUST-SPEND/);
+  assert.match(text, /usage input -> provider receipts and local model rows/);
+  assert.match(text, /trust input -> GitHub\/Higgsfield signals, NOT USAGE/);
+  assert.match(text, /reactor output -> vibe score receipt \+ profile passport/);
+  assert.match(text, /VTK:\/\/SHOWCASE\/\/SHARE-KIT\/\/README-PROFILE/);
+  assert.match(text, /vibetracker profile -> local HTML passport/);
+  assert.match(text, /vibetracker badge -> static SVG source-to-score/);
+  assert.match(text, /VTK:\/\/SCAN-BEAT\/\/01\/03\/\/HF/);
+  assert.match(text, /HIGGSFIELD MCP PRISM/);
+  assert.match(text, /CODEX BUILDER TRACE/);
+  assert.match(text, /drawille .*[⠀-⣿]/u);
+  assert.match(text, /VTRK:\/\/SYNC-SURPRISE/);
+  assert.match(text, /VTK:\/\/COLLECT-CHECKPOINT\/\/HF\/\/higgsfield/);
+  assert.match(text, /showcase data is illustrative; real sync validates/);
+  assert.match(text, /share: c0vibe\.app only after local review/);
+});
+
+test("compact showcase keeps the fast path short but still impressive", () => {
+  const text = renderShowcase({ compact: true });
+
+  assert.match(text, /VTK:\/\/SHOWCASE\/\/FIRST-RUN-COMMAND-RAIL/);
+  assert.match(text, /VTK:\/\/SHOWCASE\/\/SCAN-REPLAY\/\/CLI-TO-GUI/);
+  assert.match(text, /LIVE TURN 03\/04 LAN BLOOM/);
+  assert.match(text, /local_only loopback only/);
+  assert.match(text, /credits visible; no CDN, scripts, or network calls/);
+  assert.match(text, /VTK:\/\/SHOWCASE\/\/SOURCE-TO-SCORE-PASSPORT\/\/OFFLINE/);
+  assert.match(text, /VTK:\/\/SHOWCASE\/\/SCORE-REACTOR\/\/NO-TRUST-SPEND/);
+  assert.match(text, /VTK:\/\/SHOWCASE\/\/SHARE-KIT\/\/README-PROFILE/);
+  assert.match(text, /VTK:\/\/SCAN-BEAT\/\/01\/03\/\/HF/);
+  assert.match(text, /unicode braille signal field/);
+  assert.match(text, /NOT USAGE/);
+  assert.doesNotMatch(text, /VTRK:\/\/SYNC-SURPRISE/);
+  assert.equal(text.split("\n").every((line) => line.length <= 80), true);
+});
+
+test("html showcase carries terminal charm into a static gui artifact", () => {
+  const html = renderShowcaseHtml({ compact: true });
+
+  assert.match(html, /<!doctype html>/);
+  assert.match(html, /VTK:\/\/STATIC-GUI\/\/OFFLINE\/\/compact scan/);
+  assert.match(html, /VibeTRACKER/);
+  assert.match(html, /Higgsfield MCP/);
+  assert.match(html, /Codex CLI/);
+  assert.match(html, /GitHub-style cadence signal, clearly labelled not usage/);
+  assert.match(html, /Vibers Unite at c0vibe\.app/);
+  assert.match(html, /scriptless live scan replay recorder/);
+  assert.match(html, /VTK:\/\/SCAN-REPLAY\/\/STATIC-GUI\/\/NO-SCRIPT/);
+  assert.match(html, /LIVE TURN 04\/04 REVIEW/);
+  assert.match(html, /data-impact="not_usage"/);
+  assert.match(html, /data-impact="local_only"/);
+  assert.match(html, /open-source motion credits/);
+  assert.match(html, /drawille MIT braille signal texture/);
+  assert.match(html, /source-to-score passport/);
+  assert.match(html, /VTK:\/\/SOURCE-TO-SCORE\/\/STATIC-GUI\/\/OFFLINE/);
+  assert.match(html, /share kit runway/);
+  assert.match(html, /upload aggregate/);
+  assert.match(html, /provider mix/);
+  assert.match(html, /heatgrid rhythm/);
+  assert.match(html, /score input/);
+  assert.match(html, /NOT USAGE, no rank impact/);
+  assert.match(html, /profile, heatgrid, score, and badge share reviewed aggregates/);
+  assert.match(html, /No raw prompts, outputs, or secrets leave this demo/);
+  assert.match(html, /source-to-score reactor/);
+  assert.match(html, /VTK:\/\/SCORE-REACTOR\/\/STATIC-GUI\/\/NO-TRUST-SPEND/);
+  assert.match(html, /profile proof engine/);
+  assert.match(html, /usage core/);
+  assert.match(html, /trust side rail/);
+  assert.match(html, /GitHub \+ MCP signals, NOT USAGE/);
+  assert.match(html, /Trust side rails add context only: NOT USAGE, no spend, no rank inflation/);
+  assert.match(html, /@keyframes reactorFill/);
+  assert.match(html, /vibetracker:\/\/showcase\/inline-terminal/);
+  assert.match(html, /VTK:\/\/SHOWCASE\/\/VIBETRACKER\/\/VIBERS-UNITE/);
+  assert.match(html, /@keyframes turn/);
+  assert.match(html, /prefers-reduced-motion/);
+  assert.doesNotMatch(html, /<script/i);
+  assert.doesNotMatch(html, /https?:\/\//i);
+});

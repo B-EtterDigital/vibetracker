@@ -1,0 +1,147 @@
+{
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "gm3qorzdhgbfurvjtvhg6dckhu",
+      "model": "black-forest-labs/flux-schnell",
+      "version": "5c7d5dc6dd8bf75c1acaa8565735e7986bc5b66206b55cca93cb72c9bf15ccaa",
+      "status": "succeeded",
+      "input": { "prompt": "a neon city at dusk" },
+      "output": ["https://replicate.delivery/xezq/out-0.webp"],
+      "created_at": "2026-06-29T21:19:17.159825Z",
+      "started_at": "2026-06-29T21:19:17.779176Z",
+      "completed_at": "2026-06-29T21:19:19.491859Z",
+      "source": "api",
+      "metrics": { "predict_time": 1.83, "total_time": 2.33 },
+      "urls": {
+        "web": "https://replicate.com/p/gm3qorzdhgbfurvjtvhg6dckhu",
+        "get": "https://api.replicate.com/v1/predictions/gm3qorzdhgbfurvjtvhg6dckhu",
+        "cancel": "https://api.replicate.com/v1/predictions/gm3qorzdhgbfurvjtvhg6dckhu/cancel"
+      }
+    },
+    {
+      "id": "h4n5p2mrabcxyz7kq9wtvz1abc",
+      "model": "black-forest-labs/flux-schnell",
+      "version": "5c7d5dc6dd8bf75c1acaa8565735e7986bc5b66206b55cca93cb72c9bf15ccaa",
+      "status": "succeeded",
+      "input": { "prompt": "portrait of a robot" },
+      "output": ["https://replicate.delivery/xezq/out-1.webp"],
+      "created_at": "2026-06-29T18:02:11.000000Z",
+      "started_at": "2026-06-29T18:02:11.500000Z",
+      "completed_at": "2026-06-29T18:02:13.100000Z",
+      "source": "web",
+      "metrics": { "predict_time": 1.42, "total_time": 2.1 },
+      "urls": {
+        "web": "https://replicate.com/p/h4n5p2mrabcxyz7kq9wtvz1abc",
+        "get": "https://api.replicate.com/v1/predictions/h4n5p2mrabcxyz7kq9wtvz1abc",
+        "cancel": "https://api.replicate.com/v1/predictions/h4n5p2mrabcxyz7kq9wtvz1abc/cancel"
+      }
+    },
+    {
+      "id": "z9processing0000000000000000",
+      "model": "black-forest-labs/flux-schnell",
+      "version": "5c7d5dc6dd8bf75c1acaa8565735e7986bc5b66206b55cca93cb72c9bf15ccaa",
+      "status": "processing",
+      "input": { "prompt": "still cooking" },
+      "output": null,
+      "created_at": "2026-06-29T12:00:00.000000Z",
+      "started_at": "2026-06-29T12:00:00.500000Z",
+      "source": "api",
+      "metrics": {},
+      "urls": {
+        "web": "https://replicate.com/p/z9processing0000000000000000",
+        "get": "https://api.replicate.com/v1/predictions/z9processing0000000000000000",
+        "cancel": "https://api.replicate.com/v1/predictions/z9processing0000000000000000/cancel"
+      }
+    },
+    {
+      "id": "b2fluxpro5555555555555555555",
+      "model": "black-forest-labs/flux-1.1-pro",
+      "version": "80a09d66baa990429c2f5ae8a4306bf778a1b3775afd01cc2cc8bdbe9033769c",
+      "status": "succeeded",
+      "input": { "prompt": "cinematic mountain landscape" },
+      "output": "https://replicate.delivery/xezq/out-2.webp",
+      "created_at": "2026-06-28T11:30:00.000000Z",
+      "started_at": "2026-06-28T11:30:01.000000Z",
+      "completed_at": "2026-06-28T11:30:06.400000Z",
+      "source": "api",
+      "metrics": { "predict_time": 5.4, "total_time": 6.4 },
+      "urls": {
+        "web": "https://replicate.com/p/b2fluxpro5555555555555555555",
+        "get": "https://api.replicate.com/v1/predictions/b2fluxpro5555555555555555555",
+        "cancel": "https://api.replicate.com/v1/predictions/b2fluxpro5555555555555555555/cancel"
+      }
+    },
+    {
+      "id": "v7hunyuanvid8888888888888888",
+      "model": "tencent/hunyuan-video",
+      "version": "6c9132aee14409cd6568d030453f1ba50f5f3412b844fe67f78a9eb62d55664f",
+      "status": "succeeded",
+      "input": { "prompt": "a cat surfing a wave, slow motion" },
+      "output": "https://replicate.delivery/xezq/out-3.mp4",
+      "created_at": "2026-06-27T14:20:00.000000Z",
+      "started_at": "2026-06-27T14:20:02.000000Z",
+      "completed_at": "2026-06-27T14:22:12.000000Z",
+      "source": "api",
+      "metrics": { "predict_time": 128.7, "total_time": 132.0 },
+      "urls": {
+        "web": "https://replicate.com/p/v7hunyuanvid8888888888888888",
+        "get": "https://api.replicate.com/v1/predictions/v7hunyuanvid8888888888888888",
+        "cancel": "https://api.replicate.com/v1/predictions/v7hunyuanvid8888888888888888/cancel"
+      }
+    },
+    {
+      "id": "w1whisperaudio4444444444444444",
+      "model": "openai/whisper",
+      "version": "cdd97b257f93cb89dede1c7584e3f3dfc969571b357dbcee08e793740bedd854",
+      "status": "succeeded",
+      "input": { "audio": "https://example.com/clip.mp3" },
+      "output": { "transcription": "hello world" },
+      "created_at": "2026-06-26T09:05:00.000000Z",
+      "started_at": "2026-06-26T09:05:01.000000Z",
+      "completed_at": "2026-06-26T09:05:04.700000Z",
+      "source": "api",
+      "metrics": { "predict_time": 3.7, "total_time": 4.5 },
+      "urls": {
+        "web": "https://replicate.com/p/w1whisperaudio4444444444444444",
+        "get": "https://api.replicate.com/v1/predictions/w1whisperaudio4444444444444444",
+        "cancel": "https://api.replicate.com/v1/predictions/w1whisperaudio4444444444444444/cancel"
+      }
+    },
+    {
+      "id": "l3llamainstruct7777777777777777",
+      "model": "meta/meta-llama-3-8b-instruct",
+      "version": "5a6809ca6288247d06daf6365557e5e429063f32a21146b2a807c682652136b8",
+      "status": "succeeded",
+      "input": { "prompt": "Summarize the plot of Hamlet." },
+      "output": ["Hamlet", " is", " a", " tragedy."],
+      "created_at": "2026-06-25T08:00:00.000000Z",
+      "started_at": "2026-06-25T08:00:00.400000Z",
+      "completed_at": "2026-06-25T08:00:01.300000Z",
+      "source": "api",
+      "metrics": { "predict_time": 0.9, "total_time": 1.3 },
+      "urls": {
+        "web": "https://replicate.com/p/l3llamainstruct7777777777777777",
+        "get": "https://api.replicate.com/v1/predictions/l3llamainstruct7777777777777777",
+        "cancel": "https://api.replicate.com/v1/predictions/l3llamainstruct7777777777777777/cancel"
+      }
+    },
+    {
+      "id": "c0canceled9999999999999999999",
+      "model": "meta/meta-llama-3-70b-instruct",
+      "version": "fbfb20b472b2f3bdd101412a9f70a0ed4fc0ced78a77ff00970ee7a2383c575d",
+      "status": "canceled",
+      "input": { "prompt": "never mind" },
+      "output": null,
+      "created_at": "2026-06-25T07:00:00.000000Z",
+      "source": "api",
+      "metrics": {},
+      "urls": {
+        "web": "https://replicate.com/p/c0canceled9999999999999999999",
+        "get": "https://api.replicate.com/v1/predictions/c0canceled9999999999999999999",
+        "cancel": "https://api.replicate.com/v1/predictions/c0canceled9999999999999999999/cancel"
+      }
+    }
+  ]
+}

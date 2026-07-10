@@ -1,0 +1,22 @@
+{
+  "data": [
+    {
+      "start_time": 1782777600,
+      "end_time": 1782864000,
+      "results": [
+        { "amount": { "value": 12.5, "currency": "usd" }, "line_item": "gpt-4o-2024-08-06" },
+        { "amount": { "value": 3.2, "currency": "usd" }, "line_item": "dall-e-3" },
+        { "amount": { "value": 0, "currency": "usd" }, "line_item": "whisper-1" }
+      ]
+    },
+    {
+      "start_time": 1782864000,
+      "end_time": 1782950400,
+      "results": [
+        { "amount": { "value": 5.0, "currency": "usd" }, "line_item": "gpt-4o-mini" }
+      ]
+    }
+  ],
+  "has_more": false,
+  "next_page": null
+}

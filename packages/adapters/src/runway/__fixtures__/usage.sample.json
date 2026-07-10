@@ -1,0 +1,40 @@
+{
+  "models": [
+    "gen4_turbo",
+    "gen4.5",
+    "gen4_image",
+    "eleven_v3",
+    "gemini_2.5_flash",
+    "kling2.5_turbo_pro"
+  ],
+  "results": [
+    {
+      "date": "2026-06-05",
+      "usedCredits": [
+        { "model": "gen4_turbo", "amount": 240 },
+        { "model": "gen4_image", "amount": 25 }
+      ]
+    },
+    {
+      "date": "2026-06-12",
+      "usedCredits": [
+        { "model": "gen4.5", "amount": 500 },
+        { "model": "eleven_v3", "amount": 12 }
+      ]
+    },
+    {
+      "date": "2026-06-20",
+      "usedCredits": [
+        { "model": "kling2.5_turbo_pro", "amount": -60 },
+        { "model": "gemini_2.5_flash", "amount": 3 }
+      ]
+    },
+    {
+      "date": "2026-06-28",
+      "usedCredits": [
+        { "model": "gen4_turbo", "amount": 180 },
+        { "model": "gen4_image", "amount": 0 }
+      ]
+    }
+  ]
+}

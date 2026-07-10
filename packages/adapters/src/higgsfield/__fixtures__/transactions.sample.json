@@ -1,0 +1,13 @@
+{
+  "items": [
+    { "display_name": "Nano Banana Pro", "credits": -2, "action": "spend", "created_at": "2026-06-29T21:19:17.159825Z" },
+    { "display_name": "Nano Banana Pro", "credits": -2, "action": "spend", "created_at": "2026-06-29T21:15:53.746060Z" },
+    { "display_name": "Seedance 1.0 Pro", "credits": -45, "action": "spend", "created_at": "2026-06-29T18:02:11.000000Z" },
+    { "display_name": "Kling 2.1 Master", "credits": -60, "action": "spend", "created_at": "2026-06-28T11:30:00.000000Z" },
+    { "display_name": "Voice Dubbing", "credits": -8, "action": "deduct", "created_at": "2026-06-28T09:05:00.000000Z" },
+    { "display_name": "Soul Portrait", "credits": -4, "action": "spend", "created_at": "2026-06-27T14:20:00.000000Z" },
+    { "display_name": "Monthly Grant", "credits": 8000, "action": "grant", "created_at": "2026-06-27T00:00:00.000000Z" },
+    { "display_name": "Failed job refund", "credits": 45, "action": "refund", "created_at": "2026-06-26T22:00:00.000000Z" }
+  ],
+  "next_cursor": null
+}

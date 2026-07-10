@@ -1,0 +1,28 @@
+{
+  "time_series": [
+    {
+      "bucket": "2026-06-29T00:00:00Z",
+      "results": [
+        { "endpoint_id": "fal-ai/flux/dev", "unit": "megapixel", "quantity": 12, "unit_price": 0.025, "cost": 0.3, "currency": "USD", "auth_method": "Production Key" },
+        { "endpoint_id": "fal-ai/flux-pro/v1.1", "unit": "image", "quantity": 4, "unit_price": 0.04, "cost": 0.16, "currency": "USD", "auth_method": "Production Key" }
+      ]
+    },
+    {
+      "bucket": "2026-06-28T00:00:00Z",
+      "results": [
+        { "endpoint_id": "fal-ai/veo3", "unit": "second", "quantity": 8, "unit_price": 0.5, "cost": 4.0, "currency": "USD", "auth_method": "Production Key" },
+        { "endpoint_id": "fal-ai/kling-video/v2/master/image-to-video", "unit": "second", "quantity": 5, "unit_price": 0.28, "cost": 1.4, "currency": "USD", "auth_method": "Production Key" },
+        { "endpoint_id": "fal-ai/whisper", "unit": "second", "quantity": 120, "unit_price": 0.0001, "cost": 0.012, "currency": "USD", "auth_method": "Production Key" }
+      ]
+    },
+    {
+      "bucket": "2026-06-27T00:00:00Z",
+      "results": [
+        { "endpoint_id": "fal-ai/any-llm", "unit": "token", "quantity": 15000, "unit_price": 0.0000012, "cost": 0.018, "currency": "USD", "auth_method": "Admin Key" },
+        { "endpoint_id": "fal-ai/hunyuan3d-v21", "unit": "request", "quantity": 2, "unit_price": 0.35, "cost": 0.7, "currency": "USD", "auth_method": "Production Key" }
+      ]
+    }
+  ],
+  "next_cursor": null,
+  "has_more": false
+}

@@ -1,0 +1,29 @@
+# deps / build
+node_modules/
+package-lock.json
+dist/
+build/
+.next/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# local usage store + secrets (must NEVER be committed)
+.vibetracker/
+supabase/.temp/
+*.sqlite
+.env
+.env.*
+!.env.example
+
+# os / editor
+.DS_Store
+*.log
+graphify-out/
+cc.json
+
+# Local Netlify folder
+.netlify
+
+# maintainer-internal planning docs (kept locally, never shipped)
+PLAN.md

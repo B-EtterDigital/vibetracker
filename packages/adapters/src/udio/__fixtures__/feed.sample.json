@@ -1,0 +1,12 @@
+{
+  "data": [
+    { "id": "sng_9f3a01", "title": "Neon Rain (Synthwave)", "model": "udio-1.5", "status": "complete", "finished": true, "created_at": "2026-06-29T21:19:17.159825Z", "prompt": "80s synthwave, neon, driving bassline", "song_path": "https://www.udio.com/songs/sng_9f3a01.mp3" },
+    { "id": "sng_9f3a02", "title": "Neon Rain (Synthwave) v2", "model": "udio-1.5", "status": "complete", "finished": true, "created_at": "2026-06-29T21:19:16.882140Z", "prompt": "80s synthwave, neon, driving bassline", "song_path": "https://www.udio.com/songs/sng_9f3a02.mp3" },
+    { "id": "sng_7c1b44", "title": "Golden Hour Acoustic", "model": "udio-1.5-allegro", "status": "complete", "finished": true, "created_at": "2026-06-29T18:02:11.000000Z", "prompt": "warm acoustic folk, fingerpicked guitar", "song_path": "https://www.udio.com/songs/sng_7c1b44.mp3" },
+    { "id": "sng_5a90c2", "title": "Midnight Drive", "model": "udio-1.0", "status": "complete", "finished": true, "created_at": "2026-06-28T11:30:00.000000Z", "prompt": "lofi hip hop, rainy night", "song_path": "https://www.udio.com/songs/sng_5a90c2.mp3" },
+    { "id": "sng_4d22e8", "title": "Broken Render", "model": "udio-1.5", "status": "failed", "finished": false, "created_at": "2026-06-28T09:05:00.000000Z", "prompt": "orchestral cinematic swell" },
+    { "id": "sng_3b77aa", "title": "Still Cooking", "model": "udio-1.5", "status": "processing", "finished": false, "created_at": "2026-06-27T14:20:00.000000Z", "prompt": "ambient drone, evolving pads" },
+    { "id": "sng_1e05f0", "title": "Sunrise Anthem", "model": "udio-1.0", "status": "complete", "finished": true, "created_at": "2026-06-27T10:00:00.000000Z", "prompt": "uplifting festival edm, big drop", "song_path": "https://www.udio.com/songs/sng_1e05f0.mp3" }
+  ],
+  "next": null
+}

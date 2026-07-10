@@ -1,0 +1,10 @@
+-- SUPERSEDED — do not apply. The production schema lives in the C0X repo against the
+-- shared C0VIBE Supabase project (tnsaqsqajpjbvlpasojt):
+--
+--   002-C0X-v1/supabase/migrations/20260702120000_vibetracker_usage_leaderboard.sql
+--
+-- That version reuses the existing public.users + public.user_handles tables (WorkOS auth),
+-- stores aggregates only, and enforces "no self-promotion" via public-read-only RLS (writes
+-- go through the vibetracker-ingest edge function / service role). See docs/compliance/TRUST_MODEL.md.
+--
+-- This standalone file is kept only as a reference for the table shapes.

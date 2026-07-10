@@ -1,0 +1,22 @@
+{
+  "data": [
+    {
+      "starting_at": "2026-06-01T00:00:00Z",
+      "ending_at": "2026-06-02T00:00:00Z",
+      "results": [
+        { "amount": "42.1750", "currency": "USD", "model": "claude-opus-4" },
+        { "amount": "3.20", "currency": "USD", "model": "claude-haiku-4-5" },
+        { "amount": "0", "currency": "USD", "model": "claude-sonnet-5" }
+      ]
+    },
+    {
+      "starting_at": "2026-06-02T00:00:00Z",
+      "ending_at": "2026-06-03T00:00:00Z",
+      "results": [
+        { "amount": "10.00", "currency": "USD", "model": "claude-opus-4" }
+      ]
+    }
+  ],
+  "has_more": false,
+  "next_page": null
+}

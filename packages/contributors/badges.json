@@ -1,0 +1,30 @@
+{
+  "schema": "vibetracker.contributor-badges/0.1",
+  "badges": [
+    {
+      "id": "adapter-builder",
+      "label": "Adapter Builder",
+      "description": "Built or substantially improved a provider adapter with tests."
+    },
+    {
+      "id": "fixture-steward",
+      "label": "Fixture Steward",
+      "description": "Provided or redacted representative provider fixtures."
+    },
+    {
+      "id": "trust-signal-builder",
+      "label": "Trust Signal Builder",
+      "description": "Improved not-usage trust signals or public evidence handling."
+    },
+    {
+      "id": "privacy-reviewer",
+      "label": "Privacy Reviewer",
+      "description": "Improved local-first, redaction, signing, or privacy boundaries."
+    },
+    {
+      "id": "local-ai-mapper",
+      "label": "Local AI Mapper",
+      "description": "Mapped local runners, proxy paths, or desktop/browser capture flows."
+    }
+  ]
+}

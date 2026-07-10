@@ -1,0 +1,14 @@
+{
+  "subscription": {
+    "character_count": 82000,
+    "character_limit": 100000,
+    "tier": "creator",
+    "next_character_count_reset_unix": 1785369600
+  },
+  "characterStats": {
+    "time": [1782777600000, 1782864000000, 1782950400000],
+    "usage": {
+      "All": [12000, 0, 70000]
+    }
+  }
+}

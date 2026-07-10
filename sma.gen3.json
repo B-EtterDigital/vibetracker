@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "name": "VibeTRACKER SMA Gen3 Control Plane",
+  "version": "2026-07-01",
+  "portable": true,
+  "project": {
+    "id": "000_VibeTRACKER",
+    "graphifyProjectId": "000-vibetracker",
+    "description": "Universal AI-usage tracker: npx CLI + per-provider adapters + Viberank-derived leaderboard site."
+  },
+  "costPolicy": {
+    "defaultMode": "free-local-first",
+    "paidServicesEnabledByDefault": false,
+    "paidActivation": "manual-only",
+    "baseline": [
+      "local worktrees",
+      "local focused tests",
+      "local SMA Gen3 analysis",
+      "existing GitHub Actions minutes already attached to the repository"
+    ],
+    "optionalPaidServices": [
+      { "id": "blacksmith", "purpose": "faster drop-in GitHub Actions runners", "activation": "change workflow runner labels or run manual Blacksmith workflows" },
+      { "id": "depot", "purpose": "managed runners, cache, Docker builds, remote agent sandboxes", "activation": "connect Depot org and change workflow runner labels" },
+      { "id": "nx-cloud", "purpose": "remote task cache and distributed execution", "activation": "connect Nx Cloud token and run nx affected" }
+    ]
+  },
+  "targetConcurrency": {
+    "runnerSwapOnly": { "min": 5, "max": 5 },
+    "affectedCacheWorktrees": { "min": 8, "max": 12 },
+    "gen3ControlPlane": { "min": 15, "max": 25 },
+    "moduleLocalCeiling": { "min": 25, "max": 30 }
+  },
+  "moduleDefaults": {
+    "maxParallelAgents": 2,
+    "requiredLocalGates": [
+      "pnpm sma:gen3:check",
+      "pnpm typecheck"
+    ]
+  },
+  "modules": [
+    {
+      "id": "cli",
+      "label": "CLI",
+      "description": "npx vibetracker command surface, config, keychain, local SQLite store wiring, table/live output.",
+      "paths": [
+        "packages/cli/**",
+        "packages/browser-extension/**"
+      ],
+      "requiredLocalGates": [
+        "pnpm typecheck",
+        "pnpm telemetry:audit:strict"
+      ],
+      "maxParallelAgents": 2
+    },
+    {
+      "id": "adapters",
+      "label": "ADAPTERS",
+      "description": "Per-provider usage adapters. Each provider is an independent work partition so agents can build adapters in parallel without collision.",
+      "paths": [
+        "packages/adapters/**",
+        "packages/plugins/**",
+        "packages/contributors/**"
+      ],
+      "workPartitions": [
+        { "id": "higgsfield", "label": "Higgsfield adapter", "paths": ["packages/adapters/src/higgsfield/**"], "requiredLocalGates": ["pnpm typecheck", "pnpm telemetry:audit:strict"] },
+        { "id": "claude-code", "label": "Claude Code adapter", "paths": ["packages/adapters/src/claude-code/**"], "requiredLocalGates": ["pnpm typecheck", "pnpm telemetry:audit:strict"] },
+        { "id": "openai", "label": "OpenAI adapter", "paths": ["packages/adapters/src/openai/**"], "requiredLocalGates": ["pnpm typecheck", "pnpm telemetry:audit:strict"] },
+        { "id": "replicate", "label": "Replicate adapter", "paths": ["packages/adapters/src/replicate/**"], "requiredLocalGates": ["pnpm typecheck", "pnpm telemetry:audit:strict"] },
+        { "id": "elevenlabs", "label": "ElevenLabs adapter", "paths": ["packages/adapters/src/elevenlabs/**"], "requiredLocalGates": ["pnpm typecheck", "pnpm telemetry:audit:strict"] },
+        { "id": "falai", "label": "fal.ai adapter", "paths": ["packages/adapters/src/falai/**"], "requiredLocalGates": ["pnpm typecheck", "pnpm telemetry:audit:strict"] },
+        { "id": "suno", "label": "Suno adapter", "paths": ["packages/adapters/src/suno/**"], "requiredLocalGates": ["pnpm typecheck", "pnpm telemetry:audit:strict"] },
+        { "id": "udio", "label": "Udio adapter", "paths": ["packages/adapters/src/udio/**"], "requiredLocalGates": ["pnpm typecheck", "pnpm telemetry:audit:strict"] },
+        { "id": "anthropic", "label": "Anthropic API adapter", "paths": ["packages/adapters/src/anthropic/**"], "requiredLocalGates": ["pnpm typecheck", "pnpm telemetry:audit:strict"] },
+        { "id": "runway", "label": "Runway adapter", "paths": ["packages/adapters/src/runway/**"], "requiredLocalGates": ["pnpm typecheck", "pnpm telemetry:audit:strict"] },
+        { "id": "luma", "label": "Luma adapter", "paths": ["packages/adapters/src/luma/**"], "requiredLocalGates": ["pnpm typecheck", "pnpm telemetry:audit:strict"] },
+        { "id": "kling", "label": "Kling adapter", "paths": ["packages/adapters/src/kling/**"], "requiredLocalGates": ["pnpm typecheck", "pnpm telemetry:audit:strict"] }
+      ],
+      "requiredLocalGates": [
+        "pnpm typecheck",
+        "pnpm telemetry:audit:strict"
+      ],
+      "maxParallelAgents": 4
+    },
+    {
+      "id": "web",
+      "label": "WEB",
+      "description": "Viberank-derived Next.js leaderboard/profile site (packages/web). Excludes the security-critical submit/auth surface, which is a shared hot path.",
+      "paths": [
+        "packages/web/**"
+      ],
+      "excludePaths": [
+        "packages/web/src/lib/auth.ts",
+        "packages/web/src/app/api/submit/**"
+      ],
+      "requiredLocalGates": [
+        "pnpm typecheck"
+      ],
+      "maxParallelAgents": 2
+    },
+    {
+      "id": "backend",
+      "label": "BACKEND",
+      "description": "Supabase migrations and edge functions (non-verification). One owner at a time.",
+      "paths": [
+        "supabase/migrations/**",
+        "supabase/functions/**",
+        "packages/backend/**"
+      ],
+      "excludePaths": [
+        "supabase/migrations/*verification*",
+        "supabase/functions/verify-*/**"
+      ],
+      "requiredLocalGates": [
+        "pnpm telemetry:audit:strict"
+      ],
+      "maxParallelAgents": 1
+    }
+  ],
+  "sharedHotPaths": [
+    {
+      "id": "shared-contract-surface",
+      "label": "Normalized record schema, adapter interface, and local store contract",
+      "paths": [
+        "packages/core/**"
+      ],
+      "risk": "high",
+      "requiredGates": ["affected-ci", "merge-queue", "release-train-package"]
+    },
+    {
+      "id": "telemetry-surface",
+      "label": "VTRS telemetry surface (no silent failures)",
+      "paths": [
+        "packages/core/src/telemetry/**",
+        "scripts/telemetry-audit.mjs"
+      ],
+      "risk": "medium",
+      "requiredGates": ["agent-preflight", "affected-ci"]
+    },
+    {
+      "id": "pricing-surface",
+      "label": "Credit/token to USD pricing tables (versioned, everything derives USD from here)",
+      "paths": [
+        "packages/core/src/pricing/**",
+        "data/pricing/**"
+      ],
+      "risk": "medium",
+      "requiredGates": ["affected-ci", "merge-queue"]
+    },
+    {
+      "id": "auth-and-verification-surface",
+      "label": "Upload signing, OAuth, submission verification, RLS policies (security-critical)",
+      "paths": [
+        "packages/core/src/verify/**",
+        "packages/web/src/lib/auth.ts",
+        "packages/web/src/app/api/submit/**",
+        "supabase/migrations/*verification*",
+        "supabase/functions/verify-*/**"
+      ],
+      "risk": "high",
+      "requiredGates": ["merge-queue", "release-train-package"]
+    },
+    {
+      "id": "dependency-and-package-surface",
+      "label": "Package/dependency/workspace surface",
+      "paths": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "scripts/build.mjs",
+        "tsconfig.base.json",
+        ".npmrc"
+      ],
+      "risk": "high",
+      "requiredGates": ["affected-ci", "merge-queue", "release-train-package"]
+    },
+    {
+      "id": "ci-workflow-surface",
+      "label": "CI workflow surface",
+      "paths": [
+        ".github/workflows/**",
+        ".github/dependabot.yml"
+      ],
+      "risk": "high",
+      "requiredGates": ["affected-ci", "merge-queue", "release-train-package"]
+    },
+    {
+      "id": "sma-control-plane",
+      "label": "SMA Gen3 control plane and agent rules",
+      "paths": [
+        ".gitignore",
+        "README.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CONTRIBUTING.md",
+        "PLAN.md",
+        ".sff/**",
+        ".smarch/agent-context/**",
+        "sma.gen3.json",
+        "scripts/sma-gen3.mjs",
+        "scripts/lib/**",
+        "scripts/__tests__/**",
+        "scripts/release-gate.mjs",
+        "scripts/typecheck.mjs",
+        "docs/**"
+      ],
+      "risk": "medium",
+      "requiredGates": ["agent-preflight", "affected-ci"]
+    }
+  ],
+  "ciTiers": [
+    { "id": "config-validation", "label": "Gen3 config validation", "cost": "free-local", "commands": ["pnpm sma:gen3:check"] },
+    { "id": "agent-preflight", "label": "Agent preflight", "cost": "free-local", "commands": ["pnpm sma:gen3:check", "pnpm typecheck"] },
+    { "id": "affected-ci", "label": "Affected CI", "cost": "free-local-or-existing-ci", "commands": ["pnpm sma:gen3:json", "pnpm telemetry:audit:strict", "pnpm test:scripts"] },
+    { "id": "merge-queue", "label": "Merge queue integration gate", "cost": "existing-ci-or-optional-runner", "commands": ["GitHub merge queue required checks"] },
+    { "id": "release-train-package", "label": "Release train packaging gate", "cost": "existing-ci-or-optional-runner", "commands": ["pnpm sma:release-gate", "pnpm build"] }
+  ]
+}

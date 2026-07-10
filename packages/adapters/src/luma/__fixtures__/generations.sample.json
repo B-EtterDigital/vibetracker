@@ -1,0 +1,75 @@
+{
+  "generations": [
+    {
+      "id": "8f1a0c2e-0001-4a00-9a00-000000000001",
+      "generation_type": "video",
+      "state": "completed",
+      "failure_reason": null,
+      "created_at": "2026-06-29T20:00:00Z",
+      "model": "ray-2",
+      "assets": { "video": "https://cdn.lumalabs.ai/8f1a0c2e-0001/video.mp4" },
+      "request": { "prompt": "A serene lake surrounded by mountains at sunset", "aspect_ratio": "16:9", "loop": true, "resolution": "720p", "duration": "5s" }
+    },
+    {
+      "id": "8f1a0c2e-0002-4a00-9a00-000000000002",
+      "generation_type": "image",
+      "state": "completed",
+      "failure_reason": null,
+      "created_at": "2026-06-29T18:30:00Z",
+      "model": "photon-1",
+      "assets": { "image": "https://cdn.lumalabs.ai/8f1a0c2e-0002/image.jpg" },
+      "request": { "prompt": "Editorial portrait, soft window light", "aspect_ratio": "3:4" }
+    },
+    {
+      "id": "8f1a0c2e-0003-4a00-9a00-000000000003",
+      "generation_type": "video",
+      "state": "completed",
+      "failure_reason": null,
+      "created_at": "2026-06-28T10:00:00Z",
+      "model": "ray-flash-2",
+      "assets": { "video": "https://cdn.lumalabs.ai/8f1a0c2e-0003/video.mp4" },
+      "request": { "prompt": "Drone flyover of a neon city at night", "aspect_ratio": "16:9", "resolution": "540p", "duration": "5s" }
+    },
+    {
+      "id": "8f1a0c2e-0004-4a00-9a00-000000000004",
+      "generation_type": "video",
+      "state": "failed",
+      "failure_reason": "content_moderation",
+      "created_at": "2026-06-27T22:00:00Z",
+      "model": "ray-2",
+      "assets": {},
+      "request": { "prompt": "Rejected prompt", "aspect_ratio": "16:9" }
+    },
+    {
+      "id": "8f1a0c2e-0005-4a00-9a00-000000000005",
+      "generation_type": "video",
+      "state": "dreaming",
+      "failure_reason": null,
+      "created_at": "2026-06-27T21:00:00Z",
+      "model": "ray-2",
+      "assets": { "progress_video": "https://cdn.lumalabs.ai/8f1a0c2e-0005/progress.mp4" },
+      "request": { "prompt": "Still rendering", "aspect_ratio": "16:9" }
+    },
+    {
+      "id": "8f1a0c2e-0006-4a00-9a00-000000000006",
+      "generation_type": "image",
+      "state": "completed",
+      "failure_reason": null,
+      "created_at": "2026-06-15T09:00:00Z",
+      "model": "photon-flash-1",
+      "assets": { "image": "https://cdn.lumalabs.ai/8f1a0c2e-0006/image.jpg" },
+      "request": { "prompt": "Product shot on seamless gray", "aspect_ratio": "1:1" }
+    },
+    {
+      "id": "8f1a0c2e-0007-4a00-9a00-000000000007",
+      "generation_type": "image",
+      "state": "completed",
+      "failure_reason": null,
+      "created_at": "2026-05-20T12:00:00Z",
+      "model": "photon-1",
+      "assets": { "image": "https://cdn.lumalabs.ai/8f1a0c2e-0007/image.jpg" },
+      "request": { "prompt": "Concept art, misty forest", "aspect_ratio": "16:9" }
+    }
+  ],
+  "credits": { "credit_balance": 4275.5 }
+}

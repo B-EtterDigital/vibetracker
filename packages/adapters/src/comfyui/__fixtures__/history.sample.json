@@ -1,0 +1,14 @@
+{
+  "p1": {
+    "outputs": { "9": { "images": [{ "filename": "a.png" }, { "filename": "b.png" }] } },
+    "status": { "status_str": "success", "completed": true, "messages": [["execution_start", { "timestamp": 1782950400000 }], ["execution_success", { "timestamp": 1782950405000 }]] }
+  },
+  "p2": {
+    "outputs": { "12": { "gifs": [{ "filename": "v.webp" }] } },
+    "status": { "status_str": "success", "completed": true, "messages": [["execution_start", { "timestamp": 1782960000000 }]] }
+  },
+  "p3": {
+    "outputs": {},
+    "status": { "status_str": "error", "completed": true, "messages": [["execution_start", { "timestamp": 1782970000000 }]] }
+  }
+}

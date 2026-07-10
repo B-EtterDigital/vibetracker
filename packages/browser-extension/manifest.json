@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "VibeTRACKER Capture",
+  "version": "0.1.0",
+  "description": "Capture explicit AI web activity into the local VibeTRACKER ledger.",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["http://127.0.0.1:8765/*", "http://localhost:8765/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Capture AI activity"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+}

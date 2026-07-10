@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VibeTRACKER Capture</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="capture-shell" aria-label="VibeTRACKER browser capture cockpit">
+    <header>
+      <span>VTK://BROWSER-CAPTURE</span>
+      <h1>Vibe Capture</h1>
+      <p>Explicitly mark an AI web tab as local usage evidence. No prompt text, no page scraping, no upload.</p>
+    </header>
+
+    <section class="provider-card" aria-label="Active provider preview">
+      <div class="provider-orb" id="provider-mark">AI</div>
+      <div>
+        <span id="provider-host">checking active tab</span>
+        <b id="provider-label">AI web tool</b>
+        <small id="provider-category">local low-confidence browser evidence</small>
+      </div>
+    </section>
+
+    <pre id="terminal" aria-label="Capture terminal">VTRK://BROWSER-CAPTURE
+waiting for active tab
+run local API first</pre>
+
+    <div class="rails" aria-label="Capture boundaries">
+      <div><b>Local</b><span>POST /capture on 127.0.0.1:8765</span></div>
+      <div><b>Low confidence</b><span>Manual browser signal, never verified by itself</span></div>
+      <div><b>Private</b><span>URL, title, category only; no content capture</span></div>
+    </div>
+
+    <button id="capture" type="button">
+      <span>Capture active tab</span>
+      <i aria-hidden="true">↵</i>
+    </button>
+
+    <output id="status" role="status">Run: vibetracker api serve --port 8765</output>
+    <footer>Vibers Unite · c0vibe.app</footer>
+  </main>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

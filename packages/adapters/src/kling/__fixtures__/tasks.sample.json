@@ -1,0 +1,8 @@
+{
+  "data": [
+    { "task_id": "t1", "created_at": 1782950400000, "task_status": "succeed", "model_name": "kling-v2", "type": "text2video" },
+    { "task_id": "t2", "created_at": 1782000000000, "task_status": "succeed", "model_name": "kling-v1-5", "type": "image2video" },
+    { "task_id": "t3", "created_at": 1781000000000, "task_status": "failed", "model_name": "kling-v2", "type": "text2video" }
+  ],
+  "has_more": false
+}
