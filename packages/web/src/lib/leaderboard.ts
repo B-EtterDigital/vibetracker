@@ -288,12 +288,12 @@ export function rankByUsd(rows: LeaderRow[]): RankedRow[] {
 
 export function formatUsd(n: number | null | undefined): string {
   if (n == null) return "—";
-  return `$${Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  return `$${Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 }
 
 export function formatInt(n: number | null | undefined): string {
   if (n == null) return "—";
-  return Number(n).toLocaleString();
+  return Number(n).toLocaleString("en-US");
 }
 
 function fit(value: string | number, width: number): string {

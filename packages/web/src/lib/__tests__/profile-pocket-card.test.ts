@@ -121,28 +121,17 @@ test("profile pocket card waiting state does not invent usage or trust", () => {
   assert.match(card.terminalLines.join("\n"), /NOT USAGE/);
 });
 
-test("public profile route exposes the pocket signal card without raw html", () => {
+test("public profile route retires the pocket deck for the calm dashboard", () => {
   const page = readFileSync("packages/web/src/app/u/[handle]/page.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
-  assert.match(page, /ProfilePocketCardPanel/);
-  assert.match(page, /ProfileWalletPassPanel/);
-  assert.match(page, /buildProfilePocketCard/);
-  assert.match(page, /profile-pocket-card/);
-  assert.match(page, /profile-wallet-pass/);
-  assert.match(page, /VTK:\/\/PROFILE-POCKET-CARD\/\/MOBILE-SIGNAL\/\/C0VIBE\.APP/);
-  assert.match(page, /VTK:\/\/PROFILE-WALLET-PASS\/\/POCKET-PROOF\/\/C0VIBE\.APP/);
-  assert.match(page, /pocket@profile/);
-  assert.match(page, /wallet@profile/);
-  assert.match(page, /pass\.terminalLines\.join/);
-  assert.match(page, /pass\.matrixRows\.join/);
-  assert.match(page, /pass\.seals\.map/);
-  assert.match(page, /pass\.chips\.map/);
-  assert.match(page, /profilePocketImpactLabel\(chip\.impact\)/);
-  assert.match(page, /NOT USAGE/);
-  assert.match(page, /raw reads/);
-  assert.match(page, /Vibers Unite/);
-  assert.match(page, /c0vibe\.app/);
+  assert.match(page, /ProfileHeader/);
+  assert.match(page, /StatCards/);
+  assert.doesNotMatch(page, /ProfilePocketCardPanel/);
+  assert.doesNotMatch(page, /ProfileWalletPassPanel/);
+  assert.doesNotMatch(page, /buildProfilePocketCard/);
+  assert.doesNotMatch(page, /profile-pocket-card/);
+  assert.doesNotMatch(page, /profile-wallet-pass/);
   assert.doesNotMatch(page, /dangerouslySetInnerHTML/);
 
   assert.match(styles, /\.profile-pocket-card/);
