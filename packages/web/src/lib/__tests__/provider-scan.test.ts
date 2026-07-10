@@ -173,17 +173,13 @@ test("provider world coverage map highlights creator, Chinese, European, local, 
   assert.match(relay.frames.join("\n"), /c0vibe/i);
 });
 
-test("providers route opens with a first-contact world console before metric cards", () => {
+test("providers route opens with the provider directory before metric cards", () => {
   const page = readFileSync("packages/web/src/app/providers/page.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
-  assert.match(page, /ProviderWorldIgnitionPanel/);
-  assert.match(page, /VTK:\/\/FIRST-CONTACT\/\/ALL-VIBERS\/\/C0VIBE\.APP/);
-  assert.match(page, /first-contact@registry/);
-  assert.match(page, /VISUAL ONLY/);
-  assert.match(page, /world\.zones\.map/);
-  assert.match(page, /zone\.impact\.replace|data-impact=\{zone\.impact\}|data-impact=\{zone\.impact\}/);
-  assert.match(page, /ProviderWorldIgnitionPanel world=\{worldCoverage\}[\s\S]+<section className="provider-metrics"/);
+  assert.match(page, /ProvidersDirectory/);
+  assert.match(page, /ProvidersDirectory providers=\{PROVIDERS\}[\s\S]+<section className="provider-metrics"/);
+  assert.doesNotMatch(page, /ProviderWorldIgnitionPanel/);
   assert.match(page, /Vibers Unite/);
   assert.match(page, /c0vibe\.app/);
 
@@ -449,18 +445,23 @@ test("provider freshness radar turns registry state into no-call readiness lanes
   assert.match(publish.guardrail, /PUBLISH rail only/);
 });
 
-test("providers route exposes the freshness radar with SFF responsive hooks", () => {
+test("providers route ships the theatre encore collapsed and drops the freshness radar", () => {
   const page = readFileSync("packages/web/src/app/providers/page.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
   const providerScan = readFileSync("packages/web/src/lib/provider-scan.ts", "utf8");
+  const providersCss = readFileSync("packages/web/src/app/providers/providers.css", "utf8");
+  const directory = readFileSync("packages/web/src/app/providers/directory.tsx", "utf8");
 
-  assert.match(page, /buildProviderFreshnessRadar/);
-  assert.match(page, /ProviderFreshnessRadarPanel/);
-  assert.match(page, /provider-freshness-radar/);
-  assert.match(page, /freshness@registry/);
-  assert.match(page, /NO PROVIDER CALLS/);
-  assert.match(page, /lane\.checkLines\.map|lane\.checkLines\.join/);
-  assert.match(page, /lane\.marks\.map/);
+  assert.doesNotMatch(page, /buildProviderFreshnessRadar|ProviderFreshnessRadarPanel/);
+  assert.match(page, /<details className="providers-theatre">/);
+  assert.match(page, /ProviderSurpriseDirectorPanel/);
+  assert.match(directory, /<colgroup className="providers-columns"/);
+  assert.match(providersCss, /table-layout: fixed/);
+  assert.match(providersCss, /providers-columns__action \{ width: 20%/);
+  assert.match(providersCss, /\.providers-row td\.providers-row__cats \{ display: none; \}/);
+  assert.match(providersCss, /\.providers-hero \.registry-terminal \{ min-height: 210px; \}/);
+  assert.match(providersCss, /@media \(max-width: 767px\)/);
+  assert.match(providersCss, /prefers-reduced-motion: reduce/);
   assert.match(providerScan, /ProviderFreshnessRadar/);
   assert.match(providerScan, /Provider freshness radar/);
   assert.match(providerScan, /providerCalls=0/);
