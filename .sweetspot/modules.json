@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.0.0",
+  "project": {
+    "id": "000-vibetracker",
+    "name": "vibetrack",
+    "root": ".",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "2e22947e2b39996de9bc09d367d2485b37228343",
+    "stack": [
+      "pnpm",
+      "sma"
+    ]
+  },
+  "modules": [
+    {
+      "brick_id": "000-vibetracker.adapter-module.packages-adapters-src.3472df77",
+      "manifest_path": "packages/adapters/src/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 46,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.library-module.packages-web-src-lib-__tests__.7fd032bc",
+      "manifest_path": "packages/web/src/lib/__tests__/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 46,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.package.packages-adapters.3ab3a775",
+      "manifest_path": "packages/adapters/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 46,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.package.packages-backend.d34508fe",
+      "manifest_path": "packages/backend/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 46,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.package.packages-browser-extension.8db9d8b8",
+      "manifest_path": "packages/browser-extension/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 46,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.package.packages-cli.5a4e3b45",
+      "manifest_path": "packages/cli/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 46,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.package.packages-contributors.28667e9a",
+      "manifest_path": "packages/contributors/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 46,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.package.packages-core.2e690549",
+      "manifest_path": "packages/core/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 46,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.package.packages-plugins.82824060",
+      "manifest_path": "packages/plugins/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 46,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.package.packages-web.2e82f685",
+      "manifest_path": "packages/web/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 46,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.providers-module.packages-web-src-app-providers.6159b58c",
+      "manifest_path": "packages/web/src/app/providers/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 46,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.security-module.packages-core-src-security.65ba66c2",
+      "manifest_path": "packages/core/src/security/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 39,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.state-module.packages-core-src-store.8a4d4c99",
+      "manifest_path": "packages/core/src/store/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 46,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.supabase-function.supabase-functions-vibetracker-ingest.2f275f71",
+      "manifest_path": "supabase/functions/vibetracker-ingest/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 39,
+      "notes": "Existing manifest found by SMA scanner."
+    },
+    {
+      "brick_id": "000-vibetracker.web.public-profile.adaptive-depth",
+      "manifest_path": "packages/web/src/app/u/[handle]/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 84,
+      "notes": "Existing manifest found by SMA scanner."
+    }
+  ]
+}

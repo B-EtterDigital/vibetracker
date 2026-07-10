@@ -1,12 +1,33 @@
 {
   "schemaVersion": 1,
   "name": "VibeTRACKER SMA Gen3 Control Plane",
-  "version": "2026-07-01",
+  "version": "2026-07-10",
   "portable": true,
   "project": {
     "id": "000_VibeTRACKER",
     "graphifyProjectId": "000-vibetracker",
     "description": "Universal AI-usage tracker: npx CLI + per-provider adapters + Viberank-derived leaderboard site."
+  },
+  "brickManifestPolicy": {
+    "required": true,
+    "projectId": "000-vibetracker",
+    "manifests": [
+      "packages/adapters/module.sweetspot.json",
+      "packages/adapters/src/module.sweetspot.json",
+      "packages/backend/module.sweetspot.json",
+      "packages/browser-extension/module.sweetspot.json",
+      "packages/cli/module.sweetspot.json",
+      "packages/contributors/module.sweetspot.json",
+      "packages/core/module.sweetspot.json",
+      "packages/core/src/security/module.sweetspot.json",
+      "packages/core/src/store/module.sweetspot.json",
+      "packages/plugins/module.sweetspot.json",
+      "packages/web/module.sweetspot.json",
+      "packages/web/src/app/providers/module.sweetspot.json",
+      "packages/web/src/app/u/[handle]/module.sweetspot.json",
+      "packages/web/src/lib/__tests__/module.sweetspot.json",
+      "supabase/functions/vibetracker-ingest/module.sweetspot.json"
+    ]
   },
   "costPolicy": {
     "defaultMode": "free-local-first",
@@ -41,6 +62,7 @@
     {
       "id": "cli",
       "label": "CLI",
+      "manifest": "packages/cli/module.sweetspot.json",
       "description": "npx vibetracker command surface, config, keychain, local SQLite store wiring, table/live output.",
       "paths": [
         "packages/cli/**",
@@ -55,6 +77,7 @@
     {
       "id": "adapters",
       "label": "ADAPTERS",
+      "manifest": "packages/adapters/module.sweetspot.json",
       "description": "Per-provider usage adapters. Each provider is an independent work partition so agents can build adapters in parallel without collision.",
       "paths": [
         "packages/adapters/**",
@@ -84,6 +107,7 @@
     {
       "id": "web",
       "label": "WEB",
+      "manifest": "packages/web/module.sweetspot.json",
       "description": "Viberank-derived Next.js leaderboard/profile site (packages/web). Excludes the security-critical submit/auth surface, which is a shared hot path.",
       "paths": [
         "packages/web/**"
@@ -100,6 +124,7 @@
     {
       "id": "backend",
       "label": "BACKEND",
+      "manifest": "packages/backend/module.sweetspot.json",
       "description": "Supabase migrations and edge functions (non-verification). One owner at a time.",
       "paths": [
         "supabase/migrations/**",
@@ -194,7 +219,9 @@
         "CONTRIBUTING.md",
         "PLAN.md",
         ".sff/**",
+        ".sweetspot/**",
         ".smarch/agent-context/**",
+        "**/module.sweetspot.json",
         "sma.gen3.json",
         "scripts/sma-gen3.mjs",
         "scripts/lib/**",

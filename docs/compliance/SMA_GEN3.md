@@ -13,6 +13,9 @@ SMA Gen3 process are declined, regardless of quality.
 | File | Role |
 | --- | --- |
 | `sma.gen3.json` | Module ownership, shared hot paths, concurrency tiers, cost policy, CI tiers |
+| `**/module.sweetspot.json` | Explicit brick ownership, interfaces, risk, quality, provenance, and clone-readiness contracts |
+| `.sweetspot/project.json` / `.sweetspot/modules.json` | Portable project identity and tracked brick index |
+| `.sweetspot/scans/latest.registry.json` | Regenerable local scanner evidence; ignored by git because it contains machine paths |
 | `scripts/sma-gen3.mjs` | Lane classifier CLI (`--changed-file`, `--json`, `check`) |
 | `scripts/lib/sma-gen3.mjs` | Zero-dep classifier + validator library |
 | `scripts/telemetry-audit.mjs` | VTRS audit — bans silent catches / `vtrs-ignore` |
@@ -26,11 +29,19 @@ SMA Gen3 process are declined, regardless of quality.
 `telemetry:audit:strict`, `typecheck`, `test:scripts`.
 
 ## Modules
+Each top-level module has an explicit `module.sweetspot.json`; `pnpm sma:gen3:check`
+fails when a declared manifest is missing, malformed, assigned to another project, or
+does not declare owned paths.
+
 - **cli** (`packages/cli/**`) — command surface, config, keychain, local SQLite store, output.
 - **adapters** (`packages/adapters/**`) — per-provider adapters, partitioned per provider
   (`higgsfield`, `claude-code`, `openai`, `replicate`, `elevenlabs`, `falai`, `suno`, `udio`, …).
 - **web** (`packages/web/**`) — Viberank-derived leaderboard/profile site (excludes auth/submit).
 - **backend** (`supabase/**`, `packages/backend/**`) — migrations & edge functions.
+
+Nested feature bricks make high-change surfaces independently legible. The provider
+directory and adaptive public profile each carry their own manifest inside the owning
+route directory; package-level manifests remain the parent boundary.
 
 ## Shared hot paths (serialized, one owner)
 - `shared-contract-surface` — `packages/core/**` (normalized record schema, adapter
@@ -50,6 +61,8 @@ is breadcrumbed. Silent catches and `vtrs-ignore` are banned and enforced by
 1. `git status --short --branch`
 2. `pnpm sma:gen3 -- --changed-file <path>` or `pnpm sma:gen3:json`
 3. Follow the lane; run its gates; for shared/release surfaces run `pnpm sma:release-gate`.
+4. For boundary or manifest changes, run the SMARCH scanner and validator; the committed
+   local scan output must report zero unmanifested candidates.
 
 ## Graphify
 Project id `000-vibetracker`. Module graphs are mandatory for module agents before broad

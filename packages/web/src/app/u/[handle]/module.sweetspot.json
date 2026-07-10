@@ -1,0 +1,373 @@
+{
+  "schema_version": "1.0.0",
+  "brick": {
+    "id": "000-vibetracker.web.public-profile.adaptive-depth",
+    "name": "Adaptive Public Profile",
+    "kind": "module",
+    "status": "project_bound",
+    "version": "0.1.0",
+    "language": [
+      "typescript",
+      "tsx",
+      "css"
+    ],
+    "frameworks": [
+      "next",
+      "react"
+    ],
+    "domain": [
+      "public-profile",
+      "usage-analytics",
+      "adaptive-disclosure"
+    ]
+  },
+  "hierarchy": {
+    "level": "brick",
+    "group_id": "000-vibetracker:packages/web/src/app",
+    "contains": [
+      "route",
+      "component",
+      "utility",
+      "test",
+      "style"
+    ],
+    "component_policy": "internal_by_default",
+    "notes": "Public profile route with deterministic fresh, operator, and supernova disclosure tiers."
+  },
+  "source": {
+    "project": "000-vibetracker",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "2e22947e2b39996de9bc09d367d2485b37228343",
+    "paths": [
+      "packages/web/src/app/u/[handle]",
+      "packages/web/src/lib/profile-complexity.ts",
+      "packages/web/src/lib/__tests__/profile-complexity.test.ts",
+      "packages/web/src/lib/__tests__/profile-route.test.ts",
+      "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts"
+    ]
+  },
+  "owner": {
+    "primary": "Cyrill",
+    "team": "Better Digital",
+    "reviewers": []
+  },
+  "boundaries": {
+    "owned_paths": [
+      "packages/web/src/app/u/[handle]",
+      "packages/web/src/lib/profile-complexity.ts",
+      "packages/web/src/lib/__tests__/profile-complexity.test.ts",
+      "packages/web/src/lib/__tests__/profile-route.test.ts",
+      "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts"
+    ],
+    "public_paths": [
+      "packages/web/src/app/u/[handle]/page.tsx",
+      "packages/web/src/lib/profile-complexity.ts",
+      "packages/web/src/app/u/[handle]/panels.tsx",
+      "packages/web/src/app/u/[handle]/profile-chart.tsx"
+    ],
+    "private_paths": [
+      "packages/web/src/app/u/[handle]/profile.css",
+      "packages/web/src/lib/__tests__/profile-complexity.test.ts",
+      "packages/web/src/lib/__tests__/profile-route.test.ts",
+      "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts"
+    ],
+    "forbidden_imports": [
+      "packages/web/src/lib/supabase-admin.ts",
+      "client-side service-role keys",
+      "undocumented cross-brick private imports"
+    ],
+    "allowed_side_effects": [
+      "read_public_profile_aggregates",
+      "emit_vtrs_telemetry"
+    ]
+  },
+  "classification": {
+    "data_classes": [
+      "public",
+      "aggregate_usage"
+    ],
+    "risk": "medium",
+    "notes": "Renders opt-in public aggregates only; trust evidence is labelled separately and never changes usage totals."
+  },
+  "sweetspot": {
+    "ssa_v2": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Route orchestration, deterministic policy, panels, chart, and route-local CSS are separated below the 500-line local limit.",
+      "evidence": [
+        "packages/web/src/app/u/[handle]/page.tsx",
+        "packages/web/src/lib/profile-complexity.ts"
+      ]
+    },
+    "ssi": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Profile inputs and disclosure outputs are typed and deterministic.",
+      "evidence": [
+        "packages/web/src/lib/__tests__/profile-complexity.test.ts"
+      ]
+    },
+    "sstf": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Focused profile contracts and the full package suite pass on the current tree.",
+      "evidence": [
+        "packages/web/src/lib/__tests__/profile-route.test.ts",
+        "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts"
+      ]
+    },
+    "spe": {
+      "status": "partial",
+      "score": 70,
+      "notes": "Server rendering stays linear in provider/day counts; formal performance budgets remain project work.",
+      "evidence": []
+    },
+    "srs": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Hard query failures are captured and rethrown; expected optional-table fallbacks leave warning breadcrumbs.",
+      "evidence": [
+        "packages/web/src/lib/data.ts",
+        "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts"
+      ]
+    },
+    "ssra": {
+      "status": "partial",
+      "score": 80,
+      "notes": "Release train and production proof remain mandatory before promotion.",
+      "evidence": [
+        "scripts/release-gate.mjs"
+      ]
+    },
+    "sas": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Owned, public, and private paths plus dependencies are explicit.",
+      "evidence": [
+        "packages/web/src/app/u/[handle]/module.sweetspot.json"
+      ]
+    },
+    "sva": {
+      "status": "partial",
+      "score": 80,
+      "notes": "The route uses the anonymous read client; dependency audit remains part of release proof.",
+      "evidence": [
+        "packages/web/src/lib/supabase.ts"
+      ]
+    },
+    "srls": {
+      "status": "passing",
+      "score": 90,
+      "notes": "The production aggregate migration is aligned and exposes SELECT policies without client write policies.",
+      "evidence": [
+        "docs/compliance/TRUST_MODEL.md",
+        "supabase/migrations/002_vibetracker_trust_signals.sql",
+        "supabase/migrations/003_vibetracker_daily_usage.sql",
+        "production migration 20260702120000 local=remote"
+      ]
+    },
+    "sev": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Only public Supabase URL and anonymous key variables are used.",
+      "evidence": [
+        "packages/web/src/lib/supabase.ts"
+      ]
+    },
+    "ssc": {
+      "status": "partial",
+      "score": 80,
+      "notes": "Dependencies are inherited from the web package and checked by the release audit.",
+      "evidence": [
+        "packages/web/package.json"
+      ]
+    },
+    "sai": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Lease, intent, decision, and source commit are recorded.",
+      "evidence": [
+        ".smarch/agent-context/adaptive-profile-depth.ndjson"
+      ]
+    }
+  },
+  "interfaces": {
+    "public_api": [
+      "GET /u/[handle]",
+      "readComplexity(profile, registry)"
+    ],
+    "adapters": [
+      "Supabase public aggregate views",
+      "provider registry"
+    ],
+    "required_dependencies": [
+      "next",
+      "react",
+      "@supabase/supabase-js"
+    ],
+    "forbidden_dependencies": [
+      "service-role client",
+      "raw prompt or output storage"
+    ]
+  },
+  "security": {
+    "rls": {
+      "required": true,
+      "status": "complete",
+      "matrix_path": "docs/compliance/TRUST_MODEL.md",
+      "negative_tests": [
+        "20260702120000: vibetracker_submissions has SELECT policy and no client write policy",
+        "20260702120000: vibetracker_submission_providers has SELECT policy and no client write policy",
+        "002/003: trust and daily aggregates have SELECT policies and no client write policies"
+      ]
+    },
+    "env": {
+      "required": true,
+      "status": "complete",
+      "variables": [
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          "scope": "public_client",
+          "required_in": [
+            "local",
+            "preview",
+            "production"
+          ]
+        },
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_URL",
+          "scope": "public_client",
+          "required_in": [
+            "local",
+            "preview",
+            "production"
+          ]
+        }
+      ]
+    },
+    "vulnerability_findings": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "report_paths": []
+    }
+  },
+  "supply_chain": {
+    "dependencies": [
+      {
+        "name": "next",
+        "version": "^16.1.1",
+        "purpose": "Server-rendered public route.",
+        "risk": "low"
+      },
+      {
+        "name": "react",
+        "version": "^19.0.0",
+        "purpose": "Profile panels and chart controls.",
+        "risk": "low"
+      },
+      {
+        "name": "@supabase/supabase-js",
+        "version": "^2.45.0",
+        "purpose": "Anonymous public aggregate reads.",
+        "risk": "medium"
+      }
+    ],
+    "licenses": [
+      "MIT"
+    ],
+    "checksums": [],
+    "sbom_path": ""
+  },
+  "quality": {
+    "score": 84,
+    "line_count": {
+      "max_file_lines": 357,
+      "over_600_count": 0
+    },
+    "code_budget": {
+      "status": "acceptable",
+      "feature_lines": 1450,
+      "file_count": 9,
+      "dependency_count": 3,
+      "notes": "The route is split by responsibility; no owned implementation file exceeds 500 lines."
+    },
+    "test_commands": [
+      "node --test packages/web/src/lib/__tests__/profile-complexity.test.ts packages/web/src/lib/__tests__/profile-route.test.ts packages/web/src/lib/__tests__/profile-data-telemetry.test.ts"
+    ],
+    "verification": [
+      {
+        "command": "pnpm sma:release-gate",
+        "status": "pass",
+        "timestamp": "2026-07-10T14:55:19Z",
+        "notes": "15 control-plane tests, 476 package tests, strict VTRS audit, and the real package-local TypeScript compiler passed."
+      }
+    ]
+  },
+  "clone": {
+    "readiness": "project_bound",
+    "adaptation_points": [
+      "profile data adapter",
+      "provider registry",
+      "route shell",
+      "public RLS policy"
+    ],
+    "install_steps": [
+      "Copy owned paths.",
+      "Wire the public profile data adapter.",
+      "Run the focused tests and release gate."
+    ],
+    "known_traps": [
+      "Trust signals are evidence, never usage or rank input.",
+      "Missing profiles return 404; backend failures must remain observable and rethrow.",
+      "Optional rollout tables may degrade only with a VTRS warning breadcrumb."
+    ]
+  },
+  "provenance": {
+    "created_by": {
+      "actor_kind": "agent",
+      "actor_id": "bdd-main@019f4b2d",
+      "provider": "OpenAI",
+      "model": "gpt-5-codex",
+      "role": "architect",
+      "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+      "commit": "2e22947e2b39996de9bc09d367d2485b37228343",
+      "files_touched": [
+        "packages/web/src/app/u/[handle]/module.sweetspot.json"
+      ],
+      "verification": [
+        {
+          "command": "pnpm sma:release-gate",
+          "status": "pass",
+          "timestamp": "2026-07-10T14:55:19Z",
+          "notes": "Current-tree release gate passed with 491 tests and real TypeScript compilation."
+        }
+      ],
+      "timestamp": "2026-07-10T14:35:26Z",
+      "summary": "Declared the adaptive public profile as an explicit project brick.",
+      "intent": "Make the adaptive profile independently owned, testable, observable, and retrievable.",
+      "decision_rationale": "A nested route brick keeps the high-change profile surface legible without splitting its deterministic policy from its UI contract.",
+      "lease_id": "lease-1783691824375-f04519f4",
+      "context_event_ids": [
+        "ctx-1783693869911-b452c30b"
+      ],
+      "attestation": {
+        "method": "git_commit",
+        "reference": "2e22947e2b39996de9bc09d367d2485b37228343"
+      }
+    },
+    "touched_by": [],
+    "reviewed_by": [],
+    "source_chain": [
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.public-profile.adaptive-depth",
+        "commit": "2e22947e2b39996de9bc09d367d2485b37228343",
+        "path": "packages/web/src/app/u/[handle]",
+        "event": "created",
+        "timestamp": "2026-07-10T14:35:26Z"
+      }
+    ]
+  }
+}

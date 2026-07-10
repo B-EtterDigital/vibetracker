@@ -22,6 +22,9 @@ supabase/.temp/
 graphify-out/
 cc.json
 
+# local SMA scanner cache (contains machine-absolute paths; regenerate on demand)
+.sweetspot/scans/
+
 # Local Netlify folder
 .netlify
 

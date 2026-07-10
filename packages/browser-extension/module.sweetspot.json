@@ -1,0 +1,270 @@
+{
+  "schema_version": "1.0.0",
+  "brick": {
+    "id": "000-vibetracker.package.packages-browser-extension.8db9d8b8",
+    "name": "Browser Extension",
+    "kind": "module_group",
+    "status": "project_bound",
+    "version": "0.1.0",
+    "language": [
+      "javascript",
+      "markdown",
+      "typescript"
+    ],
+    "frameworks": [],
+    "domain": [
+      "package",
+      "browser",
+      "extension"
+    ]
+  },
+  "hierarchy": {
+    "level": "brick",
+    "group_id": "000-vibetracker:packages",
+    "contains": [
+      "module",
+      "component",
+      "service",
+      "adapter",
+      "hook",
+      "utility",
+      "file"
+    ],
+    "component_policy": "internal_by_default",
+    "notes": "Bootstrap brick manifest. Gates must be proven before canonical status."
+  },
+  "source": {
+    "project": "000-vibetracker",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "2e22947e2b39996de9bc09d367d2485b37228343",
+    "paths": [
+      "packages/browser-extension"
+    ]
+  },
+  "owner": {
+    "primary": "Cyrill",
+    "team": "Better Digital",
+    "reviewers": []
+  },
+  "boundaries": {
+    "owned_paths": [
+      "packages/browser-extension"
+    ],
+    "public_paths": [
+      "packages/browser-extension/README.md"
+    ],
+    "private_paths": [],
+    "forbidden_imports": [
+      "client-side service-role keys",
+      "undocumented cross-brick private imports",
+      "unscoped privileged provider clients"
+    ],
+    "allowed_side_effects": []
+  },
+  "classification": {
+    "data_classes": [
+      "public"
+    ],
+    "risk": "low",
+    "notes": "Bootstrap classification. Manual data-flow review required before promotion."
+  },
+  "sweetspot": {
+    "ssa_v2": {
+      "status": "partial",
+      "score": 55,
+      "notes": "Bootstrap boundary. Needs manual SSA-v2 review and minimum-responsible-code proof.",
+      "evidence": []
+    },
+    "ssi": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "No UI runtime boundary detected.",
+      "evidence": []
+    },
+    "sstf": {
+      "status": "missing",
+      "score": 0,
+      "notes": "Tests must be mapped before promotion.",
+      "evidence": []
+    },
+    "spe": {
+      "status": "missing",
+      "score": 0,
+      "notes": "Performance budget must be measured before promotion.",
+      "evidence": []
+    },
+    "srs": {
+      "status": "partial",
+      "score": 35,
+      "notes": "Observability and degradation path need review.",
+      "evidence": []
+    },
+    "ssra": {
+      "status": "partial",
+      "score": 35,
+      "notes": "Release readiness is project-bound until gates are proven.",
+      "evidence": []
+    },
+    "sas": {
+      "status": "partial",
+      "score": 50,
+      "notes": "Agent ownership can be derived from this manifest but needs review.",
+      "evidence": []
+    },
+    "sva": {
+      "status": "partial",
+      "score": 45,
+      "notes": "Security scanner has not certified this brick.",
+      "evidence": []
+    },
+    "srls": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "No private data inferred by bootstrap.",
+      "evidence": []
+    },
+    "sev": {
+      "status": "partial",
+      "score": 45,
+      "notes": "Env contract needs explicit variables if runtime secrets are used.",
+      "evidence": []
+    },
+    "ssc": {
+      "status": "partial",
+      "score": 50,
+      "notes": "Supply-chain metadata is bootstrap-level.",
+      "evidence": []
+    },
+    "sai": {
+      "status": "partial",
+      "score": 60,
+      "notes": "Model/tool provenance recorded for manifest generation.",
+      "evidence": []
+    }
+  },
+  "interfaces": {
+    "public_api": [
+      "packages/browser-extension/README.md"
+    ],
+    "adapters": [],
+    "forbidden_dependencies": [
+      "direct-service-role-client"
+    ],
+    "required_dependencies": []
+  },
+  "security": {
+    "rls": {
+      "required": false,
+      "status": "not_applicable",
+      "negative_tests": []
+    },
+    "env": {
+      "required": false,
+      "status": "not_applicable",
+      "variables": []
+    },
+    "vulnerability_findings": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "report_paths": []
+    }
+  },
+  "supply_chain": {
+    "dependencies": [],
+    "licenses": [],
+    "checksums": [],
+    "sbom_path": ""
+  },
+  "quality": {
+    "score": 46,
+    "line_count": {
+      "max_file_lines": 204,
+      "over_600_count": 0
+    },
+    "code_budget": {
+      "status": "lean",
+      "feature_lines": 533,
+      "file_count": 8,
+      "dependency_count": 0,
+      "notes": "Bootstrap estimate from countable source/text files. Generated/vendor files need manual exceptions."
+    },
+    "test_commands": [
+      "pnpm test"
+    ],
+    "verification": [
+      {
+        "command": "pnpm test",
+        "status": "skipped",
+        "timestamp": "2026-07-10T14:31:17.829Z",
+        "notes": "Bootstrap manifest created before per-brick verification."
+      }
+    ]
+  },
+  "clone": {
+    "readiness": "manual_only",
+    "adaptation_points": [
+      "Confirm imports and runtime providers.",
+      "Confirm env variables and secrets.",
+      "Confirm RLS/authz/data contracts when data is touched."
+    ],
+    "install_steps": [
+      "Copy packages/browser-extension.",
+      "Copy or adapt declared runtime dependencies.",
+      "Run the verification commands and update this manifest."
+    ],
+    "known_traps": [
+      "Bootstrap manifest is not canonical proof.",
+      "Do not copy secrets, local env files, generated caches, or project-only assumptions.",
+      "Promote only after tests, security, RLS/env, and ownership are reviewed."
+    ]
+  },
+  "provenance": {
+    "created_by": {
+      "actor_kind": "automation",
+      "actor_id": "sma-bootstrap-manifests",
+      "role": "scanner",
+      "timestamp": "2026-07-10T14:31:17.829Z",
+      "summary": "Generated bootstrap manifest from scanner candidate."
+    },
+    "touched_by": [
+      {
+        "actor_kind": "ai_model",
+        "actor_id": "codex",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "scanner",
+        "session_id": "local-codex-session",
+        "files_touched": [
+          "packages/browser-extension/module.sweetspot.json"
+        ],
+        "verification": [
+          {
+            "command": "node $SMA_HOME/tools/sma-bootstrap-manifests.mjs --registry <scan-registry> --write",
+            "status": "pass",
+            "timestamp": "2026-07-10T14:31:17.829Z",
+            "notes": "Bootstrap generation completed; per-brick gates remain project-bound."
+          }
+        ],
+        "timestamp": "2026-07-10T14:31:17.829Z",
+        "summary": "Created SMA bootstrap metadata and hierarchy placement.",
+        "attestation": {
+          "method": "scanner",
+          "reference": "sma-bootstrap-manifests"
+        }
+      }
+    ],
+    "reviewed_by": [],
+    "source_chain": [
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.package.packages-browser-extension.8db9d8b8",
+        "commit": "3741fdd9b620f3fa0712d19384a275a81970f1e8",
+        "path": "packages/browser-extension",
+        "event": "created",
+        "timestamp": "2026-07-10T14:31:17.829Z"
+      }
+    ]
+  }
+}

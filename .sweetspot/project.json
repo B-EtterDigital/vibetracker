@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "project": {
+    "id": "000-vibetracker",
+    "name": "vibetrack",
+    "root": ".",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "2e22947e2b39996de9bc09d367d2485b37228343",
+    "stack": [
+      "pnpm",
+      "sma"
+    ]
+  },
+  "sma": {
+    "status": "bootstrap",
+    "generated_at": "2026-07-10T15:00:32.316Z",
+    "manifest_policy": "Every scanner candidate gets a project_bound manifest before promotion.",
+    "hierarchy": "Workspace > Project > Brick Group > Brick > Module > Submodule > Component/Service/Adapter/Hook/Utility > File"
+  }
+}

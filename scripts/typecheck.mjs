@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Lenient typecheck gate. Runs `tsc --noEmit` for every package that has a
-// tsconfig.json; passes cleanly during bootstrap when no TypeScript exists yet.
+// Workspace typecheck gate. Every package with a tsconfig must provide and run
+// its own TypeScript compiler; a missing compiler is a gate failure, never a skip.
 
 import { readdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -13,19 +13,22 @@ const PKGS = join(ROOT, "packages");
 let checked = 0;
 let failed = 0;
 
-// Can't run tsc without TypeScript + package deps installed. Skip cleanly until they are
-// (esbuild alone, used to build the CLI bundle, does not pull in tsc).
-if (!existsSync(join(ROOT, "node_modules", "typescript"))) {
-  console.log("✓ typecheck: TypeScript not installed (bundle-only build) — skipping tsc.");
-  process.exit(0);
-}
-
 if (existsSync(PKGS)) {
   for (const name of readdirSync(PKGS)) {
-    const cfg = join(PKGS, name, "tsconfig.json");
+    const packageRoot = join(PKGS, name);
+    const cfg = join(packageRoot, "tsconfig.json");
     if (!existsSync(cfg)) continue;
     checked++;
-    const r = spawnSync("npx", ["tsc", "-p", cfg, "--noEmit"], { cwd: ROOT, stdio: "inherit" });
+    const compiler = join(packageRoot, "node_modules", "typescript", "bin", "tsc");
+    if (!existsSync(compiler)) {
+      failed++;
+      console.error(`✗ typecheck: ${name} has tsconfig.json but no package-local TypeScript compiler.`);
+      continue;
+    }
+    const r = spawnSync(process.execPath, [compiler, "-p", cfg, "--noEmit"], {
+      cwd: packageRoot,
+      stdio: "inherit",
+    });
     if (r.status !== 0) failed++;
   }
 }

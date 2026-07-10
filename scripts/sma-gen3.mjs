@@ -21,7 +21,7 @@ if (argv.includes("check") || argv.includes("--check")) {
   const { ok, errors, warnings } = validateConfig(config);
   for (const w of warnings) console.warn(`⚠ warning: ${w}`);
   if (ok) {
-    console.log(`✓ sma.gen3.json valid — ${config.modules.length} modules, ${config.sharedHotPaths.length} shared hot paths, ${config.ciTiers.length} CI tiers.`);
+    console.log(`✓ sma.gen3.json valid — ${config.modules.length} modules, ${config.brickManifestPolicy.manifests.length} brick manifests, ${config.sharedHotPaths.length} shared hot paths, ${config.ciTiers.length} CI tiers.`);
     process.exit(0);
   }
   for (const e of errors) console.error(`✗ error: ${e}`);

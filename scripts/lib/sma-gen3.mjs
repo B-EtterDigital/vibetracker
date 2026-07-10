@@ -2,7 +2,7 @@
 // Portable, zero-dependency lane classifier + config validator.
 // Mirrors the C0X control plane; specialised via sma.gen3.json.
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -115,7 +115,7 @@ export function gitChangedFiles(root = REPO_ROOT) {
 }
 
 // Structural validation of sma.gen3.json. Returns { ok, errors, warnings }.
-export function validateConfig(config) {
+export function validateConfig(config, root = REPO_ROOT) {
   const errors = [];
   const warnings = [];
 
@@ -128,12 +128,26 @@ export function validateConfig(config) {
   if (!Array.isArray(config.ciTiers) || config.ciTiers.length === 0)
     warnings.push("ciTiers[] is empty — no CI tiers defined");
 
+  const manifestPolicy = config.brickManifestPolicy;
+  if (manifestPolicy?.required !== true) {
+    errors.push("brickManifestPolicy.required must be true");
+  }
+  if (manifestPolicy?.projectId !== config.project?.graphifyProjectId) {
+    errors.push("brickManifestPolicy.projectId must match project.graphifyProjectId");
+  }
+  if (!Array.isArray(manifestPolicy?.manifests) || manifestPolicy.manifests.length === 0) {
+    errors.push("brickManifestPolicy.manifests[] must be a non-empty array");
+  }
+
   const ids = new Set();
   for (const m of config.modules ?? []) {
     if (!m.id) errors.push("a module is missing an id");
     else if (ids.has(m.id)) errors.push(`duplicate module id: ${m.id}`);
     else ids.add(m.id);
     if (!Array.isArray(m.paths) || m.paths.length === 0) errors.push(`module ${m.id}: paths[] required`);
+    if (!m.manifest) errors.push(`module ${m.id}: manifest path required`);
+    else if (!manifestPolicy?.manifests?.includes(m.manifest))
+      errors.push(`module ${m.id}: manifest must be declared by brickManifestPolicy`);
     if (!Array.isArray(m.requiredLocalGates) || m.requiredLocalGates.length === 0)
       warnings.push(`module ${m.id}: no requiredLocalGates`);
   }
@@ -152,6 +166,42 @@ export function validateConfig(config) {
     if (!Array.isArray(hp.paths) || hp.paths.length === 0) errors.push(`sharedHotPath ${hp.id}: paths[] required`);
     if (!["high", "medium", "low"].includes(hp.risk)) warnings.push(`sharedHotPath ${hp.id}: risk should be high|medium|low`);
     if (!Array.isArray(hp.requiredGates) || hp.requiredGates.length === 0) warnings.push(`sharedHotPath ${hp.id}: no requiredGates`);
+  }
+
+  const manifestPaths = manifestPolicy?.manifests ?? [];
+  const seenManifestPaths = new Set();
+  const seenBrickIds = new Set();
+  for (const manifestPath of manifestPaths) {
+    if (seenManifestPaths.has(manifestPath)) {
+      errors.push(`duplicate brick manifest path: ${manifestPath}`);
+      continue;
+    }
+    seenManifestPaths.add(manifestPath);
+
+    const absolutePath = join(root, manifestPath);
+    if (!existsSync(absolutePath)) {
+      errors.push(`missing brick manifest: ${manifestPath}`);
+      continue;
+    }
+
+    let manifest;
+    try {
+      manifest = JSON.parse(readFileSync(absolutePath, "utf8"));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`invalid brick manifest ${manifestPath}: ${message}`);
+      continue;
+    }
+
+    if (manifest.schema_version !== "1.0.0")
+      errors.push(`brick manifest ${manifestPath}: schema_version must be 1.0.0`);
+    if (!manifest.brick?.id) errors.push(`brick manifest ${manifestPath}: brick.id required`);
+    else if (seenBrickIds.has(manifest.brick.id)) errors.push(`duplicate brick id: ${manifest.brick.id}`);
+    else seenBrickIds.add(manifest.brick.id);
+    if (manifest.source?.project !== manifestPolicy.projectId)
+      errors.push(`brick manifest ${manifestPath}: source.project must be ${manifestPolicy.projectId}`);
+    if (!Array.isArray(manifest.boundaries?.owned_paths) || manifest.boundaries.owned_paths.length === 0)
+      errors.push(`brick manifest ${manifestPath}: boundaries.owned_paths[] required`);
   }
 
   return { ok: errors.length === 0, errors, warnings };
