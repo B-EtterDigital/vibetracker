@@ -15,8 +15,13 @@ test("resolver returns a path only for ids with a real asset", () => {
   assert.equal(hasLogo("XAI"), true, "resolution is case-insensitive");
   assert.equal(logoPath("Anthropic"), "/provider-logos/anthropic.svg");
 
-  // Providers with no Simple Icons glyph resolve to null -> monogram fallback.
-  for (const missing of ["kling", "openai", "codex", "higgsfield", "runway", "not-a-provider"]) {
+  // OpenAI/Codex (svgrepo) and Runway (svgl) were sourced beyond Simple Icons.
+  assert.equal(hasLogo("openai"), true);
+  assert.equal(hasLogo("codex"), true);
+  assert.equal(logoPath("runway"), "/provider-logos/runway.svg");
+
+  // Providers with no available brand SVG resolve to null -> monogram fallback.
+  for (const missing of ["kling", "higgsfield", "udio", "luma", "not-a-provider"]) {
     assert.equal(hasLogo(missing), false, `${missing} should have no logo`);
     assert.equal(logoPath(missing), null, `${missing} should resolve to null`);
   }

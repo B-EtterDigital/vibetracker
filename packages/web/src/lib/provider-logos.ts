@@ -18,6 +18,8 @@ const LOGO_IDS: ReadonlySet<string> = new Set([
   "anthropic",
   "claude",
   "claude-code",
+  "codex", // OpenAI mark (svgrepo), reused for the Codex CLI family
+  "codex-cli",
   "deepseek",
   "elevenlabs",
   "gemini",
@@ -27,10 +29,12 @@ const LOGO_IDS: ReadonlySet<string> = new Set([
   "lmstudio",
   "mistral",
   "ollama",
+  "openai",
   "openrouter",
   "perplexity",
   "qwen",
   "replicate",
+  "runway", // svgl.app
   "suno",
   "xai",
 ]);
