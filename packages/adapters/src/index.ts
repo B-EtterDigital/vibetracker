@@ -72,7 +72,10 @@ export function createAdapterFromConfig(id: string, creds: ProviderCreds = {}, o
   switch (id) {
     case "claude-code": return createClaudeCodeAdapter(opts);
     case "codex":       return createCodexAdapter(opts);
-    case "higgsfield":  return createHiggsfieldAdapter(higgsfieldCli(), opts); // default: authenticated Higgsfield CLI; MCP transport available via createMcpClient
+    // default: authenticated Higgsfield CLI (MCP transport available via createMcpClient).
+    // creditUsd defaults to the current discounted top-up rate (~$0.05/credit, ~20 credits/$)
+    // so a flat-fee media source still surfaces a real, labelled USD estimate; opts can override.
+    case "higgsfield":  return createHiggsfieldAdapter(higgsfieldCli(), { creditUsd: 0.05, ...opts });
     case "openai":      return createOpenAIAdapter(openaiHttp({ adminKey: req(creds.adminKey, id, "adminKey") }), opts);
     case "anthropic":   return createAnthropicAdapter(anthropicHttp({ adminKey: req(creds.adminKey, id, "adminKey") }), opts);
     case "elevenlabs":  return createElevenLabsAdapter(elevenHttp({ apiKey: req(creds.apiKey, id, "apiKey") }), opts);
