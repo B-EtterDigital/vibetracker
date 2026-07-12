@@ -5,6 +5,7 @@
 import type { Adapter } from "../../core/src/adapter.js";
 
 import { createClaudeCodeAdapter } from "./claude-code/index.ts";
+import { createCodexAdapter } from "./codex/index.ts";
 import { createHiggsfieldAdapter, createMcpClient as higgsfieldMcp } from "./higgsfield/index.ts";
 import { createOpenAIAdapter } from "./openai/index.ts";
 import { createHttpClient as openaiHttp } from "./openai/client.ts";
@@ -70,6 +71,7 @@ function apiToken(creds: ProviderCreds, id: string): string {
 export function createAdapterFromConfig(id: string, creds: ProviderCreds = {}, opts: Record<string, unknown> = {}): Adapter {
   switch (id) {
     case "claude-code": return createClaudeCodeAdapter(opts);
+    case "codex":       return createCodexAdapter(opts);
     case "higgsfield":  return createHiggsfieldAdapter(higgsfieldMcp(), opts); // MCP client not wired yet — throws on use
     case "openai":      return createOpenAIAdapter(openaiHttp({ adminKey: req(creds.adminKey, id, "adminKey") }), opts);
     case "anthropic":   return createAnthropicAdapter(anthropicHttp({ adminKey: req(creds.adminKey, id, "adminKey") }), opts);
