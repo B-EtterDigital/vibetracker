@@ -25,6 +25,8 @@ import { createKlingAdapter } from "./kling/index.ts";
 import { createHttpClient as klingHttp } from "./kling/client.ts";
 import { createSunoAdapter } from "./suno/index.ts";
 import { createCookieClient as sunoCookie } from "./suno/client.ts";
+import { createSunoApiAdapter } from "./sunoapi/index.ts";
+import { createHttpClient as sunoapiHttp } from "./sunoapi/client.ts";
 import { createUdioAdapter } from "./udio/index.ts";
 import { createSessionClient as udioSession } from "./udio/client.ts";
 import { createOpenRouterAdapter } from "./openrouter/index.ts";
@@ -85,6 +87,7 @@ export function createAdapterFromConfig(id: string, creds: ProviderCreds = {}, o
     case "luma":        return createLumaAdapter(lumaHttp({ apiKey: req(creds.apiKey, id, "apiKey") }), opts);
     case "kling":       return createKlingAdapter(klingHttp({ accessKey: req(creds.accessKey, id, "accessKey"), secretKey: req(creds.secretKey, id, "secretKey") }), opts);
     case "suno":        return createSunoAdapter(sunoCookie({ sessionCookie: req(creds.sessionCookie, id, "sessionCookie") }), opts);
+    case "sunoapi":     return createSunoApiAdapter(sunoapiHttp({ apiKey: apiToken(creds, id) }), opts);
     case "udio":        return createUdioAdapter(udioSession({ sessionToken: req(creds.sessionToken, id, "sessionToken") }), opts);
     case "openrouter":  return createOpenRouterAdapter(openrouterHttp({ apiKey: req(creds.apiKey, id, "apiKey") }), opts);
     case "comfyui":     return createComfyUIAdapter(comfyuiHttp({ baseUrl: creds.apiKey })); // apiKey slot = optional base URL

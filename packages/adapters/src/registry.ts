@@ -83,7 +83,7 @@ export const PROVIDERS: ProviderDescriptor[] = [
   ai({ id: "sakana", label: "Sakana AI", categories: ["llm"], tier: "manual", auth: "none", status: "planned", verified: false, method: "manual until public billing API" }),
 
   // ===== AI — PLANNED (media / audio) =====
-  ai({ id: "sunoapi", label: "sunoapi.org", categories: ["music"], tier: "ledger", auth: "apiKey", status: "planned", verified: false, method: "3rd-party Suno API + credits" }),
+  ai({ id: "sunoapi", label: "sunoapi.org", categories: ["music"], tier: "balance", auth: "apiKey", status: "built", verified: true, method: "/api/v1/generate/credit balance (USD via creditUsd)" }),
   ai({ id: "stability", label: "Stability AI", categories: ["image", "video"], tier: "ledger", auth: "apiKey", status: "planned", verified: false, method: "balance/credits" }),
   ai({ id: "ideogram", label: "Ideogram", categories: ["image"], tier: "feed_recon", auth: "apiKey", status: "planned", verified: false, method: "feed" }),
   ai({ id: "leonardo", label: "Leonardo.ai", categories: ["image"], tier: "ledger", auth: "apiKey", status: "planned", verified: false, method: "token/credit usage" }),
