@@ -56,9 +56,13 @@ function niceStep(value: number): number {
   return s * pow;
 }
 const valueAt = (d: ChartDay, m: Metric): number => (m === "usd" ? d.usd : m === "credits" ? d.credits : d.ops);
-// A series plots dollars if it spends, else credits if it meters them, else raw operations.
-function metricOf(totalUsd: number, totalCredits: number): Metric {
-  if (totalUsd > 0) return "usd";
+// A series plots dollars only when spend is a real story (>= $10 total — a trivial $1 rounding
+// artifact from a flat-fee media source must not flatten its curve to a dead $0 line); otherwise
+// operations, the creator-facing activity signal, which every source carries.
+const USD_STORY_FLOOR = 10;
+function metricOf(totalUsd: number, totalOps: number, totalCredits: number): Metric {
+  if (totalUsd >= USD_STORY_FLOOR) return "usd";
+  if (totalOps > 0) return "ops";
   if (totalCredits > 0) return "credits";
   return "ops";
 }
@@ -89,6 +93,7 @@ export function ProfileUsageChart({ days, providers = [] }: { days: ChartDay[]; 
     const combined = align(sorted);
     const combinedMetric = metricOf(
       combined.reduce((s, d) => s + d.usd, 0),
+      combined.reduce((s, d) => s + d.ops, 0),
       combined.reduce((s, d) => s + d.credits, 0),
     );
     const provSeries = providers
@@ -97,7 +102,7 @@ export function ProfileUsageChart({ days, providers = [] }: { days: ChartDay[]; 
         const totalUsd = aligned.reduce((s, d) => s + d.usd, 0);
         const totalCredits = aligned.reduce((s, d) => s + d.credits, 0);
         const totalOps = aligned.reduce((s, d) => s + d.ops, 0);
-        return { id: p.id, label: p.label, color: p.color, aligned, metric: metricOf(totalUsd, totalCredits), rank: totalUsd || totalOps };
+        return { id: p.id, label: p.label, color: p.color, aligned, metric: metricOf(totalUsd, totalOps, totalCredits), rank: totalUsd || totalOps };
       })
       .filter((p) => p.rank > 0)
       .sort((a, b) => b.rank - a.rank);
