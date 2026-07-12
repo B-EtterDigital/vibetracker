@@ -223,6 +223,9 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
 
   return (
     <section className="vprofile">
+      <a className="vprofile-back" href="/">
+        <span aria-hidden="true">&#8592;</span> Leaderboard
+      </a>
       {sections.map((node, index) => (
         <div className="vprofile-slot" style={{ "--panel-i": index } as CSSProperties} key={index}>
           {node}

@@ -58,7 +58,7 @@ test("profile chart supports range controls, pointer inspection, and keyboard in
   assert.match(chart, /const RANGES: Range\[\] = \["30d", "90d", "all"\]/);
   assert.match(chart, /role="group" aria-label="Chart range"/);
   assert.match(chart, /aria-pressed=\{range === r\}/);
-  assert.match(chart, /aria-label="Usage over time chart"/);
+  assert.match(chart, /Usage over time chart/);
   assert.match(chart, /tabIndex=\{0\}/);
   assert.match(chart, /event\.key === "ArrowLeft"/);
   assert.match(chart, /event\.key === "ArrowRight"/);

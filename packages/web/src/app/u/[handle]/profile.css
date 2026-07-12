@@ -13,6 +13,18 @@
   animation-delay: calc(var(--panel-i, 0) * 90ms);
 }
 
+.vprofile-back {
+  justify-self: start;
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 500 12px/1 var(--vp-mono); letter-spacing: 0.04em; text-transform: uppercase;
+  color: rgba(217, 255, 242, 0.6); text-decoration: none;
+  padding: 4px 2px; transition: color 0.16s ease;
+}
+
+.vprofile-back:hover { color: #2ee8d6; }
+
+.vprofile-back:focus-visible { outline: 2px solid #2ee8d6; outline-offset: 3px; border-radius: 4px; }
+
 @keyframes vprofile-in {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -161,10 +173,32 @@
 .vprofile-stat-sub { font: 500 11px/1.4 var(--vp-mono); color: rgba(217, 255, 242, 0.45); }
 
 /* ---- usage chart ---- */
+/* GUTTER reserves a fixed-px left column for the Y-axis scale; the plot lives
+   right of it so SVG gridlines and HTML labels share one aligned box. */
 
-.vprofile-chart { display: grid; gap: 6px; }
+.vprofile-chart { --vp-gutter: 46px; display: grid; gap: 8px; }
 
-.vprofile-chart-ranges { display: flex; justify-content: flex-end; gap: 6px; }
+.vprofile-chart-top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+
+.vprofile-chart-legend { display: flex; align-items: center; gap: 16px; }
+
+.vprofile-chart-key {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 500 11px/1 var(--vp-mono); color: rgba(217, 255, 242, 0.62);
+}
+
+.vprofile-chart-swatch {
+  width: 14px; height: 3px; border-radius: 2px; background: #2ee8d6;
+}
+
+.vprofile-chart-swatch--avg {
+  background: repeating-linear-gradient(90deg, rgba(217, 255, 242, 0.55) 0 4px, transparent 4px 8px);
+}
+
+.vprofile-chart-ranges { display: flex; gap: 6px; }
 
 .vprofile-chart-range {
   appearance: none; cursor: pointer; padding: 4px 10px; border-radius: 999px;
@@ -176,11 +210,16 @@
 
 .vprofile-chart-stage { position: relative; }
 
-.vprofile-chart-stage svg { display: block; width: 100%; height: 220px; }
+.vprofile-chart-plot { position: relative; margin-left: var(--vp-gutter); }
+
+.vprofile-chart-plot svg { display: block; width: 100%; height: 240px; }
+
+.vprofile-chart-plot:focus-visible { outline: 2px solid #2ee8d6; outline-offset: 2px; border-radius: 4px; }
 
 .vprofile-chart-ylabel {
-  position: absolute; right: 4px; font: 500 10px/1 var(--vp-mono);
-  color: rgba(217, 255, 242, 0.45); pointer-events: none;
+  position: absolute; left: 0; width: calc(var(--vp-gutter) - 8px); text-align: right;
+  transform: translateY(-50%); font: 500 10.5px/1 var(--vp-mono);
+  color: rgba(217, 255, 242, 0.55); pointer-events: none;
 }
 
 .vprofile-chart-dot {
@@ -196,7 +235,7 @@
   white-space: nowrap; pointer-events: none; z-index: 2;
 }
 
-.vprofile-chart-xlabels { position: relative; height: 14px; }
+.vprofile-chart-xlabels { position: relative; height: 14px; margin-left: var(--vp-gutter); }
 
 .vprofile-chart-xlabels span {
   position: absolute; top: 0; font: 500 10px/1 var(--vp-mono);

@@ -2,7 +2,10 @@
 
 // One hero chart: usd/day over a selectable trailing range. Dates are parsed
 // deterministically from "YYYY-MM-DD" (no locale/timezone variance), so the
-// server-rendered markup and the hydrated client markup always match.
+// server-rendered markup and the hydrated client markup always match. The
+// vertical scale is a "nice"-rounded linear domain with gridlines, a legend,
+// and an average reference line, so spike days read against a clear axis
+// instead of crushing the daily signal.
 
 import { useMemo, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { formatInt, formatUsd } from "../../../lib/leaderboard";
@@ -19,6 +22,12 @@ type Range = "30d" | "90d" | "all";
 const RANGES: Range[] = ["30d", "90d", "all"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_MS = 86_400_000;
+// viewBox: horizontal is stretched to fill (preserveAspectRatio none); vertical
+// is locked 1:1 to the CSS height so HTML label overlays align to SVG gridlines.
+const VW = 1000;
+const VH = 240;
+const TOP = 14;
+const BASE = 226;
 
 function shortDate(date: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(date);
@@ -31,6 +40,16 @@ function toStamp(date: string): number {
 
 function toDate(stamp: number): string {
   return new Date(stamp).toISOString().slice(0, 10);
+}
+
+// Round a raw range up to a clean axis: a nice step (1/2/5 x 10^n) sized for
+// roughly four gridlines, then the smallest multiple of it that covers the max.
+function niceStep(value: number): number {
+  if (value <= 0) return 1;
+  const pow = Math.pow(10, Math.floor(Math.log10(value)));
+  const n = value / pow;
+  const s = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+  return s * pow;
 }
 
 export function ProfileUsageChart({ days }: { days: ChartDay[] }) {
@@ -50,33 +69,42 @@ export function ProfileUsageChart({ days }: { days: ChartDay[] }) {
       const day = byDate.get(toDate(t));
       points.push({ date: toDate(t), value: day ? (usdMode ? day.usd : day.credits) : 0 });
     }
-    let max = 0;
-    for (const p of points) max = Math.max(max, p.value);
-    return { points, max: Math.max(1, max), usdMode };
+    let rawMax = 0;
+    let sum = 0;
+    for (const p of points) {
+      rawMax = Math.max(rawMax, p.value);
+      sum += p.value;
+    }
+    const step = niceStep(Math.max(rawMax, 1) / 4);
+    const niceMax = Math.max(step, Math.ceil(rawMax / step) * step);
+    const ticks: number[] = [];
+    for (let v = 0; v <= niceMax + 1e-6; v += step) ticks.push(v);
+    return { points, max: niceMax, avg: sum / points.length, ticks, usdMode };
   }, [days, range]);
 
   if (!model) {
     return <p className="vprofile-dim-note">no daily series in this submission</p>;
   }
 
-  const { points, max, usdMode } = model;
+  const { points, max, avg, ticks, usdMode } = model;
   const denom = Math.max(1, points.length - 1);
-  const x = (i: number) => 10 + (i / denom) * 700;
-  const y = (v: number) => 210 - (v / max) * 190;
-  const line = points.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(2)} ${y(p.value).toFixed(2)}`).join(" ");
-  const area = `${line} L${x(points.length - 1).toFixed(2)} 210 L${x(0).toFixed(2)} 210 Z`;
-  const gridValue = (v: number) => (usdMode ? `$${Math.round(v).toLocaleString("en-US")}` : Math.round(v).toLocaleString("en-US"));
-  const tickCount = Math.min(8, points.length);
-  const ticks = [...new Set(
+  const x = (i: number) => (i / denom) * VW;
+  const y = (v: number) => BASE - (v / max) * (BASE - TOP);
+  const line = points.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p.value).toFixed(1)}`).join(" ");
+  const area = `${line} L${VW} ${BASE} L0 ${BASE} Z`;
+  const fmt = (v: number) => (usdMode ? `$${Math.round(v).toLocaleString("en-US")}` : Math.round(v).toLocaleString("en-US"));
+  const tickCount = Math.min(7, points.length);
+  const xticks = [...new Set(
     Array.from({ length: tickCount }, (_, k) => Math.round((k * (points.length - 1)) / Math.max(1, tickCount - 1))),
   )];
   const activePoint = active == null ? null : points[active];
+  const leftPct = (i: number) => (x(i) / VW) * 100;
+  const anchor = (pct: number) => (pct < 8 ? "0%" : pct > 92 ? "-100%" : "-50%");
 
   function onMove(event: MouseEvent<SVGSVGElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
     if (!rect.width) return;
-    const fx = ((event.clientX - rect.left) / rect.width) * 720;
-    const index = Math.round(((fx - 10) / 700) * denom);
+    const index = Math.round(((event.clientX - rect.left) / rect.width) * denom);
     setActive(Math.min(points.length - 1, Math.max(0, index)));
   }
 
@@ -87,105 +115,87 @@ export function ProfileUsageChart({ days }: { days: ChartDay[] }) {
     else if (event.key === "ArrowRight") next = Math.min(points.length - 1, current + 1);
     else if (event.key === "Home") next = 0;
     else if (event.key === "End") next = points.length - 1;
-    else if (event.key === "Escape") {
-      setActive(null);
-      return;
-    } else return;
+    else if (event.key === "Escape") return setActive(null);
+    else return;
     event.preventDefault();
     setActive(next);
   }
 
-  const tipLeft = active == null ? 0 : (x(active) / 720) * 100;
-  const anchor = (pct: number) => (pct < 8 ? "0%" : pct > 92 ? "-100%" : "-50%");
+  const unit = usdMode ? "USD per day" : "credits per day";
 
   return (
     <div className="vprofile-chart">
-      <div className="vprofile-chart-ranges" role="group" aria-label="Chart range">
-        {RANGES.map((r) => (
-          <button
-            type="button"
-            className="vprofile-chart-range"
-            aria-pressed={range === r}
-            onClick={() => {
-              setRange(r);
-              setActive(null);
-            }}
-            key={r}
-          >
-            {r}
-          </button>
-        ))}
-      </div>
-      <div
-        className="vprofile-chart-stage"
-        role="group"
-        aria-label="Usage over time chart"
-        tabIndex={0}
-        onKeyDown={onKey}
-        onBlur={() => setActive(null)}
-      >
-        <svg viewBox="0 0 720 220" preserveAspectRatio="none" onMouseMove={onMove} onMouseLeave={() => setActive(null)}>
-          <defs>
-            <linearGradient id="vp-area" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#2ee8d6" stopOpacity="0.34" />
-              <stop offset="0.55" stopColor="#2ee8d6" stopOpacity="0.12" />
-              <stop offset="1" stopColor="#2ee8d6" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          {[max, max / 2, 0].map((v) => (
-            <line
-              x1="10"
-              x2="710"
-              y1={y(v)}
-              y2={y(v)}
-              stroke="rgba(217,255,242,0.12)"
-              strokeWidth="1"
-              vectorEffect="non-scaling-stroke"
-              key={`grid-${v}`}
-            />
+      <div className="vprofile-chart-top">
+        <div className="vprofile-chart-legend" aria-hidden="true">
+          <span className="vprofile-chart-key"><i className="vprofile-chart-swatch" />{unit}</span>
+          <span className="vprofile-chart-key"><i className="vprofile-chart-swatch vprofile-chart-swatch--avg" />avg {fmt(avg)}/day</span>
+        </div>
+        <div className="vprofile-chart-ranges" role="group" aria-label="Chart range">
+          {RANGES.map((r) => (
+            <button
+              type="button"
+              className="vprofile-chart-range"
+              aria-pressed={range === r}
+              onClick={() => {
+                setRange(r);
+                setActive(null);
+              }}
+              key={r}
+            >
+              {r}
+            </button>
           ))}
-          <path d={area} fill="url(#vp-area)" stroke="none" />
-          <path d={line} fill="none" stroke="#2ee8d6" strokeWidth="2.25" vectorEffect="non-scaling-stroke" />
-          {activePoint ? (
-            <line
-              x1={x(active as number)}
-              x2={x(active as number)}
-              y1="20"
-              y2="210"
-              stroke="rgba(46,232,214,0.45)"
-              strokeWidth="1"
-              vectorEffect="non-scaling-stroke"
-            />
-          ) : null}
-        </svg>
-        {[max, max / 2, 0].map((v) => (
-          <span className="vprofile-chart-ylabel" style={{ top: `${y(v) - 14}px` }} key={`ylabel-${v}`}>
-            {gridValue(v)}
+        </div>
+      </div>
+      <div className="vprofile-chart-stage">
+        {ticks.map((v) => (
+          <span className="vprofile-chart-ylabel" style={{ top: `${y(v)}px` }} key={`yl-${v}`}>
+            {fmt(v)}
           </span>
         ))}
-        {activePoint ? (
-          <>
-            <span
-              className="vprofile-chart-dot"
-              style={{ left: `${tipLeft}%`, top: `${y(activePoint.value)}px` }}
-              aria-hidden="true"
-            />
-            <span
-              className="vprofile-chart-tip"
-              style={{ left: `${tipLeft}%`, top: `${y(activePoint.value) - 10}px`, transform: `translate(${anchor(tipLeft)}, -100%)` }}
-              aria-live="polite"
-            >
-              {activePoint.date} · {usdMode ? formatUsd(activePoint.value) : `${formatInt(activePoint.value)} cr`}
-            </span>
-          </>
-        ) : null}
+        <div
+          className="vprofile-chart-plot"
+          role="group"
+          aria-label={`Usage over time chart. ${unit}, peak ${fmt(max)}, average ${fmt(avg)}.`}
+          tabIndex={0}
+          onKeyDown={onKey}
+          onBlur={() => setActive(null)}
+        >
+          <svg viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" onMouseMove={onMove} onMouseLeave={() => setActive(null)}>
+            <defs>
+              <linearGradient id="vp-area" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#2ee8d6" stopOpacity="0.34" />
+                <stop offset="0.55" stopColor="#2ee8d6" stopOpacity="0.12" />
+                <stop offset="1" stopColor="#2ee8d6" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {ticks.map((v) => (
+              <line x1="0" x2={VW} y1={y(v)} y2={y(v)} stroke="rgba(217,255,242,0.1)" strokeWidth="1" vectorEffect="non-scaling-stroke" key={`g-${v}`} />
+            ))}
+            <line x1="0" x2={VW} y1={y(avg)} y2={y(avg)} stroke="rgba(217,255,242,0.28)" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
+            <path d={area} fill="url(#vp-area)" stroke="none" />
+            <path d={line} fill="none" stroke="#2ee8d6" strokeWidth="2.25" vectorEffect="non-scaling-stroke" />
+            {activePoint ? (
+              <line x1={x(active as number)} x2={x(active as number)} y1={TOP} y2={BASE} stroke="rgba(46,232,214,0.45)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+            ) : null}
+          </svg>
+          {activePoint ? (
+            <>
+              <span className="vprofile-chart-dot" style={{ left: `${leftPct(active as number)}%`, top: `${y(activePoint.value)}px` }} aria-hidden="true" />
+              <span
+                className="vprofile-chart-tip"
+                style={{ left: `${leftPct(active as number)}%`, top: `${y(activePoint.value) - 10}px`, transform: `translate(${anchor(leftPct(active as number))}, -100%)` }}
+                aria-live="polite"
+              >
+                {shortDate(activePoint.date)} · {usdMode ? formatUsd(activePoint.value) : `${formatInt(activePoint.value)} cr`}
+              </span>
+            </>
+          ) : null}
+        </div>
       </div>
       <div className="vprofile-chart-xlabels" aria-hidden="true">
-        {ticks.map((i) => (
-          <span
-            style={{ left: `${(x(i) / 720) * 100}%`, transform: `translateX(${anchor((x(i) / 720) * 100)})` }}
-            key={`tick-${i}`}
-          >
+        {xticks.map((i) => (
+          <span style={{ left: `${leftPct(i)}%`, transform: `translateX(${anchor(leftPct(i))})` }} key={`xt-${i}`}>
             {shortDate(points[i].date)}
           </span>
         ))}
