@@ -292,14 +292,15 @@
 /* The whole stage tilts as one plane so gridlines, y-labels and bands stay aligned; bands carry
    soft shadows + a staggered rise so the stack reads as dimensional, not a flat area chart. */
 .vprofile-chart--stacked .vprofile-chart-stage {
-  transform: perspective(1600px) rotateX(6deg);
-  transform-origin: 50% 72%;
-  transition: transform 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  transform: perspective(1400px) rotateX(11deg);
+  transform-origin: 50% 78%;
+  transition: transform 460ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-.vprofile-chart-plot--3d svg { filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.4)); }
+.vprofile-chart-plot--3d { transform-style: preserve-3d; }
+.vprofile-chart-plot--3d svg { filter: drop-shadow(0 14px 20px rgba(0, 0, 0, 0.5)); }
 
-.vprofile-band { filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.42)); }
+.vprofile-band { filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.5)); }
 
 .vprofile-band > path:first-child { animation: vprofile-band-rise 520ms cubic-bezier(0.22, 0.61, 0.36, 1) both; animation-delay: calc(var(--band-i) * 55ms); transform-origin: 50% 100%; }
 

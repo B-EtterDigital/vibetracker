@@ -109,9 +109,11 @@ export function ProfileUsageChart({ days, providers = [] }: { days: ChartDay[]; 
   const selected = typeof view === "object" ? provSeries.find((p) => p.id === view.provider) ?? null : null;
   const stacked = view === "stacked";
 
-  // Metric + colour for the active lens. Stacking must share one metric across bands (you cannot
-  // stack dollars onto operations), so it uses the combined metric; single lenses use their own.
-  const metric: Metric = stacked ? combinedMetric : selected ? selected.metric : combinedMetric;
+  // Metric + colour for the active lens. Stacking shares one metric across every band and uses
+  // OPERATIONS on purpose: dollars are dominated by one coding source, but ops balance coding and
+  // media into a colourful "all your activity, together" stack. Single lenses use their own metric
+  // (usd for spend-bearing coding, ops for a flat-fee media source), "All" keeps the usd headline.
+  const metric: Metric = stacked ? "ops" : selected ? selected.metric : combinedMetric;
   const activeColor = view === "all" ? COMBINED_COLOR : selected ? selected.color : COMBINED_COLOR;
 
   const single = view === "all" ? combined.map((d) => valueAt(d, metric)) : selected ? selected.aligned.map((d) => valueAt(d, metric)) : combined.map((d) => valueAt(d, metric));
