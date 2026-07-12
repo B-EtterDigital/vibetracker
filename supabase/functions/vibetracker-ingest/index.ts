@@ -26,6 +26,10 @@ function optionalDailyUsageStorageError(message: string): boolean {
   return /vibetracker_submission_daily_usage|schema cache|does not exist|relation .* not found/i.test(message);
 }
 
+function optionalCategoryStorageError(message: string): boolean {
+  return /vibetracker_submission_categories|schema cache|does not exist|relation .* not found/i.test(message);
+}
+
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -100,6 +104,22 @@ async function sha256Hex(input: string): Promise<string> {
     }
   }
 
+  let categoriesPersisted = 0;
+  let categoryWarning: string | undefined;
+  if (result.byCategory.length) {
+    const rows = result.byCategory.map((r) => ({
+      submission_id: sub.id, category: r.category, ops: r.ops, credits: r.credits, usd: r.usd ?? 0,
+    }));
+    const { error: bcErr } = await admin.from("vibetracker_submission_categories").insert(rows);
+    if (bcErr) {
+      categoryWarning = optionalCategoryStorageError(bcErr.message)
+        ? "category aggregate table not deployed yet; profile falls back to provider-primary category rollup"
+        : `categories: ${bcErr.message}`;
+    } else {
+      categoriesPersisted = rows.length;
+    }
+  }
+
   let trustSignalsPersisted = 0;
   let trustSignalWarning: string | undefined;
   if (result.trustSignals.length) {
@@ -127,8 +147,11 @@ async function sha256Hex(input: string): Promise<string> {
     accepted: result.accepted, rejected: result.rejected,
     totals: result.totals, byProvider: result.byProvider,
     byDay: result.byDay,
+    byCategory: result.byCategory,
     dailyUsagePersisted,
     ...(dailyUsageWarning ? { dailyUsageWarning } : {}),
+    categoriesPersisted,
+    ...(categoryWarning ? { categoryWarning } : {}),
     trustSignals: result.trustSignals.length,
     trustSignalsPersisted,
     ...(trustSignalWarning ? { trustSignalWarning } : {}),

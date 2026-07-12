@@ -24,7 +24,7 @@ const profile: ProfileView = {
     { date: "2026-07-04", ops: 800, credits: 400, usd: 20 },
     { date: "2026-07-05", ops: 1000, credits: 550, usd: 30 },
   ],
-  trustSignals: [{
+  categories: [], trustSignals: [{
     kind: "github_activity",
     source: "github_cli",
     label: "GitHub activity evidence (not AI usage)",

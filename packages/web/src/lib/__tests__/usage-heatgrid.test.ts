@@ -24,7 +24,7 @@ const baseProfile: ProfileView = {
     { date: "2026-07-02", ops: 50, credits: 15, usd: 2 },
     { date: "2026-07-03", ops: 100, credits: 25, usd: 8 },
   ],
-  trustSignals: [],
+  categories: [], trustSignals: [],
 };
 
 test("usage heatgrid uses official GitHub contribution colors for usage rhythm", () => {

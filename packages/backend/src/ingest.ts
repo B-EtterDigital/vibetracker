@@ -25,6 +25,7 @@ export interface UploadBundle {
 
 export interface ProviderRollup { provider: string; ops: number; credits: number; usd?: number }
 export interface DailyRollup { date: string; ops: number; credits: number; usd?: number }
+export interface CategoryRollup { category: string; ops: number; credits: number; usd?: number }
 
 export interface IngestResult {
   ok: boolean;
@@ -37,6 +38,9 @@ export interface IngestResult {
   totals: { count: number; credits: number; usd?: number; providers: number };
   byProvider: ProviderRollup[];              // the ONLY breakdown that leaves the server
   byDay: DailyRollup[];                      // aggregate-only rhythm data for public heatgrids
+  byCategory: CategoryRollup[];              // true per-record category rollup (Vibe Categories) — a
+                                             // single provider (e.g. Higgsfield) splits across image/
+                                             // video/3d here, which a provider-primary rollup cannot do
   trustSignals: TrustSignal[];               // labelled evidence only; never counted in totals
 }
 
@@ -188,6 +192,8 @@ export function handleIngest(payload: unknown, opts: { userId?: string; maxRecor
   const byDay: DailyRollup[] = aggregate(accepted, "day")
     .sort((a, b) => a.key.localeCompare(b.key))
     .map((r) => ({ date: r.key, ops: r.count, credits: r.credits, usd: r.usd }));
+  const byCategory: CategoryRollup[] = aggregate(accepted, "category")
+    .map((r) => ({ category: r.key, ops: r.count, credits: r.credits, usd: r.usd }));
   const trustSignals = sanitizeTrustSignals(bundle.trustSignals);
 
   // Individual records are intentionally NOT returned — only aggregates leave here.
@@ -202,6 +208,7 @@ export function handleIngest(payload: unknown, opts: { userId?: string; maxRecor
     totals: { count: t.count, credits: t.credits, usd: t.usd, providers: t.providers },
     byProvider,
     byDay,
+    byCategory,
     trustSignals,
   };
 }

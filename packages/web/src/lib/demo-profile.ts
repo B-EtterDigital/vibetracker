@@ -27,6 +27,19 @@ const PROVIDER_ROWS: ProfileView["providers"] = [
   { provider: "ollama", ops: 2350, credits: 0, usd: 0 },
 ];
 
+// Vibe Categories from each record's OWN category — Higgsfield's 1450 ops split across
+// image/video/3d here, which a provider-primary rollup collapses into one. ops sum to
+// TOTAL_OPS and usd to TOTAL_USD so the specialization panel never drifts from the board.
+const CATEGORY_ROWS: ProfileView["categories"] = [
+  { category: "coding", ops: 9110, credits: 16000, usd: 1022 },
+  { category: "research", ops: 5690, credits: 6000, usd: 338 },
+  { category: "image", ops: 1580, credits: 12000, usd: 380 },
+  { category: "video", ops: 1530, credits: 17000, usd: 620 },
+  { category: "music", ops: 920, credits: 3600, usd: 214 },
+  { category: "voice", ops: 620, credits: 1300, usd: 76 },
+  { category: "3d", ops: 250, credits: 5400, usd: 118 },
+];
+
 // latest is BY CONSTRUCTION the sum of the provider rows, so the board's total, the provider
 // bars, and the daily series can never drift apart.
 const TOTAL_USD = PROVIDER_ROWS.reduce((sum, row) => sum + row.usd, 0); // 2768
@@ -137,6 +150,7 @@ export function buildDemoProfile(): ProfileView {
     // Fresh copies on every call so callers can never mutate the module's fixtures.
     providers: PROVIDER_ROWS.map((row) => ({ ...row })),
     usageDays: usdCents.map((cents, i) => ({ date: dayDate(i), ops: ops[i], credits: credits[i], usd: cents / 100 })),
+    categories: CATEGORY_ROWS.map((row) => ({ ...row })),
     trustSignals: structuredClone(TRUST_SIGNALS),
   };
 }

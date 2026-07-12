@@ -21,7 +21,7 @@ const profile: ProfileView = {
   usageDays: [
     { date: "2026-07-05", ops: 1200, credits: 42, usd: 12.34 },
   ],
-  trustSignals: [{
+  categories: [], trustSignals: [{
     kind: "github_activity",
     source: "github_cli",
     label: "GitHub activity evidence (not AI usage)",

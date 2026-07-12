@@ -49,6 +49,7 @@ export interface ProfileView {
   latest: { total_usd: number; total_credits: number; record_count: number; created_at: string; tier: string } | null;
   providers: Array<{ provider: string; ops: number; credits: number; usd: number }>;
   usageDays: Array<{ date: string; ops: number; credits: number; usd: number }>;
+  categories: Array<{ category: string; ops: number; credits: number; usd: number }>;
   trustSignals: ProfileTrustSignal[];
 }
 
@@ -100,6 +101,29 @@ async function usageDaysFor(submissionId: string): Promise<ProfileView["usageDay
   }).filter((row) => /^\d{4}-\d{2}-\d{2}$/.test(row.date));
 }
 
+async function categoriesFor(submissionId: string): Promise<ProfileView["categories"]> {
+  const { data, error } = await supabaseServer()
+    .from("vibetracker_submission_categories")
+    .select("category,ops,credits,usd")
+    .eq("submission_id", submissionId)
+    .limit(40);
+  // Additive table — older C0VIBE deployments predate it. The profile page falls back to
+  // a provider-primary category rollup when this returns empty, so it never fails the page.
+  if (error) {
+    reportOptionalFallback("profile.categories.fallback", error);
+    return [];
+  }
+  return (data ?? []).map((row) => {
+    const r = row as { category?: string; ops?: number; credits?: number; usd?: number };
+    return {
+      category: String(r.category ?? ""),
+      ops: Number(r.ops ?? 0),
+      credits: Number(r.credits ?? 0),
+      usd: Number(r.usd ?? 0),
+    };
+  }).filter((row) => row.category.length > 0);
+}
+
 export async function getProfile(handle: string): Promise<ProfileView | null> {
   try {
     const sb = supabaseServer();
@@ -121,6 +145,7 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
     }
 
     const usageDays = latest ? await usageDaysFor(latest.id) : [];
+    const categories = latest ? await categoriesFor(latest.id) : [];
     const trustSignals = latest ? await trustSignalsFor(latest.id) : [];
 
     return {
@@ -130,6 +155,7 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
       latest: latest ? { total_usd: latest.total_usd, total_credits: latest.total_credits, record_count: latest.record_count, created_at: latest.created_at, tier: latest.tier } : null,
       providers,
       usageDays,
+      categories,
       trustSignals,
     };
   } catch (error) {

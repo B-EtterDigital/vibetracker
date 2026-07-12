@@ -140,6 +140,7 @@ export function buildScoreLabProfile(input: ScoreLabInput, nowMs = Date.now()): 
     } : null,
     providers,
     usageDays,
+    categories: hasUsage ? [{ category: "coding", ops: value.records, credits: Math.round(value.records * 0.72), usd: value.usd }] : [],
     trustSignals,
   };
 }

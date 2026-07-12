@@ -158,26 +158,35 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   ];
 
   // Specialization ranks by creation ACTIVITY (ops/generations), not spend, so a
-  // creator's real work surfaces: a thousand image gens on a flat media
-  // subscription would vanish under dollar-ranking, yet it is exactly what the
-  // viber makes. This matches the ops-weighted identity read. usd rides along as
-  // context in the label.
-  const categoryOps = new Map<string, number>();
-  const categoryUsd = new Map<string, number>();
-  for (const p of profile.providers) {
-    const category = primaryCategory(p.provider);
-    categoryOps.set(category, (categoryOps.get(category) ?? 0) + p.ops);
-    categoryUsd.set(category, (categoryUsd.get(category) ?? 0) + p.usd);
-  }
-  const opsTotal = [...categoryOps.values()].reduce((sum, ops) => sum + ops, 0);
-  const categories = [...categoryOps.entries()]
-    .filter(([, ops]) => ops > 0)
-    .sort((a, b) => b[1] - a[1])
-    .map(([category, ops]): MixBar => ({
-      id: category,
-      label: vibeLabel(category),
-      amount: `${formatInt(ops)} ops · ${formatUsd(categoryUsd.get(category) ?? 0)} · ${shareLabel(ops, opsTotal)}%`,
-      share: opsTotal > 0 ? (ops / opsTotal) * 100 : 0,
+  // creator's real work surfaces: a thousand image gens on a flat media subscription
+  // would vanish under dollar-ranking, yet it is exactly what the viber makes. This
+  // matches the ops-weighted identity read. usd rides along as context in the label.
+  //
+  // Categories come from each record's OWN category (profile.categories) so one provider
+  // (Higgsfield) splits across AI Image / Video / 3D — a provider-primary rollup cannot.
+  // Older submissions predate that aggregate: fall back to the provider-primary rollup so
+  // their profiles still render.
+  const categorySource = profile.categories.length > 0
+    ? profile.categories.map((c) => ({ id: c.category, ops: c.ops, usd: c.usd }))
+    : (() => {
+        const ops = new Map<string, number>();
+        const usd = new Map<string, number>();
+        for (const p of profile.providers) {
+          const category = primaryCategory(p.provider);
+          ops.set(category, (ops.get(category) ?? 0) + p.ops);
+          usd.set(category, (usd.get(category) ?? 0) + p.usd);
+        }
+        return [...ops.entries()].map(([id, o]) => ({ id, ops: o, usd: usd.get(id) ?? 0 }));
+      })();
+  const opsTotal = categorySource.reduce((sum, c) => sum + c.ops, 0);
+  const categories = categorySource
+    .filter((c) => c.ops > 0)
+    .sort((a, b) => b.ops - a.ops)
+    .map((c): MixBar => ({
+      id: c.id,
+      label: vibeLabel(c.id),
+      amount: `${formatInt(c.ops)} ops · ${formatUsd(c.usd)} · ${shareLabel(c.ops, opsTotal)}%`,
+      share: opsTotal > 0 ? (c.ops / opsTotal) * 100 : 0,
     }));
 
   const trustChips = profile.trustSignals.map((signal) => ({
