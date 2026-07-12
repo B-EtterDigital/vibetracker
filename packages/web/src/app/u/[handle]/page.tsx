@@ -7,6 +7,7 @@ import { providerBrand } from "../../../lib/provider-brand";
 import { readComplexity } from "../../../lib/profile-complexity";
 import { trustSignalMark, trustSignalMetric, trustSignalTitle, trustSignalWindow } from "../../../lib/profile-trust";
 import { PROVIDERS } from "../../../../../adapters/src/index";
+import { vibeCategoryFor, vibeLabel } from "../../../../../core/src/vibe-categories";
 import {
   CategoryMix,
   DemoBanner,
@@ -133,7 +134,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
         from: brand.from,
         to: brand.to,
         ink: brand.ink,
-        tag: primaryCategory(p.provider),
+        tag: vibeCategoryFor(primaryCategory(p.provider)).short,
       };
     }),
     more: rest.length ? `+${rest.length} more · ${formatUsd(restUsd)}` : null,
@@ -166,7 +167,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     .sort((a, b) => b[1] - a[1])
     .map(([category, usd]): MixBar => ({
       id: category,
-      label: category,
+      label: vibeLabel(category),
       amount: `${formatUsd(usd)} · ${shareLabel(usd, categoryUsd)}%`,
       share: categoryUsd > 0 ? (usd / categoryUsd) * 100 : 0,
     }));

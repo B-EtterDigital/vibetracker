@@ -10,6 +10,7 @@ import type { ComplexityRead, SignalTier } from "../../../lib/profile-complexity
 import { GITHUB_LEVEL_COLORS } from "../../../lib/profile-trust";
 import type { Tier } from "../../../lib/leaderboard";
 import { ProfileUsageChart, type ChartDay } from "./profile-chart";
+import { vibeColor } from "../../../../../core/src/vibe-categories";
 
 const DAY_MS = 86_400_000;
 
@@ -40,7 +41,7 @@ const TIER_MARKS: Array<{ id: SignalTierName; at: number }> = [
 function identityColor(identity: IdentityRead): string {
   if (identity.kind === "allrounder") return "#2ee8d6";
   if (identity.kind === "forming") return "#ffc64d";
-  return CATEGORY_COLORS[identity.topCategory ?? "other"] ?? "#7a8a93";
+  return vibeColor(identity.topCategory);
 }
 
 export interface BrandChip {
@@ -309,7 +310,7 @@ export function CategoryMix({ rows, sub }: { rows: MixBar[]; sub: string }) {
       <div className="vprofile-bars" role="group" aria-label="Where the usage lives, by primary category">
         {rows.map((bar, index) => (
           <BarRow
-            bar={{ ...bar, color: CATEGORY_COLORS[bar.id] ?? "#7a8a93", top: index === 0 }}
+            bar={{ ...bar, color: vibeColor(bar.id), top: index === 0 }}
             key={bar.id}
           />
         ))}
