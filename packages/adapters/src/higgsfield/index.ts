@@ -67,5 +67,5 @@ export function createHiggsfieldAdapter(client: HiggsfieldClient, opts: Higgsfie
   };
 }
 
-export { createFixtureClient, createMcpClient } from "./client.ts";
-export type { HiggsfieldClient, HiggsfieldTx, HiggsfieldBalance, HiggsfieldPage } from "./client.ts";
+export { createFixtureClient, createCliClient, createMcpClient } from "./client.ts";
+export type { HiggsfieldClient, HiggsfieldTx, HiggsfieldBalance, HiggsfieldPage, HiggsfieldCliRunner, HiggsfieldCliClientOpts, HiggsfieldMcpClientOpts } from "./client.ts";

@@ -6,7 +6,7 @@ import type { Adapter } from "../../core/src/adapter.js";
 
 import { createClaudeCodeAdapter } from "./claude-code/index.ts";
 import { createCodexAdapter } from "./codex/index.ts";
-import { createHiggsfieldAdapter, createMcpClient as higgsfieldMcp } from "./higgsfield/index.ts";
+import { createHiggsfieldAdapter, createCliClient as higgsfieldCli } from "./higgsfield/index.ts";
 import { createOpenAIAdapter } from "./openai/index.ts";
 import { createHttpClient as openaiHttp } from "./openai/client.ts";
 import { createAnthropicAdapter } from "./anthropic/index.ts";
@@ -72,7 +72,7 @@ export function createAdapterFromConfig(id: string, creds: ProviderCreds = {}, o
   switch (id) {
     case "claude-code": return createClaudeCodeAdapter(opts);
     case "codex":       return createCodexAdapter(opts);
-    case "higgsfield":  return createHiggsfieldAdapter(higgsfieldMcp(), opts); // MCP client not wired yet — throws on use
+    case "higgsfield":  return createHiggsfieldAdapter(higgsfieldCli(), opts); // default: authenticated Higgsfield CLI; MCP transport available via createMcpClient
     case "openai":      return createOpenAIAdapter(openaiHttp({ adminKey: req(creds.adminKey, id, "adminKey") }), opts);
     case "anthropic":   return createAnthropicAdapter(anthropicHttp({ adminKey: req(creds.adminKey, id, "adminKey") }), opts);
     case "elevenlabs":  return createElevenLabsAdapter(elevenHttp({ apiKey: req(creds.apiKey, id, "apiKey") }), opts);
