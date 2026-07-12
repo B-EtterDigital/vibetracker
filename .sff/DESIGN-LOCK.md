@@ -1,6 +1,6 @@
 # DESIGN-LOCK - VibeTRACKER (SFF v1, 2026-07-06)
 
-Direction: calm instrument dashboard (amended 2026-07-10 on explicit user order: "stunning, not overwhelming"). Viberank-derived data cards, one hero chart per surface, honest labeled metrics, terminal soul kept in type and labels only. Theatre panels are encore-only behind an explicit disclosure, never the default surface. Results reveal adaptively: panel depth follows the complexity of the viewer's own data (fresh / operator / supernova signal tiers). ## LOCKED
+Direction: calm instrument dashboard (amended 2026-07-10 on explicit user order: "stunning, not overwhelming"). Viberank-derived data cards, one hero chart per surface, honest labeled metrics, terminal soul kept in type and labels only. Theatre panels are encore-only behind an explicit disclosure, never the default surface. Results reveal adaptively: panel depth follows the complexity of the viewer's own data across five hardened signal tiers (ember / spark / current / surge / supernova; Supernova is top-percentile at 85+, never a default finish line). ## LOCKED
 Prior direction (2026-07-06 "terminal-grade operator console with branded provider theatre") is superseded; local-first proof rails and no-confetti motion remain binding.
 
 Tournament: selected "inline terminal command center" over "glossy SaaS bento" and "plain leaderboard shell" because VibeTRACKER needs to feel like a serious scanner first and a public profile second.

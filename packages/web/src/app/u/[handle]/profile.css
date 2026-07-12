@@ -88,9 +88,11 @@
 
 .vprofile-chip-signal i { font-style: normal; font-weight: 500; color: rgba(217, 255, 242, 0.45); }
 
-.vprofile-signal-fresh { color: #ffc64d; border-color: rgba(255, 198, 77, 0.4); }
-.vprofile-signal-operator { color: #2ee8d6; border-color: rgba(46, 232, 214, 0.4); }
-.vprofile-signal-supernova { color: #36e39b; border-color: rgba(54, 227, 155, 0.4); }
+.vprofile-signal-ember { color: #ffc64d; border-color: rgba(255, 198, 77, 0.4); }
+.vprofile-signal-spark { color: #ff9d4d; border-color: rgba(255, 157, 77, 0.4); }
+.vprofile-signal-current { color: #2ee8d6; border-color: rgba(46, 232, 214, 0.4); }
+.vprofile-signal-surge { color: #36e39b; border-color: rgba(54, 227, 155, 0.4); }
+.vprofile-signal-supernova { color: #9f7cff; border-color: rgba(159, 124, 255, 0.4); }
 
 .vprofile-joined { font: 500 11px/1 var(--vp-mono); color: rgba(217, 255, 242, 0.45); }
 

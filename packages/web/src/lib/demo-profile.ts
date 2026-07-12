@@ -13,17 +13,20 @@ const DAYS = 120;
 
 // Per-provider verbatim targets (usd / credits / ops). Every id must exist in the real adapter
 // registry; "codex-cli" is the live registry id for Codex (same hyphenation fix as llama-cpp).
+// A curated top-viber sample: broad sources, a year-plus of history, media + local, and a
+// six-figure coding spend, so it lands at Surge and renders every panel (a "fully unlocked board"
+// per the design lock). Totals are derived from these rows, so the sum invariants hold by construction.
 const PROVIDER_ROWS: ProfileView["providers"] = [
-  { provider: "claude-code", ops: 5210, credits: 9800, usd: 612 },
-  { provider: "codex-cli", ops: 3900, credits: 6200, usd: 410 },
-  { provider: "higgsfield", ops: 1450, credits: 24000, usd: 498 },
-  { provider: "replicate", ops: 880, credits: 2900, usd: 173 },
-  { provider: "runway", ops: 610, credits: 5100, usd: 342 },
-  { provider: "kling", ops: 410, credits: 2400, usd: 166 },
-  { provider: "suno", ops: 920, credits: 3600, usd: 214 },
-  { provider: "elevenlabs", ops: 620, credits: 1300, usd: 76 },
-  { provider: "openrouter", ops: 2210, credits: 4100, usd: 189 },
-  { provider: "mistral", ops: 1140, credits: 1900, usd: 88 },
+  { provider: "claude-code", ops: 5210, credits: 9800, usd: 24480 },
+  { provider: "codex-cli", ops: 3900, credits: 6200, usd: 16400 },
+  { provider: "higgsfield", ops: 1450, credits: 24000, usd: 19920 },
+  { provider: "replicate", ops: 880, credits: 2900, usd: 6920 },
+  { provider: "runway", ops: 610, credits: 5100, usd: 13680 },
+  { provider: "kling", ops: 410, credits: 2400, usd: 6640 },
+  { provider: "suno", ops: 920, credits: 3600, usd: 8560 },
+  { provider: "elevenlabs", ops: 620, credits: 1300, usd: 3040 },
+  { provider: "openrouter", ops: 2210, credits: 4100, usd: 7560 },
+  { provider: "mistral", ops: 1140, credits: 1900, usd: 3520 },
   { provider: "ollama", ops: 2350, credits: 0, usd: 0 },
 ];
 
@@ -31,13 +34,14 @@ const PROVIDER_ROWS: ProfileView["providers"] = [
 // image/video/3d here, which a provider-primary rollup collapses into one. ops sum to
 // TOTAL_OPS and usd to TOTAL_USD so the specialization panel never drifts from the board.
 const CATEGORY_ROWS: ProfileView["categories"] = [
-  { category: "coding", ops: 9110, credits: 16000, usd: 1022 },
-  { category: "research", ops: 5690, credits: 6000, usd: 338 },
-  { category: "image", ops: 1580, credits: 12000, usd: 380 },
-  { category: "video", ops: 1530, credits: 17000, usd: 620 },
-  { category: "music", ops: 920, credits: 3600, usd: 214 },
-  { category: "audio", ops: 620, credits: 1300, usd: 76 },
-  { category: "3d", ops: 250, credits: 5400, usd: 118 },
+  { category: "coding", ops: 8000, credits: 16000, usd: 40000 },
+  { category: "research", ops: 5000, credits: 6000, usd: 13000 },
+  { category: "video", ops: 1530, credits: 17000, usd: 24800 },
+  { category: "image", ops: 1580, credits: 12000, usd: 15200 },
+  { category: "music", ops: 920, credits: 3600, usd: 8560 },
+  { category: "3d", ops: 250, credits: 5400, usd: 4720 },
+  { category: "audio", ops: 620, credits: 1300, usd: 3040 },
+  { category: "other", ops: 1800, credits: 0, usd: 1400 },
 ];
 
 // latest is BY CONSTRUCTION the sum of the provider rows, so the board's total, the provider

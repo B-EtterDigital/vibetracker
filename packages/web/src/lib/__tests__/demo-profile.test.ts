@@ -25,7 +25,7 @@ test("sums invariant: usageDays sums equal the latest totals exactly (cents for 
   const profile = buildDemoProfile();
 
   assert.ok(profile.latest);
-  assert.equal(profile.latest.total_usd, 2768); // provider usd sum incl. the elevenlabs arbitration row
+  assert.equal(profile.latest.total_usd, 110720); // provider usd sum (top-viber sample: six-figure coding spend)
   assert.equal(profile.latest.total_credits, 61300);
   assert.equal(profile.latest.record_count, 19700); // provider ops sum incl. the elevenlabs arbitration row
   assert.equal(profile.latest.created_at, "2026-07-01T12:00:00Z");
@@ -50,26 +50,27 @@ test("sums invariant: usageDays sums equal the latest totals exactly (cents for 
   }
 });
 
-test("complexity read against the REAL registry: supernova at 100 with every panel revealed", () => {
+test("complexity read against the REAL registry: surge at 64 with every panel revealed", () => {
   const read = readComplexity(buildDemoProfile(), PROVIDERS);
 
-  assert.equal(read.tier, "supernova");
-  assert.equal(read.score, 100);
+  // Under the hardened curve the curated sample lands at Surge (a full band below Supernova) yet
+  // still opens every panel, because Surge unlocks rhythm + trust and the demo carries trust signals.
+  assert.equal(read.tier, "surge");
+  assert.equal(read.score, 64); // 15 sources + 20 categories + 6 days + 12 usd + 4 ops + 3 media + 4 local
   assert.deepEqual(read.reveal, { chart: true, providerMix: true, categoryMix: true, insights: true, rhythm: true, trust: true });
   assert.equal(read.facts.providers, 11);
   assert.equal(read.facts.days, 120);
+  assert.equal(read.facts.categories, 8); // the true per-record category rollup
   assert.equal(read.facts.hasLocal, true); // ollama
   assert.equal(read.facts.hasMedia, true); // higgsfield primary category is image
 
-  // Six primary-category fields under the committed ops-weighted identity (the elevenlabs row
-  // was added by orchestrator arbitration to supply the audio field): coding 9110 (claude-code
-  // + codex-cli), llm 5700 (openrouter + mistral + ollama), video 1900 (replicate + runway +
-  // kling), image 1450 (higgsfield), music 920 (suno), audio 620 (elevenlabs).
+  // Identity now reads the true per-record categories (profile.categories, eight fields): coding
+  // leads at 8000 ops but well under 60%, so the read is an eight-field allrounder.
   assert.equal(read.identity.kind, "allrounder");
-  assert.equal(read.identity.label, "allrounder across 6 fields");
+  assert.equal(read.identity.label, "allrounder across 8 fields");
   assert.equal(read.identity.topCategory, "coding");
-  assert.equal(read.identity.topShare, 46); // round(9110 / 19700 * 100)
-  assert.equal(read.identity.fields, 6);
+  assert.equal(read.identity.topShare, 41); // round(8000 / 19700 * 100)
+  assert.equal(read.identity.fields, 8);
 });
 
 test("trust signals: exactly two, and both survive the profile-trust public guard", () => {

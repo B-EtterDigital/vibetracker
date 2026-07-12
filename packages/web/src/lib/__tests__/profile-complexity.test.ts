@@ -32,9 +32,11 @@ function profile(overrides: Partial<ProfileView> = {}): ProfileView {
 }
 
 const HINT = {
-  fresh: "fresh signal: a few sources, early days. The board grows with every sync.",
-  operator: "operator signal: steady, multi-source AI usage.",
-  supernova: "supernova signal: deep, multi-domain AI usage. Full instrumentation unlocked.",
+  ember: "ember signal: a first spark of tracked usage. the board grows with every sync.",
+  spark: "spark signal: a real, multi-source footprint taking shape.",
+  current: "current signal: steady, multi-domain AI usage flowing.",
+  surge: "surge signal: deep, wide, high-volume creation. rare air.",
+  supernova: "supernova signal: a top-percentile viber across every axis. full instrumentation.",
 };
 
 // Shared fake registry with a spread of primary categories, one local-runner id, and media rows.
@@ -48,58 +50,94 @@ const REGISTRY: ProviderDescriptor[] = [
   descriptor("ollama", ["llm"]),
 ];
 
-const RICH_PROVIDERS = [usage("higgsfield"), usage("replicate"), usage("openai"), usage("claude-code"), usage("ollama"), usage("mistral"), usage("cursor")];
+// Wider registries for the harder upper tiers: eight sources across seven primary categories, and a
+// twelve-source / eight-category set for the near-max Supernova reach.
+const WIDE: ProviderDescriptor[] = [
+  descriptor("code-a", ["coding"]), descriptor("code-b", ["coding"]),
+  descriptor("img", ["image"]), descriptor("vid", ["video"]),
+  descriptor("music", ["music"]), descriptor("audio", ["audio"]),
+  descriptor("threed", ["3d"]), descriptor("ollama", ["llm"]),
+];
+const WIDE_PROVIDERS = WIDE.map((d) => usage(d.id));
+const MAX_REG: ProviderDescriptor[] = [
+  ...WIDE,
+  descriptor("tool", ["other"]), descriptor("code-c", ["coding"]),
+  descriptor("img2", ["image"]), descriptor("vid2", ["video"]),
+];
+const MAX_PROVIDERS = MAX_REG.map((d) => usage(d.id));
 
-test("fresh tier: empty and sparse profiles stay fresh with the chart gated under seven days", () => {
+test("ember tier: empty and sparse profiles stay ember with the chart gated under seven days", () => {
   const empty = readComplexity(profile(), REGISTRY);
-  assert.equal(empty.tier, "fresh");
+  assert.equal(empty.tier, "ember");
   assert.equal(empty.score, 0);
-  assert.equal(empty.hint, HINT.fresh);
+  assert.equal(empty.hint, HINT.ember);
   assert.deepEqual(empty.facts, { providers: 0, categories: 0, days: 0, usd: 0, ops: 0, hasLocal: false, hasMedia: false });
   assert.deepEqual(empty.reveal, { chart: false, providerMix: true, categoryMix: false, insights: false, rhythm: false, trust: false });
-  // Progress: days hint leads the grow list (fixed breadth-first priority (days, sources, categories)), capped at two, no usd/ops hints.
-  assert.deepEqual(empty.progress, { pct: 0, nextTier: "operator", pointsToNext: 30, unlocksNext: ["usage insights", "category mix"], grow: ["more days of history", "more connected sources"] });
+  assert.deepEqual(empty.progress, { pct: 0, nextTier: "spark", pointsToNext: 20, unlocksNext: ["usage over time", "usage insights"], grow: ["more days of history", "more connected sources"] });
 
   const sparse = readComplexity(profile({ providers: [usage("openai", 4, 2), usage("mistral", 3, 1)], usageDays: days(5) }), REGISTRY);
-  assert.equal(sparse.tier, "fresh");
-  assert.equal(sparse.score, 0);
+  assert.equal(sparse.tier, "ember"); // two sources only (4); one category, no days/usd
+  assert.equal(sparse.score, 4);
   assert.equal(sparse.reveal.chart, false); // 5 days < 7 gates the chart
   assert.equal(sparse.reveal.providerMix, true);
-  assert.equal(sparse.hint, HINT.fresh);
 });
 
-test("operator tier: a four-provider, two-category, twenty-day, $50 profile scores 45 and opens the operator panel set", () => {
+test("spark tier: six sources, three categories, a month, media + local score 22 and open the chart + insights", () => {
   const read = readComplexity(
-    profile({ providers: [usage("openai"), usage("mistral"), usage("claude-code"), usage("cursor")], usageDays: days(20), latest: latest(50, 400) }),
+    profile({ providers: [usage("openai"), usage("mistral"), usage("claude-code"), usage("cursor"), usage("ollama"), usage("higgsfield")], usageDays: days(30) }),
     REGISTRY,
   );
-  assert.equal(read.tier, "operator");
-  assert.equal(read.score, 45); // 15 providers + 10 categories + 10 days + 10 usd
-  assert.deepEqual(read.facts, { providers: 4, categories: 2, days: 20, usd: 50, ops: 400, hasLocal: false, hasMedia: false });
+  assert.equal(read.tier, "spark");
+  assert.equal(read.score, 22); // 6 sources (9) + 3 categories (4) + 30 days (2) + media (3) + local (4)
+  assert.equal(read.hint, HINT.spark);
+  assert.deepEqual(read.reveal, { chart: true, providerMix: true, categoryMix: false, insights: true, rhythm: false, trust: false });
+  assert.equal(read.progress.nextTier, "current");
+  assert.equal(read.progress.pointsToNext, 18); // 40 - 22
+});
+
+test("current tier: eight sources, seven categories, three months, $30k and 6k ops score 54 and add the specialization mix", () => {
+  const read = readComplexity(profile({ providers: WIDE_PROVIDERS, usageDays: days(90), latest: latest(30_000, 6_000) }), WIDE);
+  assert.equal(read.tier, "current");
+  assert.equal(read.score, 54); // 15 sources + 15 categories + 6 days + 7 usd + 4 ops + 3 media + 4 local
+  assert.equal(read.hint, HINT.current);
   assert.deepEqual(read.reveal, { chart: true, providerMix: true, categoryMix: true, insights: true, rhythm: false, trust: false });
-  assert.equal(read.hint, HINT.operator);
-  assert.deepEqual(read.progress, { pct: 45, nextTier: "supernova", pointsToNext: 20, unlocksNext: ["sync rhythm", "trust signals"], grow: ["more days of history", "more connected sources"] });
+  assert.equal(read.progress.nextTier, "surge");
+  assert.equal(read.progress.pointsToNext, 6); // 60 - 54
 });
 
-test("supernova tier: seven providers with local, media, deep history, spend, ops, and a trust signal max out with every panel", () => {
-  const read = readComplexity(profile({ providers: RICH_PROVIDERS, usageDays: days(40), latest: latest(250, 1500), trustSignals: trustSignals(1) }), REGISTRY);
-  assert.equal(read.tier, "supernova");
-  assert.equal(read.score, 100);
-  assert.ok(read.score >= 65);
-  assert.deepEqual(read.facts, { providers: 7, categories: 4, days: 40, usd: 250, ops: 1500, hasLocal: true, hasMedia: true });
+test("surge tier: a heavy viber — eight sources, seven categories, 200 days, $150k, 30k ops — lands at 67, high but below the top", () => {
+  const read = readComplexity(
+    profile({ providers: WIDE_PROVIDERS, usageDays: days(200), latest: latest(150_000, 30_000), trustSignals: trustSignals(2) }),
+    WIDE,
+  );
+  assert.equal(read.tier, "surge");
+  assert.equal(read.score, 67); // 15 + 15 + 12 days + 12 usd + 6 ops + 3 media + 4 local
+  assert.ok(read.score >= 60 && read.score < 85, "high, but a full band below Supernova");
+  assert.equal(read.hint, HINT.surge);
   assert.deepEqual(read.reveal, { chart: true, providerMix: true, categoryMix: true, insights: true, rhythm: true, trust: true });
-  assert.equal(read.hint, HINT.supernova);
-  // Top tier with every fact strong: nothing left to unlock and no grow hints.
-  assert.deepEqual(read.progress, { pct: 100, nextTier: null, pointsToNext: null, unlocksNext: [], grow: [] });
+  assert.equal(read.progress.nextTier, "supernova");
+  assert.equal(read.progress.pointsToNext, 18); // 85 - 67
 });
 
-test("trust reveal gate: a supernova profile with zero trust signals keeps trust hidden while every other panel opens", () => {
-  const base: Partial<ProfileView> = { providers: RICH_PROVIDERS, usageDays: days(40), latest: latest(250, 1500) };
-  const withTrust = readComplexity(profile({ ...base, trustSignals: trustSignals(2) }), REGISTRY);
-  const withoutTrust = readComplexity(profile({ ...base, trustSignals: trustSignals(0) }), REGISTRY);
+test("supernova tier: only a near-max footprint — 12 sources, all 8 categories, 2 years, $1M, 100k ops — reaches the top", () => {
+  const read = readComplexity(
+    profile({ providers: MAX_PROVIDERS, usageDays: days(730), latest: latest(1_000_000, 100_000), trustSignals: trustSignals(3) }),
+    MAX_REG,
+  );
+  assert.equal(read.tier, "supernova");
+  assert.equal(read.score, 93); // 18 + 20 + 20 days + 20 usd + 8 ops + 3 media + 4 local
+  assert.equal(read.hint, HINT.supernova);
+  assert.deepEqual(read.reveal, { chart: true, providerMix: true, categoryMix: true, insights: true, rhythm: true, trust: true });
+  assert.deepEqual(read.progress, { pct: 93, nextTier: null, pointsToNext: null, unlocksNext: [], grow: [] });
+});
 
-  assert.equal(withTrust.tier, "supernova");
-  assert.equal(withoutTrust.tier, "supernova");
+test("trust reveal gate: a surge profile with zero trust signals keeps trust hidden while every other panel opens", () => {
+  const base: Partial<ProfileView> = { providers: WIDE_PROVIDERS, usageDays: days(200), latest: latest(150_000, 30_000) };
+  const withTrust = readComplexity(profile({ ...base, trustSignals: trustSignals(2) }), WIDE);
+  const withoutTrust = readComplexity(profile({ ...base, trustSignals: trustSignals(0) }), WIDE);
+
+  assert.equal(withTrust.tier, "surge");
+  assert.equal(withoutTrust.tier, "surge");
   assert.equal(withTrust.reveal.trust, true);
   assert.equal(withoutTrust.reveal.trust, false);
   assert.deepEqual(withoutTrust.reveal, { chart: true, providerMix: true, categoryMix: true, insights: true, rhythm: true, trust: false });
@@ -124,47 +162,27 @@ test("registry join: unmatched provider ids add spend and ops but never categori
   assert.equal(matched.facts.categories, 2); // llm + image
 });
 
-test("score boundaries and clamp: tiers flip at 30 and 65, and the richest reachable profile is capped at 100", () => {
-  // Every band is a multiple of 5, so the reachable grid is {0,5,...,100}. The tier edges are
-  // exercised at the adjacent reachable scores: 25|30 for fresh|operator, 60|65 for operator|supernova.
-  const boundaryRegistry = [descriptor("ollama", ["llm"]), ...Array.from({ length: 6 }, (_u, i) => descriptor(`llm-${i}`, ["llm"]))];
-  const sixLlm = Array.from({ length: 6 }, (_u, i) => usage(`llm-${i}`));
-
-  const fresh25 = readComplexity(profile({ providers: sixLlm, usageDays: days(3) }), boundaryRegistry);
-  assert.equal(fresh25.score, 25); // 6 providers only; one category, no days/usd/ops/local/media
-  assert.equal(fresh25.tier, "fresh");
-
-  const op30 = readComplexity(profile({ providers: [usage("ollama"), ...sixLlm.slice(1)], usageDays: days(3) }), boundaryRegistry);
-  assert.equal(op30.score, 30); // +5 for the local runner tips it across the 30 edge
-  assert.equal(op30.tier, "operator");
-
-  // Three non-media categories (llm/coding/other) so hasMedia stays off.
-  const mixRegistry = [
-    descriptor("m-llm-a", ["llm"]), descriptor("m-llm-b", ["llm"]),
-    descriptor("m-code-a", ["coding"]), descriptor("m-code-b", ["coding"]),
-    descriptor("m-other-a", ["other"]), descriptor("m-other-b", ["other"]),
-    descriptor("ollama", ["llm"]),
-  ];
-  const sixMix = [usage("m-llm-a"), usage("m-llm-b"), usage("m-code-a"), usage("m-code-b"), usage("m-other-a"), usage("m-other-b")];
-
-  const op60 = readComplexity(profile({ providers: sixMix, usageDays: days(3), latest: latest(120, 500) }), mixRegistry);
-  assert.equal(op60.score, 60); // 25 providers + 20 categories + 15 usd
-  assert.equal(op60.tier, "operator");
-  assert.equal(op60.progress.nextTier, "supernova");
-  assert.equal(op60.progress.pointsToNext, 5); // 65 - 60
-
-  const nova65 = readComplexity(profile({ providers: [...sixMix, usage("ollama")], usageDays: days(3), latest: latest(120, 500) }), mixRegistry);
-  assert.equal(nova65.score, 65); // +5 for the local runner tips it across the 65 edge
-  assert.equal(nova65.tier, "supernova");
-
-  // Richest reachable profile: all seven bands fire and the raw sum equals the clamp ceiling.
-  const maxRegistry = [...mixRegistry, descriptor("higgsfield", ["image", "video"])];
+test("clamp: only a 20-source, all-category, two-year, seven-figure, six-figure-ops footprint reaches the 100 ceiling", () => {
+  const bigReg = [...MAX_REG, ...Array.from({ length: 8 }, (_u, i) => descriptor(`fill-${i}`, ["coding"]))]; // 20 sources, 8 distinct categories
   const maxed = readComplexity(
-    profile({ providers: [...sixMix, usage("ollama"), usage("higgsfield")], usageDays: days(40), latest: latest(250, 1500), trustSignals: trustSignals(3) }),
-    maxRegistry,
+    profile({ providers: bigReg.map((d) => usage(d.id)), usageDays: days(730), latest: latest(1_000_000, 100_000), trustSignals: trustSignals(3) }),
+    bigReg,
   );
-  assert.equal(maxed.score, 100); // 25+20+20+15+10+5+5 = 100, held at the ceiling by the clamp
+  assert.equal(maxed.facts.providers, 20);
+  assert.equal(maxed.score, 100); // 25 + 20 + 20 + 20 + 8 + 3 + 4 = 100, held at the ceiling by the clamp
   assert.equal(maxed.tier, "supernova");
+  assert.deepEqual(maxed.progress, { pct: 100, nextTier: null, pointsToNext: null, unlocksNext: [], grow: [] });
+});
+
+test("tier edge: the ember|spark flip lands at exactly 20", () => {
+  // Eight coding/llm sources across two categories score 19 (ember); a single tracked op tips it to
+  // 20 (spark). No media or local runner, so only the source count + ops move the score.
+  const reg = Array.from({ length: 8 }, (_u, i) => descriptor(`n-${i}`, i < 4 ? ["coding"] : ["llm"]));
+  const eight = reg.map((d) => usage(d.id));
+  assert.equal(readComplexity(profile({ providers: eight }), reg).score, 19); // 8 sources (15) + 2 categories (4)
+  assert.equal(readComplexity(profile({ providers: eight }), reg).tier, "ember");
+  assert.equal(readComplexity(profile({ providers: eight, latest: latest(0, 100) }), reg).score, 20); // + 1 op band
+  assert.equal(readComplexity(profile({ providers: eight, latest: latest(0, 100) }), reg).tier, "spark");
 });
 
 test("maker identity: activity distribution resolves specialist, dual, allrounder, credits fallback, and forming without spend influence", () => {

@@ -33,9 +33,11 @@ export type IdentityRead = ComplexityRead["identity"];
 export type ProgressRead = ComplexityRead["progress"];
 
 const TIER_MARKS: Array<{ id: SignalTierName; at: number }> = [
-  { id: "fresh", at: 0 },
-  { id: "operator", at: 30 },
-  { id: "supernova", at: 65 },
+  { id: "ember", at: 0 },
+  { id: "spark", at: 20 },
+  { id: "current", at: 40 },
+  { id: "surge", at: 60 },
+  { id: "supernova", at: 85 },
 ];
 
 function identityColor(identity: IdentityRead): string {
@@ -211,9 +213,9 @@ export function SignalProgress({ tier, progress }: { tier: SignalTierName; progr
           className="vprofile-progress__fill"
           style={{
             width: `${pct}%`,
-            // One fill div; the hard-stop gradient is sized to the full track
-            // (100/pct of the fill width) so tier thresholds stay at 30%/65%.
-            backgroundImage: "linear-gradient(90deg, #ffc64d 0 30%, #2ee8d6 30% 65%, #36e39b 65% 100%)",
+            // One fill div; the hard-stop gradient is sized to the full track (100/pct of the fill
+            // width) so the five tier thresholds stay fixed at 20% / 40% / 60% / 85%.
+            backgroundImage: "linear-gradient(90deg, #ffc64d 0 20%, #ff9d4d 20% 40%, #2ee8d6 40% 60%, #36e39b 60% 85%, #9f7cff 85% 100%)",
             backgroundSize: `${10000 / Math.max(pct, 1)}% 100%`,
             backgroundRepeat: "no-repeat",
           }}

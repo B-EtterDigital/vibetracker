@@ -25,7 +25,7 @@ test("public profile route reveals panels from deterministic signal depth", () =
   assert.match(page, /if \(reveal\.categoryMix\)/);
   assert.match(page, /if \(reveal\.rhythm\)/);
   assert.match(page, /if \(reveal\.trust\)/);
-  assert.match(page, /if \(read\.tier === "fresh"\)/);
+  assert.match(page, /const climbing = read\.tier === "ember"/);
   assert.match(page, /more panels unlock as your data deepens/);
   assert.match(page, /<section className="vprofile">[\s\S]*<\/section>/);
   assert.doesNotMatch(page, /<main className="vprofile">/);
@@ -58,7 +58,8 @@ test("profile chart supports range controls, pointer inspection, and keyboard in
   assert.match(chart, /const RANGES: Range\[\] = \["30d", "90d", "all"\]/);
   assert.match(chart, /role="group" aria-label="Chart range"/);
   assert.match(chart, /aria-pressed=\{range === r\}/);
-  assert.match(chart, /Usage over time chart/);
+  assert.match(chart, /Usage over time\./);
+  assert.match(chart, /All together/); // the stacked lens + Flat/3D depth toggle
   assert.match(chart, /tabIndex=\{0\}/);
   assert.match(chart, /event\.key === "ArrowLeft"/);
   assert.match(chart, /event\.key === "ArrowRight"/);
@@ -66,7 +67,7 @@ test("profile chart supports range controls, pointer inspection, and keyboard in
   assert.match(chart, /event\.key === "End"/);
   assert.match(chart, /event\.key === "Escape"/);
   assert.match(chart, /aria-live="polite"/);
-  assert.match(chart, /showing credits \(no usd recorded\)/);
+  assert.match(chart, /vprofile-series-chip/); // per-source selector chips
 });
 
 test("profile route-local styling stays responsive and motion-safe", () => {

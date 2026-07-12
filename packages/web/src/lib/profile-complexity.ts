@@ -5,7 +5,10 @@
 import type { ProfileView } from "./data";
 import type { ProviderDescriptor } from "../../../adapters/src/index";
 
-export type SignalTier = "fresh" | "operator" | "supernova";
+// Five signal tiers, an energy ladder. Deliberately hard: Supernova (85+) needs a footprint far
+// beyond even a heavy multi-tool user, so it stays top-percentile rather than a default finish line.
+export type SignalTier = "ember" | "spark" | "current" | "surge" | "supernova";
+const TIER_RANK: Readonly<Record<SignalTier, number>> = { ember: 0, spark: 1, current: 2, surge: 3, supernova: 4 };
 
 export interface ComplexityFacts {
   providers: number;
@@ -44,20 +47,28 @@ const LOCAL_IDS: ReadonlySet<string> = new Set(["ollama", "lmstudio", "comfyui",
 const MEDIA_PRIMARY: ReadonlySet<string> = new Set(["image", "video", "music", "audio", "3d"]);
 
 const HINTS: Readonly<Record<SignalTier, string>> = {
-  fresh: "fresh signal: a few sources, early days. The board grows with every sync.",
-  operator: "operator signal: steady, multi-source AI usage.",
-  supernova: "supernova signal: deep, multi-domain AI usage. Full instrumentation unlocked.",
+  ember: "ember signal: a first spark of tracked usage. the board grows with every sync.",
+  spark: "spark signal: a real, multi-source footprint taking shape.",
+  current: "current signal: steady, multi-domain AI usage flowing.",
+  surge: "surge signal: deep, wide, high-volume creation. rare air.",
+  supernova: "supernova signal: a top-percentile viber across every axis. full instrumentation.",
 };
 
-const NEXT_TIER: Readonly<Record<SignalTier, "operator" | "supernova" | null>> = { fresh: "operator", operator: "supernova", supernova: null };
+type UpgradeTier = "spark" | "current" | "surge" | "supernova";
+const NEXT_TIER: Readonly<Record<SignalTier, UpgradeTier | null>> = {
+  ember: "spark", spark: "current", current: "surge", surge: "supernova", supernova: null,
+};
 
-// Score floors where each upgraded tier begins (must mirror tierForScore's edges).
-const TIER_FLOOR: Readonly<Record<"operator" | "supernova", number>> = { operator: 30, supernova: 65 };
+// Score floors where each upgraded tier begins (must mirror tierForScore's edges). Uneven on
+// purpose: Surge spans a wide 60-84 band (a heavy user lands here) and Supernova starts at 85.
+const TIER_FLOOR: Readonly<Record<UpgradeTier, number>> = { spark: 20, current: 40, surge: 60, supernova: 85 };
 
-// Panels the next tier turns on, phrased for the profile page's progress rail.
-const NEXT_UNLOCKS: Readonly<Record<"operator" | "supernova", readonly string[]>> = {
-  operator: ["usage insights", "category mix"],
-  supernova: ["sync rhythm", "trust signals"],
+// What the next tier turns on, phrased for the profile page's progress rail.
+const NEXT_UNLOCKS: Readonly<Record<UpgradeTier, readonly string[]>> = {
+  spark: ["usage over time", "usage insights"],
+  current: ["specialization mix"],
+  surge: ["sync rhythm", "trust signals"],
+  supernova: ["the supernova mark"],
 };
 
 interface MatchedProvider {
@@ -109,46 +120,75 @@ function readFacts(profile: ProfileView, matched: readonly MatchedProvider[]): C
   };
 }
 
-// Additive, deterministic score. Every band is a multiple of 5, so the reachable score grid is
-// {0,5,...,100}; the maximum band sum is exactly 100 and the clamp is a hard ceiling.
+// Additive, deterministic score, deliberately hard to top out. Max band sum is exactly 100 and the
+// clamp is a hard ceiling. Reference: a heavy multi-tool viber (~9 sources, 7 categories, ~330 days,
+// ~$200k coding, media, no local runner) scores ~60 — Surge, high but a full band below Supernova.
 function scoreFacts(facts: ComplexityFacts): number {
   let score = 0;
 
-  if (facts.providers >= 6) score += 25;
-  else if (facts.providers >= 3) score += 15;
+  // Breadth of sources — max 25.
+  if (facts.providers >= 20) score += 25;
+  else if (facts.providers >= 12) score += 18;
+  else if (facts.providers >= 8) score += 15;
+  else if (facts.providers >= 4) score += 9;
+  else if (facts.providers >= 2) score += 4;
 
-  if (facts.categories >= 3) score += 20;
-  else if (facts.categories === 2) score += 10;
+  // Range of making (categories) — max 20; the full eight-category sweep is required to top it.
+  if (facts.categories >= 8) score += 20;
+  else if (facts.categories >= 6) score += 15;
+  else if (facts.categories >= 4) score += 9;
+  else if (facts.categories >= 2) score += 4;
 
-  if (facts.days >= 30) score += 20;
-  else if (facts.days >= 7) score += 10;
+  // Tenure — max 20; two years of history is the ceiling.
+  if (facts.days >= 730) score += 20;
+  else if (facts.days >= 365) score += 15;
+  else if (facts.days >= 180) score += 12;
+  else if (facts.days >= 90) score += 6;
+  else if (facts.days >= 30) score += 2;
 
-  if (facts.usd >= 100) score += 15;
-  else if (facts.usd >= 10) score += 10;
+  // Scale of spend — max 20; a seven-figure spend is the ceiling.
+  if (facts.usd >= 1_000_000) score += 20;
+  else if (facts.usd >= 250_000) score += 15;
+  else if (facts.usd >= 100_000) score += 12;
+  else if (facts.usd >= 25_000) score += 7;
+  else if (facts.usd >= 5_000) score += 3;
+  else if (facts.usd >= 500) score += 1;
 
-  if (facts.ops >= 1000) score += 10;
-  if (facts.hasLocal) score += 5;
-  if (facts.hasMedia) score += 5;
+  // Volume of operations — max 8.
+  if (facts.ops >= 100_000) score += 8;
+  else if (facts.ops >= 25_000) score += 6;
+  else if (facts.ops >= 5_000) score += 4;
+  else if (facts.ops >= 1_000) score += 3;
+  else if (facts.ops >= 100) score += 1;
+
+  // Range bonuses — max 7.
+  if (facts.hasMedia) score += 3;
+  if (facts.hasLocal) score += 4;
 
   return Math.min(100, score);
 }
 
 function tierForScore(score: number): SignalTier {
-  if (score >= 65) return "supernova";
-  if (score >= 30) return "operator";
-  return "fresh";
+  if (score >= 85) return "supernova";
+  if (score >= 60) return "surge";
+  if (score >= 40) return "current";
+  if (score >= 20) return "spark";
+  return "ember";
 }
 
 function planReveal(tier: SignalTier, facts: ComplexityFacts, trustCount: number): RevealPlan {
-  if (tier === "supernova") {
-    // Every panel opens; trust additionally requires at least one public trust signal.
-    return { chart: true, providerMix: true, categoryMix: true, insights: true, rhythm: true, trust: trustCount > 0 };
-  }
-  if (tier === "operator") {
-    return { chart: true, providerMix: true, categoryMix: true, insights: true, rhythm: false, trust: false };
-  }
-  // fresh: hold everything back except the provider mix; the chart waits for a week of history.
-  return { chart: facts.days >= 7, providerMix: true, categoryMix: false, insights: false, rhythm: false, trust: false };
+  const rank = TIER_RANK[tier];
+  const atLeast = (t: SignalTier) => rank >= TIER_RANK[t];
+  return {
+    // Ember earns the chart only after a week of history; Spark and up always show it.
+    chart: atLeast("spark") || facts.days >= 7,
+    providerMix: true,
+    insights: atLeast("spark"),
+    categoryMix: atLeast("current"),
+    rhythm: atLeast("surge"),
+    // Trust opens at Surge but still needs at least one public trust signal to render.
+    trust: atLeast("surge") && trustCount > 0,
+  };
 }
 
 // Growth hints are breadth/consistency only, fixed breadth-first priority (days, sources, categories), capped at two. Spend-based

@@ -243,16 +243,15 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   }
   if (reveal.trust) revealed.push(<TrustRow tier={tier} signals={trustChips} key="trust" />);
   const cta = <TrackYours providerCount={PROVIDERS.length} key="cta" />;
-  if (read.tier === "fresh") {
-    const locked: Array<{ name: string; unlock: string }> = [];
-    if (!reveal.chart) locked.push({ name: "usage over time", unlock: "unlocks after a week of history" });
-    if (!reveal.insights) locked.push({ name: "usage insights", unlock: "unlocks at operator" });
-    if (!reveal.categoryMix) locked.push({ name: "specialization", unlock: "unlocks at operator" });
-    if (!(reveal.rhythm && reveal.trust)) locked.push({ name: "sync rhythm + trust", unlock: "unlocks at supernova" });
-    sections.push(cta, ...revealed);
-    if (locked.length) {
-      sections.push(<LockedPanels note="more panels unlock as your data deepens" items={locked} key="locked" />);
-    }
+  const locked: Array<{ name: string; unlock: string }> = [];
+  if (!reveal.chart) locked.push({ name: "usage over time", unlock: "unlocks after a week of history" });
+  if (!reveal.insights) locked.push({ name: "usage insights", unlock: "unlocks at spark" });
+  if (!reveal.categoryMix) locked.push({ name: "specialization", unlock: "unlocks at current" });
+  if (!reveal.rhythm) locked.push({ name: "sync rhythm", unlock: "unlocks at surge" });
+  // Lower tiers lead with the CTA and a teaser of what deepens next; Surge/Supernova lead with data.
+  const climbing = read.tier === "ember" || read.tier === "spark" || read.tier === "current";
+  if (climbing && locked.length) {
+    sections.push(cta, ...revealed, <LockedPanels note="more panels unlock as your data deepens" items={locked} key="locked" />);
   } else {
     sections.push(...revealed, cta);
   }
