@@ -156,20 +156,27 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     { label: "Last sync", value: profile.latest ? fmtDate(profile.latest.created_at) : "—" },
   ];
 
-  const categoryTotals = new Map<string, number>();
+  // Specialization ranks by creation ACTIVITY (ops/generations), not spend, so a
+  // creator's real work surfaces: a thousand image gens on a flat media
+  // subscription would vanish under dollar-ranking, yet it is exactly what the
+  // viber makes. This matches the ops-weighted identity read. usd rides along as
+  // context in the label.
+  const categoryOps = new Map<string, number>();
+  const categoryUsd = new Map<string, number>();
   for (const p of profile.providers) {
     const category = primaryCategory(p.provider);
-    categoryTotals.set(category, (categoryTotals.get(category) ?? 0) + p.usd);
+    categoryOps.set(category, (categoryOps.get(category) ?? 0) + p.ops);
+    categoryUsd.set(category, (categoryUsd.get(category) ?? 0) + p.usd);
   }
-  const categoryUsd = [...categoryTotals.values()].reduce((sum, usd) => sum + usd, 0);
-  const categories = [...categoryTotals.entries()]
-    .filter(([, usd]) => usd > 0)
+  const opsTotal = [...categoryOps.values()].reduce((sum, ops) => sum + ops, 0);
+  const categories = [...categoryOps.entries()]
+    .filter(([, ops]) => ops > 0)
     .sort((a, b) => b[1] - a[1])
-    .map(([category, usd]): MixBar => ({
+    .map(([category, ops]): MixBar => ({
       id: category,
       label: vibeLabel(category),
-      amount: `${formatUsd(usd)} · ${shareLabel(usd, categoryUsd)}%`,
-      share: categoryUsd > 0 ? (usd / categoryUsd) * 100 : 0,
+      amount: `${formatInt(ops)} ops · ${formatUsd(categoryUsd.get(category) ?? 0)} · ${shareLabel(ops, opsTotal)}%`,
+      share: opsTotal > 0 ? (ops / opsTotal) * 100 : 0,
     }));
 
   const trustChips = profile.trustSignals.map((signal) => ({
