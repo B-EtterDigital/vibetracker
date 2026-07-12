@@ -88,7 +88,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
 
   const brands = byUsd.slice(0, 6).map((p) => {
     const brand = providerBrand(p.provider);
-    return { id: p.provider, label: providerLabel(p.provider), mark: brand.mark, from: brand.from, to: brand.to, ink: brand.ink };
+    return { id: p.provider, label: providerLabel(p.provider), mark: brand.mark, from: brand.from, to: brand.to, ink: brand.ink, logo: brand.logo };
   });
 
   const creditsSum = profile.providers.reduce((sum, p) => sum + p.credits, 0);
@@ -134,6 +134,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
         from: brand.from,
         to: brand.to,
         ink: brand.ink,
+        logo: brand.logo,
         tag: vibeCategoryFor(primaryCategory(p.provider)).short,
       };
     }),

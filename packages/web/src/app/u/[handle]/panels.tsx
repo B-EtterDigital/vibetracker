@@ -51,6 +51,7 @@ export interface BrandChip {
   from: string;
   to: string;
   ink: string;
+  logo?: string;
 }
 
 export type StatMarkKind = "spent" | "credits" | "days" | "sources";
@@ -71,6 +72,7 @@ export interface MixBar {
   from?: string;
   to?: string;
   ink?: string;
+  logo?: string;
   color?: string;
   tag?: string;
   top?: boolean;
@@ -138,13 +140,19 @@ export function ProfileHeader({
         <div className="vprofile-header-brands" aria-label="Top providers by estimated spend">
           {brands.map((b) => (
             <span className="vprofile-brand-pill" key={b.id}>
-              <i
-                className="vprofile-mark"
-                style={{ background: `linear-gradient(135deg, ${b.from}, ${b.to})`, color: b.ink }}
-                aria-hidden="true"
-              >
-                {b.mark}
-              </i>
+              {b.logo ? (
+                <i className="vprofile-mark vprofile-mark--logo" aria-hidden="true">
+                  <img src={b.logo} alt="" width={14} height={14} loading="lazy" decoding="async" />
+                </i>
+              ) : (
+                <i
+                  className="vprofile-mark"
+                  style={{ background: `linear-gradient(135deg, ${b.from}, ${b.to})`, color: b.ink }}
+                  aria-hidden="true"
+                >
+                  {b.mark}
+                </i>
+              )}
               {b.label}
             </span>
           ))}
@@ -241,7 +249,11 @@ function BarRow({ bar }: { bar: MixBar }) {
   return (
     <div className="vprofile-bar-row">
       <div className="vprofile-bar-line">
-        {bar.mark ? (
+        {bar.logo ? (
+          <i className="vprofile-mark vprofile-mark-lg vprofile-mark--logo" aria-hidden="true">
+            <img src={bar.logo} alt="" width={14} height={14} loading="lazy" decoding="async" />
+          </i>
+        ) : bar.mark ? (
           <i
             className="vprofile-mark vprofile-mark-lg"
             style={{ background: `linear-gradient(135deg, ${bar.from}, ${bar.to})`, color: bar.ink }}

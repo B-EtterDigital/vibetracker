@@ -202,6 +202,16 @@ button.providers-chip { cursor: pointer; transition: background-color .16s ease,
   font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   letter-spacing: .02em;
 }
+/* Real brand glyph variant: neutral dark chip (no gradient) so the monochrome
+   logo reads cleanly; same 24px rounded square as the monogram it replaces. */
+.providers-row__mark--logo {
+  background: #0d1419;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+}
+.providers-row__mark--logo img { width: 14px; height: 14px; display: block; }
 .providers-row__name {
   display: inline-flex;
   flex-direction: column;

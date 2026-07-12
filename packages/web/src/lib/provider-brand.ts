@@ -1,8 +1,12 @@
+import { logoPath } from "./provider-logos.ts";
+
 export interface ProviderBrand {
   mark: string;
   from: string;
   to: string;
   ink: string;
+  /** Public path to the real brand glyph when available; monogram is the fallback. */
+  logo?: string;
 }
 
 const BRANDS: Record<string, ProviderBrand> = {
@@ -177,10 +181,12 @@ function hash(s: string): number {
 
 export function providerBrand(id: string): ProviderBrand {
   const key = id.toLowerCase();
+  const logo = logoPath(key) ?? undefined;
   const exact = BRANDS[key];
-  if (exact) return exact;
+  // Spread when a logo exists so the shared BRANDS object is never mutated.
+  if (exact) return logo ? { ...exact, logo } : exact;
   const colors = FALLBACKS[hash(key) % FALLBACKS.length];
-  return { mark: key.slice(0, 2).toUpperCase() || "AI", from: colors[0], to: colors[1], ink: "#071013" };
+  return { mark: key.slice(0, 2).toUpperCase() || "AI", from: colors[0], to: colors[1], ink: "#071013", logo };
 }
 
 export function hasProviderBrand(id: string): boolean {

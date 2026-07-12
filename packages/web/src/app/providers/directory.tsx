@@ -251,7 +251,13 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
                   style={{ "--brand-from": brand.from, "--brand-to": brand.to, "--brand-ink": brand.ink } as CSSProperties}
                 >
                   <td className="providers-row__id">
-                    <span className="providers-row__mark" aria-hidden="true">{brand.mark}</span>
+                    {brand.logo ? (
+                      <span className="providers-row__mark providers-row__mark--logo" aria-hidden="true">
+                        <img src={brand.logo} alt="" width={14} height={14} loading="lazy" decoding="async" />
+                      </span>
+                    ) : (
+                      <span className="providers-row__mark" aria-hidden="true">{brand.mark}</span>
+                    )}
                     <span className="providers-row__name">
                       <b>{p.label}</b>
                       <span>{p.id}</span>
