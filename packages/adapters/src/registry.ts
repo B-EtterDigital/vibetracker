@@ -139,6 +139,7 @@ export const PROVIDERS: ProviderDescriptor[] = [
   ai({ id: "antigravity", label: "Antigravity", categories: ["coding"], tier: "log", auth: "localLogs", status: "built", verified: false, method: "local session logs ⚠ verify path" }),
   ai({ id: "opencode", label: "OpenCode", categories: ["coding"], tier: "log", auth: "localLogs", status: "planned", verified: false, method: "local session store ⚠" }),
   ai({ id: "gemini-cli", label: "Gemini CLI", categories: ["coding"], tier: "log", auth: "localLogs", status: "planned", verified: false, method: "local logs" }),
+  ai({ id: "codex", label: "Codex", categories: ["coding", "llm"], tier: "log", auth: "localLogs", status: "built", verified: false, method: "~/.codex/sessions/**/*.jsonl (live)" }),
   ai({ id: "codex-cli", label: "Codex CLI", categories: ["coding"], tier: "log", auth: "localLogs", status: "planned", verified: false, method: "local logs" }),
   ai({ id: "copilot", label: "GitHub Copilot", categories: ["coding"], tier: "log", auth: "apiKey", status: "planned", verified: false, method: "org metrics API / logs" }),
   ai({ id: "windsurf", label: "Windsurf", categories: ["coding", "llm"], tier: "log", auth: "apiKey", status: "planned", verified: false, method: "admin usage API or local logs" }),

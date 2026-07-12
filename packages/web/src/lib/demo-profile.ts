@@ -36,7 +36,7 @@ const CATEGORY_ROWS: ProfileView["categories"] = [
   { category: "image", ops: 1580, credits: 12000, usd: 380 },
   { category: "video", ops: 1530, credits: 17000, usd: 620 },
   { category: "music", ops: 920, credits: 3600, usd: 214 },
-  { category: "voice", ops: 620, credits: 1300, usd: 76 },
+  { category: "audio", ops: 620, credits: 1300, usd: 76 },
   { category: "3d", ops: 250, credits: 5400, usd: 118 },
 ];
 

@@ -94,7 +94,11 @@ function readFacts(profile: ProfileView, matched: readonly MatchedProvider[]): C
   const descriptors = matched.map((pair) => pair.descriptor);
   return {
     providers: profile.providers.length,
-    categories: new Set(descriptors.map(primaryCategory)).size,
+    // True per-record categories when present (a single provider can span several); the
+    // provider-primary set is the fallback for submissions that predate the category rollup.
+    categories: profile.categories.length > 0
+      ? profile.categories.length
+      : new Set(descriptors.map(primaryCategory)).size,
     days: profile.usageDays.length,
     // usd/ops prefer the reviewed submission totals; the provider sum is the fallback and spans
     // every provider row (matched or not) because spend is spend regardless of registry coverage.
@@ -184,8 +188,15 @@ function bucketByPrimary(matched: readonly MatchedProvider[], pick: (usage: Matc
 
 // Maker identity comes from activity, never spend. Operations lead; providers that expose
 // credits instead of operation counts fall back to credit weight so their work still resolves.
-function readIdentity(matched: readonly MatchedProvider[]): ComplexityRead["identity"] {
-  const opsBuckets = bucketByPrimary(matched, (usage) => usage.ops);
+// The true per-record category rollup (profile.categories) is preferred when present, so the
+// identity headline matches the specialization panel exactly and stays correct even when a
+// provider id is missing from the registry (which would otherwise drop its ops from the read).
+function readIdentity(matched: readonly MatchedProvider[], categories: ProfileView["categories"]): ComplexityRead["identity"] {
+  const categoryBuckets = new Map<string, number>();
+  for (const row of categories) {
+    if (row.ops > 0) categoryBuckets.set(row.category, (categoryBuckets.get(row.category) ?? 0) + row.ops);
+  }
+  const opsBuckets = categoryBuckets.size > 0 ? categoryBuckets : bucketByPrimary(matched, (usage) => usage.ops);
   const buckets = opsBuckets.size > 0 ? opsBuckets : bucketByPrimary(matched, (usage) => usage.credits);
   if (buckets.size === 0) {
     return { kind: "forming", label: "signal forming", topCategory: null, topShare: 0, fields: 0 };
@@ -218,5 +229,5 @@ export function readComplexity(profile: ProfileView, registry: readonly Provider
   const score = scoreFacts(facts);
   const tier = tierForScore(score);
   const reveal = planReveal(tier, facts, profile.trustSignals.length);
-  return { tier, score, facts, reveal, hint: HINTS[tier], progress: readProgress(tier, score, facts), identity: readIdentity(matched) };
+  return { tier, score, facts, reveal, hint: HINTS[tier], progress: readProgress(tier, score, facts), identity: readIdentity(matched, profile.categories) };
 }
