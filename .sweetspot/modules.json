@@ -139,6 +139,13 @@
       "notes": "Interactive local-first onboarding command deck with explicit source and publish-preview gates."
     },
     {
+      "brick_id": "000-vibetracker.web.inspectable-score-lab",
+      "manifest_path": "packages/web/src/app/score/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 84,
+      "notes": "Interactive production-formula score instrument with trust permanently quarantined from score."
+    },
+    {
       "brick_id": "000-vibetracker.web.public-profile.adaptive-depth",
       "manifest_path": "packages/web/src/app/u/[handle]/module.sweetspot.json",
       "status": "project_bound",

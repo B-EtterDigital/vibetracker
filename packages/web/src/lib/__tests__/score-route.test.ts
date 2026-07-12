@@ -1,125 +1,84 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import {
+  buildScoreLabSnapshot,
+  SCORE_LAB_PRESETS,
+} from "../../app/score/score-model.ts";
 
-test("score lab is exposed as a first-class inspectable score route", () => {
+test("score route is a focused interactive production-formula instrument", () => {
   const page = readFileSync("packages/web/src/app/score/page.tsx", "utf8");
+  const lab = readFileSync("packages/web/src/app/score/score-lab.tsx", "utf8");
+  const model = readFileSync("packages/web/src/app/score/score-model.ts", "utf8");
+  const styles = readFileSync("packages/web/src/app/score/score.css", "utf8");
+  const controls = readFileSync("packages/web/src/app/score/score-controls.css", "utf8");
+  const responsive = readFileSync("packages/web/src/app/score/score-responsive.css", "utf8");
+  const manifest = readFileSync("packages/web/src/app/score/module.sweetspot.json", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
-  const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
   assert.match(layout, /href="\/score"><span>04<\/span>Score lab/);
-  assert.match(page, /buildVibeScoreReceipt/);
-  assert.match(page, /buildVibeScoreReactor/);
-  assert.match(page, /buildVibeScoreCalibrationChamber/);
-  assert.match(page, /buildVibeScoreMixerConsole/);
-  assert.match(page, /providerBrand/);
-  assert.match(page, /scoreLabProfile/);
-  assert.match(page, /score-route-intro/);
-  assert.match(page, /ScoreDatastreamRelayPanel/);
-  assert.match(page, /ScoreFormulaFlightRecorderPanel/);
-  assert.match(page, /ScoreSignalMatrixPanel/);
-  assert.match(page, /ScoreCalibrationChamberPanel/);
-  assert.match(page, /ScoreMixerConsolePanel/);
-  assert.match(page, /score-datastream-relay/);
-  assert.match(page, /score-relay-provider/);
-  assert.match(page, /score-relay-gate/);
-  assert.match(page, /score-relay-guard/);
-  assert.match(page, /score-flight-recorder/);
-  assert.match(page, /score-flight-delta/);
-  assert.match(page, /score-signal-matrix/);
-  assert.match(page, /score-signal-cell/);
-  assert.match(page, /score-calibration-chamber/);
-  assert.match(page, /score-calibration-step/);
-  assert.match(page, /score-mixer-console/);
-  assert.match(page, /score-mixer-lane/);
-  assert.match(page, /score-lab-receipt/);
-  assert.match(page, /score-lab-reactor/);
-  assert.match(page, /VTK:\/\/SCORE-LAB\/\/PROOF-RECEIPT\/\/FORMULA-NOT-PROOF/);
-  assert.match(page, /VTK:\/\/SCORE-LAB\/\/DATASTREAM-RELAY\/\/PROFILE-AND-SCORE-SAME-RECEIPT/);
-  assert.match(page, /VTK:\/\/SCORE-RELAY\/\/DATASTREAM-FEEDS-SCORE-AND-PROFILE/);
-  assert.match(page, /VTK:\/\/SCORE-LAB\/\/FORMULA-FLIGHT-RECORDER\/\/ZERO-MUTATION/);
-  assert.match(page, /VTK:\/\/SCORE-FLIGHT-RECORDER\/\/FORMULA-DELTAS\/\/NO-TRUST-MUTATION/);
-  assert.match(page, /VTK:\/\/SCORE-LAB\/\/SIGNAL-MATRIX\/\/TRUST-SIDE-RAIL/);
-  assert.match(page, /VTK:\/\/SCORE-MATRIX\/\/LIVE-RAILS\/\/NO-FAKE-PROOF/);
-  assert.match(page, /VTK:\/\/SCORE-LAB\/\/CALIBRATION-CHAMBER\/\/FORMULA-LOCKED/);
-  assert.match(page, /VTK:\/\/SCORE-LAB\/\/MIXER-CONSOLE\/\/ONE-REVIEWED-DATASTREAM/);
-  assert.match(page, /VTK:\/\/SCORE-LAB\/\/DATASTREAM-OSCILLOSCOPE\/\/NO-MIXED-SIGNALS/);
-  assert.match(page, /FORMULA LAB/);
-  assert.match(page, /relay@score-lab/);
-  assert.match(page, /flight-recorder@score-lab/);
-  assert.match(page, /NO TRUST MUTATION/);
-  assert.match(page, /ZERO EXTRA USAGE/);
-  assert.match(page, /calibrate@score-lab/);
-  assert.match(page, /mixer@score-lab/);
-  assert.match(page, /step\.statusLabel/);
-  assert.match(page, /step\.checklist\.map/);
-  assert.match(page, /lane\.statusLabel/);
-  assert.match(page, /lane\.contribution/);
-  assert.match(page, /visual pulses write 0 records and change 0 ranks/);
-  assert.match(page, /trust rail -> display context only -> \+0 score \+0 spend \+0 rank/);
-  assert.match(page, /trust side rail remains labelled context: delta \+0 score/);
-  assert.match(page, /promptReads 0 \/\/ outputReads 0 \/\/ hiddenUploads 0 \/\/ rankWrites 0/);
-  assert.match(page, /one reviewed datastream -> profile score heatgrid trust labels/);
-  assert.match(page, /calibration\.totals\.trustDelta/);
-  assert.match(page, /calibration\.totals\.usageWrites/);
-  assert.match(page, /factor\.impact === "not_usage" \? "\+0 score"/);
-  assert.match(page, /Same receipt feeds `\/u\/\[handle\]`, `\/score`, heatgrid rhythm/);
-  assert.match(page, /profile\.providers\.map/);
-  assert.match(page, /mixer\.outputs\.map/);
-  assert.match(page, /accepted usage rows -> formula -> public profile/);
-  assert.match(page, /Sample receipt for formula inspection/);
-  assert.match(page, /NOT USAGE/);
-  assert.match(page, /Vibers Unite/);
-  assert.match(page, /C0vibe\.app/);
-  assert.match(page, /reactor\.rails\.map/);
-  assert.match(page, /rail\.impact === "not_usage"/);
-  assert.doesNotMatch(page, /dangerouslySetInnerHTML/);
-  assert.match(styles, /\.score-route-intro/);
-  assert.match(styles, /\.score-datastream-relay/);
-  assert.match(styles, /\.score-datastream-relay__terminal/);
-  assert.match(styles, /\.score-datastream-relay__fanout/);
-  assert.match(styles, /\.score-relay-providers/);
-  assert.match(styles, /\.score-relay-provider::after/);
-  assert.match(styles, /\.score-relay-provider i::before/);
-  assert.match(styles, /\.score-relay-circuit/);
-  assert.match(styles, /\.score-relay-gate--freshness/);
-  assert.match(styles, /\.score-relay-gate footer i::before/);
-  assert.match(styles, /\.score-relay-guard article\[data-impact="not_usage"\]/);
-  assert.match(styles, /\.score-flight-recorder/);
-  assert.match(styles, /\.score-flight-recorder__terminal/);
-  assert.match(styles, /\.score-flight-recorder__locks/);
-  assert.match(styles, /\.score-flight-recorder__equation/);
-  assert.match(styles, /\.score-flight-recorder__deltas/);
-  assert.match(styles, /\.score-flight-delta--trust/);
-  assert.match(styles, /\.score-flight-delta\[data-impact="not_usage"\]/);
-  assert.match(styles, /\.score-flight-delta footer i::before/);
-  assert.match(styles, /\.score-flight-recorder__fanout/);
-  assert.match(styles, /\.score-signal-matrix/);
-  assert.match(styles, /\.score-signal-matrix__terminal/);
-  assert.match(styles, /\.score-signal-matrix__trace/);
-  assert.match(styles, /\.score-signal-matrix__cells/);
-  assert.match(styles, /\.score-signal-cell--trust/);
-  assert.match(styles, /\.score-signal-cell\[data-impact="not_usage"\]/);
-  assert.match(styles, /\.score-signal-cell footer i::before/);
-  assert.match(styles, /\.score-calibration-chamber/);
-  assert.match(styles, /\.score-calibration-chamber__terminal/);
-  assert.match(styles, /\.score-calibration-chamber__counters/);
-  assert.match(styles, /\.score-calibration-chamber__steps/);
-  assert.match(styles, /\.score-calibration-step--trust/);
-  assert.match(styles, /\.score-calibration-step\[data-impact="not_usage"\]/);
-  assert.match(styles, /\.score-calibration-step__screen/);
-  assert.match(styles, /\.score-calibration-step__checklist/);
-  assert.match(styles, /\.score-calibration-step footer i::before/);
-  assert.match(styles, /\.score-mixer-console/);
-  assert.match(styles, /\.score-mixer-console__terminal/);
-  assert.match(styles, /\.score-mixer-console__outputs/);
-  assert.match(styles, /\.score-mixer-console__lanes/);
-  assert.match(styles, /\.score-mixer-lane--trust/);
-  assert.match(styles, /\.score-mixer-lane\[data-status="context"\]/);
-  assert.match(styles, /\.score-mixer-lane footer i::before/);
-  assert.match(styles, /\.score-mixer-console__invariants/);
-  assert.match(styles, /\.score-lab-receipt\.profile-vibe-score/);
-  assert.match(styles, /\.score-lab-reactor\.profile-score-reactor/);
-  assert.match(styles, /prefers-reduced-motion: reduce/);
-  assert.match(styles, /@media \(max-width: 760px\)/);
+  assert.match(page, /<ScoreLab \/>/);
+  assert.match(page, /\.\/score\.css/);
+  assert.match(page, /\.\/score-controls\.css/);
+  assert.match(page, /\.\/score-responsive\.css/);
+  assert.match(lab, /^"use client";/);
+  assert.match(lab, /buildScoreLabSnapshot/);
+  assert.match(lab, /type="range"/);
+  assert.match(lab, /aria-pressed=/);
+  assert.match(lab, /navigator\.clipboard\.writeText/);
+  assert.match(lab, /Clipboard access failed/);
+  assert.match(lab, /trust != usage/);
+  assert.match(lab, /\+0 score/);
+  assert.match(lab, /Nothing writes to a ledger, profile, or rank/);
+  assert.match(model, /buildVibeScoreReceipt/);
+  assert.match(model, /factor\.impact === "score"/);
+  assert.match(styles, /\.score-gauge/);
+  assert.match(styles, /\.score-receipt/);
+  assert.match(styles, /\.score-ledger/);
+  assert.match(styles, /\.wrap:has\(\.score-surface\)::before/);
+  assert.match(controls, /input\[type="range"\]/);
+  assert.match(controls, /:focus-visible/);
+  assert.match(responsive, /@media \(max-width: 760px\)/);
+  assert.match(responsive, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(manifest, /000-vibetracker\.web\.inspectable-score-lab/);
+  assert.doesNotMatch(page, /ScoreDatastreamRelayPanel|ScoreFormulaFlightRecorderPanel|ScoreSignalMatrixPanel/);
+  assert.doesNotMatch(lab, /dangerouslySetInnerHTML/);
+});
+
+test("score lab uses the production formula and quarantines trust context", () => {
+  const originalNow = Date.now;
+  Date.now = () => Date.UTC(2026, 6, 5, 12, 0, 0);
+  try {
+    const studio = buildScoreLabSnapshot(SCORE_LAB_PRESETS[1].input);
+    assert.equal(studio.receipt.score, 79);
+    assert.equal(studio.scoringPoints, studio.receipt.score);
+    assert.equal(studio.scoringMax, 92);
+    assert.equal(studio.profile.providers.length, 3);
+    assert.equal(studio.profile.usageDays.length, 3);
+
+    const noTrust = buildScoreLabSnapshot({ ...SCORE_LAB_PRESETS[1].input, trustSignals: 0 });
+    const highTrust = buildScoreLabSnapshot({ ...SCORE_LAB_PRESETS[1].input, trustSignals: 5 });
+    assert.equal(noTrust.receipt.score, highTrust.receipt.score);
+    assert.equal(noTrust.trustContextPoints, 0);
+    assert.ok(highTrust.trustContextPoints > 0);
+    assert.equal(highTrust.receipt.factors.find((factor) => factor.id === "trust")?.impact, "not_usage");
+
+    const power = buildScoreLabSnapshot(SCORE_LAB_PRESETS[2].input);
+    assert.equal(power.receipt.score, 92);
+    assert.equal(power.receipt.tier, "legend");
+
+    const offline = buildScoreLabSnapshot({
+      records: 0,
+      usd: 500,
+      activeDays: 90,
+      providers: 10,
+      freshnessDays: 0,
+      trustSignals: 5,
+    });
+    assert.equal(offline.receipt.score, 0);
+    assert.equal(offline.receipt.tier, "offline");
+    assert.equal(offline.profile.providers.length, 0);
+  } finally {
+    Date.now = originalNow;
+  }
 });
