@@ -115,12 +115,27 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // Distinguishable series colours for the stacked / 3D "all together" view. Two oranges (Claude,
   // Suno) and two reds (OpenClaw, fal.ai) are kept clearly apart; unspecified sources fall back to
   // their brand colour.
+  // Per-provider model breakdown for the "click a source, see its models" list, ops-ranked.
+  const providerModelsById = new Map<string, Array<{ model: string; ops: number; usd: number }>>();
+  for (const m of profile.providerModels) {
+    const list = providerModelsById.get(m.provider) ?? [];
+    list.push({ model: m.model, ops: m.ops, usd: m.usd });
+    providerModelsById.set(m.provider, list);
+  }
+  for (const list of providerModelsById.values()) list.sort((a, b) => b.usd - a.usd || b.ops - a.ops);
+
   const chartSeries = profile.providers
     .slice()
     .sort((a, b) => b.ops - a.ops)
     .filter((p) => providerDaysById.has(p.provider))
     .slice(0, 7)
-    .map((p) => ({ id: p.provider, label: providerLabel(p.provider), color: CHART_SERIES_COLOR[p.provider] ?? providerBrand(p.provider).from, days: providerDaysById.get(p.provider) ?? [] }));
+    .map((p) => ({
+      id: p.provider,
+      label: providerLabel(p.provider),
+      color: CHART_SERIES_COLOR[p.provider] ?? providerBrand(p.provider).from,
+      days: providerDaysById.get(p.provider) ?? [],
+      models: providerModelsById.get(p.provider) ?? [],
+    }));
 
   const creditsSum = profile.providers.reduce((sum, p) => sum + p.credits, 0);
   const cards = [
@@ -235,7 +250,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   sections.push(
     <ProfileHeader
       handle={profile.handle}
-      since={fmtDate(profile.created_at)}
+      since={fmtDate(profile.usageDays[0]?.date ?? profile.created_at)}
       tierChip={tierRaw}
       signalTier={read.tier}
       signalHint={read.hint}

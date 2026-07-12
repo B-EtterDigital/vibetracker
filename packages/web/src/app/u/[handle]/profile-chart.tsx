@@ -26,6 +26,7 @@ export interface ProviderSeries {
   label: string;
   color: string;
   days: ChartDay[];
+  models?: Array<{ model: string; ops: number; usd: number }>;
 }
 
 type Range = "30d" | "90d" | "all";
@@ -120,6 +121,7 @@ export function ProfileUsageChart({ days, providers = [] }: { days: ChartDay[]; 
   if (!model) return <p className="vprofile-dim-note">no daily series in this submission</p>;
   const { axis, combined, combinedMetric, provSeries } = model;
   const selected = typeof view === "object" ? provSeries.find((p) => p.id === view.provider) ?? null : null;
+  const selectedModels = selected ? (providers.find((p) => p.id === selected.id)?.models ?? []) : [];
   const stacked = view === "stacked";
   const scene3d = stacked && threeD;
 
@@ -331,6 +333,25 @@ export function ProfileUsageChart({ days, providers = [] }: { days: ChartDay[]; 
           <span style={{ left: `${leftPct(i)}%`, transform: `translateX(${anchor(leftPct(i))})` }} key={`xt-${i}`}>{shortDate(axis[i])}</span>
         ))}
       </div>
+
+      {selected && selectedModels.length > 0 ? (
+        <div className="vprofile-chart-models">
+          <div className="vprofile-chart-models-head">
+            <i className="vprofile-series-dot" style={{ background: selected.color }} aria-hidden="true" />
+            {selected.label} · models used
+          </div>
+          <ul className="vprofile-chart-models-list">
+            {selectedModels.map((m) => (
+              <li className="vprofile-chart-model" key={m.model}>
+                <span className="vprofile-chart-model-name" title={m.model}>{m.model}</span>
+                <span className="vprofile-chart-model-stat">
+                  {formatInt(m.ops)} ops{m.usd > 0 ? ` · ${formatUsd(m.usd)}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }

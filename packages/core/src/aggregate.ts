@@ -6,7 +6,9 @@ export type GroupBy = "provider" | "category" | "model" | "day" | "account" | "p
 
 export interface AggRow {
   key: string;
-  count: number;
+  count: number;        // number of records in the group
+  ops: number;          // sum of `quantity` — the real operation count (a per-day record can stand
+                        // for many operations, so this is NOT the record count)
   credits: number;      // sum of rawAmount where rawUnit === "credits"
   raw: number;          // sum of rawAmount regardless of unit
   usd?: number;         // sum of usdEst where present (estimate)
@@ -33,8 +35,11 @@ export function aggregate(records: NormalizedRecord[], by: GroupBy): AggRow[] {
   const map = new Map<string, AggRow>();
   for (const r of records) {
     const k = keyOf(r, by);
-    const row = map.get(k) ?? { key: k, count: 0, credits: 0, raw: 0 };
+    const row = map.get(k) ?? { key: k, count: 0, ops: 0, credits: 0, raw: 0 };
     row.count += 1;
+    // A record's `quantity` is how many operations it represents (1 per generation/message, but a
+    // per-day rollup can carry hundreds). Sum it for the real op count; fall back to 1 if absent.
+    row.ops += Number.isFinite(r.quantity) && r.quantity > 0 ? r.quantity : 1;
     row.raw += r.rawAmount;
     if (r.rawUnit === "credits") row.credits += r.rawAmount;
     if (r.usdEst != null) row.usd = Number(((row.usd ?? 0) + r.usdEst).toFixed(4));

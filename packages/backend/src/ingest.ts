@@ -27,6 +27,7 @@ export interface ProviderRollup { provider: string; ops: number; credits: number
 export interface DailyRollup { date: string; ops: number; credits: number; usd?: number }
 export interface CategoryRollup { category: string; ops: number; credits: number; usd?: number }
 export interface ProviderDailyRollup { provider: string; date: string; ops: number; credits: number; usd?: number }
+export interface ProviderModelRollup { provider: string; model: string; ops: number; credits: number; usd?: number }
 
 export interface IngestResult {
   ok: boolean;
@@ -44,10 +45,13 @@ export interface IngestResult {
                                              // video/3d here, which a provider-primary rollup cannot do
   byProviderDay: ProviderDailyRollup[];      // per-provider daily series — powers the profile's
                                              // click-a-provider-into-the-chart + all-together overlay
+  byProviderModel: ProviderModelRollup[];    // per-provider model breakdown — "click a source, see
+                                             // which models you used" (opus/fable vs gpt vs Kling…)
   trustSignals: TrustSignal[];               // labelled evidence only; never counted in totals
 }
 
 const MAX_PROVIDER_DAY_ROWS = 8_000;         // 10 providers × ~2 years of days — a hard abuse ceiling
+const MAX_PROVIDER_MODEL_ROWS = 2_000;       // far above any real per-provider model count
 
 const MAX_RECORDS = 200_000;
 const MAX_TRUST_SIGNALS = 8;
@@ -192,22 +196,23 @@ export function handleIngest(payload: unknown, opts: { userId?: string; maxRecor
 
   const t = totals(accepted);
   const byProvider: ProviderRollup[] = aggregate(accepted, "provider").map((r) => ({
-    provider: r.key, ops: r.count, credits: r.credits, usd: r.usd,
+    provider: r.key, ops: r.ops, credits: r.credits, usd: r.usd,
   }));
   const byDay: DailyRollup[] = aggregate(accepted, "day")
     .sort((a, b) => a.key.localeCompare(b.key))
-    .map((r) => ({ date: r.key, ops: r.count, credits: r.credits, usd: r.usd }));
+    .map((r) => ({ date: r.key, ops: r.ops, credits: r.credits, usd: r.usd }));
   const byCategory: CategoryRollup[] = aggregate(accepted, "category")
-    .map((r) => ({ category: r.key, ops: r.count, credits: r.credits, usd: r.usd }));
+    .map((r) => ({ category: r.key, ops: r.ops, credits: r.credits, usd: r.usd }));
 
   // Per-provider daily series: group accepted records by provider+day (composite key aggregate()
   // does not offer). Sorted by provider then date so the client can slice contiguous runs.
+  const qtyOf = (r: NormalizedRecord) => (Number.isFinite(r.quantity) && r.quantity > 0 ? r.quantity : 1);
   const providerDayMap = new Map<string, ProviderDailyRollup>();
   for (const r of accepted) {
     const date = r.ts.slice(0, 10);
     const key = `${r.provider}\t${date}`;
     const row = providerDayMap.get(key) ?? { provider: r.provider, date, ops: 0, credits: 0 };
-    row.ops += 1;
+    row.ops += qtyOf(r);
     if (r.rawUnit === "credits") row.credits += r.rawAmount;
     if (r.usdEst != null) row.usd = Number(((row.usd ?? 0) + r.usdEst).toFixed(4));
     providerDayMap.set(key, row);
@@ -215,6 +220,22 @@ export function handleIngest(payload: unknown, opts: { userId?: string; maxRecor
   const byProviderDay: ProviderDailyRollup[] = [...providerDayMap.values()]
     .sort((a, b) => (a.provider < b.provider ? -1 : a.provider > b.provider ? 1 : a.date.localeCompare(b.date)))
     .slice(0, MAX_PROVIDER_DAY_ROWS);
+
+  // Per-provider model breakdown: which models a source used, ops-ranked within each provider.
+  const providerModelMap = new Map<string, ProviderModelRollup>();
+  for (const r of accepted) {
+    const model = (r.model ?? "").trim();
+    if (!model) continue; // sources with no per-record model (e.g. lifetime backfill) are skipped
+    const key = `${r.provider}\t${model}`;
+    const row = providerModelMap.get(key) ?? { provider: r.provider, model, ops: 0, credits: 0 };
+    row.ops += qtyOf(r);
+    if (r.rawUnit === "credits") row.credits += r.rawAmount;
+    if (r.usdEst != null) row.usd = Number(((row.usd ?? 0) + r.usdEst).toFixed(4));
+    providerModelMap.set(key, row);
+  }
+  const byProviderModel: ProviderModelRollup[] = [...providerModelMap.values()]
+    .sort((a, b) => (a.provider < b.provider ? -1 : a.provider > b.provider ? 1 : (b.usd ?? 0) - (a.usd ?? 0) || b.ops - a.ops))
+    .slice(0, MAX_PROVIDER_MODEL_ROWS);
 
   const trustSignals = sanitizeTrustSignals(bundle.trustSignals);
 
@@ -232,6 +253,7 @@ export function handleIngest(payload: unknown, opts: { userId?: string; maxRecor
     byDay,
     byCategory,
     byProviderDay,
+    byProviderModel,
     trustSignals,
   };
 }

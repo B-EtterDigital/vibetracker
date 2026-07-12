@@ -175,6 +175,6 @@ export function buildDemoProfile(): ProfileView {
     usageDays: usdCents.map((cents, i) => ({ date: dayDate(i), ops: ops[i], credits: credits[i], usd: cents / 100 })),
     categories: CATEGORY_ROWS.map((row) => ({ ...row })),
     providerDays: demoProviderDays(),
-    trustSignals: structuredClone(TRUST_SIGNALS),
+    providerModels: [], trustSignals: structuredClone(TRUST_SIGNALS),
   };
 }

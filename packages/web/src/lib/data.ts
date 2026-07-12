@@ -51,6 +51,7 @@ export interface ProfileView {
   usageDays: Array<{ date: string; ops: number; credits: number; usd: number }>;
   categories: Array<{ category: string; ops: number; credits: number; usd: number }>;
   providerDays: Array<{ provider: string; date: string; ops: number; credits: number; usd: number }>;
+  providerModels: Array<{ provider: string; model: string; ops: number; credits: number; usd: number }>;
   trustSignals: ProfileTrustSignal[];
 }
 
@@ -151,6 +152,28 @@ async function providerDaysFor(submissionId: string): Promise<ProfileView["provi
   }).filter((row) => row.provider.length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(row.date));
 }
 
+async function providerModelsFor(submissionId: string): Promise<ProfileView["providerModels"]> {
+  const { data, error } = await supabaseServer()
+    .from("vibetracker_submission_provider_models")
+    .select("provider,model,ops,credits,usd")
+    .eq("submission_id", submissionId)
+    .limit(2000);
+  if (error) {
+    reportOptionalFallback("profile.provider-models.fallback", error);
+    return [];
+  }
+  return (data ?? []).map((row) => {
+    const r = row as { provider?: string; model?: string; ops?: number; credits?: number; usd?: number };
+    return {
+      provider: String(r.provider ?? ""),
+      model: String(r.model ?? ""),
+      ops: Number(r.ops ?? 0),
+      credits: Number(r.credits ?? 0),
+      usd: Number(r.usd ?? 0),
+    };
+  }).filter((row) => row.provider.length > 0 && row.model.length > 0);
+}
+
 export async function getProfile(handle: string): Promise<ProfileView | null> {
   try {
     const sb = supabaseServer();
@@ -174,6 +197,7 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
     const usageDays = latest ? await usageDaysFor(latest.id) : [];
     const categories = latest ? await categoriesFor(latest.id) : [];
     const providerDays = latest ? await providerDaysFor(latest.id) : [];
+    const providerModels = latest ? await providerModelsFor(latest.id) : [];
     const trustSignals = latest ? await trustSignalsFor(latest.id) : [];
 
     return {
@@ -185,6 +209,7 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
       usageDays,
       categories,
       providerDays,
+      providerModels,
       trustSignals,
     };
   } catch (error) {

@@ -26,7 +26,7 @@ const profile: ProfileView = {
     { date: "2026-07-04", ops: 500, credits: 300, usd: 18 },
     { date: "2026-07-05", ops: 500, credits: 400, usd: 12 },
   ],
-  categories: [], providerDays: [], trustSignals: [{
+  categories: [], providerDays: [], providerModels: [], trustSignals: [{
     kind: "higgsfield_mcp",
     source: "codex_mcp",
     label: "Higgsfield MCP connection evidence (not AI usage)",
