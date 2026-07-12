@@ -149,7 +149,7 @@
       "brick_id": "000-vibetracker.web.runway-decision-console",
       "manifest_path": "packages/web/src/app/insights/module.sweetspot.json",
       "status": "project_bound",
-      "score": 84,
+      "score": 90,
       "notes": "Interactive estimate-only runway console with local planning controls and zero usage writes."
     },
     {

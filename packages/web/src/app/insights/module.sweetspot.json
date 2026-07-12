@@ -20,7 +20,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "1822bd8",
+    "commit": "85d29e6",
     "paths": [
       "packages/web/src/app/insights",
       "packages/web/src/lib/insights-runway.ts",
@@ -87,9 +87,9 @@
       "evidence": ["packages/web/src/lib/insights-runway.ts"]
     },
     "sstf": {
-      "status": "pending",
-      "score": 70,
-      "notes": "Focused and release verification are pending the current implementation pass.",
+      "status": "passing",
+      "score": 95,
+      "notes": "Focused estimate tests and the complete clean release gate pass on the implementation commit.",
       "evidence": [
         "packages/web/src/lib/__tests__/insights-route.test.ts",
         "packages/web/src/lib/__tests__/insights-runway.test.ts"
@@ -114,10 +114,14 @@
       ]
     },
     "ssra": {
-      "status": "pending",
-      "score": 70,
-      "notes": "Production build, deploy, and desktop/mobile runtime proof are pending.",
-      "evidence": []
+      "status": "passing",
+      "score": 95,
+      "notes": "Clean build, Netlify preview and production deploys, desktop/mobile interactions, network, console, layout, and Lighthouse proof pass.",
+      "evidence": [
+        "Netlify deploy 6a530944c4adb58b6ab1c953",
+        "/home/bdd-main/.playwright-mcp/vibetracker-insights-runway-desktop.png",
+        "/home/bdd-main/.playwright-mcp/vibetracker-insights-runway-mobile.png"
+      ]
     },
     "sas": {
       "status": "passing",
@@ -219,7 +223,7 @@
     "sbom_path": ""
   },
   "quality": {
-    "score": 84,
+    "score": 90,
     "line_count": {
       "max_file_lines": 357,
       "over_600_count": 0
@@ -235,7 +239,14 @@
       "node --test packages/web/src/lib/__tests__/insights-route.test.ts",
       "node --test packages/web/src/lib/__tests__/insights-runway.test.ts"
     ],
-    "verification": []
+    "verification": [
+      {
+        "command": "focused insights tests + pnpm sma:release-gate + pnpm audit --audit-level high + pnpm --dir packages/web build",
+        "status": "pass",
+        "timestamp": "2026-07-12T03:28:26Z",
+        "notes": "6 focused estimate tests, 15 control-plane tests, 491 package tests, strict VTRS, TypeScript, dependency audit, clean 21-route Next build, Netlify interactions, and Lighthouse proof passed."
+      }
+    ]
   },
   "clone": {
     "readiness": "project_bound",
@@ -264,7 +275,7 @@
       "model": "gpt-5-codex",
       "role": "architect",
       "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
-      "commit": "1822bd8",
+      "commit": "85d29e6",
       "files_touched": [
         "packages/web/src/app/insights/page.tsx",
         "packages/web/src/app/insights/runway-decision-console.tsx",
@@ -277,16 +288,23 @@
         "packages/web/src/lib/__tests__/insights-route.test.ts",
         "packages/web/src/lib/__tests__/insights-runway.test.ts"
       ],
-      "verification": [],
-      "timestamp": "2026-07-12T03:15:45Z",
+      "verification": [
+        "ctx-1783826893838-8505674b",
+        "ctx-1783826894043-6b949c6c"
+      ],
+      "timestamp": "2026-07-12T03:28:26Z",
       "summary": "Consolidated the static Insights theatre into an interactive runway decision console.",
       "intent": "Make estimate-only AI cost planning immediately useful, inspectable, and visually precise without writes.",
       "decision_rationale": "One production-model console exposes more usable planning truth than seven repeated static explanation panels.",
       "lease_id": "lease-1783825802569-1d6208ef",
-      "context_event_ids": ["ctx-1783825802614-b9d3c2c5"],
+      "context_event_ids": [
+        "ctx-1783825802614-b9d3c2c5",
+        "ctx-1783826893838-8505674b",
+        "ctx-1783826894043-6b949c6c"
+      ],
       "attestation": {
         "method": "git_commit",
-        "reference": "1822bd8"
+        "reference": "85d29e6"
       }
     },
     "touched_by": [],
@@ -295,7 +313,7 @@
       {
         "project": "000-vibetracker",
         "brick_id": "000-vibetracker.web.runway-decision-console",
-        "commit": "1822bd8",
+        "commit": "85d29e6",
         "path": "packages/web/src/app/insights",
         "event": "created",
         "timestamp": "2026-07-12T03:15:45Z"
