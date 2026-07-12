@@ -161,8 +161,14 @@ export function handleIngest(payload: unknown, opts: { userId?: string; maxRecor
   const bundle: UploadBundle = typeof payload === "object" && payload !== null ? (payload as UploadBundle) : {};
 
   const handleRaw = typeof bundle.handle === "string" ? bundle.handle : "anonymous";
-  const handle = HANDLE_RE.test(handleRaw) ? handleRaw : "anonymous";
-  if (!HANDLE_RE.test(handleRaw)) errors.push("invalid handle; defaulted to anonymous");
+  // "demo" (any casing/padding) is reserved for the bundled sample profile, so no upload
+  // can ever shadow /u/demo. Both write paths share this validator — the edge function is
+  // a thin wrapper around handleIngest — so this is the single guard for every write.
+  // Same shape as the invalid-handle path: default to anonymous + recorded error.
+  const demoReserved = handleRaw.trim().toLowerCase() === "demo";
+  const handle = !demoReserved && HANDLE_RE.test(handleRaw) ? handleRaw : "anonymous";
+  if (demoReserved) errors.push(`handle "demo" is reserved for the sample profile`);
+  else if (!HANDLE_RE.test(handleRaw)) errors.push("invalid handle; defaulted to anonymous");
 
   const recs = Array.isArray(bundle.records) ? bundle.records : [];
   if (!Array.isArray(bundle.records)) errors.push("records missing or not an array");

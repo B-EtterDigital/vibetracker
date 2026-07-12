@@ -1,0 +1,175 @@
+/* Reliability surfaces — the calm system shared by 404 / error / loading.
+   Matches the profile dashboard exactly: panel bg #0d1419, border
+   1px rgba(46,232,214,.14), radius 10px, mono dim uppercase labels,
+   focus-visible 2px #2ee8d6. No glows, no ascii, no emoji. Everything is
+   namespaced .vrel-. Motion is transform-only and disabled for
+   prefers-reduced-motion. */
+
+.vrel {
+  --vrel-mono: var(--font-data), ui-monospace, SFMono-Regular, Menlo, monospace;
+  max-width: 560px;
+  margin: 72px auto 0;
+  padding: 0 4px 48px;
+}
+
+.vrel :is(a, button, [tabindex]):focus-visible {
+  outline: 2px solid #2ee8d6;
+  outline-offset: 2px;
+}
+
+/* ---- panel ---- */
+
+.vrel-panel {
+  display: grid;
+  gap: 14px;
+  background: #0d1419;
+  border: 1px solid rgba(46, 232, 214, 0.14);
+  border-radius: 10px;
+  padding: 28px 28px 26px;
+}
+
+.vrel-label {
+  margin: 0;
+  font: 600 12px/1.2 var(--vrel-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(217, 255, 242, 0.55);
+}
+
+.vrel-title {
+  margin: 0;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+  font: 600 clamp(1.4rem, 3vw, 1.9rem) / 1.15 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+.vrel-text {
+  margin: 0;
+  max-width: 48ch;
+  color: rgba(217, 255, 242, 0.7);
+  font: 500 14px/1.6 var(--vrel-mono);
+}
+
+/* ---- static command chip (no copy behavior; these surfaces need zero JS) ---- */
+
+.vrel-cmd {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  margin: 2px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(46, 232, 214, 0.3);
+  background: #040607;
+  font: 500 12px/1 var(--vrel-mono);
+  color: #d9fff2;
+}
+
+.vrel-cmd i { font-style: normal; color: rgba(217, 255, 242, 0.4); }
+.vrel-cmd code { padding: 0; border: 0; background: transparent; font: inherit; color: #2ee8d6; }
+
+/* ---- actions ---- */
+
+.vrel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 0;
+}
+
+.vrel-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(46, 232, 214, 0.3);
+  background: transparent;
+  font: 600 12px/1 var(--vrel-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #d9fff2;
+  transition: border-color 0.38s cubic-bezier(0.22, 0.68, 0.12, 1),
+    color 0.38s cubic-bezier(0.22, 0.68, 0.12, 1);
+}
+
+.vrel-pill:hover { border-color: rgba(46, 232, 214, 0.55); color: #2ee8d6; }
+
+.vrel-pill--primary {
+  appearance: none;
+  cursor: pointer;
+  border-color: #2ee8d6;
+  background: #2ee8d6;
+  color: #040607;
+}
+
+.vrel-pill--primary:hover { background: #36e39b; border-color: #36e39b; color: #040607; }
+
+/* ---- dim ref line (error digest) ---- */
+
+.vrel-ref {
+  margin: 6px 0 0;
+  font: 500 11px/1.4 var(--vrel-mono);
+  letter-spacing: 0.04em;
+  color: rgba(217, 255, 242, 0.4);
+}
+
+/* ---- loading skeleton (mirrors the real dashboard layout order) ---- */
+
+.vrel-skel { display: grid; gap: 14px; }
+
+.vrel-bone {
+  position: relative;
+  overflow: hidden;
+  background: #0d1419;
+  border: 1px solid rgba(46, 232, 214, 0.14);
+  border-radius: 10px;
+}
+
+/* single transform-only shimmer bar; disabled under reduced motion */
+.vrel-bone::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(46, 232, 214, 0.06), transparent);
+  transform: translateX(-100%);
+  animation: vrel-shimmer 1.4s linear infinite;
+}
+
+@keyframes vrel-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vrel-bone::after { animation: none; }
+}
+
+/* header bone: avatar circle + two text bars */
+.vrel-skel-head { display: flex; align-items: center; gap: 16px; padding: 6px 2px 4px; }
+.vrel-bone-avatar { width: 56px; height: 56px; flex: 0 0 56px; border-radius: 50%; }
+.vrel-skel-lines { display: grid; gap: 10px; flex: 1 1 auto; min-width: 0; }
+.vrel-bone-line { height: 20px; }
+.vrel-bone-line--wide { width: 46%; }
+.vrel-bone-line--narrow { width: 28%; height: 13px; }
+
+/* progress bone */
+.vrel-bone-progress { height: 88px; }
+
+/* four stat-card bones in the dashboard's responsive grid */
+.vrel-skel-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.vrel-bone-stat { height: 108px; }
+
+/* one wide chart bone */
+.vrel-bone-chart { height: 292px; }
+
+@media (max-width: 1020px) {
+  .vrel-skel-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .vrel { margin-top: 44px; }
+  .vrel-skel-stats { grid-template-columns: 1fr; }
+}

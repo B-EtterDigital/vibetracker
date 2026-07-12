@@ -57,7 +57,10 @@ async function sha256Hex(input: string): Promise<string> {
     }
   }
 
-  const result = handleIngest(payload, { userId }); // aggregates only; tier from auth
+  // aggregates only; tier from auth. handleIngest is also the shared handle guard:
+  // it rejects the reserved "demo" handle (bundled sample profile) by defaulting it to
+  // anonymous, so this write path can never insert a row that shadows /u/demo.
+  const result = handleIngest(payload, { userId });
 
   if (userId) {
     await admin.from("vibetracker_members").upsert({ user_id: userId }, { onConflict: "user_id" });

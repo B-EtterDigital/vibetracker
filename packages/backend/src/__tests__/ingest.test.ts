@@ -148,6 +148,24 @@ test("bad handle is defaulted, not trusted", () => {
   assert.ok(res.errors.some((e) => e.includes("handle")));
 });
 
+test("reserved demo handle can never shadow the sample profile", () => {
+  const reservedMsg = `handle "demo" is reserved for the sample profile`;
+  for (const claimed of ["demo", "Demo", "DEMO", " demo "]) {
+    const res = handleIngest({ handle: claimed, records: [rec()] });
+    assert.equal(res.handle, "anonymous", `"${claimed}" must default to anonymous`);
+    assert.equal(res.ok, false);
+    assert.ok(res.errors.includes(reservedMsg), `"${claimed}" must carry the reserved-handle error`);
+  }
+  // guarded on the attested path too — no auth bypass
+  const authed = handleIngest({ handle: "demo", records: [rec()] }, { userId: "u-123" });
+  assert.equal(authed.handle, "anonymous");
+  assert.ok(authed.errors.includes(reservedMsg));
+  // near-miss handles are untouched
+  const near = handleIngest({ handle: "demo2", records: [rec()] });
+  assert.equal(near.handle, "demo2");
+  assert.equal(near.ok, true);
+});
+
 test("totals + byProvider computed server-side from sanitized data", () => {
   const res = handleIngest({
     handle: "cyrill",
