@@ -28,7 +28,7 @@ function trustSignals(count: number): ProfileView["trustSignals"] {
 }
 
 function profile(overrides: Partial<ProfileView> = {}): ProfileView {
-  return { handle: "tester", created_at: "2026-01-01T00:00:00.000Z", isPremium: false, latest: null, providers: [], usageDays: [], categories: [], trustSignals: [], ...overrides };
+  return { handle: "tester", created_at: "2026-01-01T00:00:00.000Z", isPremium: false, latest: null, providers: [], usageDays: [], categories: [], providerDays: [], trustSignals: [], ...overrides };
 }
 
 const HINT = {

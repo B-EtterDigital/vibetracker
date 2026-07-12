@@ -141,6 +141,7 @@ export function buildScoreLabProfile(input: ScoreLabInput, nowMs = Date.now()): 
     providers,
     usageDays,
     categories: hasUsage ? [{ category: "coding", ops: value.records, credits: Math.round(value.records * 0.72), usd: value.usd }] : [],
+    providerDays: [],
     trustSignals,
   };
 }

@@ -30,6 +30,10 @@ function optionalCategoryStorageError(message: string): boolean {
   return /vibetracker_submission_categories|schema cache|does not exist|relation .* not found/i.test(message);
 }
 
+function optionalProviderDailyStorageError(message: string): boolean {
+  return /vibetracker_submission_provider_daily|schema cache|does not exist|relation .* not found/i.test(message);
+}
+
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -120,6 +124,22 @@ async function sha256Hex(input: string): Promise<string> {
     }
   }
 
+  let providerDailyPersisted = 0;
+  let providerDailyWarning: string | undefined;
+  if (result.byProviderDay.length) {
+    const rows = result.byProviderDay.map((r) => ({
+      submission_id: sub.id, provider: r.provider, day: r.date, ops: r.ops, credits: r.credits, usd: r.usd ?? 0,
+    }));
+    const { error: pdErr } = await admin.from("vibetracker_submission_provider_daily").insert(rows);
+    if (pdErr) {
+      providerDailyWarning = optionalProviderDailyStorageError(pdErr.message)
+        ? "provider-daily aggregate table not deployed yet; profile chart shows the combined series only"
+        : `provider daily: ${pdErr.message}`;
+    } else {
+      providerDailyPersisted = rows.length;
+    }
+  }
+
   let trustSignalsPersisted = 0;
   let trustSignalWarning: string | undefined;
   if (result.trustSignals.length) {
@@ -152,6 +172,8 @@ async function sha256Hex(input: string): Promise<string> {
     ...(dailyUsageWarning ? { dailyUsageWarning } : {}),
     categoriesPersisted,
     ...(categoryWarning ? { categoryWarning } : {}),
+    providerDailyPersisted,
+    ...(providerDailyWarning ? { providerDailyWarning } : {}),
     trustSignals: result.trustSignals.length,
     trustSignalsPersisted,
     ...(trustSignalWarning ? { trustSignalWarning } : {}),

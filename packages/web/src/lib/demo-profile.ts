@@ -128,6 +128,25 @@ const TRUST_SIGNALS: ProfileTrustSignal[] = [
   },
 ];
 
+// Per-provider daily series for the interactive chart: each provider's totals distributed across
+// the 120 days with a provider-specific phase, so a clicked provider reads as its own distinct
+// curve in the big chart. Illustrative — the combined exact-sum invariant lives in usageDays.
+function demoProviderDays(): ProfileView["providerDays"] {
+  const out: ProfileView["providerDays"] = [];
+  PROVIDER_ROWS.forEach((row, j) => {
+    const shape = Array.from({ length: DAYS }, (_unused, i) =>
+      Math.max(0.1, rawDailyUsd(i) * (1 + 0.55 * Math.sin((2 * Math.PI * i) / DAYS + j * 1.7))));
+    const usdCents = scaleToExactSum(shape, Math.round(row.usd * 100));
+    const ops = scaleToExactSum(shape, row.ops);
+    const credits = scaleToExactSum(shape, row.credits);
+    for (let i = 0; i < DAYS; i += 1) {
+      if (usdCents[i] <= 0 && ops[i] <= 0 && credits[i] <= 0) continue;
+      out.push({ provider: row.provider, date: dayDate(i), ops: Math.max(0, ops[i]), credits: Math.max(0, credits[i]), usd: Math.max(0, usdCents[i]) / 100 });
+    }
+  });
+  return out;
+}
+
 // The 120-day series starts on 2026-03-04, which is also the account's created_at date, so the
 // demo story is coherent: tracking began the day the account appeared.
 export function buildDemoProfile(): ProfileView {
@@ -151,6 +170,7 @@ export function buildDemoProfile(): ProfileView {
     providers: PROVIDER_ROWS.map((row) => ({ ...row })),
     usageDays: usdCents.map((cents, i) => ({ date: dayDate(i), ops: ops[i], credits: credits[i], usd: cents / 100 })),
     categories: CATEGORY_ROWS.map((row) => ({ ...row })),
+    providerDays: demoProviderDays(),
     trustSignals: structuredClone(TRUST_SIGNALS),
   };
 }

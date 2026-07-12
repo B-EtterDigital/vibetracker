@@ -26,6 +26,7 @@ export interface UploadBundle {
 export interface ProviderRollup { provider: string; ops: number; credits: number; usd?: number }
 export interface DailyRollup { date: string; ops: number; credits: number; usd?: number }
 export interface CategoryRollup { category: string; ops: number; credits: number; usd?: number }
+export interface ProviderDailyRollup { provider: string; date: string; ops: number; credits: number; usd?: number }
 
 export interface IngestResult {
   ok: boolean;
@@ -41,8 +42,12 @@ export interface IngestResult {
   byCategory: CategoryRollup[];              // true per-record category rollup (Vibe Categories) — a
                                              // single provider (e.g. Higgsfield) splits across image/
                                              // video/3d here, which a provider-primary rollup cannot do
+  byProviderDay: ProviderDailyRollup[];      // per-provider daily series — powers the profile's
+                                             // click-a-provider-into-the-chart + all-together overlay
   trustSignals: TrustSignal[];               // labelled evidence only; never counted in totals
 }
+
+const MAX_PROVIDER_DAY_ROWS = 8_000;         // 10 providers × ~2 years of days — a hard abuse ceiling
 
 const MAX_RECORDS = 200_000;
 const MAX_TRUST_SIGNALS = 8;
@@ -194,6 +199,23 @@ export function handleIngest(payload: unknown, opts: { userId?: string; maxRecor
     .map((r) => ({ date: r.key, ops: r.count, credits: r.credits, usd: r.usd }));
   const byCategory: CategoryRollup[] = aggregate(accepted, "category")
     .map((r) => ({ category: r.key, ops: r.count, credits: r.credits, usd: r.usd }));
+
+  // Per-provider daily series: group accepted records by provider+day (composite key aggregate()
+  // does not offer). Sorted by provider then date so the client can slice contiguous runs.
+  const providerDayMap = new Map<string, ProviderDailyRollup>();
+  for (const r of accepted) {
+    const date = r.ts.slice(0, 10);
+    const key = `${r.provider}\t${date}`;
+    const row = providerDayMap.get(key) ?? { provider: r.provider, date, ops: 0, credits: 0 };
+    row.ops += 1;
+    if (r.rawUnit === "credits") row.credits += r.rawAmount;
+    if (r.usdEst != null) row.usd = Number(((row.usd ?? 0) + r.usdEst).toFixed(4));
+    providerDayMap.set(key, row);
+  }
+  const byProviderDay: ProviderDailyRollup[] = [...providerDayMap.values()]
+    .sort((a, b) => (a.provider < b.provider ? -1 : a.provider > b.provider ? 1 : a.date.localeCompare(b.date)))
+    .slice(0, MAX_PROVIDER_DAY_ROWS);
+
   const trustSignals = sanitizeTrustSignals(bundle.trustSignals);
 
   // Individual records are intentionally NOT returned — only aggregates leave here.
@@ -209,6 +231,7 @@ export function handleIngest(payload: unknown, opts: { userId?: string; maxRecor
     byProvider,
     byDay,
     byCategory,
+    byProviderDay,
     trustSignals,
   };
 }

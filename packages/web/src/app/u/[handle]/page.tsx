@@ -91,6 +91,22 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     return { id: p.provider, label: providerLabel(p.provider), mark: brand.mark, from: brand.from, to: brand.to, ink: brand.ink, logo: brand.logo };
   });
 
+  // Per-provider daily series for the interactive chart. Ranked by ops (activity), not spend, so
+  // the media powerhouse (Higgsfield, high ops / ~$0 spend) surfaces alongside the coding sources;
+  // brand-coloured so each reads as its own curve when clicked into the big chart or stacked.
+  const providerDaysById = new Map<string, Array<{ date: string; ops: number; credits: number; usd: number }>>();
+  for (const row of profile.providerDays) {
+    const list = providerDaysById.get(row.provider) ?? [];
+    list.push({ date: row.date, ops: row.ops, credits: row.credits, usd: row.usd });
+    providerDaysById.set(row.provider, list);
+  }
+  const chartSeries = profile.providers
+    .slice()
+    .sort((a, b) => b.ops - a.ops)
+    .filter((p) => providerDaysById.has(p.provider))
+    .slice(0, 7)
+    .map((p) => ({ id: p.provider, label: providerLabel(p.provider), color: providerBrand(p.provider).from, days: providerDaysById.get(p.provider) ?? [] }));
+
   const creditsSum = profile.providers.reduce((sum, p) => sum + p.credits, 0);
   const cards = [
     {
@@ -214,7 +230,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     <StatCards cards={cards} key="stats" />,
   );
   const revealed: ReactNode[] = [];
-  if (reveal.chart) revealed.push(<UsagePanel days={profile.usageDays} key="usage" />);
+  if (reveal.chart) revealed.push(<UsagePanel days={profile.usageDays} providers={chartSeries} key="usage" />);
   const showProviderMix = reveal.providerMix && mix.rows.length > 0;
   if (showProviderMix || reveal.insights) {
     revealed.push(<MixRow mix={showProviderMix ? mix : null} insights={reveal.insights ? insights : null} key="mix" />);

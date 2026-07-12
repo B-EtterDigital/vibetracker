@@ -254,6 +254,65 @@
   color: rgba(217, 255, 242, 0.45); white-space: nowrap;
 }
 
+/* ---- per-source selector: click a brand chip to load it into the big chart ---- */
+
+.vprofile-chart-series {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-left: var(--vp-gutter);
+}
+
+.vprofile-series-chip {
+  appearance: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px 4px 8px; border-radius: 999px;
+  border: 1px solid rgba(217, 255, 242, 0.14); background: rgba(217, 255, 242, 0.03);
+  font: 600 11px/1 var(--vp-mono); color: rgba(217, 255, 242, 0.66);
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.vprofile-series-chip:hover { border-color: rgba(46, 232, 214, 0.4); color: #d9fff2; }
+
+.vprofile-series-chip[aria-pressed="true"] {
+  background: rgba(46, 232, 214, 0.12); border-color: rgba(46, 232, 214, 0.55); color: #eafff9;
+}
+
+.vprofile-series-dot {
+  width: 9px; height: 9px; border-radius: 50%; flex: none;
+  box-shadow: 0 0 0 1px rgba(4, 6, 7, 0.6), 0 0 7px rgba(255, 255, 255, 0.16);
+}
+
+.vprofile-series-stack {
+  display: inline-flex; flex-direction: column; gap: 1.5px; flex: none;
+}
+.vprofile-series-stack span { display: block; width: 11px; height: 2px; border-radius: 1px; }
+.vprofile-series-stack span:nth-child(1) { background: #2ee8d6; }
+.vprofile-series-stack span:nth-child(2) { background: #9f7cff; }
+.vprofile-series-stack span:nth-child(3) { background: #ff4fd8; }
+
+/* ---- "all together" stacked view: layered depth for a slight-3D read ---- */
+
+/* The whole stage tilts as one plane so gridlines, y-labels and bands stay aligned; bands carry
+   soft shadows + a staggered rise so the stack reads as dimensional, not a flat area chart. */
+.vprofile-chart--stacked .vprofile-chart-stage {
+  transform: perspective(1600px) rotateX(6deg);
+  transform-origin: 50% 72%;
+  transition: transform 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.vprofile-chart-plot--3d svg { filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.4)); }
+
+.vprofile-band { filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.42)); }
+
+.vprofile-band > path:first-child { animation: vprofile-band-rise 520ms cubic-bezier(0.22, 0.61, 0.36, 1) both; animation-delay: calc(var(--band-i) * 55ms); transform-origin: 50% 100%; }
+
+@keyframes vprofile-band-rise {
+  from { opacity: 0; transform: scaleY(0.6); }
+  to   { opacity: 1; transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vprofile-chart--stacked .vprofile-chart-stage { transition: none; }
+  .vprofile-band > path:first-child { animation: none; }
+}
+
 /* ---- two-column row ---- */
 
 .vprofile-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }

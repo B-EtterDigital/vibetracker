@@ -9,7 +9,7 @@ import { TrustBadge } from "../../../components/TrustBadge";
 import type { ComplexityRead, SignalTier } from "../../../lib/profile-complexity";
 import { GITHUB_LEVEL_COLORS } from "../../../lib/profile-trust";
 import type { Tier } from "../../../lib/leaderboard";
-import { ProfileUsageChart, type ChartDay } from "./profile-chart";
+import { ProfileUsageChart, type ChartDay, type ProviderSeries } from "./profile-chart";
 import { vibeColor } from "../../../../../core/src/vibe-categories";
 
 const DAY_MS = 86_400_000;
@@ -235,11 +235,12 @@ export function SignalProgress({ tier, progress }: { tier: SignalTierName; progr
   );
 }
 
-export function UsagePanel({ days }: { days: ChartDay[] }) {
+export function UsagePanel({ days, providers = [] }: { days: ChartDay[]; providers?: ProviderSeries[] }) {
+  const sub = providers.length > 0 ? "usd/day · click a source" : "usd/day";
   return (
     <section className="vprofile-panel vprofile-usage">
-      <PanelHead title="Usage over time" sub="usd/day" />
-      <ProfileUsageChart days={days} />
+      <PanelHead title="Usage over time" sub={sub} />
+      <ProfileUsageChart days={days} providers={providers} />
     </section>
   );
 }

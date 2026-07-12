@@ -24,7 +24,7 @@ const profile: ProfileView = {
     { date: "2026-07-04", ops: 800, credits: 400, usd: 20 },
     { date: "2026-07-05", ops: 1000, credits: 550, usd: 30 },
   ],
-  categories: [], trustSignals: [],
+  categories: [], providerDays: [], trustSignals: [],
 };
 
 test("profile intelligence deck derives forecast and provider efficiency from public aggregates", () => {
