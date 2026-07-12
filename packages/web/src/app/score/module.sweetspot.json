@@ -20,7 +20,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "458e840",
+    "commit": "5db2d0c",
     "paths": [
       "packages/web/src/app/score",
       "packages/web/src/lib/__tests__/score-route.test.ts"
@@ -79,9 +79,9 @@
       "evidence": ["packages/web/src/app/score/score-model.ts"]
     },
     "sstf": {
-      "status": "pending",
-      "score": 70,
-      "notes": "Focused and release verification are pending the current implementation pass.",
+      "status": "passing",
+      "score": 95,
+      "notes": "Focused formula tests and the complete clean release gate pass on the implementation commit.",
       "evidence": ["packages/web/src/lib/__tests__/score-route.test.ts"]
     },
     "spe": {
@@ -100,10 +100,14 @@
       ]
     },
     "ssra": {
-      "status": "pending",
-      "score": 70,
-      "notes": "Production build, deploy, and desktop/mobile runtime proof are pending.",
-      "evidence": []
+      "status": "passing",
+      "score": 95,
+      "notes": "Clean production build, Netlify preview and production deploys, desktop/mobile interactions, network, console, layout, and Lighthouse proof pass.",
+      "evidence": [
+        "Netlify deploy 6a530271dba887f0e32a9e57",
+        "/home/bdd-main/.playwright-mcp/vibetracker-score-instrument-desktop.png",
+        "/home/bdd-main/.playwright-mcp/vibetracker-score-instrument-mobile.png"
+      ]
     },
     "sas": {
       "status": "passing",
@@ -142,7 +146,10 @@
       "status": "passing",
       "score": 90,
       "notes": "Lease, intent, source commit, decision, and touched paths are recorded.",
-      "evidence": [".smarch/agent-context/web-score-lab-instrument.ndjson"]
+      "evidence": [
+        ".smarch/agent-context/web-score-lab-instrument.ndjson",
+        ".smarch/agent-context/000-vibetracker.web.inspectable-score-lab.ndjson"
+      ]
     }
   },
   "interfaces": {
@@ -203,14 +210,14 @@
     "sbom_path": ""
   },
   "quality": {
-    "score": 84,
+    "score": 90,
     "line_count": {
       "max_file_lines": 309,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 903,
+      "feature_lines": 906,
       "file_count": 7,
       "dependency_count": 2,
       "notes": "The former 700-line static route is now a 13-line server surface with a production-formula model, focused client instrument, split route-local CSS, and contract test."
@@ -219,7 +226,14 @@
       "node --test packages/web/src/lib/__tests__/score-route.test.ts",
       "node --test packages/web/src/lib/__tests__/vibe-score.test.ts"
     ],
-    "verification": []
+    "verification": [
+      {
+        "command": "focused score tests + pnpm sma:release-gate + pnpm audit --audit-level high + pnpm --dir packages/web build",
+        "status": "pass",
+        "timestamp": "2026-07-12T02:59:34Z",
+        "notes": "9 focused formula tests, 15 control-plane tests, 490 package tests, strict VTRS, TypeScript, dependency audit, clean 21-route Next build, Netlify interactions, and Lighthouse proof passed."
+      }
+    ]
   },
   "clone": {
     "readiness": "project_bound",
@@ -248,7 +262,7 @@
       "model": "gpt-5-codex",
       "role": "architect",
       "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
-      "commit": "458e840",
+      "commit": "5db2d0c",
       "files_touched": [
         "packages/web/src/app/score/page.tsx",
         "packages/web/src/app/score/score-lab.tsx",
@@ -259,16 +273,26 @@
         "packages/web/src/app/score/module.sweetspot.json",
         "packages/web/src/lib/__tests__/score-route.test.ts"
       ],
-      "verification": [],
-      "timestamp": "2026-07-12T02:39:13Z",
+      "verification": [
+        "ctx-1783825158858-ea14fad9",
+        "ctx-1783825159137-6740b927",
+        "ctx-1783825257523-55f46ecd"
+      ],
+      "timestamp": "2026-07-12T02:59:34Z",
       "summary": "Replaced the static score theatre with an interactive production-formula instrument.",
       "intent": "Make Vibe Score useful, visually precise, and fully inspectable without mutating real data.",
       "decision_rationale": "A bounded sample model feeding the production receipt function is the honest way to make the score interactive.",
       "lease_id": "lease-1783823273149-389d6931",
-      "context_event_ids": ["ctx-1783823273239-48a71ef5"],
+      "context_event_ids": [
+        "ctx-1783823273239-48a71ef5",
+        "ctx-1783825158858-ea14fad9",
+        "ctx-1783825159137-6740b927",
+        "ctx-1783825257277-722e5de8",
+        "ctx-1783825257523-55f46ecd"
+      ],
       "attestation": {
         "method": "git_commit",
-        "reference": "458e840"
+        "reference": "5db2d0c"
       }
     },
     "touched_by": [],
@@ -277,7 +301,7 @@
       {
         "project": "000-vibetracker",
         "brick_id": "000-vibetracker.web.inspectable-score-lab",
-        "commit": "458e840",
+        "commit": "5db2d0c",
         "path": "packages/web/src/app/score",
         "event": "created",
         "timestamp": "2026-07-12T02:39:13Z"

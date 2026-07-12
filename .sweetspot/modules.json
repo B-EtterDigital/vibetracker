@@ -142,7 +142,7 @@
       "brick_id": "000-vibetracker.web.inspectable-score-lab",
       "manifest_path": "packages/web/src/app/score/module.sweetspot.json",
       "status": "project_bound",
-      "score": 84,
+      "score": 90,
       "notes": "Interactive production-formula score instrument with trust permanently quarantined from score."
     },
     {
