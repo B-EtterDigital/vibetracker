@@ -36,6 +36,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <a href="/providers">Providers</a>
             <a href="/insights">Insights</a>
             <a href="/life">AI Life</a>
+            <a href="/u/demo">Profile</a>
           </nav>
           <div className="hdr-actions">
             <a className="hdr-cli" href="/how-to">Get the CLI</a>
