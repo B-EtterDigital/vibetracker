@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { cache, type CSSProperties, type ReactNode } from "react";
 import { getProfile } from "../../../lib/data";
+import { buildDemoProfile, DEMO_HANDLE } from "../../../lib/demo-profile";
 import { formatInt, formatUsd, type Tier } from "../../../lib/leaderboard";
 import { providerBrand } from "../../../lib/provider-brand";
 import { readComplexity } from "../../../lib/profile-complexity";
@@ -8,6 +9,8 @@ import { trustSignalMark, trustSignalMetric, trustSignalTitle, trustSignalWindow
 import { PROVIDERS } from "../../../../../adapters/src/index";
 import {
   CategoryMix,
+  DemoBanner,
+  LockedPanels,
   MixRow,
   ProfileHeader,
   RhythmStrip,
@@ -26,7 +29,9 @@ export const revalidate = 60;
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 // One profile fetch per request, shared by generateMetadata and the page.
+// The bundled demo profile renders the full dashboard without touching the DB.
 const loadProfile = cache(async (handle: string) => {
+  if (handle === DEMO_HANDLE) return buildDemoProfile();
   const profile = await getProfile(handle);
   return profile;
 });
@@ -53,6 +58,12 @@ function primaryCategory(id: string): string {
 
 export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
+  if (handle === DEMO_HANDLE) {
+    return {
+      title: "demo — sample profile · VibeUsage",
+      description: "Bundled sample profile showing a fully unlocked board. Not real tracked usage: run npx vibetrack init to build your own.",
+    };
+  }
   const profile = await loadProfile(handle);
   if (!profile) return {};
   const read = readComplexity(profile, PROVIDERS);
@@ -64,6 +75,7 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
 
 export default async function Profile({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
+  const isDemo = handle === DEMO_HANDLE;
   const profile = await loadProfile(handle);
   if (!profile) notFound();
 
@@ -82,21 +94,25 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const cards = [
     {
       label: "total spent",
+      mark: "spent" as const,
       value: formatUsd(facts.usd),
       sub: `avg ${formatUsd(facts.usd / Math.max(facts.days, 1))}/day`,
     },
     {
       label: "total credits",
+      mark: "credits" as const,
       value: formatInt(profile.latest?.total_credits ?? creditsSum),
       sub: `${formatInt(facts.ops)} records`,
     },
     {
       label: "days active",
+      mark: "days" as const,
       value: String(facts.days),
       sub: `since ${fmtDate(profile.usageDays[0]?.date ?? profile.created_at)}`,
     },
     {
       label: "sources",
+      mark: "sources" as const,
       value: String(facts.providers),
       sub: `${facts.categories} categories`,
     },
@@ -163,7 +179,9 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     note: signal.note,
   }));
 
-  const sections: ReactNode[] = [
+  const sections: ReactNode[] = [];
+  if (isDemo) sections.push(<DemoBanner key="demo" />);
+  sections.push(
     <ProfileHeader
       handle={profile.handle}
       since={fmtDate(profile.created_at)}
@@ -176,7 +194,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     />,
     <SignalProgress tier={read.tier} progress={read.progress} key="progress" />,
     <StatCards cards={cards} key="stats" />,
-  ];
+  );
   const revealed: ReactNode[] = [];
   if (reveal.chart) revealed.push(<UsagePanel days={profile.usageDays} key="usage" />);
   const showProviderMix = reveal.providerMix && mix.rows.length > 0;
@@ -190,9 +208,15 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   if (reveal.trust) revealed.push(<TrustRow tier={tier} signals={trustChips} key="trust" />);
   const cta = <TrackYours providerCount={PROVIDERS.length} key="cta" />;
   if (read.tier === "fresh") {
-    sections.push(cta, ...revealed, (
-      <p className="vprofile-unlock-note" key="unlock">more panels unlock as your data deepens</p>
-    ));
+    const locked: Array<{ name: string; unlock: string }> = [];
+    if (!reveal.chart) locked.push({ name: "usage over time", unlock: "unlocks after a week of history" });
+    if (!reveal.insights) locked.push({ name: "usage insights", unlock: "unlocks at operator" });
+    if (!reveal.categoryMix) locked.push({ name: "specialization", unlock: "unlocks at operator" });
+    if (!(reveal.rhythm && reveal.trust)) locked.push({ name: "sync rhythm + trust", unlock: "unlocks at supernova" });
+    sections.push(cta, ...revealed);
+    if (locked.length) {
+      sections.push(<LockedPanels note="more panels unlock as your data deepens" items={locked} key="locked" />);
+    }
   } else {
     sections.push(...revealed, cta);
   }

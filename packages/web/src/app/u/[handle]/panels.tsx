@@ -52,8 +52,11 @@ export interface BrandChip {
   ink: string;
 }
 
+export type StatMarkKind = "spent" | "credits" | "days" | "sources";
+
 export interface StatCard {
   label: string;
+  mark: StatMarkKind;
   value: string;
   sub: string;
 }
@@ -150,12 +153,32 @@ export function ProfileHeader({
   );
 }
 
+// Small geometric stat marks: stroke-only inline SVG, no icon library.
+const WEEK_DOTS = [1.5, 3.67, 5.83, 8, 10.17, 12.33, 14.5];
+
+function StatMark({ kind }: { kind: StatMarkKind }) {
+  return (
+    <svg className="vprofile-stat-mark" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      {kind === "spent" ? (<><circle cx="8" cy="8" r="5.5" /><circle cx="8" cy="8" r="1.1" /></>) : null}
+      {kind === "credits" ? <path d="M4 12.5V9.5M8 12.5V6.5M12 12.5V3.5" /> : null}
+      {kind === "days"
+        ? WEEK_DOTS.map((cx, index) => (
+            index < 4
+              ? <circle cx={cx} cy="8" r="0.9" fill="currentColor" stroke="none" key={cx} />
+              : <circle cx={cx} cy="8" r="0.9" strokeWidth="0.9" key={cx} />
+          ))
+        : null}
+      {kind === "sources" ? (<><path d="M5 5.5L11 5.5L8 11Z" strokeWidth="1" /><circle cx="5" cy="5.5" r="1.8" /><circle cx="11" cy="5.5" r="1.8" /><circle cx="8" cy="11" r="1.8" /></>) : null}
+    </svg>
+  );
+}
+
 export function StatCards({ cards }: { cards: StatCard[] }) {
   return (
     <div className="vprofile-stats">
       {cards.map((card) => (
         <article className="vprofile-panel vprofile-stat" key={card.label}>
-          <span className="vprofile-stat-label">{card.label}</span>
+          <span className="vprofile-stat-label"><StatMark kind={card.mark} />{card.label}</span>
           <strong className="vprofile-stat-value">{card.value}</strong>
           <span className="vprofile-stat-sub">{card.sub}</span>
         </article>
@@ -175,7 +198,17 @@ export function SignalProgress({ tier, progress }: { tier: SignalTierName; progr
     <section className="vprofile-panel vprofile-progress">
       <PanelHead title="signal progress" sub="usage builds your profile" />
       <div className="vprofile-progress__track" role="img" aria-label={`signal progress ${Math.round(pct)} percent`}>
-        <span className="vprofile-progress__fill" style={{ width: `${pct}%` }} />
+        <span
+          className="vprofile-progress__fill"
+          style={{
+            width: `${pct}%`,
+            // One fill div; the hard-stop gradient is sized to the full track
+            // (100/pct of the fill width) so tier thresholds stay at 30%/65%.
+            backgroundImage: "linear-gradient(90deg, #ffc64d 0 30%, #2ee8d6 30% 65%, #36e39b 65% 100%)",
+            backgroundSize: `${10000 / Math.max(pct, 1)}% 100%`,
+            backgroundRepeat: "no-repeat",
+          }}
+        />
       </div>
       <div className="vprofile-progress__tiers" aria-hidden="true">
         {TIER_MARKS.map((markpoint) => (
@@ -356,7 +389,7 @@ export function TrustRow({ tier, signals }: { tier: Tier; signals: TrustChip[] }
   );
 }
 
-export function TrackYours({ providerCount }: { providerCount: number }) {
+export function CopyInitChip() {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "blocked">("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
@@ -377,19 +410,56 @@ export function TrackYours({ providerCount }: { providerCount: number }) {
   const stateWord: ReactNode =
     copyState === "copied" ? "copied" : copyState === "blocked" ? "copy blocked" : "copy";
   return (
+    <button
+      type="button"
+      className="vprofile-cta-cmd"
+      onClick={copy}
+      data-state={copyState}
+      aria-label="Copy npx vibetrack init to clipboard"
+    >
+      <code>npx vibetrack init</code>
+      <span aria-live="polite">{stateWord}</span>
+    </button>
+  );
+}
+
+export function DemoBanner() {
+  return (
+    <section className="vprofile-demo-banner">
+      <span className="vprofile-demo-banner__label">sample profile</span>
+      <p>This is what your board becomes after one upload. Every number below is bundled demo data.</p>
+      <CopyInitChip />
+    </section>
+  );
+}
+
+export interface GhostPanel {
+  name: string;
+  unlock: string;
+}
+
+export function LockedPanels({ note, items }: { note: string; items: GhostPanel[] }) {
+  return (
+    <section className="vprofile-panel vprofile-locked">
+      <PanelHead title="your dashboard, waiting" sub={note} />
+      <div className="vprofile-locked__grid">
+        {items.map((ghost) => (
+          <div className="vprofile-ghost" key={ghost.name}>
+            <b>{ghost.name}</b>
+            <span>{ghost.unlock}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function TrackYours({ providerCount }: { providerCount: number }) {
+  return (
     <section className="vprofile-panel vprofile-cta">
       <p className="vprofile-cta-copy">Track yours, locally first. Upload only when you choose.</p>
       <div className="vprofile-cta-actions">
-        <button
-          type="button"
-          className="vprofile-cta-cmd"
-          onClick={copy}
-          data-state={copyState}
-          aria-label="Copy npx vibetrack init to clipboard"
-        >
-          <code>npx vibetrack init</code>
-          <span aria-live="polite">{stateWord}</span>
-        </button>
+        <CopyInitChip />
         <a className="vprofile-cta-link" href="/providers">browse {providerCount} providers</a>
       </div>
     </section>

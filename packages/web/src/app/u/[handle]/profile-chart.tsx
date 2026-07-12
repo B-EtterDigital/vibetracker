@@ -127,7 +127,8 @@ export function ProfileUsageChart({ days }: { days: ChartDay[] }) {
         <svg viewBox="0 0 720 220" preserveAspectRatio="none" onMouseMove={onMove} onMouseLeave={() => setActive(null)}>
           <defs>
             <linearGradient id="vp-area" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#2ee8d6" stopOpacity="0.28" />
+              <stop offset="0" stopColor="#2ee8d6" stopOpacity="0.34" />
+              <stop offset="0.55" stopColor="#2ee8d6" stopOpacity="0.12" />
               <stop offset="1" stopColor="#2ee8d6" stopOpacity="0" />
             </linearGradient>
           </defs>
@@ -144,7 +145,7 @@ export function ProfileUsageChart({ days }: { days: ChartDay[] }) {
             />
           ))}
           <path d={area} fill="url(#vp-area)" stroke="none" />
-          <path d={line} fill="none" stroke="#2ee8d6" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          <path d={line} fill="none" stroke="#2ee8d6" strokeWidth="2.25" vectorEffect="non-scaling-stroke" />
           {activePoint ? (
             <line
               x1={x(active as number)}

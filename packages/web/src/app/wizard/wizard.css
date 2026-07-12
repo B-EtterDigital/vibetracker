@@ -4,6 +4,11 @@
   transform: translateX(-50%);
 }
 
+.wrap:has(.wizard-surface)::before {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .wizard-console {
   --wiz-bg: #070a0c;
   --wiz-panel: #0b1115;

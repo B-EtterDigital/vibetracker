@@ -35,6 +35,8 @@ test("wizard route is a focused interactive command deck", () => {
   assert.match(styles, /\.wizard-workspace/);
   assert.match(styles, /\.wizard-terminal/);
   assert.match(styles, /\.wizard-sources__grid/);
+  assert.match(styles, /\.wrap:has\(\.wizard-surface\)::before/);
+  assert.match(styles, /overflow-wrap: anywhere/);
   assert.match(styles, /:focus-visible/);
   assert.match(layoutStyles, /@media \(max-width: 760px\)/);
   assert.match(layoutStyles, /@media \(prefers-reduced-motion: reduce\)/);

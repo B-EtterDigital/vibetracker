@@ -74,7 +74,8 @@ test("profile route-local styling stays responsive and motion-safe", () => {
   assert.match(styles, /\.vprofile-chart/);
   assert.match(styles, /\.vprofile :is\(a, button, \[tabindex\]\):focus-visible/);
   assert.match(styles, /\.vprofile-trust-row/);
-  assert.match(styles, /\.vprofile-unlock-note/);
+  assert.match(styles, /\.vprofile-locked/);
+  assert.match(styles, /\.vprofile-ghost/);
   assert.match(styles, /\.vprofile-progress__track/);
   assert.match(styles, /\.vprofile-progress__fill/);
   assert.match(styles, /@keyframes vprofile-fill/);
