@@ -134,26 +134,24 @@ export function ProfileUsageChart({ days, providers = [] }: { days: ChartDay[]; 
   // Smoothed per-provider series for the stacked lenses (shared by flat + 3D).
   const win = Math.min(11, Math.max(3, Math.round(axis.length / 32)) | 1);
   const smoothed = stacked ? provSeries.map((p) => smooth(p.aligned.map((d) => valueAt(d, metric)), win)) : [];
-  // Flat mode stacks cumulatively (max = the daily sum); 3D floats each source from the baseline on
-  // its own plane (max = the tallest single source), so every ribbon is full-height and visible.
+  // Both stacked lenses build the same cumulative ramp; 3D just lifts each cumulative band onto its
+  // own plane in depth, so the substantial "all activity" shape is kept and the layers separate.
   const cumTops: number[][] = [];
-  if (stacked && !scene3d) {
+  if (stacked) {
     let running = axis.map(() => 0);
     for (const vals of smoothed) {
       running = running.map((base, i) => base + vals[i]);
       cumTops.push(running.slice());
     }
   }
-  const scaleBasis = scene3d
-    ? Math.max(1, ...smoothed.map((vals) => Math.max(...vals, 0)))
-    : stacked
-      ? Math.max(1, ...(cumTops.length ? cumTops[cumTops.length - 1] : [0]))
-      : Math.max(1, ...single);
+  const scaleBasis = stacked
+    ? Math.max(1, ...(cumTops.length ? cumTops[cumTops.length - 1] : [0]))
+    : Math.max(1, ...single);
   const step = niceStep(scaleBasis / 4);
   const niceMax = Math.max(step, Math.ceil(scaleBasis / step) * step);
   const ticks: number[] = [];
   for (let v = 0; v <= niceMax + 1e-6; v += step) ticks.push(v);
-  const perDayTotal = stacked && !scene3d && cumTops.length ? cumTops[cumTops.length - 1] : single;
+  const perDayTotal = stacked && cumTops.length ? cumTops[cumTops.length - 1] : single;
   const avg = perDayTotal.reduce((s, v) => s + v, 0) / Math.max(1, perDayTotal.length);
 
   const denom = Math.max(1, axis.length - 1);
@@ -269,7 +267,7 @@ export function ProfileUsageChart({ days, providers = [] }: { days: ChartDay[]; 
                             <stop offset="1" stopColor={p.color} stopOpacity="0.45" />
                           </linearGradient>
                         </defs>
-                        <path d={areaPath(smoothed[k])} fill={`url(#vp-l-${p.id})`} />
+                        <path d={bandPath(k === 0 ? axis.map(() => 0) : cumTops[k - 1], cumTops[k])} fill={`url(#vp-l-${p.id})`} />
                       </svg>
                     </div>
                   );
