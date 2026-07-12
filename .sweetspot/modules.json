@@ -135,7 +135,7 @@
       "brick_id": "000-vibetracker.web.first-run-command-deck",
       "manifest_path": "packages/web/src/app/wizard/module.sweetspot.json",
       "status": "project_bound",
-      "score": 84,
+      "score": 90,
       "notes": "Interactive local-first onboarding command deck with explicit source and publish-preview gates."
     },
     {

@@ -2,6 +2,7 @@ import { buildInstallRunway } from "../../lib/install-runway";
 import { buildLaunchSequence, buildWizardFlightRecorder } from "../../lib/launch-sequence";
 import { WizardShell } from "./wizard-shell";
 import "./wizard.css";
+import "./wizard-controls.css";
 import "./wizard-layout.css";
 
 export const metadata = {

@@ -20,7 +20,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "2e696d7",
+    "commit": "c3ee3cd",
     "paths": [
       "packages/web/src/app/wizard",
       "packages/web/src/lib/__tests__/wizard-route.test.ts"
@@ -41,6 +41,7 @@
       "packages/web/src/app/wizard/wizard-shell.tsx",
       "packages/web/src/app/wizard/wizard-command.ts",
       "packages/web/src/app/wizard/wizard.css",
+      "packages/web/src/app/wizard/wizard-controls.css",
       "packages/web/src/app/wizard/wizard-layout.css"
     ],
     "private_paths": [
@@ -78,9 +79,9 @@
       "evidence": ["packages/web/src/app/wizard/wizard-command.ts"]
     },
     "sstf": {
-      "status": "pending",
-      "score": 70,
-      "notes": "Focused and release verification are pending the current implementation pass.",
+      "status": "passing",
+      "score": 95,
+      "notes": "The focused route and runbook contracts plus the complete package suite pass on the clean current head.",
       "evidence": ["packages/web/src/lib/__tests__/wizard-route.test.ts"]
     },
     "spe": {
@@ -96,10 +97,13 @@
       "evidence": ["packages/web/src/app/wizard/wizard-shell.tsx"]
     },
     "ssra": {
-      "status": "pending",
-      "score": 70,
-      "notes": "Production build, deploy, and desktop/mobile runtime proof are pending.",
-      "evidence": []
+      "status": "passing",
+      "score": 90,
+      "notes": "Release gate, clean production build, Netlify preview, desktop/mobile layout, interaction, network, and console proof pass.",
+      "evidence": [
+        "scripts/release-gate.mjs",
+        "Netlify deploy 6a52f39d9c9d89b3f712dfe5"
+      ]
     },
     "sas": {
       "status": "passing",
@@ -131,7 +135,7 @@
     "ssc": {
       "status": "passing",
       "score": 90,
-      "notes": "Next and React are inherited from the web package and no dependency was added.",
+      "notes": "Next and React are inherited from the web package, no dependency was added, and the current audit reports no known vulnerabilities.",
       "evidence": ["packages/web/package.json"]
     },
     "sai": {
@@ -198,22 +202,29 @@
     "sbom_path": ""
   },
   "quality": {
-    "score": 84,
+    "score": 90,
     "line_count": {
-      "max_file_lines": 0,
+      "max_file_lines": 375,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 0,
-      "file_count": 6,
+      "feature_lines": 1051,
+      "file_count": 7,
       "dependency_count": 2,
-      "notes": "Final line counts are recorded after focused verification."
+      "notes": "The former 1,236-line static route is now a 35-line server surface with deterministic command logic, a focused client tool, split route-local CSS, and one contract test; no owned implementation file exceeds 400 lines."
     },
     "test_commands": [
       "node --test packages/web/src/lib/__tests__/wizard-route.test.ts"
     ],
-    "verification": []
+    "verification": [
+      {
+        "command": "focused wizard tests + pnpm sma:release-gate + pnpm --dir packages/web build + pnpm audit --audit-level high",
+        "status": "pass",
+        "timestamp": "2026-07-12T01:58:09Z",
+        "notes": "2 focused tests, 15 control-plane tests, 489 package tests, strict VTRS, TypeScript, dependency audit, clean Next build, and Netlify desktop/mobile interaction proof passed."
+      }
+    ]
   },
   "clone": {
     "readiness": "project_bound",
@@ -242,17 +253,25 @@
       "model": "gpt-5-codex",
       "role": "architect",
       "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
-      "commit": "2e696d7",
+      "commit": "f16cc99",
       "files_touched": [
         "packages/web/src/app/wizard/page.tsx",
         "packages/web/src/app/wizard/wizard-shell.tsx",
         "packages/web/src/app/wizard/wizard-command.ts",
         "packages/web/src/app/wizard/wizard.css",
+        "packages/web/src/app/wizard/wizard-controls.css",
         "packages/web/src/app/wizard/wizard-layout.css",
         "packages/web/src/app/wizard/module.sweetspot.json",
         "packages/web/src/lib/__tests__/wizard-route.test.ts"
       ],
-      "verification": [],
+      "verification": [
+        {
+          "command": "focused wizard tests + pnpm sma:release-gate",
+          "status": "pass",
+          "timestamp": "2026-07-12T01:58:09Z",
+          "notes": "Current-tree command, interaction, telemetry, package, and type contracts pass."
+        }
+      ],
       "timestamp": "2026-07-12T01:25:00Z",
       "summary": "Replaced the static first-run theatre with an interactive local command deck.",
       "intent": "Make onboarding useful, visually precise, and explicitly local-first without faking runtime activity.",
@@ -261,16 +280,49 @@
       "context_event_ids": ["ctx-1783818821685-9f3aee2a"],
       "attestation": {
         "method": "git_commit",
-        "reference": "2e696d7"
+        "reference": "f16cc99"
       }
     },
-    "touched_by": [],
+    "touched_by": [
+      {
+        "actor_kind": "agent",
+        "actor_id": "bdd-main@019f4b2d",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "verifier",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "commit": "c3ee3cd",
+        "files_touched": [
+          "packages/web/src/app/wizard/wizard.css",
+          "packages/web/src/lib/__tests__/wizard-route.test.ts",
+          "packages/web/src/app/wizard/module.sweetspot.json"
+        ],
+        "verification": [
+          {
+            "command": "clean release gate + production build + Netlify desktop/mobile runtime proof",
+            "status": "pass",
+            "timestamp": "2026-07-12T01:58:09Z",
+            "notes": "Mobile proof stamp wraps, controls fit, runbook interactions work, every request returns 200, and the console is clean."
+          }
+        ],
+        "timestamp": "2026-07-12T01:58:09Z",
+        "summary": "Closed mobile shell wrapping and promoted the verified hosted command-deck proof.",
+        "intent": "Prove the interactive onboarding surface at the real deployment boundary.",
+        "decision_rationale": "The final receipt must cover both deterministic command generation and the rendered responsive interaction path.",
+        "lease_id": "lease-1783821466383-5e450536",
+        "context_event_ids": ["ctx-1783821466517-53490c6e"],
+        "attestation": {
+          "method": "netlify_deploy",
+          "reference": "6a52f39d9c9d89b3f712dfe5"
+        }
+      }
+    ],
     "reviewed_by": [],
     "source_chain": [
       {
         "project": "000-vibetracker",
         "brick_id": "000-vibetracker.web.first-run-command-deck",
-        "commit": "2e696d7",
+        "commit": "f16cc99",
         "path": "packages/web/src/app/wizard",
         "event": "created",
         "timestamp": "2026-07-12T01:25:00Z"

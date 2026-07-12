@@ -12,6 +12,7 @@ test("wizard route is a focused interactive command deck", () => {
   const page = readFileSync("packages/web/src/app/wizard/page.tsx", "utf8");
   const shell = readFileSync("packages/web/src/app/wizard/wizard-shell.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/wizard/wizard.css", "utf8");
+  const controlStyles = readFileSync("packages/web/src/app/wizard/wizard-controls.css", "utf8");
   const layoutStyles = readFileSync("packages/web/src/app/wizard/wizard-layout.css", "utf8");
   const manifest = readFileSync("packages/web/src/app/wizard/module.sweetspot.json", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
@@ -34,10 +35,10 @@ test("wizard route is a focused interactive command deck", () => {
   assert.match(shell, /trust signals remain NOT USAGE/);
   assert.match(styles, /\.wizard-workspace/);
   assert.match(styles, /\.wizard-terminal/);
-  assert.match(styles, /\.wizard-sources__grid/);
+  assert.match(controlStyles, /\.wizard-sources__grid/);
   assert.match(styles, /\.wrap:has\(\.wizard-surface\)::before/);
   assert.match(styles, /overflow-wrap: anywhere/);
-  assert.match(styles, /:focus-visible/);
+  assert.match(controlStyles, /:focus-visible/);
   assert.match(layoutStyles, /@media \(max-width: 760px\)/);
   assert.match(layoutStyles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(manifest, /000-vibetracker\.web\.first-run-command-deck/);
