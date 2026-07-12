@@ -46,7 +46,7 @@ import { startLocalApiServer } from "./api-server.ts";
 import { desktopActivitiesToRecords, renderDesktopActivity, scanDesktopActivity } from "./desktop-activity.ts";
 import { buildOAuthUrl, exchangeOAuthCode, waitForOAuthCallback } from "./oauth.ts";
 import { ccusageToRecords, findCcJson, CCUSAGE_PROVIDERS } from "./import-ccusage.ts";
-import { fetchViberankProfile, gapToRecords, VIBERANK_PROVIDER, CODING_AGENT_PROVIDERS } from "./import-viberank.ts";
+import { fetchViberankProfile, decomposeViberank, VIBERANK_PROVIDER } from "./import-viberank.ts";
 import { commandCockpitPayload, renderCommandCockpit, renderCommandCockpitHtml } from "./command-cockpit.ts";
 import {
   defaultSyncSurpriseDirectorProviders,
@@ -781,7 +781,7 @@ async function main() {
   if (cmd === "import" && argv[1] === "viberank") {
     const handle = argv[2];
     if (!handle) { console.log(`usage: vibetracker import viberank <github-handle>`); return; }
-    await showSyncSurpriseQueue(["github-cli", "codex-cli", VIBERANK_PROVIDER]);
+    await showSyncSurpriseQueue(["codex", "claude-code", "gemini-cli"]);
     await showProviderScanBeat({
       providerId: "codex-cli",
       label: "Viberank coding profile",
@@ -792,47 +792,47 @@ async function main() {
     try {
       prof = await withSpinner(`fetching viberank.app/profile/${handle}`, () => fetchViberankProfile(handle));
     } catch (err) { console.error(`  ${bad("✗")} ${(err as Error).message}`); return; }
-    const store = readRecords(STORE).filter((r) => r.provider !== VIBERANK_PROVIDER); // re-import replaces
-    const coding = store.filter((r) => CODING_AGENT_PROVIDERS.includes(r.provider));
-    const localUsd = coding.reduce((a, r) => a + (r.usdEst || 0), 0);
-    const localTok = coding.reduce((a, r) => a + (r.rawAmount || 0), 0);
-    const gapUsd = prof.usd - localUsd;
-    const gapTok = prof.tokens - localTok;
-    console.log(`  viberank total   ${gold("$" + Math.round(prof.usd).toLocaleString("en-US"))} · ${paint((prof.tokens / 1e9).toFixed(1) + "B", 190)}`);
-    console.log(`  tracked locally  ${gold("$" + Math.round(localUsd).toLocaleString("en-US"))} · ${paint((localTok / 1e9).toFixed(1) + "B", 190)}`);
-    if (gapUsd <= 0) {
-      console.log(`  ${ok("✓")} local history already covers your viberank total — nothing to import.`);
-      await showCollectionCheckpoint({
-        providerId: VIBERANK_PROVIDER,
-        label: "Viberank history",
-        status: "up_to_date",
-        received: 0,
-        accepted: 0,
-        fresh: 0,
-        duplicate: 0,
-        sourceMix: [],
-        hint: "local coding history already covers the public profile total",
-      });
+
+    // Decompose the viberank history into REAL provider records (codex / claude-code /
+    // gemini-cli, all AI Coding) from the page's per-model cost breakdown — no fake
+    // "viberank-history" provider. The end of the active range is injected HERE (never inside
+    // the pure decomposer): the profile's last-updated date, else today.
+    const endISO = (flag(argv, "--until") ?? prof.lastUpdated ?? new Date().toISOString()).slice(0, 10);
+    const recs = decomposeViberank(
+      { handle, total: prof.usd, joined: prof.joined, lastUpdated: prof.lastUpdated, models: prof.models },
+      { end: endISO },
+    );
+    if (!recs.length) {
+      console.error(`  ${bad("✗")} viberank returned no per-model spend for ${handle} — nothing to import.`);
       return;
     }
-    const oldest = coding.map((r) => r.ts).sort()[0] ?? new Date().toISOString();
-    const since = flag(argv, "--since") ?? new Date(Date.parse(oldest) - 200 * 86400000).toISOString(); // default: 200d before oldest local
-    const recs = gapToRecords(prof, gapUsd, gapTok, since, oldest);
-    writeRecords(STORE, [...store, ...recs]);
-    console.log(`  ${ok("✓")} imported the missing ${gold("$" + Math.round(gapUsd).toLocaleString("en-US"))} / ${paint((gapTok / 1e9).toFixed(1) + "B", 190)} as "${VIBERANK_PROVIDER}"`);
-    console.log(`  ${dim(`spread evenly over ${recs.length} days (${since.slice(0, 10)} → ${oldest.slice(0, 10)}) — pre-history viberank kept but your disk lost`)}`);
-    console.log(`  ${dim("adjust the window:")} ${paint(`vibetracker import viberank ${handle} --since 2025-08-19`, 190)}`);
+
+    // Purge prior imported rows so a re-run REPLACES rather than stacks:
+    //  · legacy fake provider "viberank-history" (old importer), unconditionally, and
+    //  · prior runs of THIS path — coding-category "feed_recon" rows.
+    // Scoped to coding on purpose: "feed_recon" is shared with media adapters
+    // (suno/udio/luma/kling → music/video/image), whose real rows must survive.
+    const kept = readRecords(STORE).filter((r) =>
+      r.provider !== VIBERANK_PROVIDER && !(r.source === "feed_recon" && r.category === "coding"));
+    writeRecords(STORE, [...kept, ...recs]);
+
+    const totalUsd = recs.reduce((a, r) => a + (r.usdEst || 0), 0);
+    const nModels = new Set(recs.map((r) => r.model)).size;
+    const nDays = new Set(recs.map((r) => r.ts)).size;
+    const byProvider = [...new Set(recs.map((r) => r.provider))].sort();
+    console.log(`imported ${handle}: $${Math.round(totalUsd).toLocaleString("en-US")} across ${nModels} models over ${nDays} days, as AI Coding (reconstructed from viberank, source feed_recon, low confidence)`);
+    console.log(`  ${dim(`providers: ${byProvider.join(" · ")} · ${(prof.joined ?? endISO).slice(0, 10)} → ${endISO}`)}`);
     await showCollectionCheckpoint({
-      providerId: VIBERANK_PROVIDER,
-      label: "Viberank history",
-      status: recs.length ? "new" : "up_to_date",
+      providerId: "codex",
+      label: "Viberank coding history",
+      status: "new",
       received: recs.length,
       accepted: recs.length,
       fresh: recs.length,
       duplicate: 0,
-      usd: gapUsd,
+      usd: totalUsd,
       sourceMix: checkpointSourceMix(recs),
-      hint: "public coding-history gap imported into the local ledger",
+      hint: "viberank coding history decomposed into real providers (feed_recon, low confidence)",
     });
     return;
   }
