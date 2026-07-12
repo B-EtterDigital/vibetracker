@@ -29,6 +29,18 @@ export const revalidate = 60;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+// Distinguishable colours for the stacked / 3D "all together" chart series (user-specified):
+// Codex blue, Claude orange, Suno a second distinct orange, OpenClaw red, fal.ai a second distinct
+// red, Higgsfield yellow. Sources not listed here fall back to their brand colour.
+const CHART_SERIES_COLOR: Record<string, string> = {
+  codex: "#3b82f6",          // blue
+  "claude-code": "#ea7317",  // orange
+  suno: "#ff9e64",           // lighter, distinct orange
+  falai: "#d1345b",          // red, distinct from OpenClaw
+  openclaw: "#ef4444",       // red
+  higgsfield: "#f5d020",     // yellow
+};
+
 // One profile fetch per request, shared by generateMetadata and the page.
 // The bundled demo profile renders the full dashboard without touching the DB.
 const loadProfile = cache(async (handle: string) => {
@@ -100,12 +112,15 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     list.push({ date: row.date, ops: row.ops, credits: row.credits, usd: row.usd });
     providerDaysById.set(row.provider, list);
   }
+  // Distinguishable series colours for the stacked / 3D "all together" view. Two oranges (Claude,
+  // Suno) and two reds (OpenClaw, fal.ai) are kept clearly apart; unspecified sources fall back to
+  // their brand colour.
   const chartSeries = profile.providers
     .slice()
     .sort((a, b) => b.ops - a.ops)
     .filter((p) => providerDaysById.has(p.provider))
     .slice(0, 7)
-    .map((p) => ({ id: p.provider, label: providerLabel(p.provider), color: providerBrand(p.provider).from, days: providerDaysById.get(p.provider) ?? [] }));
+    .map((p) => ({ id: p.provider, label: providerLabel(p.provider), color: CHART_SERIES_COLOR[p.provider] ?? providerBrand(p.provider).from, days: providerDaysById.get(p.provider) ?? [] }));
 
   const creditsSum = profile.providers.reduce((sum, p) => sum + p.credits, 0);
   const cards = [
