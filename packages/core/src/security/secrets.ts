@@ -6,10 +6,15 @@ export interface SecretFinding {
 
 const SECRET_KEY_NAMES = /(?:api[_-]?key|token|secret|password|authorization|session[_-]?cookie|bearer)/i;
 const SECRET_VALUE_PATTERNS: Array<{ kind: string; re: RegExp }> = [
-  { kind: "openai_key", re: /\bsk-[A-Za-z0-9_-]{20,}\b/g },
+  { kind: "openai_key", re: /\bsk-[A-Za-z0-9_-]{20,}\b/g },        // also sk-admin-/sk-proj-/sk-or-v1- (OpenRouter)
   { kind: "anthropic_key", re: /\bsk-ant-[A-Za-z0-9_-]{20,}\b/g },
   { kind: "replicate_token", re: /\br8_[A-Za-z0-9_-]{20,}\b/g },
   { kind: "github_token", re: /\bgh[pousr]_[A-Za-z0-9_]{20,}\b/g },
+  { kind: "supabase_token", re: /\bsbp_[A-Za-z0-9]{20,}\b/g },
+  { kind: "runpod_key", re: /\brpa_[A-Za-z0-9]{20,}\b/g },
+  { kind: "browserbase_key", re: /\bbb_(?:live|test)_[A-Za-z0-9_-]{16,}\b/g },
+  { kind: "huggingface_token", re: /\bhf_[A-Za-z0-9]{20,}\b/g },
+  { kind: "fal_key", re: /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:[0-9a-f]{32}\b/g },
   { kind: "jwt", re: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g },
   { kind: "bearer_token", re: /\bBearer\s+[A-Za-z0-9._~+/=-]{20,}\b/gi },
 ];

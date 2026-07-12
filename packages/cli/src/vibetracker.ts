@@ -24,7 +24,7 @@ import { runProxy } from "./proxy.ts";
 import { planSetup, runWizard, localLogsPresent, GUIDE, fieldLabel, maskKey, setupPlanSurpriseTargets } from "./wizard.ts";
 import { showBanner, showWelcome, withSpinner, typeLine, rule, icon, bar, dim, paint, ok, bad, gold, human } from "./banner.ts";
 import { createInterface } from "node:readline/promises";
-import { loadConfig, saveConfig, resolveCreds, CRED_FIELDS, CONFIG_PATH } from "./config.ts";
+import { loadConfig, saveConfig, resolveCreds, storeProviderCreds, clearProviderCreds, storeToken, clearToken, CRED_FIELDS, CONFIG_PATH } from "./config.ts";
 import { renderTotal } from "./commands/total.ts";
 import { renderStats } from "./commands/stats.ts";
 import { renderProfileHtml } from "./profile.ts";
@@ -1024,7 +1024,9 @@ async function main() {
       return;
     }
     if (argv[1] === "preview") {
-      console.log(JSON.stringify(anonymousTelemetryPreview(readRecords(STORE), cfg), null, 2));
+      // redactSecrets (core deep-redactor) is defence-in-depth: this preview holds no creds, but any
+      // dump that could ever include one is passed through the guard so a secret can't reach a terminal.
+      console.log(JSON.stringify(redactSecrets(anonymousTelemetryPreview(readRecords(STORE), cfg)), null, 2));
       return;
     }
     console.log(`anonymous telemetry: ${cfg.anonymousTelemetry === true ? "enabled" : "disabled"}`);
@@ -1476,11 +1478,10 @@ async function main() {
         const accessToken = typeof token.access_token === "string" ? token.access_token : undefined;
         if (!accessToken) throw new Error("token response did not include access_token");
         const cfg = loadConfig();
-        cfg.creds = cfg.creds ?? {};
-        cfg.creds[provider] = { ...(cfg.creds[provider] ?? {}), token: accessToken };
+        const inKeyring = storeProviderCreds(cfg, provider, { token: accessToken });
         if (!cfg.enabled.includes(provider)) cfg.enabled.push(provider);
         saveConfig(cfg);
-        console.log(`OAuth token stored for ${provider} in ${CONFIG_PATH} (mode 600).`);
+        console.log(`OAuth token stored for ${provider} ${inKeyring ? "in the OS keyring" : `in ${CONFIG_PATH} (mode 600)`}.`);
       } finally {
         callback.close();
       }
@@ -1493,9 +1494,9 @@ async function main() {
 
   if (cmd === "logout") {
     const cfg = loadConfig();
-    delete cfg.token;
+    clearToken(cfg);
     saveConfig(cfg);
-    console.log("logged out — token removed.");
+    console.log("logged out — token removed from the keyring.");
     return;
   }
 
@@ -1504,7 +1505,7 @@ async function main() {
     console.log(rule("YOUR KEYS"));
     if (!cfg.enabled.length) { console.log(`  ${dim("nothing connected yet — run")} ${paint("vibetracker connect <id>", 190)}`); return; }
     for (const id of cfg.enabled) {
-      const c = cfg.creds?.[id] ?? {};
+      const c = resolveCreds(id, cfg) as Record<string, string>; // reads the keyring at point of use
       const fields = Object.entries(c).map(([k, v]) => `${dim(fieldLabel(k))} ${paint(maskKey(String(v)), 200)}`).join("  ");
       console.log(`  ${icon(id)} ${id.padEnd(14)} ${fields || dim("no key needed (local)")}`);
     }
@@ -1517,7 +1518,7 @@ async function main() {
     const id = argv[1];
     if (!id || !cfg.enabled.includes(id)) { console.log(`usage: vibetracker disconnect <id> — connected: ${cfg.enabled.join(", ") || "(none)"}`); return; }
     cfg.enabled = cfg.enabled.filter((p) => p !== id);
-    if (cfg.creds) delete cfg.creds[id];
+    clearProviderCreds(cfg, id);
     saveConfig(cfg);
     console.log(`  ${ok("✓")} ${id} disconnected — its key was deleted from this machine`);
     return;
@@ -1560,13 +1561,13 @@ async function main() {
         if (ans) creds[f] = ans;
       }
     }
-    cfg.creds = cfg.creds ?? {};
-    cfg.creds[provider] = { ...(cfg.creds[provider] ?? {}), ...creds };
+    const inKeyring = storeProviderCreds(cfg, provider, creds);
     if (!cfg.enabled.includes(provider)) cfg.enabled.push(provider);
     saveConfig(cfg);
-    const have = Object.keys(cfg.creds[provider]);
+    const have = Object.keys(cfg.creds?.[provider] ?? {});
     const missing = (CRED_FIELDS[provider] ?? []).filter((f) => !have.includes(f));
-    console.log(`  ${ok("✓")} ${provider} connected${have.length ? `  ${dim(have.map((k) => `${fieldLabel(k)} ${maskKey(String(cfg.creds![provider]![k]))}`).join("  "))}` : ""}`);
+    const where = inKeyring ? dim("→ OS keyring") : dim("→ ~/.vibetracker/config.json (no keyring; mode 600)");
+    console.log(`  ${ok("✓")} ${provider} connected ${where}${have.length ? `  ${dim(have.map((k) => `${fieldLabel(k)} ${maskKey(String(cfg.creds![provider]![k]))}`).join("  "))}` : ""}`);
     if (missing.length) console.log(`  ${dim(`⚠ still missing: ${missing.join(", ")} — re-run or use env VT_* / --set`)}`);
     if (!missing.length) {
       // instant gratification: pull this provider right away

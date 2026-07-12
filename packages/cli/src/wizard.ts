@@ -7,7 +7,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import type { ProviderDescriptor } from "../../adapters/src/index.ts";
-import type { VtConfig } from "./config.ts";
+import { storeProviderCreds, type VtConfig } from "./config.ts";
 import { icon, dim } from "./banner.ts";
 
 const LOG_DIRS: Record<string, string> = {
@@ -210,7 +210,7 @@ export async function runWizard(cfg: VtConfig, deps: WizardDeps): Promise<VtConf
   cfg.creds = cfg.creds ?? {};
 
   for (const id of plan.autoEnv) {
-    cfg.creds[id] = { ...(cfg.creds[id] ?? {}), ...clean(deps.resolveEnv(id)) };
+    storeProviderCreds(cfg, id, clean(deps.resolveEnv(id))); // env keys land in the keyring, not on disk
     enabled.add(id);
     deps.log(`  ${icon(id)} ${id.padEnd(14)} connected (env key)`);
   }
@@ -238,7 +238,7 @@ export async function runWizard(cfg: VtConfig, deps: WizardDeps): Promise<VtConf
       if (g?.steps) g.steps.forEach((s, i) => deps.log(`       ${dim(`${i + 1}) ${s}`)}`));
       const ans = (await deps.prompt(`     paste ${cred} ${dim("(hidden · Enter to skip)")}: `)).trim();
       if (ans) {
-        cfg.creds[item.id] = { ...(cfg.creds[item.id] ?? {}), [item.fields[0]]: ans };
+        storeProviderCreds(cfg, item.id, { [item.fields[0]]: ans });
         enabled.add(item.id);
         deps.log(`     ✓ ${item.label} connected  ${dim(maskKey(ans))}`);
       } else {
