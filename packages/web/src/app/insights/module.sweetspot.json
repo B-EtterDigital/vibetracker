@@ -1,0 +1,305 @@
+{
+  "schema_version": "1.0.0",
+  "brick": {
+    "id": "000-vibetracker.web.runway-decision-console",
+    "name": "Runway Decision Console",
+    "kind": "module",
+    "status": "project_bound",
+    "version": "0.1.0",
+    "language": ["typescript", "tsx", "css"],
+    "frameworks": ["next", "react"],
+    "domain": ["usage-analytics", "budget-planning", "local-simulation"]
+  },
+  "hierarchy": {
+    "level": "brick",
+    "group_id": "000-vibetracker:packages/web/src/app",
+    "contains": ["route", "component", "sample", "model-adapter", "style", "test"],
+    "component_policy": "internal_by_default",
+    "notes": "Interactive estimate-only runway console driven by the production Insights runway model with explicit no-write boundaries."
+  },
+  "source": {
+    "project": "000-vibetracker",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "1822bd8",
+    "paths": [
+      "packages/web/src/app/insights",
+      "packages/web/src/lib/insights-runway.ts",
+      "packages/web/src/lib/__tests__/insights-route.test.ts",
+      "packages/web/src/lib/__tests__/insights-runway.test.ts"
+    ]
+  },
+  "owner": {
+    "primary": "Cyrill",
+    "team": "Better Digital",
+    "reviewers": []
+  },
+  "boundaries": {
+    "owned_paths": [
+      "packages/web/src/app/insights",
+      "packages/web/src/lib/insights-runway.ts",
+      "packages/web/src/lib/__tests__/insights-route.test.ts",
+      "packages/web/src/lib/__tests__/insights-runway.test.ts"
+    ],
+    "public_paths": [
+      "packages/web/src/app/insights/page.tsx",
+      "packages/web/src/app/insights/runway-decision-console.tsx",
+      "packages/web/src/app/insights/sample-profile.ts",
+      "packages/web/src/app/insights/insights.css",
+      "packages/web/src/app/insights/insights-controls.css",
+      "packages/web/src/app/insights/insights-ledger.css",
+      "packages/web/src/app/insights/insights-responsive.css",
+      "packages/web/src/lib/insights-runway.ts"
+    ],
+    "private_paths": [
+      "packages/web/src/lib/__tests__/insights-route.test.ts",
+      "packages/web/src/lib/__tests__/insights-runway.test.ts"
+    ],
+    "forbidden_imports": [
+      "packages/web/src/lib/supabase-admin.ts",
+      "client-side service-role keys",
+      "undocumented cross-brick private imports"
+    ],
+    "allowed_side_effects": [
+      "copy_local_dry_run_command",
+      "change_local_planning_controls"
+    ]
+  },
+  "classification": {
+    "data_classes": ["public", "synthetic_sample"],
+    "risk": "low",
+    "notes": "The route derives bounded planning estimates from a labelled sample and never writes usage, providers, profiles, spend, or rank."
+  },
+  "sweetspot": {
+    "ssa_v2": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Server route, sample profile, client console, production model adapter, styles, and tests are separated; every owned file is below 360 lines.",
+      "evidence": [
+        "packages/web/src/app/insights/page.tsx",
+        "packages/web/src/app/insights/runway-decision-console.tsx",
+        "packages/web/src/lib/insights-runway.ts"
+      ]
+    },
+    "ssi": {
+      "status": "passing",
+      "score": 95,
+      "notes": "One typed runway snapshot drives state, metrics, waveform, delta ledger, presets, and the copied dry-run command.",
+      "evidence": ["packages/web/src/lib/insights-runway.ts"]
+    },
+    "sstf": {
+      "status": "pending",
+      "score": 70,
+      "notes": "Focused and release verification are pending the current implementation pass.",
+      "evidence": [
+        "packages/web/src/lib/__tests__/insights-route.test.ts",
+        "packages/web/src/lib/__tests__/insights-runway.test.ts"
+      ]
+    },
+    "spe": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Two bounded sliders, three presets, one local review toggle, and a fixed sixteen-bar waveform keep client work constant.",
+      "evidence": [
+        "packages/web/src/app/insights/runway-decision-console.tsx",
+        "packages/web/src/lib/insights-runway.ts"
+      ]
+    },
+    "srs": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Estimates, NOT SPEND offsets, clipboard failures, local-only review state, and zero-write boundaries are visible in the UI.",
+      "evidence": [
+        "packages/web/src/app/insights/runway-decision-console.tsx",
+        "packages/web/src/lib/__tests__/insights-route.test.ts"
+      ]
+    },
+    "ssra": {
+      "status": "pending",
+      "score": 70,
+      "notes": "Production build, deploy, and desktop/mobile runtime proof are pending.",
+      "evidence": []
+    },
+    "sas": {
+      "status": "passing",
+      "score": 95,
+      "notes": "The route, console, adapter, styles, sample, and focused tests have explicit owned and public boundaries.",
+      "evidence": ["packages/web/src/app/insights/module.sweetspot.json"]
+    },
+    "sva": {
+      "status": "passing",
+      "score": 95,
+      "notes": "No privileged client, secret, provider mutation, upload, billing call, profile write, or network request is present.",
+      "evidence": [
+        "packages/web/src/app/insights/page.tsx",
+        "packages/web/src/app/insights/runway-decision-console.tsx"
+      ]
+    },
+    "srls": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick does not access a database.",
+      "evidence": []
+    },
+    "sev": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick requires no environment variables.",
+      "evidence": []
+    },
+    "ssc": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Next and React are inherited from the web package and no dependency was added.",
+      "evidence": ["packages/web/package.json"]
+    },
+    "sai": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Lease, intent, source commit, rationale, and touched paths are recorded.",
+      "evidence": [".smarch/agent-context/000-vibetracker.web.runway-decision-console.ndjson"]
+    }
+  },
+  "interfaces": {
+    "public_api": [
+      "GET /insights",
+      "buildInsightsRunwaySource(profile)",
+      "buildInsightsRunwaySnapshot(input)",
+      "<RunwayDecisionConsole />"
+    ],
+    "adapters": [
+      "packages/web/src/lib/insights-runway.ts#buildInsightsRunwaySource",
+      "packages/web/src/lib/insights-runway.ts#buildInsightsRunwaySnapshot",
+      "packages/web/src/lib/data.ts#ProfileView"
+    ],
+    "required_dependencies": ["next", "react"],
+    "forbidden_dependencies": [
+      "service-role client",
+      "real provider mutation",
+      "billing mutation",
+      "profile mutation",
+      "automatic upload"
+    ]
+  },
+  "security": {
+    "rls": {
+      "required": false,
+      "status": "not_applicable",
+      "negative_tests": []
+    },
+    "env": {
+      "required": false,
+      "status": "not_applicable",
+      "variables": []
+    },
+    "vulnerability_findings": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "report_paths": []
+    }
+  },
+  "supply_chain": {
+    "dependencies": [
+      {
+        "name": "next",
+        "version": "^16.1.1",
+        "purpose": "Server-rendered insights route.",
+        "risk": "low"
+      },
+      {
+        "name": "react",
+        "version": "^19.0.0",
+        "purpose": "Planning controls and clipboard feedback.",
+        "risk": "low"
+      }
+    ],
+    "licenses": ["MIT"],
+    "checksums": [],
+    "sbom_path": ""
+  },
+  "quality": {
+    "score": 84,
+    "line_count": {
+      "max_file_lines": 357,
+      "over_600_count": 0
+    },
+    "code_budget": {
+      "status": "acceptable",
+      "feature_lines": 1149,
+      "file_count": 10,
+      "dependency_count": 2,
+      "notes": "The former 614-line static route and 664-line CSS module are now a 24-line server surface, focused client console, production model adapter, and split route-local styles."
+    },
+    "test_commands": [
+      "node --test packages/web/src/lib/__tests__/insights-route.test.ts",
+      "node --test packages/web/src/lib/__tests__/insights-runway.test.ts"
+    ],
+    "verification": []
+  },
+  "clone": {
+    "readiness": "project_bound",
+    "adaptation_points": [
+      "plan presets",
+      "cap bounds",
+      "local-shift bounds",
+      "sample source"
+    ],
+    "install_steps": [
+      "Copy owned paths.",
+      "Connect planning output only through buildInsightsRunwaySnapshot.",
+      "Run focused estimate and route tests plus the release gate."
+    ],
+    "known_traps": [
+      "Local shadow value is a planning offset, never actual spend.",
+      "Review armed is local UI state and must never write usage.",
+      "Copied commands must retain --dry-run."
+    ]
+  },
+  "provenance": {
+    "created_by": {
+      "actor_kind": "agent",
+      "actor_id": "bdd-main@019f4b2d",
+      "provider": "OpenAI",
+      "model": "gpt-5-codex",
+      "role": "architect",
+      "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+      "commit": "1822bd8",
+      "files_touched": [
+        "packages/web/src/app/insights/page.tsx",
+        "packages/web/src/app/insights/runway-decision-console.tsx",
+        "packages/web/src/app/insights/sample-profile.ts",
+        "packages/web/src/app/insights/insights.css",
+        "packages/web/src/app/insights/insights-controls.css",
+        "packages/web/src/app/insights/insights-ledger.css",
+        "packages/web/src/app/insights/insights-responsive.css",
+        "packages/web/src/lib/insights-runway.ts",
+        "packages/web/src/lib/__tests__/insights-route.test.ts",
+        "packages/web/src/lib/__tests__/insights-runway.test.ts"
+      ],
+      "verification": [],
+      "timestamp": "2026-07-12T03:15:45Z",
+      "summary": "Consolidated the static Insights theatre into an interactive runway decision console.",
+      "intent": "Make estimate-only AI cost planning immediately useful, inspectable, and visually precise without writes.",
+      "decision_rationale": "One production-model console exposes more usable planning truth than seven repeated static explanation panels.",
+      "lease_id": "lease-1783825802569-1d6208ef",
+      "context_event_ids": ["ctx-1783825802614-b9d3c2c5"],
+      "attestation": {
+        "method": "git_commit",
+        "reference": "1822bd8"
+      }
+    },
+    "touched_by": [],
+    "reviewed_by": [],
+    "source_chain": [
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.runway-decision-console",
+        "commit": "1822bd8",
+        "path": "packages/web/src/app/insights",
+        "event": "created",
+        "timestamp": "2026-07-12T03:15:45Z"
+      }
+    ]
+  }
+}

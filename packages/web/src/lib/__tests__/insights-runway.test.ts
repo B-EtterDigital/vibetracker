@@ -77,17 +77,22 @@ test("runway planner clamps unsafe control values and handles a zero forecast", 
 
 test("Insights mounts an isolated, accessible planning instrument", () => {
   const page = readFileSync("packages/web/src/app/insights/page.tsx", "utf8");
-  const component = readFileSync("packages/web/src/components/InsightsRunwayConsole.tsx", "utf8");
-  const styles = readFileSync("packages/web/src/components/InsightsRunwayConsole.module.css", "utf8");
+  const component = readFileSync("packages/web/src/app/insights/runway-decision-console.tsx", "utf8");
+  const styles = readFileSync("packages/web/src/app/insights/insights.css", "utf8");
+  const controls = readFileSync("packages/web/src/app/insights/insights-controls.css", "utf8");
+  const responsive = readFileSync("packages/web/src/app/insights/insights-responsive.css", "utf8");
 
-  assert.match(page, /import \{ InsightsRunwayConsole \}/);
-  assert.match(page, /<InsightsRunwayConsole/);
+  assert.match(page, /import \{ RunwayDecisionConsole \}/);
+  assert.match(page, /<RunwayDecisionConsole/);
   assert.match(component, /type="range"/);
   assert.match(component, /type="checkbox"/);
   assert.match(component, /role="img"/);
   assert.match(component, /aria-live="polite"/);
-  assert.match(component, /No usage data is written/);
-  assert.match(styles, /@media \(max-width: 560px\)/);
-  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(component, /navigator\.clipboard\.writeText/);
+  assert.match(component, /It writes no usage data/);
+  assert.match(styles, /\.intel-scope/);
+  assert.match(controls, /input\[type="range"\]/);
+  assert.match(responsive, /@media \(max-width: 760px\)/);
+  assert.match(responsive, /@media \(prefers-reduced-motion: reduce\)/);
   assert.doesNotThrow(() => readFileSync("packages/web/src/app/icon.svg", "utf8"));
 });
