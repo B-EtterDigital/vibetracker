@@ -1,181 +1,78 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import {
+  buildWizardRunbook,
+  DEFAULT_WIZARD_OPTIONS,
+  WIZARD_MODES,
+  WIZARD_SOURCES,
+} from "../../app/wizard/wizard-command.ts";
 
-test("first-run wizard is exposed as a first-class terminal-to-gui route", () => {
+test("wizard route is a focused interactive command deck", () => {
   const page = readFileSync("packages/web/src/app/wizard/page.tsx", "utf8");
+  const shell = readFileSync("packages/web/src/app/wizard/wizard-shell.tsx", "utf8");
+  const styles = readFileSync("packages/web/src/app/wizard/wizard.css", "utf8");
+  const layoutStyles = readFileSync("packages/web/src/app/wizard/wizard-layout.css", "utf8");
+  const manifest = readFileSync("packages/web/src/app/wizard/module.sweetspot.json", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
-  const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
   assert.match(layout, /href="\/wizard"><span>05<\/span>Wizard/);
   assert.match(page, /buildInstallRunway/);
   assert.match(page, /buildLaunchSequence/);
-  assert.match(page, /buildLaunchCapsule/);
-  assert.match(page, /buildScanCommandRunway/);
   assert.match(page, /buildWizardFlightRecorder/);
-  assert.match(page, /wizard-route-intro/);
-  assert.match(page, /WizardPreflightStrip/);
-  assert.match(page, /WIZARD_PREFLIGHT_SEALS/);
-  assert.match(page, /wizardPreflightBars/);
-  assert.match(page, /wizard-preflight-strip/);
-  assert.match(page, /VTK:\/\/WIZARD-PREFLIGHT\/\/TERMINAL-GUI\/\/ZERO-SIDE-EFFECTS/);
-  assert.match(page, /preflight@wizard/);
-  assert.match(page, /providerCalls=0/);
-  assert.match(page, /ledgerWrites=0/);
-  assert.match(page, /promptReads=0/);
-  assert.match(page, /outputReads=0/);
-  assert.match(page, /terminal -> sources -> trust \+0 -> dry-run -> c0vibe review/);
-  assert.match(page, /WizardCommandBridgePanel/);
-  assert.match(page, /wizard-command-bridge/);
-  assert.match(page, /wizard-command-bridge__stages/);
-  assert.match(page, /WizardLiveTerminalViewportPanel/);
-  assert.match(page, /wizard-live-viewport/);
-  assert.match(page, /wizard-live-viewport__panes/);
-  assert.match(page, /WizardFlightRecorderPanel/);
-  assert.match(page, /wizard-flight-recorder/);
-  assert.match(page, /wizard-flight-events/);
-  assert.match(page, /WizardSignalCockpitPanel/);
-  assert.match(page, /wizard-signal-cockpit/);
-  assert.match(page, /wizard-signal-cockpit__stages/);
-  assert.match(page, /WizardLaunchReceiptPanel/);
-  assert.match(page, /wizard-launch-receipt/);
-  assert.match(page, /wizard-launch-receipt__rows/);
-  assert.match(page, /impact: "trust"/);
-  assert.match(page, /wizard-route-runway install-runway/);
-  assert.match(page, /wizard-route-capsule launch-capsule/);
-  assert.match(page, /wizard-route-steps wizard-choreography/);
-  assert.match(page, /wizard-route-scan scan-command-runway/);
-  assert.match(page, /WizardOperatorDeckPanel/);
-  assert.match(page, /wizard-operator-deck/);
-  assert.match(page, /wizard-operator-actions/);
-  assert.match(page, /VTK:\/\/FIRST-RUN-WIZARD\/\/INSTALL-RUNWAY\/\/TERMINAL-TO-GUI/);
-  assert.match(page, /VTK:\/\/FIRST-RUN-WIZARD\/\/COMMAND-BRIDGE\/\/VIBERS-UNITE/);
-  assert.match(page, /VTK:\/\/FIRST-RUN-WIZARD\/\/LIVE-TERMINAL-VIEWPORT\/\/ASCII-TO-GUI/);
-  assert.match(page, /VTK:\/\/FIRST-RUN-WIZARD\/\/FLIGHT-RECORDER\/\/CLI-TO-GUI/);
-  assert.match(page, /VTK:\/\/FIRST-RUN-WIZARD\/\/SIGNAL-COCKPIT\/\/NO-HIDDEN-UPLOAD/);
-  assert.match(page, /VTK:\/\/WIZARD-SIGNAL-COCKPIT\/\/ASCII-GUI\/\/VIBERS-UNITE/);
-  assert.match(page, /VTK:\/\/FIRST-RUN-WIZARD\/\/LAUNCH-RECEIPT\/\/NO-HIDDEN-SIDE-EFFECTS/);
-  assert.match(page, /VTK:\/\/WIZARD-LAUNCH-RECEIPT\/\/FIRST-RUN\/\/NO-HIDDEN-SIDE-EFFECTS/);
-  assert.match(page, /VTK:\/\/FIRST-RUN-WIZARD\/\/OPERATOR-DECK\/\/TERMINAL-IN-GUI/);
-  assert.match(page, /VTK:\/\/WIZARD-OPERATOR-DECK\/\/FIRST-MINUTE\/\/TERMINAL-IN-GUI/);
-  assert.match(page, /VTK:\/\/FIRST-RUN-WIZARD\/\/CHOREOGRAPHY\/\/INLINE-TERMINAL/);
-  assert.match(page, /VTK:\/\/FIRST-RUN-WIZARD\/\/SCAN-COMMAND-RUNWAY\/\/VISUAL-ONLY/);
-  assert.match(page, /Open in a terminal, then let the GUI take over/);
-  assert.match(page, /live terminal viewport/);
-  assert.match(page, /spawn terminal pane -> mount GUI shell -> keep command visible/);
-  assert.match(page, /source labels: hosted creator local trust manual publish/);
-  assert.match(page, /MCP\/GitHub\/Codex != usage/);
-  assert.match(page, /The opening bridge: ASCII terminal on the left, GUI command surface on the right/);
-  assert.match(page, /ASCII terminal boot/);
-  assert.match(page, /inline GUI/);
-  assert.match(page, /source detection/);
-  assert.match(page, /dry-run review/);
-  assert.match(page, /tool surface, not a landing page/);
-  assert.match(page, /TERMINAL \+ GUI/);
-  assert.match(page, /first minute command bridge/);
-  assert.match(page, /ascii terminal stays alive inside the GUI/);
-  assert.match(page, /source cards light up before any usage row/);
-  assert.match(page, /C0VIBE profile \+ score \+ heatgrid wait for review/);
-  assert.match(page, /Profile, Vibe Score, and heatgrid feed from the reviewed aggregate stream only/);
-  assert.match(page, /terminal-in-GUI signal cockpit/);
-  assert.match(page, /Higgsfield MCP -> authenticated source label before usage/);
-  assert.match(page, /Local AI sonar/);
-  assert.match(page, /Ollama \/ LM Studio \/ ComfyUI/);
-  assert.match(page, /Codex cube -> trust signal \/\/ NOT USAGE \/\/ no spend boost/);
-  assert.match(page, /profile \+ vibe score \+ heatgrid after review/);
-  assert.match(page, /profile \+ vibe score \+ heatgrid feed from the same reviewed datastream/);
-  assert.match(page, /detected is not counted/);
-  assert.match(page, /Provider theatre runs/);
-  assert.match(page, /score waits for reviewed aggregates/);
-  assert.match(page, /SIDE EFFECTS/);
-  assert.match(page, /prompt reads/);
-  assert.match(page, /output reads/);
-  assert.match(page, /publish writes/);
-  assert.match(page, /providerCalls/);
-  assert.match(page, /usageWrites/);
-  assert.match(page, /hiddenUpload/);
-  assert.match(page, /0 hidden uploads/);
-  assert.match(page, /visualOnly=true/);
-  assert.match(page, /provider calls/);
-  assert.match(page, /WizardLiveTerminalViewportPanel/);
-  assert.match(page, /operatorImpactFor/);
-  assert.match(page, /operatorFramesFor/);
-  assert.match(page, /operatorChecksFor/);
-  assert.match(page, /LOCAL ONLY/);
-  assert.match(page, /NOT USAGE/);
-  assert.match(page, /PUBLISH/);
-  assert.match(page, /Vibers Unite/);
-  assert.match(page, /C0vibe\.app/);
-  assert.match(page, /PREVIEW ONLY/);
-  assert.match(page, /aggregate only/);
-  assert.match(page, /<WizardPreflightStrip/);
-  assert.doesNotMatch(page, /dangerouslySetInnerHTML/);
-  assert.match(styles, /\.wizard-route-intro/);
-  assert.match(styles, /\.wizard-preflight-strip/);
-  assert.match(styles, /\.wizard-preflight-strip__terminal/);
-  assert.match(styles, /\.wizard-preflight-channels/);
-  assert.match(styles, /\.wizard-preflight-channel\[data-impact="NOT USAGE"\]/);
-  assert.match(styles, /\.wizard-preflight-channel__bars i/);
-  assert.match(styles, /\.wizard-preflight-strip__seals/);
-  assert.match(styles, /\.wizard-command-bridge/);
-  assert.match(styles, /\.wizard-command-bridge__terminal/);
-  assert.match(styles, /\.wizard-command-bridge__stats/);
-  assert.match(styles, /\.wizard-command-bridge__stages/);
-  assert.match(styles, /\.wizard-command-stage/);
-  assert.match(styles, /\.wizard-command-stage--privacy/);
-  assert.match(styles, /\.wizard-command-stage__screen pre:first-child/);
-  assert.match(styles, /\.wizard-live-viewport/);
-  assert.match(styles, /\.wizard-live-viewport__terminal/);
-  assert.match(styles, /\.wizard-live-viewport__status/);
-  assert.match(styles, /\.wizard-live-viewport__panes/);
-  assert.match(styles, /\.wizard-live-pane/);
-  assert.match(styles, /\.wizard-live-pane--trust/);
-  assert.match(styles, /\.wizard-live-pane__screen pre:first-child/);
-  assert.match(styles, /\.wizard-signal-cockpit/);
-  assert.match(styles, /\.wizard-signal-cockpit__terminal/);
-  assert.match(styles, /\.wizard-signal-cockpit__stats/);
-  assert.match(styles, /\.wizard-signal-cockpit__stages/);
-  assert.match(styles, /\.wizard-signal-stage/);
-  assert.match(styles, /\.wizard-signal-stage--trust/);
-  assert.match(styles, /\.wizard-signal-stage__screen pre:first-child/);
-  assert.match(styles, /\.wizard-launch-receipt/);
-  assert.match(styles, /\.wizard-launch-receipt__terminal/);
-  assert.match(styles, /\.wizard-launch-receipt__seals/);
-  assert.match(styles, /\.wizard-launch-receipt__rows/);
-  assert.match(styles, /\.wizard-launch-receipt-row/);
-  assert.match(styles, /\.wizard-launch-receipt-row\[data-impact="VISUAL ONLY"\]/);
-  assert.match(styles, /\.wizard-flight-recorder/);
-  assert.match(styles, /\.wizard-flight-event/);
-  assert.match(styles, /\.wizard-flight-event__screen pre:first-child/);
-  assert.match(styles, /\.wizard-flight-recorder__counters/);
-  assert.match(styles, /\.wizard-route-runway\.install-runway/);
-  assert.match(styles, /\.wizard-route-capsule\.launch-capsule/);
-  assert.match(styles, /\.wizard-route-steps\.wizard-choreography/);
-  assert.match(styles, /\.wizard-route-scan\.scan-command-runway/);
-  assert.match(styles, /\.wizard-operator-deck/);
-  assert.match(styles, /\.wizard-operator-action/);
-  assert.match(styles, /\.wizard-operator-action__screen pre:first-child/);
-  assert.match(styles, /@media \(max-width: 760px\)/);
-  assert.match(styles, /\.wizard-command-bridge__body \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /\.wizard-preflight-strip__body \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /\.wizard-preflight-channels \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
-  assert.match(styles, /\.wizard-command-bridge__stages \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
-  assert.match(styles, /\.wizard-live-viewport__body \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /\.wizard-live-viewport__panes \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
-  assert.match(styles, /\.wizard-launch-receipt__body \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /\.wizard-launch-receipt__rows \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
-  assert.match(styles, /\.wizard-signal-cockpit__body \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /\.wizard-signal-cockpit__stages \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
-  assert.match(styles, /\.wizard-flight-events \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
-  assert.match(styles, /@media \(max-width: 460px\)[\s\S]*\.wizard-command-bridge__stages \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /@media \(max-width: 460px\)[\s\S]*\.wizard-preflight-channels \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /@media \(max-width: 460px\)[\s\S]*\.wizard-signal-cockpit__stages \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /@media \(max-width: 460px\)[\s\S]*\.wizard-live-viewport__panes \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /@media \(max-width: 460px\)[\s\S]*\.wizard-launch-receipt__seals, \.wizard-launch-receipt__rows \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /@media \(max-width: 460px\)[\s\S]*\.wizard-flight-events \{ grid-template-columns: 1fr; \}/);
-  assert.match(styles, /\.wizard-command-stage__screen pre \{ opacity: 0; transform: none; \}/);
-  assert.match(styles, /\.wizard-preflight-channel__bars i/);
-  assert.match(styles, /\.wizard-live-pane__screen pre \{ opacity: 0; transform: none; \}/);
-  assert.match(styles, /\.wizard-signal-stage__screen pre \{ opacity: 0; transform: none; \}/);
-  assert.match(styles, /\.wizard-operator-actions \{ grid-template-columns: 1fr; \}/);
+  assert.match(page, /<WizardShell/);
+  assert.match(page, /\.\/wizard\.css/);
+  assert.match(shell, /^"use client";/);
+  assert.match(shell, /buildWizardRunbook/);
+  assert.match(shell, /navigator\.clipboard\.writeText/);
+  assert.match(shell, /Clipboard access failed/);
+  assert.match(shell, /nothing runs on this page/);
+  assert.match(shell, /type="checkbox"/);
+  assert.match(shell, /aria-pressed=/);
+  assert.match(shell, /aria-live="polite"/);
+  assert.match(shell, /usage != trust/);
+  assert.match(shell, /trust signals remain NOT USAGE/);
+  assert.match(styles, /\.wizard-workspace/);
+  assert.match(styles, /\.wizard-terminal/);
+  assert.match(styles, /\.wizard-sources__grid/);
+  assert.match(styles, /:focus-visible/);
+  assert.match(layoutStyles, /@media \(max-width: 760px\)/);
+  assert.match(layoutStyles, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(manifest, /000-vibetracker\.web\.first-run-command-deck/);
+  assert.doesNotMatch(shell, /dangerouslySetInnerHTML/);
+  assert.doesNotMatch(page, /WizardPreflightStrip|WizardCommandBridgePanel|WizardSignalCockpitPanel/);
+});
+
+test("runbook generator emits only real reviewed CLI steps", () => {
+  const defaultRunbook = buildWizardRunbook(DEFAULT_WIZARD_OPTIONS);
+  assert.equal(defaultRunbook.primary, "npx vibetrack init --gui");
+  assert.equal(defaultRunbook.selectedSources.length, WIZARD_SOURCES.length);
+  assert.deepEqual(defaultRunbook.commands, [
+    "npx vibetrack init --gui",
+    "vibetracker providers --domain ai",
+    "vibetracker providers --domain creative",
+    "vibetracker providers --domain dev",
+    "vibetracker detect --json",
+    "vibetracker sync --receipt --out ~/.vibetracker/receipts",
+    "vibetracker audit",
+    "vibetracker upload --dry-run",
+  ]);
+  assert.match(defaultRunbook.status, /4 source rails/);
+  assert.match(defaultRunbook.status, /publish preview locked/);
+
+  const localRunbook = buildWizardRunbook({
+    mode: "terminal",
+    sources: ["local"],
+    receipt: false,
+    publishPreview: false,
+  });
+  assert.equal(localRunbook.primary, "npx vibetrack init");
+  assert.deepEqual(localRunbook.commands, [
+    "npx vibetrack init",
+    "vibetracker detect --json",
+    "vibetracker audit",
+  ]);
+  assert.equal(localRunbook.status, "1 source rail / local only");
+  assert.ok(localRunbook.commands.every((command) => command !== "vibetracker upload"));
+  assert.equal(WIZARD_MODES.length, 3);
 });

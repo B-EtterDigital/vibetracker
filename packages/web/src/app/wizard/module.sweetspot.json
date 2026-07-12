@@ -1,0 +1,280 @@
+{
+  "schema_version": "1.0.0",
+  "brick": {
+    "id": "000-vibetracker.web.first-run-command-deck",
+    "name": "First Run Command Deck",
+    "kind": "module",
+    "status": "project_bound",
+    "version": "0.1.0",
+    "language": ["typescript", "tsx", "css"],
+    "frameworks": ["next", "react"],
+    "domain": ["onboarding", "local-first", "command-planning"]
+  },
+  "hierarchy": {
+    "level": "brick",
+    "group_id": "000-vibetracker:packages/web/src/app",
+    "contains": ["route", "component", "utility", "style", "test"],
+    "component_policy": "internal_by_default",
+    "notes": "Interactive first-run command planner with explicit usage, local, privacy, and publish-preview rails."
+  },
+  "source": {
+    "project": "000-vibetracker",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "2e696d7",
+    "paths": [
+      "packages/web/src/app/wizard",
+      "packages/web/src/lib/__tests__/wizard-route.test.ts"
+    ]
+  },
+  "owner": {
+    "primary": "Cyrill",
+    "team": "Better Digital",
+    "reviewers": []
+  },
+  "boundaries": {
+    "owned_paths": [
+      "packages/web/src/app/wizard",
+      "packages/web/src/lib/__tests__/wizard-route.test.ts"
+    ],
+    "public_paths": [
+      "packages/web/src/app/wizard/page.tsx",
+      "packages/web/src/app/wizard/wizard-shell.tsx",
+      "packages/web/src/app/wizard/wizard-command.ts",
+      "packages/web/src/app/wizard/wizard.css",
+      "packages/web/src/app/wizard/wizard-layout.css"
+    ],
+    "private_paths": [
+      "packages/web/src/lib/__tests__/wizard-route.test.ts"
+    ],
+    "forbidden_imports": [
+      "packages/web/src/lib/supabase-admin.ts",
+      "client-side service-role keys",
+      "undocumented cross-brick private imports"
+    ],
+    "allowed_side_effects": [
+      "copy_local_cli_runbook"
+    ]
+  },
+  "classification": {
+    "data_classes": ["public"],
+    "risk": "low",
+    "notes": "The route generates static local commands in memory and can copy them to the clipboard; it does not run commands, scan providers, or upload data."
+  },
+  "sweetspot": {
+    "ssa_v2": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Server composition, deterministic runbook logic, client interaction, styling, and tests are isolated below the route-local file budget.",
+      "evidence": [
+        "packages/web/src/app/wizard/page.tsx",
+        "packages/web/src/app/wizard/wizard-shell.tsx",
+        "packages/web/src/app/wizard/wizard-command.ts"
+      ]
+    },
+    "ssi": {
+      "status": "passing",
+      "score": 95,
+      "notes": "One typed options contract drives mode, source, receipt, publish-preview, terminal, and copy states.",
+      "evidence": ["packages/web/src/app/wizard/wizard-command.ts"]
+    },
+    "sstf": {
+      "status": "pending",
+      "score": 70,
+      "notes": "Focused and release verification are pending the current implementation pass.",
+      "evidence": ["packages/web/src/lib/__tests__/wizard-route.test.ts"]
+    },
+    "spe": {
+      "status": "passing",
+      "score": 95,
+      "notes": "The planner operates on three modes, four source rails, and a bounded command list.",
+      "evidence": ["packages/web/src/app/wizard/wizard-command.ts"]
+    },
+    "srs": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Clipboard failure becomes a visible blocked state and the UI repeatedly states that no command or provider action runs on the page.",
+      "evidence": ["packages/web/src/app/wizard/wizard-shell.tsx"]
+    },
+    "ssra": {
+      "status": "pending",
+      "score": 70,
+      "notes": "Production build, deploy, and desktop/mobile runtime proof are pending.",
+      "evidence": []
+    },
+    "sas": {
+      "status": "passing",
+      "score": 95,
+      "notes": "The route, generator, client surface, style, and focused test have explicit owned and public boundaries.",
+      "evidence": ["packages/web/src/app/wizard/module.sweetspot.json"]
+    },
+    "sva": {
+      "status": "passing",
+      "score": 95,
+      "notes": "No privileged client, secret, user record, command execution, or network request is present.",
+      "evidence": [
+        "packages/web/src/app/wizard/page.tsx",
+        "packages/web/src/app/wizard/wizard-shell.tsx"
+      ]
+    },
+    "srls": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick does not access a database.",
+      "evidence": []
+    },
+    "sev": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick requires no environment variables.",
+      "evidence": []
+    },
+    "ssc": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Next and React are inherited from the web package and no dependency was added.",
+      "evidence": ["packages/web/package.json"]
+    },
+    "sai": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Lease, intent, source commit, decision, and touched paths are recorded.",
+      "evidence": [".smarch/agent-context/web-wizard-command-deck.ndjson"]
+    }
+  },
+  "interfaces": {
+    "public_api": [
+      "GET /wizard",
+      "buildWizardRunbook(options)",
+      "<WizardShell />"
+    ],
+    "adapters": [
+      "packages/web/src/lib/install-runway.ts",
+      "packages/web/src/lib/launch-sequence.ts"
+    ],
+    "required_dependencies": ["next", "react"],
+    "forbidden_dependencies": [
+      "service-role client",
+      "shell execution",
+      "automatic provider scan",
+      "automatic upload"
+    ]
+  },
+  "security": {
+    "rls": {
+      "required": false,
+      "status": "not_applicable",
+      "negative_tests": []
+    },
+    "env": {
+      "required": false,
+      "status": "not_applicable",
+      "variables": []
+    },
+    "vulnerability_findings": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "report_paths": []
+    }
+  },
+  "supply_chain": {
+    "dependencies": [
+      {
+        "name": "next",
+        "version": "^16.1.1",
+        "purpose": "Server-rendered wizard route.",
+        "risk": "low"
+      },
+      {
+        "name": "react",
+        "version": "^19.0.0",
+        "purpose": "Runbook controls and clipboard feedback.",
+        "risk": "low"
+      }
+    ],
+    "licenses": ["MIT"],
+    "checksums": [],
+    "sbom_path": ""
+  },
+  "quality": {
+    "score": 84,
+    "line_count": {
+      "max_file_lines": 0,
+      "over_600_count": 0
+    },
+    "code_budget": {
+      "status": "acceptable",
+      "feature_lines": 0,
+      "file_count": 6,
+      "dependency_count": 2,
+      "notes": "Final line counts are recorded after focused verification."
+    },
+    "test_commands": [
+      "node --test packages/web/src/lib/__tests__/wizard-route.test.ts"
+    ],
+    "verification": []
+  },
+  "clone": {
+    "readiness": "project_bound",
+    "adaptation_points": [
+      "start modes",
+      "source rails",
+      "privacy gates",
+      "CLI commands"
+    ],
+    "install_steps": [
+      "Copy owned paths.",
+      "Confirm every displayed command against the current CLI usage surface.",
+      "Run the focused test and release gate."
+    ],
+    "known_traps": [
+      "The page must never imply that a command, provider scan, or upload ran.",
+      "Every copied command must exist in the current CLI.",
+      "Trust evidence must remain separate from usage totals."
+    ]
+  },
+  "provenance": {
+    "created_by": {
+      "actor_kind": "agent",
+      "actor_id": "bdd-main@019f4b2d",
+      "provider": "OpenAI",
+      "model": "gpt-5-codex",
+      "role": "architect",
+      "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+      "commit": "2e696d7",
+      "files_touched": [
+        "packages/web/src/app/wizard/page.tsx",
+        "packages/web/src/app/wizard/wizard-shell.tsx",
+        "packages/web/src/app/wizard/wizard-command.ts",
+        "packages/web/src/app/wizard/wizard.css",
+        "packages/web/src/app/wizard/wizard-layout.css",
+        "packages/web/src/app/wizard/module.sweetspot.json",
+        "packages/web/src/lib/__tests__/wizard-route.test.ts"
+      ],
+      "verification": [],
+      "timestamp": "2026-07-12T01:25:00Z",
+      "summary": "Replaced the static first-run theatre with an interactive local command deck.",
+      "intent": "Make onboarding useful, visually precise, and explicitly local-first without faking runtime activity.",
+      "decision_rationale": "A pure runbook generator, one client interaction surface, route-local CSS, and focused contract are the smallest honest feature boundary.",
+      "lease_id": "lease-1783818821615-00befb21",
+      "context_event_ids": ["ctx-1783818821685-9f3aee2a"],
+      "attestation": {
+        "method": "git_commit",
+        "reference": "2e696d7"
+      }
+    },
+    "touched_by": [],
+    "reviewed_by": [],
+    "source_chain": [
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.first-run-command-deck",
+        "commit": "2e696d7",
+        "path": "packages/web/src/app/wizard",
+        "event": "created",
+        "timestamp": "2026-07-12T01:25:00Z"
+      }
+    ]
+  }
+}

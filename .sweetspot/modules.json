@@ -132,6 +132,13 @@
       "notes": "Local-first scan route with a deterministic, no-network preview."
     },
     {
+      "brick_id": "000-vibetracker.web.first-run-command-deck",
+      "manifest_path": "packages/web/src/app/wizard/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 84,
+      "notes": "Interactive local-first onboarding command deck with explicit source and publish-preview gates."
+    },
+    {
       "brick_id": "000-vibetracker.web.public-profile.adaptive-depth",
       "manifest_path": "packages/web/src/app/u/[handle]/module.sweetspot.json",
       "status": "project_bound",
