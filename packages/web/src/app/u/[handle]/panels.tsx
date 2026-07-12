@@ -292,9 +292,10 @@ export function MixRow({
   mix,
   insights,
 }: {
-  mix: { rows: MixBar[]; more: string | null } | null;
+  mix: { rows: MixBar[]; rest?: MixBar[]; more: string | null } | null;
   insights: KeyValueRow[] | null;
 }) {
+  const rest = mix?.rest ?? [];
   return (
     <div className="vprofile-cols">
       {mix ? (
@@ -302,7 +303,16 @@ export function MixRow({
           <PanelHead title="Your stack" sub="(by spend)" />
           <div className="vprofile-bars" role="group" aria-label="Provider mix by spend">
             {mix.rows.map((bar) => <BarRow bar={bar} key={bar.id} />)}
-            {mix.more ? <p className="vprofile-bar-more">{mix.more}</p> : null}
+            {rest.length > 0 && mix.more ? (
+              <details className="vprofile-bar-fold">
+                <summary className="vprofile-bar-more">{mix.more}</summary>
+                <div className="vprofile-bars" role="group" aria-label="More providers">
+                  {rest.map((bar) => <BarRow bar={bar} key={bar.id} />)}
+                </div>
+              </details>
+            ) : mix.more ? (
+              <p className="vprofile-bar-more">{mix.more}</p>
+            ) : null}
           </div>
         </section>
       ) : null}

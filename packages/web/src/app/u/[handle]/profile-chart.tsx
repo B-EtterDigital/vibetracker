@@ -67,6 +67,19 @@ function metricOf(totalUsd: number, totalOps: number, totalCredits: number): Met
   return "ops";
 }
 const unitLabel = (m: Metric): string => (m === "usd" ? "USD per day" : m === "credits" ? "credits per day" : "ops per day");
+// Centered moving average — turns spiky daily bars into smooth ribbons so the stacked bands read
+// as clean layers instead of overlapping spikes that hide the smaller sources.
+function smooth(values: number[], window: number): number[] {
+  if (window <= 1) return values;
+  const half = Math.floor(window / 2);
+  return values.map((_v, i) => {
+    const lo = Math.max(0, i - half);
+    const hi = Math.min(values.length - 1, i + half);
+    let sum = 0;
+    for (let j = lo; j <= hi; j += 1) sum += values[j];
+    return sum / (hi - lo + 1);
+  });
+}
 function viewKey(view: View): string {
   return view === "all" || view === "stacked" ? view : `p:${view.provider}`;
 }
@@ -124,9 +137,12 @@ export function ProfileUsageChart({ days, providers = [] }: { days: ChartDay[]; 
   const single = view === "all" ? combined.map((d) => valueAt(d, metric)) : selected ? selected.aligned.map((d) => valueAt(d, metric)) : combined.map((d) => valueAt(d, metric));
   const cumTops: number[][] = [];
   if (stacked) {
+    // Adaptive smoothing window: wider spans get more smoothing so ribbons stay clean.
+    const win = Math.min(11, Math.max(3, Math.round(axis.length / 32)) | 1);
     let running = axis.map(() => 0);
     for (const p of provSeries) {
-      running = running.map((base, i) => base + valueAt(p.aligned[i], metric));
+      const vals = smooth(p.aligned.map((d) => valueAt(d, metric)), win);
+      running = running.map((base, i) => base + vals[i]);
       cumTops.push(running.slice());
     }
   }

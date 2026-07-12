@@ -4,7 +4,7 @@
 
 .vprofile {
   --vp-mono: var(--font-data), ui-monospace, SFMono-Regular, Menlo, monospace;
-  display: grid; gap: 14px; max-width: 1160px; margin: 0 auto; padding: 24px 20px 80px;
+  display: grid; gap: 14px; max-width: none; margin: 0 auto; padding: 24px 20px 80px;
 }
 
 .vprofile > * {
@@ -119,7 +119,7 @@
   overflow: hidden;
 }
 
-.vprofile-mark--logo img { width: 14px; height: 14px; display: block; }
+.vprofile-mark--logo img { width: 15px; height: 15px; display: block; border-radius: 3px; object-fit: contain; }
 
 .vprofile-identity {
   margin: 0;
@@ -343,6 +343,21 @@
 .vprofile-bar-fill { display: block; height: 100%; border-radius: 2px; }
 
 .vprofile-bar-more { margin: 0; font: 500 11px/1.4 var(--vp-mono); color: rgba(217, 255, 242, 0.4); }
+
+/* Expandable "+N more" — native <details>, works without JS. */
+.vprofile-bar-fold { display: grid; gap: 12px; }
+.vprofile-bar-fold > summary {
+  cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px;
+  width: fit-content; padding: 2px 0; color: rgba(217, 255, 242, 0.52);
+  transition: color 160ms ease;
+}
+.vprofile-bar-fold > summary::-webkit-details-marker { display: none; }
+.vprofile-bar-fold > summary::before {
+  content: "▸"; font-size: 9px; color: #2ee8d6; transition: transform 200ms ease; display: inline-block;
+}
+.vprofile-bar-fold[open] > summary::before { transform: rotate(90deg); }
+.vprofile-bar-fold > summary:hover { color: #d9fff2; }
+.vprofile-bar-fold[open] > summary { margin-bottom: 2px; }
 
 /* ---- key/value insights ---- */
 

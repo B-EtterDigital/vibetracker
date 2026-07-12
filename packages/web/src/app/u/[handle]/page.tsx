@@ -136,24 +136,26 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   ];
 
   const usdTotal = byUsd.reduce((sum, p) => sum + p.usd, 0);
+  const toMixBar = (p: (typeof byUsd)[number]): MixBar => {
+    const brand = providerBrand(p.provider);
+    return {
+      id: p.provider,
+      label: providerLabel(p.provider),
+      amount: `${formatUsd(p.usd)} · ${formatInt(p.credits)} cr · ${formatInt(p.ops)} ops`,
+      share: usdTotal > 0 ? (p.usd / usdTotal) * 100 : 0,
+      mark: brand.mark,
+      from: brand.from,
+      to: brand.to,
+      ink: brand.ink,
+      logo: brand.logo,
+      tag: vibeCategoryFor(primaryCategory(p.provider)).short,
+    };
+  };
   const rest = byUsd.slice(8);
   const restUsd = rest.reduce((sum, p) => sum + p.usd, 0);
   const mix = {
-    rows: byUsd.slice(0, 8).map((p): MixBar => {
-      const brand = providerBrand(p.provider);
-      return {
-        id: p.provider,
-        label: providerLabel(p.provider),
-        amount: `${formatUsd(p.usd)} · ${formatInt(p.credits)} cr · ${formatInt(p.ops)} ops`,
-        share: usdTotal > 0 ? (p.usd / usdTotal) * 100 : 0,
-        mark: brand.mark,
-        from: brand.from,
-        to: brand.to,
-        ink: brand.ink,
-        logo: brand.logo,
-        tag: vibeCategoryFor(primaryCategory(p.provider)).short,
-      };
-    }),
+    rows: byUsd.slice(0, 8).map(toMixBar),
+    rest: rest.map(toMixBar),
     more: rest.length ? `+${rest.length} more · ${formatUsd(restUsd)}` : null,
   };
 

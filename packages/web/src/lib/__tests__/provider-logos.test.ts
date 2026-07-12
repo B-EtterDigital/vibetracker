@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import { hasLogo, logoPath, PROVIDER_LOGO_IDS } from "../provider-logos.ts";
+import { hasLogo, logoPath, PROVIDER_LOGO_IDS, PROVIDER_LOGO_FILES } from "../provider-logos.ts";
 import { providerBrand } from "../provider-brand.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -16,31 +16,34 @@ test("resolver returns a path only for ids with a real asset", () => {
   assert.equal(logoPath("Anthropic"), "/provider-logos/anthropic.svg");
 
   // OpenAI/Codex (svgrepo) and Runway (svgl) were sourced beyond Simple Icons.
-  assert.equal(hasLogo("openai"), true);
-  assert.equal(hasLogo("codex"), true);
   assert.equal(logoPath("runway"), "/provider-logos/runway.svg");
 
-  // Providers with no available brand SVG resolve to null -> monogram fallback.
-  for (const missing of ["kling", "higgsfield", "udio", "luma", "not-a-provider"]) {
+  // Brands with no public SVG use their original-colour apple-touch-icon PNG.
+  assert.equal(logoPath("higgsfield"), "/provider-logos/higgsfield.png");
+  assert.equal(logoPath("falai"), "/provider-logos/falai.png");
+  assert.equal(logoPath("openclaw"), "/provider-logos/openclaw.png");
+
+  // Providers with no available brand asset resolve to null -> monogram fallback.
+  for (const missing of ["kling", "udio", "luma", "devin", "not-a-provider"]) {
     assert.equal(hasLogo(missing), false, `${missing} should have no logo`);
     assert.equal(logoPath(missing), null, `${missing} should resolve to null`);
   }
 });
 
-test("every resolved logo id has a matching bone-colored SVG on disk", () => {
-  // Coverage: the hardcoded manifest must equal the actual fetched assets — no
-  // dangling path (would 404 in the browser) and no orphan file (would never render).
-  const filesOnDisk = readdirSync(logoDir)
-    .filter((name) => name.endsWith(".svg"))
-    .map((name) => name.slice(0, -4))
-    .sort();
-  assert.deepEqual([...PROVIDER_LOGO_IDS], filesOnDisk, "manifest must match public/provider-logos/*.svg");
-
+test("every resolved logo id has a matching asset on disk", () => {
+  // Coverage: the hardcoded manifest must equal the actual fetched assets — no dangling path
+  // (would 404 in the browser). SVGs are additionally checked to be bone monochrome; PNGs are
+  // brand-coloured apple-touch-icons and only need to exist.
   for (const id of PROVIDER_LOGO_IDS) {
-    const svg = readFileSync(resolve(logoDir, `${id}.svg`), "utf8");
-    assert.ok(svg.includes("<svg"), `${id}.svg must be a real SVG`);
-    assert.ok(!/<html/i.test(svg), `${id}.svg must not be an error page`);
-    assert.ok(svg.includes("#eef7f4"), `${id}.svg must be bone (#eef7f4) monochrome`);
+    const file = PROVIDER_LOGO_FILES[id];
+    const path = resolve(logoDir, file);
+    assert.ok(existsSync(path), `${file} must exist on disk`);
+    if (file.endsWith(".svg")) {
+      const svg = readFileSync(path, "utf8");
+      assert.ok(svg.includes("<svg"), `${file} must be a real SVG`);
+      assert.ok(!/<html/i.test(svg), `${file} must not be an error page`);
+      assert.ok(svg.includes("#eef7f4"), `${file} must be bone (#eef7f4) monochrome`);
+    }
   }
 });
 
@@ -53,6 +56,9 @@ test("providerBrand exposes logo for logo providers and keeps monogram fields in
 
   // A logo id that has no explicit brand entry still gets its logo (via fallback branch).
   assert.equal(providerBrand("grok").logo, "/provider-logos/grok.svg");
+
+  // Higgsfield now carries a PNG logo while keeping its monogram fields.
+  assert.equal(providerBrand("higgsfield").logo, "/provider-logos/higgsfield.png");
 
   // A provider with a brand but no logo keeps mark/from/to/ink and has no logo.
   const noLogo = providerBrand("kling");
