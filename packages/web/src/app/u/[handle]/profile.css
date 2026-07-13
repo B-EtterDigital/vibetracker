@@ -4,17 +4,46 @@
 
 .vprofile {
   --vp-mono: var(--font-data), ui-monospace, SFMono-Regular, Menlo, monospace;
-  display: grid; gap: 14px; max-width: none; margin: 0 auto; padding: 24px 20px 80px;
+  /* A contained editorial width reads as designed, not stretched; the grid inside carries the
+     structure. Heatmaps and the chart still get the full width of this column. */
+  display: flex; flex-direction: column; gap: 16px;
+  max-width: 1440px; margin: 0 auto; padding: 24px 20px 104px;
+}
+@media (min-width: 2040px) { .vprofile { max-width: 1560px; } }
+
+/* The bento: 12 columns. Most panels span the full width (they were built with viewport media
+   queries); the two that read cleanly narrow — specialization, trust — pair 2-up. */
+.vprofile-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.vprofile-slot { min-width: 0; animation: vprofile-in 0.5s ease-out both; animation-delay: calc(var(--panel-i, 0) * 65ms); }
+.vprofile-slot--full { grid-column: 1 / -1; }
+.vprofile-slot--half { grid-column: span 6; }
+
+/* A movement — the chapter divider that turns a wall into scannable sections: an eyebrow label
+   trailing into a hairline rule. The extra top margin gives each chapter room to breathe. */
+.vprofile-movement {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 14px;
+  margin: 14px 2px 0;
+  animation: vprofile-in 0.5s ease-out both; animation-delay: calc(var(--panel-i, 0) * 65ms);
+}
+.vprofile-movement > span {
+  font: 700 10px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.24em;
+  color: rgba(217, 255, 242, 0.52); white-space: nowrap;
+}
+.vprofile-movement::after {
+  content: ""; flex: 1 1 auto; height: 1px;
+  background: linear-gradient(90deg, rgba(46, 232, 214, 0.28), rgba(46, 232, 214, 0.015));
 }
 
-.vprofile > * {
-  min-width: 0;
-  animation: vprofile-in 0.5s ease-out both;
-  animation-delay: calc(var(--panel-i, 0) * 90ms);
-}
+@media (max-width: 900px) { .vprofile-slot--half { grid-column: 1 / -1; } }
 
 .vprofile-back {
-  justify-self: start;
+  align-self: start;
   display: inline-flex; align-items: center; gap: 6px;
   font: 500 12px/1 var(--vp-mono); letter-spacing: 0.04em; text-transform: uppercase;
   color: rgba(217, 255, 242, 0.6); text-decoration: none;
@@ -31,7 +60,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vprofile > *, .vprofile-progress__fill { animation: none; }
+  .vprofile-slot, .vprofile-movement, .vprofile-progress__fill { animation: none; }
 }
 
 .vprofile :is(a, button, [tabindex]):focus-visible,

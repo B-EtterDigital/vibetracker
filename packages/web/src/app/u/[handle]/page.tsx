@@ -289,9 +289,38 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
 
   const claimed = tierRaw !== "self_reported";
 
-  const sections: ReactNode[] = [];
-  if (isDemo) sections.push(<DemoBanner key="demo" />);
-  sections.push(
+  const showProviderMix = reveal.providerMix && mix.rows.length > 0;
+  // The real GitHub contribution graph, whenever the viber's CLI captured it. Always shown when
+  // present (not tier-gated) — it is the viber's own git, and it reads as activity evidence, kept
+  // deliberately distinct from AI spend. Never affects spend, ops, credits, or the signal score.
+  const githubSignal = profile.trustSignals.find(
+    (s): s is Extract<typeof s, { kind: "github_activity" }> =>
+      s.kind === "github_activity" && Array.isArray(s.days) && s.days.length > 0,
+  );
+  const locked: Array<{ name: string; unlock: string }> = [];
+  if (!reveal.chart) locked.push({ name: "usage over time", unlock: "unlocks after a week of history" });
+  if (!reveal.insights) locked.push({ name: "usage insights", unlock: "unlocks at spark" });
+  if (!reveal.categoryMix) locked.push({ name: "specialization", unlock: "unlocks at current" });
+  if (!reveal.rhythm) locked.push({ name: "sync rhythm", unlock: "unlocks at surge" });
+  // Lower tiers lead with the CTA and a teaser of what deepens next; Surge/Supernova lead with data.
+  const climbing = read.tier === "ember" || read.tier === "spark" || read.tier === "current";
+
+  // ---- Layout as designed movements, not a flat wall ---------------------------------------
+  // The profile reads as scannable chapters (Overview / Usage / Activity / Identity & trust /
+  // Join) in a 12-column bento grid, instead of a monotone stack of equal full-width boxes. Every
+  // panel keeps ALL its data — this only regroups and reweights. Panels built with viewport media
+  // queries (the chart, the delta rail, the heatmaps) stay full-width; the two that read cleanly at
+  // half (specialization, trust) pair 2-up. Movement order is fixed, so a panel's push position no
+  // longer dictates where it lands.
+  type Span = "full" | "half";
+  interface Panel { key: string; group: string; span: Span; node: ReactNode; }
+  const panels: Panel[] = [];
+  const add = (group: string, span: Span, node: ReactNode) => {
+    panels.push({ key: (node as { key?: string }).key ?? group, group, span, node });
+  };
+
+  if (isDemo) add("hero", "full", <DemoBanner key="demo" />);
+  add("hero", "full",
     <ProfileHero
       handle={profile.handle}
       accent={heroAccent}
@@ -308,46 +337,28 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       joinHref={C0VIBE_JOIN_HREF}
       migrateHref={C0VIBE_MIGRATE_HREF}
       key="hero"
-    />,
-    <SignalProgress tier={read.tier} progress={read.progress} key="progress" />,
-    <StatCards cards={cards} key="stats" />,
-  );
-  const revealed: ReactNode[] = [];
+    />);
+  add("overview", "full", <SignalProgress tier={read.tier} progress={read.progress} key="progress" />);
+  add("overview", "full", <StatCards cards={cards} key="stats" />);
   if (reveal.chart) {
-    revealed.push(
-      <UsageTelemetry days={profile.usageDays} providers={chartSeries} key="telemetry" />,
-      <UsagePanel days={profile.usageDays} providers={chartSeries} key="usage" />,
-    );
+    add("usage", "full", <UsagePanel days={profile.usageDays} providers={chartSeries} key="usage" />);
+    if (showProviderMix || reveal.insights) {
+      add("usage", "full", <MixRow mix={showProviderMix ? mix : null} insights={reveal.insights ? insights : null} key="mix" />);
+    }
+    add("usage", "full", <UsageTelemetry days={profile.usageDays} providers={chartSeries} key="telemetry" />);
+  } else if (showProviderMix || reveal.insights) {
+    add("usage", "full", <MixRow mix={showProviderMix ? mix : null} insights={reveal.insights ? insights : null} key="mix" />);
   }
-  const showProviderMix = reveal.providerMix && mix.rows.length > 0;
-  if (showProviderMix || reveal.insights) {
-    revealed.push(<MixRow mix={showProviderMix ? mix : null} insights={reveal.insights ? insights : null} key="mix" />);
-  }
-  if (reveal.categoryMix) revealed.push(<CategoryMix rows={categories} sub={read.identity.label} key="categories" />);
   if (reveal.rhythm) {
-    revealed.push(
-      <SyncRhythm days={profile.usageDays.map((d) => ({ date: d.date, ops: d.ops, usd: d.usd }))} key="rhythm" />,
-    );
+    add("activity", "full", <SyncRhythm days={profile.usageDays.map((d) => ({ date: d.date, ops: d.ops, usd: d.usd }))} key="rhythm" />);
   }
-  // The real GitHub contribution graph, whenever the viber's CLI captured it. Always shown when
-  // present (not tier-gated) — it is the viber's own git, and it reads as activity evidence, kept
-  // deliberately distinct from AI spend. Never affects spend, ops, credits, or the signal score.
-  const githubSignal = profile.trustSignals.find(
-    (s): s is Extract<typeof s, { kind: "github_activity" }> =>
-      s.kind === "github_activity" && Array.isArray(s.days) && s.days.length > 0,
-  );
   if (githubSignal) {
-    revealed.push(
-      <GitHubContributions
-        handle={githubSignal.handle}
-        total={githubSignal.totalContributions}
-        days={githubSignal.days ?? []}
-        key="github"
-      />,
-    );
+    add("activity", "full",
+      <GitHubContributions handle={githubSignal.handle} total={githubSignal.totalContributions} days={githubSignal.days ?? []} key="github" />);
   }
-  if (reveal.trust) revealed.push(<TrustRow tier={tier} signals={trustChips} key="trust" />);
-  const cta = (
+  if (reveal.categoryMix) add("who", "half", <CategoryMix rows={categories} sub={read.identity.label} key="categories" />);
+  if (reveal.trust) add("who", "half", <TrustRow tier={tier} signals={trustChips} key="trust" />);
+  add("join", "full",
     <C0vibeBand
       handle={profile.handle}
       claimed={claimed}
@@ -355,19 +366,52 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       migrateHref={C0VIBE_MIGRATE_HREF}
       providerCount={PROVIDERS.length}
       key="cta"
-    />
-  );
-  const locked: Array<{ name: string; unlock: string }> = [];
-  if (!reveal.chart) locked.push({ name: "usage over time", unlock: "unlocks after a week of history" });
-  if (!reveal.insights) locked.push({ name: "usage insights", unlock: "unlocks at spark" });
-  if (!reveal.categoryMix) locked.push({ name: "specialization", unlock: "unlocks at current" });
-  if (!reveal.rhythm) locked.push({ name: "sync rhythm", unlock: "unlocks at surge" });
-  // Lower tiers lead with the CTA and a teaser of what deepens next; Surge/Supernova lead with data.
-  const climbing = read.tier === "ember" || read.tier === "spark" || read.tier === "current";
+    />);
   if (climbing && locked.length) {
-    sections.push(cta, ...revealed, <LockedPanels note="more panels unlock as your data deepens" items={locked} key="locked" />);
-  } else {
-    sections.push(...revealed, cta);
+    add("join", "full", <LockedPanels note="more panels unlock as your data deepens" items={locked} key="locked" />);
+  }
+
+  // A lone half-panel has no partner to sit beside — promote it to full so it never leaves a gap.
+  for (const group of new Set(panels.map((p) => p.group))) {
+    const halves = panels.filter((p) => p.group === group && p.span === "half");
+    if (halves.length === 1) halves[0].span = "full";
+  }
+
+  const GROUP_ORDER = climbing
+    ? ["hero", "join", "overview", "usage", "activity", "who"]
+    : ["hero", "overview", "usage", "activity", "who", "join"];
+  const GROUP_LABEL: Record<string, string> = {
+    overview: "Overview",
+    usage: "Usage",
+    activity: "Activity",
+    who: "Identity & trust",
+  };
+  const ordered = panels.slice().sort((a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group));
+
+  // Walk the ordered panels, opening a movement (an eyebrow + a hairline rule) whenever a labelled
+  // group begins. --panel-i keeps the staggered reveal animation continuous across the whole grid.
+  const grid: ReactNode[] = [];
+  let lastGroup = "";
+  let i = 0;
+  for (const panel of ordered) {
+    if (panel.group !== lastGroup) {
+      lastGroup = panel.group;
+      const label = GROUP_LABEL[panel.group];
+      if (label) {
+        grid.push(
+          <div className="vprofile-movement" style={{ "--panel-i": i } as CSSProperties} key={`mv-${panel.group}`}>
+            <span>{label}</span>
+          </div>,
+        );
+        i += 1;
+      }
+    }
+    grid.push(
+      <div className={`vprofile-slot vprofile-slot--${panel.span}`} style={{ "--panel-i": i } as CSSProperties} key={panel.key}>
+        {panel.node}
+      </div>,
+    );
+    i += 1;
   }
 
   return (
@@ -375,11 +419,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       <a className="vprofile-back" href="/">
         <span aria-hidden="true">&#8592;</span> Leaderboard
       </a>
-      {sections.map((node, index) => (
-        <div className="vprofile-slot" style={{ "--panel-i": index } as CSSProperties} key={index}>
-          {node}
-        </div>
-      ))}
+      <div className="vprofile-grid">{grid}</div>
     </section>
   );
 }
