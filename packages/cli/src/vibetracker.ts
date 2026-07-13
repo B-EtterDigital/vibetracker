@@ -68,6 +68,7 @@ import { buildLaunchKitFiles } from "./launch-kit.ts";
 import { renderShareBadgeMarkdown, renderShareBadgeSvg } from "./badge.ts";
 import { renderDoctorReport } from "./doctor.ts";
 import { lifeDemoInput, renderLifeCommand } from "./life.ts";
+import { resolveMissionCommand } from "./mission/mission-command.ts";
 import { formatTable, money } from "./format.ts";
 import { renderUploadBlocked, renderUploadFailure, renderUploadPreview, renderUploadSuccess, type UploadResponseProof } from "./upload.ts";
 import { runLogin, createHttpAuthTransport } from "./login.ts";
@@ -132,6 +133,7 @@ const USAGE = [
   "  launch-kit | kit | wow | impress | vibe [--provider a,b] [--out dir] [--open]   offline demo launch pack",
   "  sync [--demo] [--receipt --out dir]",
   "  receipts [--dir path] [--json] [--html --out path] [--open]   local sync receipt vault",
+  "  mission | pulse | now [--budget N] [--json] [--html --out path] [--open] [--no-trust]   read-only operating picture",
   "  total | stats | audit | trust | insights | profile | life | roadmap | privacy | detect [--target url] [--json] [--html --out path]",
   "    [--by provider|category|model|day] [--since 30d]",
   "    [--domain ai|dev|creative] [--provider a,b] [--category c]",
@@ -881,6 +883,25 @@ async function main() {
       sourceMix: checkpointSourceMix(accepted),
       hint: "ccusage coding-agent history imported into the local ledger",
     });
+    return;
+  }
+
+  if (cmd === "mission" || cmd === "pulse" || cmd === "now") {
+    const result = resolveMissionCommand({
+      argv,
+      records: filterRecords(readRecords(STORE), parseFilters(argv)),
+      trustSignals: argv.includes("--no-trust") ? [] : collectTrustSignals(),
+      defaultHtmlPath: join(homedir(), ".vibetracker", "mission-control.html"),
+    });
+    if (result.kind === "stdout") {
+      console.log(result.text);
+      return;
+    }
+    mkdirSync(dirname(result.path), { recursive: true });
+    writeFileSync(result.path, result.html);
+    console.log(`  ${ok("✓")} mission control → ${dim(result.path)}`);
+    console.log(`  ${dim("static HTML; ledger read-only, no usage writes, no uploads, no scripts")}`);
+    if (result.open) openBrowser(result.path);
     return;
   }
 

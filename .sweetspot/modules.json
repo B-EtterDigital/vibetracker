@@ -55,6 +55,13 @@
       "notes": "Existing manifest found by SMA scanner."
     },
     {
+      "brick_id": "000-vibetracker.cli.mission-control",
+      "manifest_path": "packages/cli/src/mission/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 92,
+      "notes": "Read-only real-ledger Mission Control with terminal, JSON, and responsive static HTML output."
+    },
+    {
       "brick_id": "000-vibetracker.package.packages-contributors.28667e9a",
       "manifest_path": "packages/contributors/module.sweetspot.json",
       "status": "project_bound",

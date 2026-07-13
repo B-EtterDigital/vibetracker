@@ -1,0 +1,313 @@
+{
+  "schema_version": "1.0.0",
+  "brick": {
+    "id": "000-vibetracker.cli.mission-control",
+    "name": "CLI Mission Control",
+    "kind": "module",
+    "status": "project_bound",
+    "version": "0.1.0",
+    "language": ["typescript", "html", "css"],
+    "frameworks": ["node-cli"],
+    "domain": ["usage-operations", "proof-quality", "local-reporting"]
+  },
+  "hierarchy": {
+    "level": "brick",
+    "group_id": "000-vibetracker:packages/cli/src",
+    "contains": ["model", "terminal-renderer", "html-renderer", "command-adapter", "test"],
+    "component_policy": "internal_by_default",
+    "notes": "Read-only daily operating picture over normalized local usage with trust permanently separated from usage and proof totals."
+  },
+  "source": {
+    "project": "000-vibetracker",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "90457afc74599a30b3aa5662b5e15700cf764935",
+    "paths": [
+      "packages/cli/src/mission",
+      "packages/cli/src/__tests__/mission-control.test.ts"
+    ]
+  },
+  "owner": {
+    "primary": "Cyrill",
+    "team": "Better Digital",
+    "reviewers": []
+  },
+  "boundaries": {
+    "owned_paths": [
+      "packages/cli/src/mission",
+      "packages/cli/src/__tests__/mission-control.test.ts"
+    ],
+    "public_paths": [
+      "packages/cli/src/mission/mission-control.ts",
+      "packages/cli/src/mission/mission-html.ts",
+      "packages/cli/src/mission/mission-command.ts"
+    ],
+    "private_paths": [
+      "packages/cli/src/__tests__/mission-control.test.ts"
+    ],
+    "forbidden_imports": [
+      "provider credential values",
+      "prompt or output stores",
+      "upload clients",
+      "database administration clients"
+    ],
+    "allowed_side_effects": [
+      "read_local_normalized_ledger",
+      "discover_separate_trust_context",
+      "write_user_requested_static_html",
+      "open_user_requested_static_html"
+    ]
+  },
+  "classification": {
+    "data_classes": ["local_usage_aggregate", "activity_context"],
+    "risk": "low",
+    "notes": "The default terminal and JSON paths are read-only. HTML writes require an explicit flag. Trust discovery is disclosed and cannot affect usage, spend, verification, or integrity totals."
+  },
+  "sweetspot": {
+    "ssa_v2": {
+      "status": "passing",
+      "score": 93,
+      "notes": "Pure model, terminal renderer, static HTML renderer, command adapter, router seam, and focused tests have explicit responsibilities; every owned code file is below 400 lines.",
+      "evidence": [
+        "packages/cli/src/mission/mission-control.ts",
+        "packages/cli/src/mission/mission-html.ts",
+        "packages/cli/src/mission/mission-command.ts"
+      ]
+    },
+    "ssi": {
+      "status": "passing",
+      "score": 95,
+      "notes": "One MissionControl snapshot drives terminal, JSON, HTML, burn, proof, freshness, local AI, trust separation, and recovery actions.",
+      "evidence": ["packages/cli/src/mission/mission-control.ts"]
+    },
+    "sstf": {
+      "status": "passing",
+      "score": 94,
+      "notes": "Six focused model, renderer, validation, empty-state, and real CLI routing tests pass inside a 538-test clean release gate with typecheck and build.",
+      "evidence": [
+        "packages/cli/src/__tests__/mission-control.test.ts",
+        ".smarch/agent-context/000-vibetracker.cli.mission-control.ndjson"
+      ]
+    },
+    "spe": {
+      "status": "passing",
+      "score": 92,
+      "notes": "The brick adds no dependency, server, watcher, database access, provider usage request, or automatic publish path.",
+      "evidence": ["packages/cli/src/mission"]
+    },
+    "srs": {
+      "status": "passing",
+      "score": 96,
+      "notes": "Estimates, source proof, verified share, freshness, NOT USAGE trust context, read-only usage, zero upload, and excluded sensitive fields are explicit.",
+      "evidence": [
+        "packages/cli/src/mission/mission-control.ts",
+        "packages/cli/src/mission/mission-html.ts",
+        "packages/cli/src/__tests__/mission-control.test.ts"
+      ]
+    },
+    "ssra": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Built CLI ran against 48,023 real local records; Chromium mobile, desktop, and 4K layouts have zero horizontal overflow, clipped text, scripts, or external resources.",
+      "evidence": [
+        "/home/bdd-main/.playwright-mcp/vibetracker-mission-control-mobile.png",
+        "/home/bdd-main/.playwright-mcp/vibetracker-mission-control-desktop.png",
+        "/home/bdd-main/.playwright-mcp/vibetracker-mission-control-4k.png"
+      ]
+    },
+    "sas": {
+      "status": "passing",
+      "score": 94,
+      "notes": "Owned, public, private, forbidden, and side-effect boundaries are explicit; the existing CLI router receives only a 21-line integration seam.",
+      "evidence": ["packages/cli/src/mission/module.sweetspot.json"]
+    },
+    "sva": {
+      "status": "passing",
+      "score": 96,
+      "notes": "Reports exclude prompts, outputs, secrets, media, and credential values; HTML escapes record labels and has a deny-by-default CSP.",
+      "evidence": [
+        "packages/cli/src/mission/mission-html.ts",
+        "packages/cli/src/__tests__/mission-control.test.ts"
+      ]
+    },
+    "srls": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick does not access a database.",
+      "evidence": []
+    },
+    "sev": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick requires no environment variables.",
+      "evidence": []
+    },
+    "ssc": {
+      "status": "passing",
+      "score": 96,
+      "notes": "The brick adds no package dependency and reuses core aggregate, record, trust, and integrity contracts.",
+      "evidence": ["package.json"]
+    },
+    "sai": {
+      "status": "passing",
+      "score": 94,
+      "notes": "Lease, intent, rationale, planned paths, real runtime proof, and responsive browser proof are recorded.",
+      "evidence": [".smarch/agent-context/000-vibetracker.cli.mission-control.ndjson"]
+    }
+  },
+  "interfaces": {
+    "public_api": [
+      "vibetracker mission",
+      "vibetracker pulse",
+      "vibetracker now",
+      "buildMissionControl()",
+      "renderMissionControl()",
+      "renderMissionHtml()",
+      "resolveMissionCommand()"
+    ],
+    "adapters": [
+      "packages/core/src/schema/record.ts#NormalizedRecord",
+      "packages/core/src/aggregate.ts#aggregate",
+      "packages/cli/src/audit.ts#computeIntegrity",
+      "packages/cli/src/trust-signals.ts#collectTrustSignals"
+    ],
+    "required_dependencies": ["node>=18"],
+    "forbidden_dependencies": [
+      "provider credential client",
+      "usage upload client",
+      "database client",
+      "browser script runtime"
+    ]
+  },
+  "security": {
+    "rls": {
+      "required": false,
+      "status": "not_applicable",
+      "negative_tests": []
+    },
+    "env": {
+      "required": false,
+      "status": "not_applicable",
+      "variables": []
+    },
+    "vulnerability_findings": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "report_paths": []
+    }
+  },
+  "supply_chain": {
+    "dependencies": [],
+    "licenses": ["MIT"],
+    "checksums": [],
+    "sbom_path": ""
+  },
+  "quality": {
+    "score": 92,
+    "line_count": {
+      "max_file_lines": 398,
+      "over_600_count": 0
+    },
+    "code_budget": {
+      "status": "acceptable",
+      "feature_lines": 811,
+      "file_count": 4,
+      "dependency_count": 0,
+      "notes": "The model holds the domain contract while renderers and command parsing remain small; no existing large CLI surface was expanded beyond the router seam."
+    },
+    "test_commands": [
+      "node --test packages/cli/src/__tests__/mission-control.test.ts",
+      "pnpm typecheck",
+      "pnpm build"
+    ],
+    "verification": [
+      {
+        "command": "focused Mission tests + typecheck + build + real built CLI + Chromium mobile/desktop/4K",
+        "status": "pass",
+        "timestamp": "2026-07-13T10:07:22Z",
+        "notes": "Six focused tests pass; the built CLI renders 48,023 real records; 390x844, 1440x1200, and 3840x2160 static-file browser checks report no horizontal overflow, clipped text, scripts, or external resources."
+      },
+      {
+        "command": "pnpm sma:release-gate + pnpm audit --audit-level high + SMA project rescan + Graphify module refresh/check/query",
+        "status": "pass",
+        "timestamp": "2026-07-13T10:26:57Z",
+        "notes": "15 controller tests and 538 package tests pass; strict telemetry, TypeScript, build, and dependency audit are clean; scanner reports zero Mission health warnings or metric drift; 17/17 module graphs are satisfied and CLI retrieval resolves all Mission symbols."
+      }
+    ]
+  },
+  "clone": {
+    "readiness": "project_bound",
+    "adaptation_points": [
+      "normalized record source",
+      "budget threshold",
+      "operator action policy",
+      "static report theme"
+    ],
+    "install_steps": [
+      "Copy the owned mission paths.",
+      "Connect the command adapter to a normalized read-only ledger.",
+      "Keep trust context outside usage and proof totals.",
+      "Run focused, typecheck, build, real-ledger, and responsive browser verification."
+    ],
+    "known_traps": [
+      "Operation quantities and record counts are different measures.",
+      "USD values are estimates and must never be labelled source truth.",
+      "Trust context must never affect usage, spend, verification, or integrity totals.",
+      "The default command must not write usage or upload data."
+    ]
+  },
+  "provenance": {
+    "created_by": {
+      "actor_kind": "agent",
+      "actor_id": "bdd-main@019f4b2d",
+      "provider": "OpenAI",
+      "model": "gpt-5-codex",
+      "role": "architect",
+      "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+      "commit": "90457af",
+      "files_touched": [
+        "packages/cli/src/mission/mission-control.ts",
+        "packages/cli/src/mission/mission-html.ts",
+        "packages/cli/src/mission/mission-command.ts",
+        "packages/cli/src/__tests__/mission-control.test.ts",
+        "packages/cli/src/vibetracker.ts",
+        "packages/cli/src/mission/module.sweetspot.json",
+        ".sweetspot/modules.json",
+        "sma.gen3.json"
+      ],
+      "verification": [
+        "ctx-1783936151584-c6b74894",
+        "ctx-1783938472839-b9f2371d",
+        "ctx-1783938473074-aa7afe2e",
+        "ctx-1783938473294-302e1b4a",
+        "ctx-1783938473539-63ddcd37"
+      ],
+      "timestamp": "2026-07-13T09:49:11Z",
+      "summary": "Added a read-only CLI Mission Control over real normalized usage with terminal, JSON, and static HTML output.",
+      "intent": "Turn the fully-live accepted roadmap into a useful daily operator surface without inventing synthetic usage or weakening trust separation.",
+      "decision_rationale": "An isolated pure model and renderer brick adds a daily workflow while limiting the mature CLI router change to one bounded seam.",
+      "lease_id": "lease-1783936151477-feb900ea",
+      "context_event_ids": [
+        "ctx-1783936151481-e71b7158",
+        "ctx-1783936151584-c6b74894"
+      ],
+      "attestation": {
+        "method": "sma_lease",
+        "reference": "lease-1783936151477-feb900ea"
+      }
+    },
+    "touched_by": [],
+    "reviewed_by": [],
+    "source_chain": [
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.cli.mission-control",
+        "commit": "90457af",
+        "path": "packages/cli/src/mission",
+        "event": "created",
+        "timestamp": "2026-07-13T09:49:11Z"
+      }
+    ]
+  }
+}

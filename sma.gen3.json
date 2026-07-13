@@ -17,6 +17,7 @@
       "packages/backend/module.sweetspot.json",
       "packages/browser-extension/module.sweetspot.json",
       "packages/cli/module.sweetspot.json",
+      "packages/cli/src/mission/module.sweetspot.json",
       "packages/contributors/module.sweetspot.json",
       "packages/core/module.sweetspot.json",
       "packages/core/src/security/module.sweetspot.json",
