@@ -1,0 +1,313 @@
+{
+  "schema_version": "1.0.0",
+  "brick": {
+    "id": "000-vibetracker.web.motion-sequencer",
+    "name": "ASCII Motion Sequencer",
+    "kind": "module",
+    "status": "project_bound",
+    "version": "0.1.0",
+    "language": ["typescript", "tsx", "css"],
+    "frameworks": ["next", "react"],
+    "domain": ["visual-feedback", "ascii-motion", "oss-attribution"]
+  },
+  "hierarchy": {
+    "level": "brick",
+    "group_id": "000-vibetracker:packages/web/src/app",
+    "contains": ["route", "sequencer", "model", "style", "test"],
+    "component_policy": "internal_by_default",
+    "notes": "Interactive visual-only ASCII sequencer driven by credited motion rigs with every usage and proof side effect fixed at zero."
+  },
+  "source": {
+    "project": "000-vibetracker",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "1abc534",
+    "paths": [
+      "packages/web/src/app/motion",
+      "packages/web/src/lib/ascii-motion-lab.ts",
+      "packages/web/src/lib/ascii-motion-references.ts",
+      "packages/web/src/lib/__tests__/ascii-motion-lab.test.ts",
+      "packages/web/src/lib/__tests__/motion-route.test.ts"
+    ]
+  },
+  "owner": {
+    "primary": "Cyrill",
+    "team": "Better Digital",
+    "reviewers": []
+  },
+  "boundaries": {
+    "owned_paths": [
+      "packages/web/src/app/motion",
+      "packages/web/src/lib/ascii-motion-lab.ts",
+      "packages/web/src/lib/ascii-motion-references.ts",
+      "packages/web/src/lib/__tests__/ascii-motion-lab.test.ts",
+      "packages/web/src/lib/__tests__/motion-route.test.ts"
+    ],
+    "public_paths": [
+      "packages/web/src/app/motion/page.tsx",
+      "packages/web/src/app/motion/motion-sequencer.tsx",
+      "packages/web/src/app/motion/motion.css",
+      "packages/web/src/app/motion/motion-controls.css",
+      "packages/web/src/app/motion/motion-responsive.css",
+      "packages/web/src/lib/ascii-motion-lab.ts"
+    ],
+    "private_paths": [
+      "packages/web/src/lib/ascii-motion-references.ts",
+      "packages/web/src/lib/__tests__/ascii-motion-lab.test.ts",
+      "packages/web/src/lib/__tests__/motion-route.test.ts"
+    ],
+    "forbidden_imports": [
+      "packages/web/src/lib/supabase-admin.ts",
+      "client-side service-role keys",
+      "undocumented cross-brick private imports"
+    ],
+    "allowed_side_effects": [
+      "play_local_visual_frames",
+      "copy_local_motion_cue",
+      "open_credited_source_link"
+    ]
+  },
+  "classification": {
+    "data_classes": ["public", "static_reference"],
+    "risk": "low",
+    "notes": "The route plays static credited frames and copies commands; it performs no provider call, upload, read, usage write, trust write, proof write, or publish."
+  },
+  "sweetspot": {
+    "ssa_v2": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Server route, client sequencer, credited model, styles, and focused tests are separated; every route-owned file is below 320 lines.",
+      "evidence": [
+        "packages/web/src/app/motion/page.tsx",
+        "packages/web/src/app/motion/motion-sequencer.tsx",
+        "packages/web/src/lib/ascii-motion-lab.ts",
+        "packages/web/src/lib/ascii-motion-references.ts"
+      ]
+    },
+    "ssi": {
+      "status": "passing",
+      "score": 95,
+      "notes": "One selected credited item drives the live frame, transport, cue copy, side-effect ledger, checks, and attribution state.",
+      "evidence": ["packages/web/src/app/motion/motion-sequencer.tsx"]
+    },
+    "sstf": {
+      "status": "pending",
+      "score": 70,
+      "notes": "Focused and release verification are pending the current implementation pass.",
+      "evidence": [
+        "packages/web/src/lib/__tests__/ascii-motion-lab.test.ts",
+        "packages/web/src/lib/__tests__/motion-route.test.ts"
+      ]
+    },
+    "spe": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Six cues, six rigs, four frames per item, one bounded timer, and eighteen static references keep work bounded.",
+      "evidence": [
+        "packages/web/src/app/motion/motion-sequencer.tsx",
+        "packages/web/src/lib/ascii-motion-lab.ts",
+        "packages/web/src/lib/ascii-motion-references.ts"
+      ]
+    },
+    "srs": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Visual-only, NOT EVIDENCE, clipboard failure, source license, guardrail, and every zero side effect are visible.",
+      "evidence": [
+        "packages/web/src/app/motion/motion-sequencer.tsx",
+        "packages/web/src/lib/__tests__/motion-route.test.ts"
+      ]
+    },
+    "ssra": {
+      "status": "pending",
+      "score": 70,
+      "notes": "Production build, deploy, and desktop/mobile runtime proof are pending.",
+      "evidence": []
+    },
+    "sas": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Route, sequencer, credited model, styles, and tests have explicit owned and public boundaries.",
+      "evidence": ["packages/web/src/app/motion/module.sweetspot.json"]
+    },
+    "sva": {
+      "status": "passing",
+      "score": 95,
+      "notes": "No secret, provider client, file read, prompt read, output read, upload, database, trust mutation, usage mutation, or publish call is present.",
+      "evidence": [
+        "packages/web/src/app/motion/page.tsx",
+        "packages/web/src/app/motion/motion-sequencer.tsx"
+      ]
+    },
+    "srls": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick does not access a database.",
+      "evidence": []
+    },
+    "sev": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick requires no environment variables.",
+      "evidence": []
+    },
+    "ssc": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Next and React are inherited; the model uses the existing provider registry and adds no dependency.",
+      "evidence": ["packages/web/package.json"]
+    },
+    "sai": {
+      "status": "passing",
+      "score": 90,
+      "notes": "Lease, intent, source commit, rationale, and touched paths are recorded.",
+      "evidence": [".smarch/agent-context/000-vibetracker.web.motion-sequencer.ndjson"]
+    }
+  },
+  "interfaces": {
+    "public_api": [
+      "GET /motion",
+      "buildAsciiMotionLab()",
+      "<MotionSequencer />"
+    ],
+    "adapters": [
+      "packages/web/src/lib/ascii-motion-lab.ts#buildAsciiMotionLab",
+      "packages/web/src/lib/ascii-motion-references.ts#ASCII_MOTION_REFERENCES",
+      "packages/adapters/src/registry.ts#PROVIDERS",
+      "packages/web/src/lib/provider-brand.ts#providerBrand"
+    ],
+    "required_dependencies": ["next", "react"],
+    "forbidden_dependencies": [
+      "service-role client",
+      "provider runtime client",
+      "usage store",
+      "trust store",
+      "proof store",
+      "automatic upload"
+    ]
+  },
+  "security": {
+    "rls": {
+      "required": false,
+      "status": "not_applicable",
+      "negative_tests": []
+    },
+    "env": {
+      "required": false,
+      "status": "not_applicable",
+      "variables": []
+    },
+    "vulnerability_findings": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "report_paths": []
+    }
+  },
+  "supply_chain": {
+    "dependencies": [
+      {
+        "name": "next",
+        "version": "^16.1.1",
+        "purpose": "Server-rendered motion route.",
+        "risk": "low"
+      },
+      {
+        "name": "react",
+        "version": "^19.0.0",
+        "purpose": "Sequencer transport and clipboard feedback.",
+        "risk": "low"
+      }
+    ],
+    "licenses": ["MIT"],
+    "checksums": [],
+    "sbom_path": ""
+  },
+  "quality": {
+    "score": 84,
+    "line_count": {
+      "max_file_lines": 333,
+      "over_600_count": 0
+    },
+    "code_budget": {
+      "status": "acceptable",
+      "feature_lines": 1489,
+      "file_count": 9,
+      "dependency_count": 2,
+      "notes": "The former 623-line static route is now a 14-line server surface plus a focused interactive sequencer, split route-local styles, and a dedicated static attribution catalog; every owned file is below the 400-line target."
+    },
+    "test_commands": [
+      "node --test packages/web/src/lib/__tests__/ascii-motion-lab.test.ts",
+      "node --test packages/web/src/lib/__tests__/motion-route.test.ts"
+    ],
+    "verification": []
+  },
+  "clone": {
+    "readiness": "project_bound",
+    "adaptation_points": [
+      "cue frames",
+      "transport tempo",
+      "rig catalog",
+      "source references"
+    ],
+    "install_steps": [
+      "Copy owned paths.",
+      "Keep all motion data sourced through buildAsciiMotionLab.",
+      "Run model, route, release, and runtime verification."
+    ],
+    "known_traps": [
+      "Motion must never act as usage or trust evidence.",
+      "GPL and LGPL projects remain credited references, not bundled runtime code.",
+      "Reduced-motion users must start paused."
+    ]
+  },
+  "provenance": {
+    "created_by": {
+      "actor_kind": "agent",
+      "actor_id": "bdd-main@019f4b2d",
+      "provider": "OpenAI",
+      "model": "gpt-5-codex",
+      "role": "architect",
+      "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+      "commit": "1abc534",
+      "files_touched": [
+        "packages/web/src/app/motion/page.tsx",
+        "packages/web/src/app/motion/motion-sequencer.tsx",
+        "packages/web/src/app/motion/motion.css",
+        "packages/web/src/app/motion/motion-controls.css",
+        "packages/web/src/app/motion/motion-responsive.css",
+        "packages/web/src/lib/ascii-motion-lab.ts",
+        "packages/web/src/lib/ascii-motion-references.ts",
+        "packages/web/src/lib/__tests__/ascii-motion-lab.test.ts",
+        "packages/web/src/lib/__tests__/motion-route.test.ts",
+        "packages/web/src/app/globals.css",
+        "packages/web/src/app/motion/module.sweetspot.json",
+        ".sweetspot/modules.json",
+        "sma.gen3.json"
+      ],
+      "verification": [],
+      "timestamp": "2026-07-12T03:40:19Z",
+      "summary": "Replaced the static Motion Lab theatre with an interactive credited ASCII sequencer.",
+      "intent": "Make VibeTRACKER motion controllable, nerdy, and inspectable without confusing animation with evidence.",
+      "decision_rationale": "A direct transport over the existing credited frames provides useful visual feedback while keeping the source and side-effect truth visible.",
+      "lease_id": "lease-1783827299454-3d9f8e58",
+      "context_event_ids": ["ctx-1783827299509-b3341c4c"],
+      "attestation": {
+        "method": "git_commit",
+        "reference": "1abc534"
+      }
+    },
+    "touched_by": [],
+    "reviewed_by": [],
+    "source_chain": [
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.motion-sequencer",
+        "commit": "1abc534",
+        "path": "packages/web/src/app/motion",
+        "event": "created",
+        "timestamp": "2026-07-12T03:40:19Z"
+      }
+    ]
+  }
+}

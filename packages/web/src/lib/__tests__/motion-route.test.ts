@@ -23,6 +23,8 @@ test("motion route is a route-local interactive credited sequencer", () => {
   assert.match(sequencer, /type="range"/);
   assert.match(sequencer, /setInterval/);
   assert.match(sequencer, /matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
+  assert.match(sequencer, /role="img"/);
+  assert.match(sequencer, /<pre aria-hidden="true">/);
   assert.match(sequencer, /navigator\.clipboard\.writeText/);
   assert.match(sequencer, /Clipboard access failed/);
   assert.match(sequencer, /motion never acts as usage evidence/);

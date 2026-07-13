@@ -1,5 +1,8 @@
 import { PROVIDERS } from "../../../adapters/src/registry.ts";
+import { ASCII_MOTION_REFERENCES, type AsciiMotionReference } from "./ascii-motion-references.ts";
 import { providerBrand } from "./provider-brand.ts";
+
+export type { AsciiMotionReference } from "./ascii-motion-references.ts";
 
 export interface AsciiMotionRig {
   id: string;
@@ -19,18 +22,6 @@ export interface AsciiMotionRig {
   mark: string;
   frames: string[];
   glyphs: string[];
-}
-
-export interface AsciiMotionReference {
-  id: string;
-  label: string;
-  project: string;
-  author: string;
-  license: string;
-  url: string;
-  cue: string;
-  note: string;
-  guardrail: string;
 }
 
 export interface AsciiMotionSideEffects {
@@ -309,206 +300,7 @@ const theatreBeats: AsciiMotionTheatreBeat[] = [
   },
 ];
 
-const references: AsciiMotionReference[] = [
-  {
-    id: "ascii-motion",
-    label: "Layered ASCII studio",
-    project: "ASCII Motion",
-    author: "Cameron Foxly",
-    license: "MIT repo",
-    url: "https://github.com/CameronFoxly/Ascii-Motion",
-    cue: "motion editor",
-    note: "ASCII Motion inspired the state-machine frame direction for authored provider reveals.",
-    guardrail: "Reference only; VibeTRACKER owns its tiny runtime frames and does not bundle the editor.",
-  },
-  {
-    id: "rune",
-    label: "React ASCII animation",
-    project: "Rune",
-    author: "Zeke John",
-    license: "MIT",
-    url: "https://github.com/zeke-john/rune",
-    cue: "browser frames",
-    note: "Rune reinforced the browser-native ASCII animation path for GUI surfaces.",
-    guardrail: "Reference only; no generated video frames are treated as usage evidence.",
-  },
-  {
-    id: "ascii-morph",
-    label: "Morphing ASCII frames",
-    project: "AsciiMorph",
-    author: "Tim Holman",
-    license: "MIT",
-    url: "https://github.com/tholman/ascii-morph",
-    cue: "morph frames",
-    note: "AsciiMorph informed the compact transition language for small logo turns.",
-    guardrail: "Reference only; morph effects are feedback, not source records.",
-  },
-  {
-    id: "xterm",
-    label: "Browser terminal core",
-    project: "xterm.js",
-    author: "xterm.js maintainers",
-    license: "MIT",
-    url: "https://github.com/xtermjs/xterm.js",
-    cue: "terminal core",
-    note: "xterm.js remains the heavier option for future real terminal embedding.",
-    guardrail: "Reference only in this UI slice; no pseudo-shell is pretending to run commands.",
-  },
-  {
-    id: "asciinema-player",
-    label: "Replayable terminal casts",
-    project: "asciinema-player",
-    author: "Marcin Kulik",
-    license: "Apache-2.0",
-    url: "https://github.com/asciinema/asciinema-player",
-    cue: "session replay",
-    note: "asciinema-player informed the idea of replayable scan transcripts.",
-    guardrail: "Reference only; VibeTRACKER dry-run review remains local and explicit.",
-  },
-  {
-    id: "vhs",
-    label: "Scripted demo rail",
-    project: "Charm VHS",
-    author: "Charmbracelet",
-    license: "MIT",
-    url: "https://github.com/charmbracelet/vhs",
-    cue: "demo as code",
-    note: "VHS inspired the repeatable terminal-tour discipline for demos and docs.",
-    guardrail: "Reference only; VibeTRACKER does not bundle a recorder or upload videos.",
-  },
-  {
-    id: "durdraw",
-    label: "Linux ANSI studio",
-    project: "Durdraw",
-    author: "cmang",
-    license: "BSD-3-Clause",
-    url: "https://github.com/cmang/durdraw",
-    cue: "frame editor",
-    note: "Durdraw inspired the frame-based ANSI/Unicode art bench for provider reels.",
-    guardrail: "Reference only; no terminal art file is treated as usage proof.",
-  },
-  {
-    id: "termdot",
-    label: "Braille dot canvas",
-    project: "termdot",
-    author: "Ahmad Awais",
-    license: "Apache-2.0",
-    url: "https://github.com/ahmadawais/termdot",
-    cue: "2x4 dot grid",
-    note: "termdot reinforces the dense braille-field direction for scan textures.",
-    guardrail: "Reference only; scan texture is decorative and never moves totals.",
-  },
-  {
-    id: "asciimatics",
-    label: "Full-screen TUI motion",
-    project: "Asciimatics",
-    author: "Peter Brittain",
-    license: "Apache-2.0",
-    url: "https://github.com/peterbrittain/asciimatics",
-    cue: "TUI scenes",
-    note: "Asciimatics informs the idea of full-screen terminal scenes and states.",
-    guardrail: "Reference only; no Python runtime is required for the web app.",
-  },
-  {
-    id: "terminaltexteffects",
-    label: "Terminal text effects engine",
-    project: "TerminalTextEffects",
-    author: "ChrisBuilds",
-    license: "MIT",
-    url: "https://github.com/ChrisBuilds/terminaltexteffects",
-    cue: "text effects",
-    note: "TerminalTextEffects is a modern terminal visual-effects engine; its decrypt, beam, and VHS-style effects are strong inspiration for future scan text reveals.",
-    guardrail: "Reference only; the web app ships authored CSS/ASCII frames and does not require a Python effects runtime.",
-  },
-  {
-    id: "notcurses",
-    label: "Blingful Unicode TUI graphics",
-    project: "Notcurses",
-    author: "Nick Black and contributors",
-    license: "Apache-2.0",
-    url: "https://github.com/dankamongmen/notcurses",
-    cue: "native TUI graphics",
-    note: "Notcurses shows how far modern terminals can push Unicode, 24-bit color, multimedia, and high-performance TUI scenes.",
-    guardrail: "Reference only; native TUI libraries are not bundled into the web app and cannot create usage evidence.",
-  },
-  {
-    id: "chafa",
-    label: "ANSI/Unicode media previews",
-    project: "Chafa",
-    author: "H.P. Jansson and contributors",
-    license: "LGPL-3.0-or-later",
-    url: "https://github.com/hpjansson/chafa",
-    cue: "image to terminal",
-    note: "Chafa converts images and animated GIFs into ANSI/Unicode terminal graphics, useful inspiration for future local media preview rails.",
-    guardrail: "Reference only; LGPL terminal graphics tooling is not bundled, and media previews never become usage proof.",
-  },
-  {
-    id: "cmatrix",
-    label: "Matrix rain discipline",
-    project: "CMatrix",
-    author: "Chris Allegretta, Abishek V. Ashok, and contributors",
-    license: "GPL-3.0",
-    url: "https://github.com/abishekvashok/cmatrix",
-    cue: "terminal rain",
-    note: "CMatrix is the classic Linux terminal rain reference; VibeTRACKER borrows the dense scan-read feeling, not code.",
-    guardrail: "Reference only; GPL motion inspiration is not bundled and never implies usage proof.",
-  },
-  {
-    id: "unimatrix",
-    label: "Unicode rain charset",
-    project: "UniMatrix",
-    author: "will8211",
-    license: "GPL-3.0-or-later",
-    url: "https://github.com/will8211/unimatrix",
-    cue: "katakana rain",
-    note: "UniMatrix showed how custom Unicode character sets can make terminal motion feel specific instead of generic.",
-    guardrail: "Reference only; character rain stays visual and is not copied into the bundled runtime.",
-  },
-  {
-    id: "pipes-sh",
-    label: "Linux pipe screensaver",
-    project: "pipes.sh",
-    author: "Pipeseroni collective",
-    license: "MIT",
-    url: "https://github.com/pipeseroni/pipes.sh",
-    cue: "pipe paths",
-    note: "pipes.sh directly inspired the provider path scanner rig and its corner-turn motion.",
-    guardrail: "Reference only; VibeTRACKER ships tiny authored frames rather than shelling out to screensavers.",
-  },
-  {
-    id: "mapscii",
-    label: "Console source map",
-    project: "MapSCII",
-    author: "Rastapasta",
-    license: "MIT",
-    url: "https://github.com/rastapasta/mapscii",
-    cue: "braille map",
-    note: "MapSCII informed the regional source atlas: dense braille texture, console map language, and offline-friendly framing.",
-    guardrail: "Reference only; VibeTRACKER does not fetch maps or store location data for this panel.",
-  },
-  {
-    id: "cbonsai",
-    label: "Terminal growth curve",
-    project: "cbonsai",
-    author: "John Allbritten",
-    license: "GPL-3.0-or-later",
-    url: "https://gitlab.com/jallbrit/cbonsai",
-    cue: "live growth",
-    note: "cbonsai is useful inspiration for future cumulative usage growth visuals that feel earned over time.",
-    guardrail: "Reference only; GPL terminal growth code is not bundled, and usage growth remains data-derived.",
-  },
-  {
-    id: "rbonsai",
-    label: "Rust terminal growth",
-    project: "rbonsai",
-    author: "Robert E.",
-    license: "GPL-3.0",
-    url: "https://github.com/roberte777/rbonsai",
-    cue: "crossterm growth",
-    note: "rbonsai shows a small Rust/crossterm path for live terminal growth and screensaver-style pacing.",
-    guardrail: "Reference only; future native widgets must keep data provenance separate from animation.",
-  },
-];
+const references = ASCII_MOTION_REFERENCES;
 
 export function buildAsciiMotionLab(): AsciiMotionLab {
   const built = PROVIDERS.filter((provider) => provider.status === "built").length;

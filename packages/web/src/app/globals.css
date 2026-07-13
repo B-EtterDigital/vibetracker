@@ -1229,31 +1229,6 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: 
   .sources-map__field::before { font-size: 28px; }
   .sources-map__relay { width: min(160px, 54vw); }
   .sources-lanes { grid-template-columns: 1fr; }
-  .motion-lab-copy::after { font-size: 56px; }
-  .motion-lab-copy h1 { font-size: 46px; }
-  .motion-lab-terminal pre { font-size: 8px; }
-  .motion-credit-strip > div:first-child span { white-space: normal; }
-  .motion-director-board__head { grid-template-columns: 1fr; align-items: start; }
-  .motion-director-board__head span { white-space: normal; }
-  .motion-director-board__terminal pre { font-size: 8px; }
-  .motion-director-cue { min-height: 372px; }
-  .motion-attribution-cockpit__head { grid-template-columns: 1fr; align-items: start; }
-  .motion-attribution-cockpit__head span { white-space: normal; }
-  .motion-attribution-cockpit__terminal pre { font-size: 8px; }
-  .motion-attribution-lane { min-height: 360px; }
-  .motion-signal-theatre__head { grid-template-columns: 1fr; align-items: start; }
-  .motion-signal-theatre__head span { white-space: normal; }
-  .motion-signal-theatre__terminal pre { font-size: 8px; }
-  .motion-signal-beat { min-height: 420px; }
-  .motion-runway__head { grid-template-columns: 1fr; align-items: start; }
-  .motion-runway__head span { white-space: normal; }
-  .motion-runway__terminal pre { font-size: 8px; }
-  .motion-runway-lane { min-height: 410px; }
-  .motion-rig-wall { grid-template-columns: 1fr; }
-  .motion-rig-card { min-height: 340px; }
-  .motion-reference-wall__head { align-items: flex-start; flex-direction: column; }
-  .motion-reference-wall__head span { white-space: normal; }
-  .motion-reference-wall__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 460px) {
   .sources-hero__copy { padding: 22px; }
@@ -1280,28 +1255,6 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: 
   .sources-intake-stack__steps { grid-template-columns: 1fr; }
   .sources-intake-step { min-height: 238px; }
   .sources-intake-step__feeds { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .motion-lab-copy h1 { font-size: 38px; }
-  .motion-director-board::after { font-size: 30px; }
-  .motion-director-board__counters { grid-template-columns: 1fr; }
-  .motion-director-timeline { grid-template-columns: 1fr; }
-  .motion-director-cue { min-height: 322px; }
-  .motion-director-cue__screen { min-height: 94px; }
-  .motion-attribution-cockpit::after { font-size: 24px; }
-  .motion-attribution-cockpit__totals { grid-template-columns: 1fr; }
-  .motion-attribution-lanes { grid-template-columns: 1fr; }
-  .motion-attribution-lane { min-height: 304px; }
-  .motion-attribution-lane__screen { min-height: 92px; }
-  .motion-signal-theatre::after { font-size: 10px; left: 12px; right: 12px; }
-  .motion-signal-theatre__clock { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .motion-signal-board { grid-template-columns: 1fr; }
-  .motion-signal-beat { min-height: 350px; }
-  .motion-signal-ledger > span { grid-template-columns: 30px minmax(0, 1fr); }
-  .motion-runway__stats { grid-template-columns: 1fr; }
-  .motion-runway__lanes { grid-template-columns: 1fr; }
-  .motion-runway-lane { min-height: 350px; }
-  .motion-rig-card__screen { grid-template-columns: 1fr; }
-  .motion-rig-card__screen div { min-height: 82px; }
-  .motion-reference-wall__grid { grid-template-columns: 1fr; }
 }
 .evidence-cockpit { position: relative; margin: 18px 0 12px; border: 1px solid color-mix(in srgb, var(--verified) 24%, var(--line));
   border-radius: 10px; background: linear-gradient(180deg, rgba(11,18,20,.95), rgba(4,7,8,.97)); overflow: hidden;

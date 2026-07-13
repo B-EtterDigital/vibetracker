@@ -1,0 +1,79 @@
+.seq-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(90px, 1fr));
+  border: 1px solid var(--seq-line);
+}
+.seq-modes button {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--seq-muted);
+  font: 700 8px/1 var(--font-data), ui-monospace, monospace;
+  cursor: pointer;
+}
+.seq-modes button + button { border-left: 1px solid var(--seq-line); }
+.seq-modes button:hover { color: var(--seq-ink); }
+.seq-modes button:focus-visible { outline: 2px solid var(--seq-cyan); outline-offset: 2px; }
+.seq-modes button[aria-pressed="true"] { color: #03100e; background: var(--seq-mint); }
+
+.seq-transport {
+  display: grid;
+  grid-template-columns: repeat(3, 38px);
+  border: 1px solid var(--seq-line);
+}
+.seq-transport button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: #081110;
+  color: var(--seq-ink);
+  font: 700 13px/1 var(--font-data), ui-monospace, monospace;
+  cursor: pointer;
+}
+.seq-transport button + button { border-left: 1px solid var(--seq-line); }
+.seq-transport button:hover { color: var(--seq-mint); background: #0c1b18; }
+.seq-transport button:focus-visible { outline: 2px solid var(--seq-cyan); outline-offset: 2px; }
+.seq-transport button:active { transform: translateY(1px); }
+
+.seq-tempo {
+  display: grid;
+  grid-template-columns: auto minmax(130px, 1fr) 62px;
+  gap: 12px;
+  align-items: center;
+  justify-self: end;
+  width: min(430px, 100%);
+  color: var(--seq-muted);
+  font-size: 8px;
+}
+.seq-tempo input {
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--seq-mint);
+  cursor: ew-resize;
+}
+.seq-tempo input:focus-visible { outline: 2px solid var(--seq-cyan); outline-offset: 3px; }
+.seq-tempo output { color: var(--seq-ink); font-size: 9px; text-align: right; }
+
+.seq-cue-copy button {
+  min-width: 102px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--seq-mint);
+  border-radius: 4px;
+  background: var(--seq-mint);
+  color: #03100e;
+  font: 700 8px/1 var(--font-data), ui-monospace, monospace;
+  cursor: pointer;
+}
+.seq-cue-copy button:hover { background: #7ef3df; }
+.seq-cue-copy button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.seq-cue-copy button:active { transform: translateY(1px); }
+.seq-cue-copy button[data-state="copied"] { border-color: #4ada9c; background: #4ada9c; }
+.seq-cue-copy button[data-state="blocked"] { border-color: var(--seq-red); background: var(--seq-red); }

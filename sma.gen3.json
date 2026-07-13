@@ -25,6 +25,7 @@
       "packages/web/module.sweetspot.json",
       "packages/web/src/app/home/module.sweetspot.json",
       "packages/web/src/app/life/module.sweetspot.json",
+      "packages/web/src/app/motion/module.sweetspot.json",
       "packages/web/src/app/providers/module.sweetspot.json",
       "packages/web/src/app/scan/module.sweetspot.json",
       "packages/web/src/app/u/[handle]/module.sweetspot.json",
