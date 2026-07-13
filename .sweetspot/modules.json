@@ -156,7 +156,7 @@
       "brick_id": "000-vibetracker.web.motion-sequencer",
       "manifest_path": "packages/web/src/app/motion/module.sweetspot.json",
       "status": "project_bound",
-      "score": 84,
+      "score": 90,
       "notes": "Interactive credited ASCII motion sequencer with every usage and proof side effect fixed at zero."
     },
     {

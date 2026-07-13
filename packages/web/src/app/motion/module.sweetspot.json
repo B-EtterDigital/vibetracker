@@ -20,7 +20,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "1abc534",
+    "commit": "1a6b6b5",
     "paths": [
       "packages/web/src/app/motion",
       "packages/web/src/lib/ascii-motion-lab.ts",
@@ -90,12 +90,13 @@
       "evidence": ["packages/web/src/app/motion/motion-sequencer.tsx"]
     },
     "sstf": {
-      "status": "pending",
-      "score": 70,
-      "notes": "Focused and release verification are pending the current implementation pass.",
+      "status": "passing",
+      "score": 95,
+      "notes": "Focused model and route tests plus the complete clean release gate pass on the final implementation commit.",
       "evidence": [
         "packages/web/src/lib/__tests__/ascii-motion-lab.test.ts",
-        "packages/web/src/lib/__tests__/motion-route.test.ts"
+        "packages/web/src/lib/__tests__/motion-route.test.ts",
+        ".smarch/agent-context/000-vibetracker.web.motion-sequencer.ndjson"
       ]
     },
     "spe": {
@@ -118,10 +119,17 @@
       ]
     },
     "ssra": {
-      "status": "pending",
-      "score": 70,
-      "notes": "Production build, deploy, and desktop/mobile runtime proof are pending.",
-      "evidence": []
+      "status": "passing",
+      "score": 95,
+      "notes": "Clean build, exact-artifact Netlify production promotion, mobile/desktop/4K interactions, network, console, layout, and Lighthouse proof pass.",
+      "evidence": [
+        "Netlify deploy 6a5488dd8f53d4663b3aa2f4",
+        "https://vibeusage.c0vibe.app/motion",
+        "/home/bdd-main/.playwright-mcp/vibetracker-motion-sequencer-desktop.png",
+        "/home/bdd-main/.playwright-mcp/vibetracker-motion-sequencer-mobile.png",
+        "/home/bdd-main/.playwright-mcp/vibetracker-motion-sequencer-4k.png",
+        "/home/bdd-main/.playwright-mcp/vibetracker-motion-lighthouse-production.json"
+      ]
     },
     "sas": {
       "status": "passing",
@@ -224,7 +232,7 @@
     "sbom_path": ""
   },
   "quality": {
-    "score": 84,
+    "score": 90,
     "line_count": {
       "max_file_lines": 333,
       "over_600_count": 0
@@ -240,7 +248,14 @@
       "node --test packages/web/src/lib/__tests__/ascii-motion-lab.test.ts",
       "node --test packages/web/src/lib/__tests__/motion-route.test.ts"
     ],
-    "verification": []
+    "verification": [
+      {
+        "command": "focused Motion tests + pnpm sma:release-gate + pnpm audit --audit-level high + Netlify production runtime + Lighthouse",
+        "status": "pass",
+        "timestamp": "2026-07-13T07:43:33Z",
+        "notes": "Focused contracts, 15 control-plane tests, 532 package tests, strict VTRS, TypeScript, vulnerability audit, 390px/1440px/4K runtime, 17/17 browser requests, and 100/100/100/100 production Lighthouse proof passed."
+      }
+    ]
   },
   "clone": {
     "readiness": "project_bound",
@@ -287,7 +302,14 @@
         "sma.gen3.json",
         "netlify.toml"
       ],
-      "verification": [],
+      "verification": [
+        "ctx-1783928601507-c1c04c18",
+        "ctx-1783928603339-bd31bfd7",
+        "ctx-1783928605590-d934eac9",
+        "ctx-1783928608381-bf1fe54b",
+        "ctx-1783928611016-73354959",
+        "ctx-1783928613143-22496ba7"
+      ],
       "timestamp": "2026-07-12T03:40:19Z",
       "summary": "Replaced the static Motion Lab theatre with an interactive credited ASCII sequencer.",
       "intent": "Make VibeTRACKER motion controllable, nerdy, and inspectable without confusing animation with evidence.",
@@ -299,7 +321,55 @@
         "reference": "1abc534"
       }
     },
-    "touched_by": [],
+    "touched_by": [
+      {
+        "actor_kind": "agent",
+        "actor_id": "bdd-main@019f4b2d",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "verifier",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "commit": "1a6b6b5",
+        "files_touched": [
+          "packages/web/src/app/motion",
+          "packages/web/src/app/globals.css",
+          "packages/web/src/lib/ascii-motion-lab.ts",
+          "packages/web/src/lib/ascii-motion-references.ts",
+          "packages/web/src/lib/__tests__/ascii-motion-lab.test.ts",
+          "packages/web/src/lib/__tests__/motion-route.test.ts",
+          "packages/web/src/lib/__tests__/app-shell-instrument.test.ts",
+          "packages/web/src/app/motion/module.sweetspot.json",
+          ".sweetspot/modules.json",
+          "sma.gen3.json",
+          "netlify.toml"
+        ],
+        "verification": [
+          {
+            "command": "clean release gate + dependency audit + Netlify mobile/desktop/4K runtime + production Lighthouse",
+            "status": "pass",
+            "timestamp": "2026-07-13T07:43:33Z",
+            "notes": "The exact 1a6b6b5 artifact is live, all route assets and browser requests return 200, the console is clean, responsive controls fit, and all four Lighthouse categories score 100."
+          }
+        ],
+        "timestamp": "2026-07-13T07:43:33Z",
+        "summary": "Closed the Motion release with clean-tree, responsive browser, deployment, security, and Lighthouse proof.",
+        "intent": "Prove the interactive ASCII Motion Sequencer at the real production boundary under SMA Gen3.",
+        "decision_rationale": "Promoting the already-ready preview deploy preserved the exact browser-tested artifact while avoiding a second function bundle with different bytes.",
+        "lease_id": "lease-1783921422107-9109705c",
+        "context_event_ids": [
+          "ctx-1783928601507-c1c04c18",
+          "ctx-1783928603339-bd31bfd7",
+          "ctx-1783928605590-d934eac9",
+          "ctx-1783928608381-bf1fe54b",
+          "ctx-1783928611016-73354959",
+          "ctx-1783928613143-22496ba7"
+        ],
+        "attestation": {
+          "method": "netlify_deploy",
+          "reference": "6a5488dd8f53d4663b3aa2f4"
+        }
+      }
+    ],
     "reviewed_by": [],
     "source_chain": [
       {
