@@ -20,7 +20,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "5c664c9",
+    "commit": "afd17db",
     "paths": [
       "packages/web/src/app/motion",
       "packages/web/src/lib/ascii-motion-lab.ts",
@@ -284,7 +284,7 @@
       "model": "gpt-5-codex",
       "role": "architect",
       "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
-      "commit": "8348677",
+      "commit": "56f1394",
       "files_touched": [
         "packages/web/src/app/motion/page.tsx",
         "packages/web/src/app/motion/motion-sequencer.tsx",
@@ -318,7 +318,7 @@
       "context_event_ids": ["ctx-1783827299509-b3341c4c"],
       "attestation": {
         "method": "git_commit",
-        "reference": "8348677"
+        "reference": "56f1394"
       }
     },
     "touched_by": [
@@ -329,7 +329,7 @@
         "model": "gpt-5-codex",
         "role": "verifier",
         "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
-        "commit": "5c664c9",
+        "commit": "afd17db",
         "files_touched": [
           "packages/web/src/app/motion",
           "packages/web/src/app/globals.css",
@@ -375,7 +375,7 @@
       {
         "project": "000-vibetracker",
         "brick_id": "000-vibetracker.web.motion-sequencer",
-        "commit": "8348677",
+        "commit": "56f1394",
         "path": "packages/web/src/app/motion",
         "event": "created",
         "timestamp": "2026-07-12T03:40:19Z"
