@@ -283,7 +283,8 @@
         "packages/web/src/app/globals.css",
         "packages/web/src/app/motion/module.sweetspot.json",
         ".sweetspot/modules.json",
-        "sma.gen3.json"
+        "sma.gen3.json",
+        "netlify.toml"
       ],
       "verification": [],
       "timestamp": "2026-07-12T03:40:19Z",

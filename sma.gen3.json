@@ -193,6 +193,7 @@
       "label": "Package/dependency/workspace surface",
       "paths": [
         "package.json",
+        "netlify.toml",
         "pnpm-lock.yaml",
         "pnpm-workspace.yaml",
         "scripts/build.mjs",

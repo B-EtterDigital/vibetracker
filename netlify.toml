@@ -1,0 +1,6 @@
+[build]
+command = "pnpm --filter @vibetracker/web... run build"
+publish = "packages/web/.next"
+
+[[plugins]]
+package = "@netlify/plugin-nextjs"
