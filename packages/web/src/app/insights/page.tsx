@@ -7,8 +7,8 @@ import "./insights-ledger.css";
 import "./insights-responsive.css";
 
 export const metadata = {
-  title: "AI Runway Console · VibeUsage",
-  description: "Tune a dry-run AI usage budget, inspect local-shift value, and see every planning delta without changing usage data.",
+  title: "AI Cost Plan · VibeUsage",
+  description: "Understand a 30-day AI spend forecast, test a monthly limit and local-work scenario, and see the calculation without changing usage data.",
 };
 
 export default function InsightsPage() {

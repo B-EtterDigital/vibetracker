@@ -28,7 +28,7 @@ const profile: ProfileView = {
   categories: [], providerDays: [], providerModels: [], trustSignals: [],
 };
 
-test("runway source uses the real 30-day pace and keeps local shadow separate", () => {
+test("runway source uses the real 30-day pace and keeps eligible local savings separate", () => {
   assert.deepEqual(buildInsightsRunwaySource(profile), {
     forecastUsd: 645,
     localShadowUsd: 11.6,
@@ -49,12 +49,9 @@ test("runway planner derives an estimate-only over-cap state", () => {
   assert.equal(snapshot.adjustedUsd, 640.94);
   assert.equal(snapshot.varianceUsd, -140.94);
   assert.equal(snapshot.utilizationPercent, 128);
-  assert.equal(snapshot.runwayDays, 23);
   assert.equal(snapshot.state, "over");
-  assert.equal(snapshot.stateLabel, "above ceiling");
+  assert.equal(snapshot.stateLabel, "over budget");
   assert.match(snapshot.command, /--budget 500 --local-shift 35 --dry-run/);
-  assert.equal(snapshot.waveform.length, 16);
-  assert.equal(snapshot.waveform.every((value) => value >= 12 && value <= 96), true);
 });
 
 test("runway planner clamps unsafe control values and handles a zero forecast", () => {
@@ -70,8 +67,8 @@ test("runway planner clamps unsafe control values and handles a zero forecast", 
   assert.equal(snapshot.adjustedUsd, 0);
   assert.equal(snapshot.varianceUsd, 1);
   assert.equal(snapshot.utilizationPercent, 0);
-  assert.equal(snapshot.runwayDays, 99);
   assert.equal(snapshot.state, "under");
+  assert.equal(snapshot.stateLabel, "inside budget");
   assert.match(snapshot.command, /--budget 1 --local-shift 100 --dry-run/);
 });
 
@@ -85,14 +82,14 @@ test("Insights mounts an isolated, accessible planning instrument", () => {
   assert.match(page, /import \{ RunwayDecisionConsole \}/);
   assert.match(page, /<RunwayDecisionConsole/);
   assert.match(component, /type="range"/);
-  assert.match(component, /type="checkbox"/);
   assert.match(component, /role="img"/);
   assert.match(component, /aria-live="polite"/);
   assert.match(component, /navigator\.clipboard\.writeText/);
-  assert.match(component, /It writes no usage data/);
-  assert.match(styles, /\.intel-scope/);
+  assert.match(component, /This page writes nothing/);
+  assert.match(styles, /\.intel-comparison/);
   assert.match(controls, /input\[type="range"\]/);
   assert.match(responsive, /@media \(max-width: 760px\)/);
   assert.match(responsive, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.doesNotMatch(component, /type="checkbox"|waveform/);
   assert.doesNotThrow(() => readFileSync("packages/web/src/app/icon.svg", "utf8"));
 });

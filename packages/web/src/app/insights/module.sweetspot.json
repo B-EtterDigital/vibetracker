@@ -2,25 +2,25 @@
   "schema_version": "1.0.0",
   "brick": {
     "id": "000-vibetracker.web.runway-decision-console",
-    "name": "Runway Decision Console",
+    "name": "Explained AI Cost Plan",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
-    "domain": ["usage-analytics", "budget-planning", "local-simulation"]
+    "domain": ["usage-analytics", "budget-planning", "local-simulation", "explainable-analytics"]
   },
   "hierarchy": {
     "level": "brick",
     "group_id": "000-vibetracker:packages/web/src/app",
     "contains": ["route", "component", "sample", "model-adapter", "style", "test"],
     "component_policy": "internal_by_default",
-    "notes": "Interactive estimate-only runway console driven by the production Insights runway model with explicit no-write boundaries."
+    "notes": "Recommendation-first, estimate-only cost plan driven by the production Insights model with visible sample-data, calculation, confidence, and no-write boundaries."
   },
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "85d29e6",
+    "commit": "526f22d",
     "paths": [
       "packages/web/src/app/insights",
       "packages/web/src/lib/insights-runway.ts",
@@ -67,13 +67,13 @@
   "classification": {
     "data_classes": ["public", "synthetic_sample"],
     "risk": "low",
-    "notes": "The route derives bounded planning estimates from a labelled sample and never writes usage, providers, profiles, spend, or rank."
+    "notes": "The route visibly identifies its synthetic example before presenting bounded planning estimates and never writes usage, providers, profiles, spend, or rank."
   },
   "sweetspot": {
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Server route, sample profile, client console, production model adapter, styles, and tests are separated; every owned file is below 360 lines.",
+      "notes": "Server route, sample profile, client decision surface, production model adapter, styles, and tests are separated; every owned implementation file is below 300 lines.",
       "evidence": [
         "packages/web/src/app/insights/page.tsx",
         "packages/web/src/app/insights/runway-decision-console.tsx",
@@ -83,7 +83,7 @@
     "ssi": {
       "status": "passing",
       "score": 95,
-      "notes": "One typed runway snapshot drives state, metrics, waveform, delta ledger, presets, and the copied dry-run command.",
+      "notes": "One typed snapshot drives the recommendation, exact comparison, calculation trace, presets, and copied dry-run command; no generated visualization is presented as evidence.",
       "evidence": ["packages/web/src/lib/insights-runway.ts"]
     },
     "sstf": {
@@ -98,7 +98,7 @@
     "spe": {
       "status": "passing",
       "score": 95,
-      "notes": "Two bounded sliders, three presets, one local review toggle, and a fixed sixteen-bar waveform keep client work constant.",
+      "notes": "Two bounded sliders, three presets, one exact comparison, and a five-row calculation trace keep client work constant.",
       "evidence": [
         "packages/web/src/app/insights/runway-decision-console.tsx",
         "packages/web/src/lib/insights-runway.ts"
@@ -107,7 +107,7 @@
     "srs": {
       "status": "passing",
       "score": 95,
-      "notes": "Estimates, NOT SPEND offsets, clipboard failures, local-only review state, and zero-write boundaries are visible in the UI.",
+      "notes": "Sample status, formula basis, local-savings denominator, estimate confidence, clipboard failures, and zero-write boundaries are visible in plain language.",
       "evidence": [
         "packages/web/src/app/insights/runway-decision-console.tsx",
         "packages/web/src/lib/__tests__/insights-route.test.ts"
@@ -116,11 +116,11 @@
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Clean build, Netlify preview and production deploys, desktop/mobile interactions, network, console, layout, and Lighthouse proof pass.",
+      "notes": "The production build passed interaction, network, console, and overflow checks at 390px mobile, 1440px desktop, and 3840px 4K fullscreen viewports.",
       "evidence": [
-        "Netlify deploy 6a530944c4adb58b6ab1c953",
-        "/home/bdd-main/.playwright-mcp/vibetracker-insights-runway-desktop.png",
-        "/home/bdd-main/.playwright-mcp/vibetracker-insights-runway-mobile.png"
+        "/tmp/insights-final-mobile.png",
+        "/tmp/insights-final-desktop.png",
+        "/tmp/insights-final-4k.png"
       ]
     },
     "sas": {
@@ -225,15 +225,15 @@
   "quality": {
     "score": 90,
     "line_count": {
-      "max_file_lines": 357,
+      "max_file_lines": 261,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1149,
+      "feature_lines": 959,
       "file_count": 10,
       "dependency_count": 2,
-      "notes": "The former 614-line static route and 664-line CSS module are now a 24-line server surface, focused client console, production model adapter, and split route-local styles."
+      "notes": "The route remains a small server surface plus a 261-line client decision component, 91-line production model adapter, and split route-local styles."
     },
     "test_commands": [
       "node --test packages/web/src/lib/__tests__/insights-route.test.ts",
@@ -243,8 +243,8 @@
       {
         "command": "focused insights tests + pnpm sma:release-gate + pnpm audit --audit-level high + pnpm --dir packages/web build",
         "status": "pass",
-        "timestamp": "2026-07-12T03:28:26Z",
-        "notes": "6 focused estimate tests, 15 control-plane tests, 491 package tests, strict VTRS, TypeScript, dependency audit, clean 21-route Next build, Netlify interactions, and Lighthouse proof passed."
+        "timestamp": "2026-07-13T19:29:00Z",
+        "notes": "7 focused Insights tests, 15 control-plane tests, 555 package tests, strict VTRS with 0 violations, TypeScript, dependency audit with no known vulnerabilities, clean 23-route Next build, and production interaction proof at 390px, 1440px, and 3840px passed with no overflow, console errors, or failed dynamic requests."
       }
     ]
   },
@@ -262,8 +262,9 @@
       "Run focused estimate and route tests plus the release gate."
     ],
     "known_traps": [
-      "Local shadow value is a planning offset, never actual spend.",
-      "Review armed is local UI state and must never write usage.",
+      "Local savings is a scenario applied only to estimated eligible work, never a percentage of total spend.",
+      "Generated decorative charts must never be presented as forecast evidence.",
+      "Synthetic sample data must be identified before the first result.",
       "Copied commands must retain --dry-run."
     ]
   },

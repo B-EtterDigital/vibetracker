@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   buildInsightsRunwaySnapshot,
+  type InsightsRunwaySnapshot,
   type InsightsRunwaySource,
 } from "../../lib/insights-runway.ts";
 
@@ -16,9 +17,9 @@ interface RunwayDecisionConsoleProps {
 type CopyState = "idle" | "copied" | "blocked";
 
 const PLAN_PRESETS = [
-  { id: "protect", label: "Protect", detail: "Hard ceiling", cap: 500, shift: 60, mark: "LOCK" },
-  { id: "target", label: "Target", detail: "Current pace", cap: 650, shift: 35, mark: "LIVE" },
-  { id: "explore", label: "Explore", detail: "More headroom", cap: 750, shift: 10, mark: "OPEN" },
+  { id: "strict", label: "Strict", detail: "$500 limit · 60% local", cap: 500, shift: 60 },
+  { id: "balanced", label: "Current pace", detail: "$650 limit · 35% local", cap: 650, shift: 35 },
+  { id: "buffer", label: "More buffer", detail: "$750 limit · 10% local", cap: 750, shift: 10 },
 ] as const;
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -28,9 +29,27 @@ const currency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
-function signedMoney(value: number): string {
-  if (value === 0) return currency.format(0);
-  return `${value > 0 ? "+" : "-"}${currency.format(Math.abs(value))}`;
+function recommendation(snapshot: InsightsRunwaySnapshot) {
+  const difference = currency.format(Math.abs(snapshot.varianceUsd));
+  if (snapshot.state === "over") {
+    return {
+      label: "Action needed",
+      title: "This plan is over budget.",
+      body: `You would exceed the limit by ${difference}. Reduce paid usage, move more eligible work local, or raise the limit before relying on this plan.`,
+    };
+  }
+  if (snapshot.state === "near") {
+    return {
+      label: "Very small buffer",
+      title: "This plan leaves almost no room for a spike.",
+      body: `Only ${difference} remains. One unusually heavy generation or coding day could push the month over your limit.`,
+    };
+  }
+  return {
+    label: "Healthy buffer",
+    title: "This plan has room for heavier days.",
+    body: `${difference} remains below the limit. Keep the plan unless your workload or provider mix changes materially.`,
+  };
 }
 
 export function RunwayDecisionConsole({
@@ -41,7 +60,6 @@ export function RunwayDecisionConsole({
 }: RunwayDecisionConsoleProps) {
   const [monthlyCapUsd, setMonthlyCapUsd] = useState(650);
   const [localShiftPercent, setLocalShiftPercent] = useState(35);
-  const [reviewArmed, setReviewArmed] = useState(false);
   const [copyState, setCopyState] = useState<CopyState>("idle");
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const snapshot = useMemo(
@@ -58,11 +76,6 @@ export function RunwayDecisionConsole({
     if (resetTimer.current) clearTimeout(resetTimer.current);
   }, []);
 
-  function applyPreset(preset: (typeof PLAN_PRESETS)[number]) {
-    setMonthlyCapUsd(preset.cap);
-    setLocalShiftPercent(preset.shift);
-  }
-
   async function copyCommand() {
     try {
       await navigator.clipboard.writeText(snapshot.command);
@@ -77,71 +90,98 @@ export function RunwayDecisionConsole({
   const selectedPreset = PLAN_PRESETS.find(
     (preset) => preset.cap === monthlyCapUsd && preset.shift === localShiftPercent,
   )?.id;
-  const scopeStyle = {
-    "--cap-marker": `${snapshot.capMarkerPercent}%`,
-    "--adjusted-marker": `${snapshot.adjustedMarkerPercent}%`,
+  const decision = recommendation(snapshot);
+  const dailyPace = source.forecastUsd / 30;
+  const comparisonMax = Math.max(snapshot.adjustedUsd, monthlyCapUsd, 1);
+  const comparisonStyle = {
+    "--plan-width": `${(snapshot.adjustedUsd / comparisonMax) * 100}%`,
+    "--budget-width": `${(monthlyCapUsd / comparisonMax) * 100}%`,
   } as CSSProperties;
-  const ledger = [
-    { label: "Observed 30d pace", value: currency.format(snapshot.projectedUsd), impact: "estimate", note: `${activeDays} active days` },
-    { label: "Local shadow offset", value: `-${currency.format(snapshot.localOffsetUsd)}`, impact: "not_spend", note: `${localShiftPercent}% scenario` },
-    { label: "Adjusted plan", value: currency.format(snapshot.adjustedUsd), impact: "estimate", note: "dry-run result" },
-    { label: "Monthly ceiling", value: currency.format(monthlyCapUsd), impact: "boundary", note: "local control" },
-    { label: "Cap variance", value: signedMoney(snapshot.varianceUsd), impact: snapshot.state, note: `${snapshot.utilizationPercent}% utilized` },
-  ];
+  const remainingLabel = snapshot.varianceUsd >= 0 ? "Budget remaining" : "Amount over budget";
 
   return (
     <div className="intel-surface">
       <section className="intel-console" data-state={snapshot.state} aria-labelledby="intel-title">
         <header className="intel-mast">
-          <div>
-            <p>VTK://RUNWAY-CONSOLE//ESTIMATE-ONLY//ZERO-WRITES</p>
-            <h1 id="intel-title">See the burn. Bend the runway.</h1>
-            <span>Turn reviewed usage pace into a budget decision without changing totals, providers, or rank.</span>
+          <div className="intel-mast__copy">
+            <div className="intel-sample-flag">
+              <b>Example calculation</b>
+              <span>Not connected to your account</span>
+            </div>
+            <p>MONTHLY AI COST PLAN</p>
+            <h1 id="intel-title">Know what next month may cost.</h1>
+            <span>
+              Set a monthly spending limit, test a local-work scenario, and see the consequence in dollars.
+              Nothing on this page changes your usage or providers.
+            </span>
+            <div className="intel-basis">
+              <b>Why the forecast is {currency.format(source.forecastUsd)}</b>
+              <span>{currency.format(dailyPace)} average on {activeDays} active example days × 30 days.</span>
+            </div>
           </div>
-          <div className="intel-readout">
-            <span>ADJUSTED 30D</span>
+          <div className="intel-readout" aria-live="polite">
+            <span>PLANNED PAID SPEND</span>
             <strong>{currency.format(snapshot.adjustedUsd)}</strong>
-            <b>{snapshot.stateLabel}</b>
+            <small>of a {currency.format(monthlyCapUsd)} monthly limit</small>
+            <b>{snapshot.varianceUsd >= 0 ? `${currency.format(snapshot.varianceUsd)} left` : `${currency.format(Math.abs(snapshot.varianceUsd))} over`}</b>
           </div>
         </header>
 
-        <div className="intel-contract" aria-label="Insights simulation contract">
+        <div className="intel-contract" aria-label="Example data used by this calculation">
+          <span><b>Example</b> not your account</span>
           <span><b>{recordCount.toLocaleString("en-US")}</b> accepted rows</span>
-          <span><b>{providerCount}</b> usage sources</span>
+          <span><b>{providerCount}</b> providers</span>
           <span><b>{activeDays}</b> active days</span>
-          <span><b>0</b> usage writes</span>
         </div>
 
-        <div className="intel-workspace">
-          <nav className="intel-presets" aria-label="Runway planning presets">
-            <p>PLAN MODES</p>
-            {PLAN_PRESETS.map((preset) => (
-              <button
-                aria-pressed={selectedPreset === preset.id}
-                key={preset.id}
-                onClick={() => applyPreset(preset)}
-                type="button"
-              >
-                <i aria-hidden="true">{preset.mark}</i>
-                <span><b>{preset.label}</b><small>{preset.detail}</small></span>
-              </button>
-            ))}
-            <div className="intel-presets__rule">
-              <span>PRESSURE SOURCE</span>
-              <b>{source.topProvider}</b>
-              <small>Highest observed sample spend. No provider changes are applied here.</small>
-            </div>
-          </nav>
+        <section className="intel-decision" aria-labelledby="intel-decision-title">
+          <header>
+            <p>{decision.label}</p>
+            <h2 id="intel-decision-title">{decision.title}</h2>
+            <span>{decision.body}</span>
+          </header>
+          <div
+            className="intel-comparison"
+            role="img"
+            aria-label={`Planned paid spend ${currency.format(snapshot.adjustedUsd)} compared with monthly budget ${currency.format(monthlyCapUsd)}. ${Math.abs(snapshot.varianceUsd).toFixed(2)} dollars ${snapshot.varianceUsd >= 0 ? "remaining" : "over budget"}.`}
+            style={comparisonStyle}
+          >
+            <div><span>Planned spend</span><i><b /></i><strong>{currency.format(snapshot.adjustedUsd)}</strong></div>
+            <div><span>Your limit</span><i><b /></i><strong>{currency.format(monthlyCapUsd)}</strong></div>
+          </div>
+          <div className="intel-decision__facts">
+            <span><small>Forecast before changes</small><strong>{currency.format(snapshot.projectedUsd)}</strong><em>{currency.format(dailyPace)} active-day pace</em></span>
+            <span><small>Estimated local savings</small><strong>−{currency.format(snapshot.localOffsetUsd)}</strong><em>{localShiftPercent}% of {currency.format(source.localShadowUsd)} eligible</em></span>
+            <span><small>{remainingLabel}</small><strong>{currency.format(Math.abs(snapshot.varianceUsd))}</strong><em>{snapshot.utilizationPercent}% of limit used</em></span>
+          </div>
+        </section>
 
-          <div className="intel-controls">
+        <div className="intel-workspace">
+          <section className="intel-controls" aria-labelledby="intel-controls-title">
             <header>
-              <div><p>PLANNING INPUTS / LIVE</p><h2>Runway controls</h2></div>
-              <span>local simulation</span>
+              <div><p>CHANGE THE ASSUMPTIONS</p><h2 id="intel-controls-title">Choose your comfort level</h2></div>
+              <span>Updates instantly</span>
             </header>
+            <div className="intel-presets" role="group" aria-label="Planning presets">
+              {PLAN_PRESETS.map((preset) => (
+                <button
+                  aria-pressed={selectedPreset === preset.id}
+                  key={preset.id}
+                  onClick={() => {
+                    setMonthlyCapUsd(preset.cap);
+                    setLocalShiftPercent(preset.shift);
+                  }}
+                  type="button"
+                >
+                  <b>{preset.label}</b>
+                  <span>{preset.detail}</span>
+                </button>
+              ))}
+            </div>
             <label>
-              <span><b>Monthly ceiling</b><small>Your planning boundary</small></span>
+              <span><b>Monthly spending limit</b><small>The most you are comfortable paying for AI providers in one month.</small></span>
               <input
-                aria-label="Monthly ceiling"
+                aria-label="Monthly spending limit"
                 max="1000"
                 min="200"
                 onChange={(event) => setMonthlyCapUsd(Number(event.target.value))}
@@ -152,9 +192,9 @@ export function RunwayDecisionConsole({
               <output>{currency.format(monthlyCapUsd)}</output>
             </label>
             <label>
-              <span><b>Local shift</b><small>Repeat work moved to local tools</small></span>
+              <span><b>Eligible work moved local</b><small>A scenario for repeat work that could run on local tools instead of paid providers.</small></span>
               <input
-                aria-label="Local shift"
+                aria-label="Eligible work moved local"
                 max="100"
                 min="0"
                 onChange={(event) => setLocalShiftPercent(Number(event.target.value))}
@@ -162,66 +202,57 @@ export function RunwayDecisionConsole({
                 type="range"
                 value={localShiftPercent}
               />
-              <output>{localShiftPercent}% / -{currency.format(snapshot.localOffsetUsd)}</output>
+              <output>{localShiftPercent}% → save {currency.format(snapshot.localOffsetUsd)}</output>
+              <p>
+                This percentage applies only to {currency.format(source.localShadowUsd)} of estimated eligible work,
+                not to the full {currency.format(source.forecastUsd)} forecast.
+              </p>
             </label>
-            <label className="intel-review">
-              <input checked={reviewArmed} onChange={(event) => setReviewArmed(event.target.checked)} type="checkbox" />
-              <span aria-hidden="true"><i /></span>
-              <b>{reviewArmed ? "Review armed" : "Arm review"}<small>Local state only. It writes no usage data.</small></b>
-            </label>
-          </div>
+          </section>
 
-          <div className="intel-scope-panel">
-            <div className="intel-scope__bar">
-              <span><i aria-hidden="true" /> LIVE PLAN SIGNAL</span>
-              <code>{snapshot.utilizationPercent}% of ceiling</code>
+          <section className="intel-math" aria-labelledby="intel-math-title">
+            <header><p>READ THE CALCULATION</p><h2 id="intel-math-title">Where the result comes from</h2></header>
+            <ol>
+              <li><span><b>30-day forecast</b><small>Active-day average × 30</small></span><strong>{currency.format(snapshot.projectedUsd)}</strong></li>
+              <li data-operation="minus"><span><b>Estimated local savings</b><small>{localShiftPercent}% of eligible work</small></span><strong>−{currency.format(snapshot.localOffsetUsd)}</strong></li>
+              <li data-operation="equals"><span><b>Planned paid spend</b><small>Forecast after this scenario</small></span><strong>{currency.format(snapshot.adjustedUsd)}</strong></li>
+              <li data-operation="compare"><span><b>Your monthly limit</b><small>The boundary you selected</small></span><strong>{currency.format(monthlyCapUsd)}</strong></li>
+              <li data-state={snapshot.state}><span><b>{remainingLabel}</b><small>{snapshot.stateLabel}</small></span><strong>{currency.format(Math.abs(snapshot.varianceUsd))}</strong></li>
+            </ol>
+            <div className="intel-provider-note">
+              <span>WHERE TO REVIEW FIRST</span>
+              <b>{source.topProvider}</b>
+              <p>It has the highest observed spend in this example. That does not mean it is wasteful; check its high-cost jobs before changing providers.</p>
             </div>
-            <div
-              aria-label={`Runway waveform: ${currency.format(snapshot.adjustedUsd)} adjusted forecast against ${currency.format(monthlyCapUsd)} ceiling`}
-              className="intel-scope"
-              role="img"
-              style={scopeStyle}
-            >
-              <div className="intel-scope__axis" aria-hidden="true"><span>$1k</span><span>$750</span><span>$500</span><span>$250</span><span>$0</span></div>
-              <div className="intel-scope__cap" aria-hidden="true"><span>CAP {currency.format(monthlyCapUsd)}</span></div>
-              <div className="intel-scope__plan" aria-hidden="true"><span>PLAN {currency.format(snapshot.adjustedUsd)}</span></div>
-              <div className="intel-scope__wave" aria-hidden="true">
-                {snapshot.waveform.map((height, index) => (
-                  <i key={`${height}-${index}`} style={{ "--bar": `${height}%`, "--i": index } as CSSProperties} />
-                ))}
-              </div>
-              <div className="intel-scope__time" aria-hidden="true"><span>NOW</span><span>D10</span><span>D20</span><span>D30</span></div>
-            </div>
-            <div className="intel-command" aria-live="polite">
-              <span>{reviewArmed ? "REVIEW QUEUED" : "PREVIEW ONLY"}</span>
-              <code>{snapshot.command}</code>
-              <button data-state={copyState} onClick={copyCommand} type="button">
-                {copyState === "copied" ? "Copied" : copyState === "blocked" ? "Clipboard blocked" : "Copy dry-run"}
-              </button>
-              <p>{copyState === "blocked" ? "Clipboard access failed. Select the command manually." : "Command preview only. No provider, usage total, or public profile changes here."}</p>
-            </div>
-          </div>
+          </section>
         </div>
 
-        <section className="intel-ledger" aria-labelledby="intel-ledger-title">
-          <header>
-            <div><p>DELTA LEDGER / SAME SIMULATION</p><h2 id="intel-ledger-title">How the plan moves</h2></div>
-            <code>{snapshot.runwayDays} days at current cap</code>
-          </header>
-          <div className="intel-ledger__head"><span>channel</span><span>observed</span><span>classification</span><span>basis</span></div>
-          {ledger.map((row) => (
-            <div className="intel-ledger__row" data-impact={row.impact} key={row.label}>
-              <b>{row.label}</b><strong>{row.value}</strong>
-              <em>{row.impact === "not_spend" ? "NOT SPEND" : row.impact.replace("_", " ").toUpperCase()}</em>
-              <span>{row.note}</span>
+        <section className="intel-details" aria-labelledby="intel-details-title">
+          <header><p>CONFIDENCE BOUNDARY</p><h2 id="intel-details-title">What is known, estimated, and unchanged</h2></header>
+          <div className="intel-details__grid">
+            <div><b>Known from the example</b><span>Accepted usage rows, provider totals, active days, and observed spend.</span></div>
+            <div><b>Estimated here</b><span>Next month’s spend and possible local savings. Workload changes can make both wrong.</span></div>
+            <div><b>Never changed here</b><span>Usage totals, provider settings, public profile, score, and rank. This page writes nothing.</span></div>
+          </div>
+          <details className="intel-technical">
+            <summary>Show the formula and CLI dry run</summary>
+            <div>
+              <p><code>{currency.format(dailyPace)} × 30 − ({currency.format(source.localShadowUsd)} × {localShiftPercent}%) = {currency.format(snapshot.adjustedUsd)}</code></p>
+              <div className="intel-command" aria-live="polite">
+                <code>{snapshot.command}</code>
+                <button data-state={copyState} onClick={copyCommand} type="button">
+                  {copyState === "copied" ? "Copied" : copyState === "blocked" ? "Clipboard blocked" : "Copy dry-run command"}
+                </button>
+                <span>{copyState === "blocked" ? "Clipboard access failed. Select the command manually." : "Preview only. The command retains --dry-run."}</span>
+              </div>
             </div>
-          ))}
+          </details>
         </section>
 
         <footer className="intel-foot">
-          <span><i aria-hidden="true" /> estimate-only planning instrument</span>
-          <span>0 totals / 0 rank / 0 provider writes</span>
-          <a href="/score">Open Score Lab</a>
+          <span><i aria-hidden="true" /> Example planning only</span>
+          <span>0 usage writes · 0 rank changes · 0 provider changes</span>
+          <a href="/score">See how Vibe Score is calculated</a>
         </footer>
       </section>
     </div>

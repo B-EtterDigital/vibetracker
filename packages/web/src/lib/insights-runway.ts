@@ -15,12 +15,8 @@ export interface InsightsRunwaySnapshot {
   adjustedUsd: number;
   varianceUsd: number;
   utilizationPercent: number;
-  runwayDays: number;
   state: InsightsRunwayState;
   stateLabel: string;
-  capMarkerPercent: number;
-  adjustedMarkerPercent: number;
-  waveform: number[];
   command: string;
 }
 
@@ -30,7 +26,6 @@ export interface InsightsRunwaySource {
   topProvider: string;
 }
 
-const SIGNAL_SHAPE = [0.56, 0.72, 0.84, 0.66, 0.93, 0.78, 0.61, 0.88, 0.74, 0.98, 0.69, 0.82, 0.64, 0.9, 0.76, 0.58];
 const LOCAL_PROVIDERS = new Set(["ollama", "lmstudio", "comfyui", "vllm", "localai", "jan"]);
 
 function clamp(value: number, min: number, max: number): number {
@@ -75,23 +70,12 @@ export function buildInsightsRunwaySnapshot(input: InsightsRunwayInput): Insight
   const adjustedUsd = money(Math.max(0, projectedUsd - localOffsetUsd));
   const varianceUsd = money(monthlyCapUsd - adjustedUsd);
   const utilizationPercent = Math.round((adjustedUsd / monthlyCapUsd) * 100);
-  const runwayDays = adjustedUsd === 0
-    ? 99
-    : Math.min(99, Math.max(1, Math.round(monthlyCapUsd / (adjustedUsd / 30))));
   const state: InsightsRunwayState = adjustedUsd > monthlyCapUsd
     ? "over"
     : utilizationPercent >= 90
       ? "near"
       : "under";
-  const stateLabel = state === "over" ? "above ceiling" : state === "near" ? "near ceiling" : "inside runway";
-  const scaleMax = Math.max(projectedUsd, monthlyCapUsd, 1);
-  const capMarkerPercent = Math.round(clamp((monthlyCapUsd / scaleMax) * 100, 6, 96));
-  const adjustedMarkerPercent = Math.round(clamp((adjustedUsd / scaleMax) * 100, 4, 98));
-  const signalBase = clamp(adjustedMarkerPercent, 18, 92);
-  const waveform = SIGNAL_SHAPE.map((shape, index) => {
-    const cadence = index % 3 === 0 ? 7 : index % 3 === 1 ? -3 : 3;
-    return Math.round(clamp(signalBase * shape + cadence, 12, 96));
-  });
+  const stateLabel = state === "over" ? "over budget" : state === "near" ? "close to the limit" : "inside budget";
 
   return {
     projectedUsd,
@@ -99,12 +83,8 @@ export function buildInsightsRunwaySnapshot(input: InsightsRunwayInput): Insight
     adjustedUsd,
     varianceUsd,
     utilizationPercent,
-    runwayDays,
     state,
     stateLabel,
-    capMarkerPercent,
-    adjustedMarkerPercent,
-    waveform,
     command: `vibetracker insights --budget ${monthlyCapUsd} --local-shift ${localShiftPercent} --dry-run`,
   };
 }
