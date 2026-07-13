@@ -1,0 +1,277 @@
+.vtelemetry {
+  --vt-current: #2ee8d6;
+  --vt-previous: #ffc64d;
+  overflow: hidden;
+  padding: 0;
+  border-color: rgba(46, 232, 214, 0.24);
+  background: #071012;
+}
+
+.vtelemetry-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 24px;
+  padding: 20px 22px 18px;
+  border-bottom: 1px solid rgba(217, 255, 242, 0.1);
+}
+
+.vtelemetry-kicker {
+  margin: 0 0 8px;
+  color: var(--vt-current);
+  font: 700 9px/1.2 var(--vp-mono);
+  letter-spacing: 0.14em;
+}
+
+.vtelemetry-head h2 {
+  margin: 0;
+  color: #eafff8;
+  font: 650 clamp(1.45rem, 2.5vw, 2.15rem)/1 var(--vp-mono);
+  letter-spacing: 0;
+}
+
+.vtelemetry-controls,
+.vtelemetry-control,
+.vtelemetry-control > div {
+  display: flex;
+  align-items: center;
+}
+
+.vtelemetry-controls { gap: 18px; }
+.vtelemetry-control { gap: 8px; }
+
+.vtelemetry-control > span {
+  color: rgba(217, 255, 242, 0.42);
+  font: 600 8px/1 var(--vp-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.vtelemetry-control > div {
+  min-height: 30px;
+  padding: 2px;
+  border: 1px solid rgba(217, 255, 242, 0.13);
+  border-radius: 6px;
+  background: #040708;
+}
+
+.vtelemetry-control button {
+  min-width: 38px;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(217, 255, 242, 0.55);
+  cursor: pointer;
+  font: 650 9px/1 var(--vp-mono);
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.vtelemetry-control button:hover { color: #eafff8; }
+.vtelemetry-control button[aria-pressed="true"] { background: var(--vt-current); color: #03100e; }
+
+.vtelemetry-readouts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-bottom: 1px solid rgba(217, 255, 242, 0.1);
+  background: #0a1315;
+}
+
+.vtelemetry-readouts > div {
+  display: grid;
+  min-width: 0;
+  min-height: 106px;
+  align-content: center;
+  gap: 7px;
+  padding: 17px 20px;
+  border-right: 1px solid rgba(217, 255, 242, 0.08);
+}
+
+.vtelemetry-readouts > div:last-child { border-right: 0; }
+
+.vtelemetry-readouts span,
+.vtelemetry-readouts small {
+  overflow-wrap: anywhere;
+  color: rgba(217, 255, 242, 0.44);
+  font: 600 8.5px/1.2 var(--vp-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.vtelemetry-readouts strong {
+  min-width: 0;
+  color: #eafff8;
+  font: 650 clamp(1.55rem, 3vw, 2.5rem)/0.95 var(--vp-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.vtelemetry-readouts strong i {
+  color: rgba(217, 255, 242, 0.35);
+  font-size: 0.46em;
+  font-style: normal;
+}
+
+.vtelemetry[data-state="up"] .vtelemetry-delta strong { color: #2ee8d6; }
+.vtelemetry[data-state="down"] .vtelemetry-delta strong { color: #ffc64d; }
+.vtelemetry[data-state="flat"] .vtelemetry-delta strong { color: #a8c0ba; }
+
+.vtelemetry-scope {
+  position: relative;
+  padding: 18px 22px 16px;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(46, 232, 214, 0.055) 31px 32px),
+    repeating-linear-gradient(90deg, transparent 0 63px, rgba(46, 232, 214, 0.04) 63px 64px),
+    #050a0b;
+}
+
+.vtelemetry-scope-head,
+.vtelemetry-legend,
+.vtelemetry-legend span,
+.vtelemetry-axis {
+  display: flex;
+  align-items: center;
+}
+
+.vtelemetry-scope-head {
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.vtelemetry-scope-head code {
+  overflow-wrap: anywhere;
+  color: rgba(217, 255, 242, 0.36);
+  font: 600 8px/1.25 var(--vp-mono);
+  letter-spacing: 0.08em;
+  text-align: right;
+}
+
+.vtelemetry-legend { gap: 14px; }
+
+.vtelemetry-legend span {
+  gap: 6px;
+  color: rgba(217, 255, 242, 0.58);
+  font: 600 8px/1 var(--vp-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.vtelemetry-key { width: 13px; height: 3px; }
+.vtelemetry-key--current { background: var(--vt-current); box-shadow: 0 0 8px rgba(46, 232, 214, 0.45); }
+.vtelemetry-key--previous { background: var(--vt-previous); }
+
+.vtelemetry-comb {
+  display: grid;
+  grid-template-columns: repeat(var(--vtelemetry-buckets), minmax(2px, 1fr));
+  align-items: end;
+  gap: clamp(1px, 0.22vw, 4px);
+  height: 172px;
+  padding-top: 4px;
+  border-bottom: 1px solid rgba(217, 255, 242, 0.2);
+}
+
+.vtelemetry-pair {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 1px;
+  height: 100%;
+  min-width: 0;
+}
+
+.vtelemetry-bar {
+  display: block;
+  width: min(42%, 7px);
+  min-height: 0;
+  transform-origin: bottom;
+  animation: vtelemetry-rise 420ms ease-out both;
+}
+
+.vtelemetry-bar--previous {
+  height: var(--vtelemetry-previous);
+  background: rgba(255, 198, 77, 0.36);
+}
+
+.vtelemetry-bar--current {
+  height: var(--vtelemetry-current);
+  background: var(--vt-current);
+  box-shadow: 0 0 8px rgba(46, 232, 214, 0.22);
+}
+
+@keyframes vtelemetry-rise {
+  from { transform: scaleY(0); opacity: 0; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+
+.vtelemetry-axis {
+  justify-content: space-between;
+  padding-top: 8px;
+  color: rgba(217, 255, 242, 0.34);
+  font: 600 8px/1 var(--vp-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vtelemetry-tape {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  overflow: hidden;
+  border-top: 1px solid rgba(217, 255, 242, 0.1);
+  background: #0a1315;
+}
+
+.vtelemetry-tape span {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 11px 14px;
+  overflow: hidden;
+  border-right: 1px solid rgba(217, 255, 242, 0.08);
+  color: rgba(217, 255, 242, 0.58);
+  font: 600 8.5px/1.25 var(--vp-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtelemetry-tape span:last-child { border-right: 0; }
+.vtelemetry-tape b { margin-right: 7px; color: var(--vt-current); font-weight: 700; letter-spacing: 0.09em; }
+
+@media (min-width: 2200px) {
+  .wrap:has(> .vprofile) { max-width: 1760px; }
+  .vtelemetry-comb { height: 206px; }
+}
+
+@media (max-width: 900px) {
+  .vtelemetry-head { grid-template-columns: 1fr; align-items: start; }
+  .vtelemetry-controls { justify-content: space-between; }
+  .vtelemetry-readouts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vtelemetry-readouts > div:nth-child(2) { border-right: 0; }
+  .vtelemetry-readouts > div:nth-child(-n + 2) { border-bottom: 1px solid rgba(217, 255, 242, 0.08); }
+  .vtelemetry-tape { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vtelemetry-tape span:nth-child(2) { border-right: 0; }
+  .vtelemetry-tape span:nth-child(-n + 2) { border-bottom: 1px solid rgba(217, 255, 242, 0.08); }
+}
+
+@media (max-width: 640px) {
+  .vtelemetry-head { gap: 18px; padding: 17px 15px 15px; }
+  .vtelemetry-controls { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .vtelemetry-control { justify-content: space-between; }
+  .vtelemetry-control > div { flex: 1; }
+  .vtelemetry-control button { flex: 1; }
+  .vtelemetry-readouts > div { min-height: 92px; padding: 14px 15px; }
+  .vtelemetry-scope { padding: 16px 15px 14px; }
+  .vtelemetry-scope-head { align-items: flex-start; }
+  .vtelemetry-scope-head code { max-width: 130px; }
+  .vtelemetry-comb { height: 132px; gap: 1px; }
+  .vtelemetry-tape { grid-template-columns: 1fr; }
+  .vtelemetry-tape span { border-right: 0; border-bottom: 1px solid rgba(217, 255, 242, 0.08); }
+  .vtelemetry-tape span:last-child { border-bottom: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vtelemetry-bar { animation: none; }
+}

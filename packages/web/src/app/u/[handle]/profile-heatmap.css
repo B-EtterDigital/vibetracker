@@ -6,6 +6,13 @@
   overflow-y: hidden;
   padding-bottom: 6px;
 }
+.vheat .vprofile-panel-head { align-items: flex-start; }
+.vheat .vprofile-panel-sub {
+  max-width: min(54ch, 68%);
+  overflow-wrap: anywhere;
+  text-align: right;
+  white-space: normal;
+}
 .vheat-grid {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -62,13 +69,24 @@ button.vheat-cell:focus-visible {
   outline: 1px solid rgba(217, 255, 242, 0.55);
   outline-offset: 1px;
 }
-.vheat-l1 { background: rgba(46, 232, 214, 0.22); box-shadow: none; }
-.vheat-l2 { background: rgba(46, 232, 214, 0.44); box-shadow: none; }
-.vheat-l3 { background: rgba(46, 232, 214, 0.7); box-shadow: none; }
-.vheat-l4 {
-  background: #2ee8d6;
-  box-shadow: 0 0 8px -1px rgba(46, 232, 214, 0.75);
-}
+/* AI spend — the locked teal ramp */
+.vheat--spend .vheat-l1 { background: rgba(46, 232, 214, 0.22); box-shadow: none; }
+.vheat--spend .vheat-l2 { background: rgba(46, 232, 214, 0.44); box-shadow: none; }
+.vheat--spend .vheat-l3 { background: rgba(46, 232, 214, 0.7); box-shadow: none; }
+.vheat--spend .vheat-l4 { background: #2ee8d6; box-shadow: 0 0 8px -1px rgba(46, 232, 214, 0.75); }
+
+/* GitHub contributions — GitHub's own green ramp, so it reads unmistakably as the git graph
+   and stays visually distinct from AI spend (a different data source, a different meaning) */
+.vheat--github .vheat-l1 { background: #0e4429; box-shadow: none; }
+.vheat--github .vheat-l2 { background: #006d32; box-shadow: none; }
+.vheat--github .vheat-l3 { background: #26a641; box-shadow: none; }
+.vheat--github .vheat-l4 { background: #39d353; box-shadow: 0 0 8px -1px rgba(57, 211, 83, 0.7); }
+
+/* legend swatches read the same ramp regardless of the panel they sit in */
+.vheat--github .vheat-legend .vheat-l1 { background: #0e4429; }
+.vheat--github .vheat-legend .vheat-l2 { background: #006d32; }
+.vheat--github .vheat-legend .vheat-l3 { background: #26a641; }
+.vheat--github .vheat-legend .vheat-l4 { background: #39d353; }
 
 .vheat-foot {
   display: flex;
@@ -98,6 +116,11 @@ button.vheat-cell:focus-visible {
   .vheat-cell { transition: none; }
   button.vheat-cell:hover,
   button.vheat-cell:focus-visible { transform: none; }
+}
+
+@media (max-width: 640px) {
+  .vheat .vprofile-panel-head { display: grid; gap: 6px; }
+  .vheat .vprofile-panel-sub { max-width: none; text-align: left; }
 }
 
 /* ---- C0VIBE brand surface on the claim lane ---- */

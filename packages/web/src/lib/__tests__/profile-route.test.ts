@@ -10,6 +10,10 @@ const hero = readFileSync("packages/web/src/app/u/[handle]/profile-hero.tsx", "u
 const heroStyles = readFileSync("packages/web/src/app/u/[handle]/profile-hero.css", "utf8");
 const cta = readFileSync("packages/web/src/app/u/[handle]/profile-cta.tsx", "utf8");
 const heat = readFileSync("packages/web/src/app/u/[handle]/profile-heatmap.tsx", "utf8");
+const heatStyles = readFileSync("packages/web/src/app/u/[handle]/profile-heatmap.css", "utf8");
+const telemetry = readFileSync("packages/web/src/app/u/[handle]/profile-telemetry.tsx", "utf8");
+const telemetryModel = readFileSync("packages/web/src/app/u/[handle]/profile-telemetry-model.ts", "utf8");
+const telemetryStyles = readFileSync("packages/web/src/app/u/[handle]/profile-telemetry.css", "utf8");
 
 test("public profile route reveals panels from deterministic signal depth", () => {
   assert.match(page, /import \{ PROVIDERS \} from "\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/adapters\/src\/index"/);
@@ -73,9 +77,24 @@ test("sync rhythm is a real contribution calendar keyed on a signal we hold for 
   assert.match(heat, /const WEEKS = 53/);                 // a GitHub year, not an arbitrary window
   assert.match(heat, /function quartiles/);               // levels cut at quartiles of ACTIVE days
   assert.doesNotMatch(heat, /ops \/ max/);                 // never a linear share of one outlier
-  assert.match(heat, /usd > q3 \? 4 : usd > q2 \? 3 : usd > q1 \? 2 : 1/);
+  assert.match(heat, /d\.usd > q3 \? 4 : d\.usd > q2 \? 3 : d\.usd > q1 \? 2 : 1/);
   assert.match(heat, /longest streak/);
   assert.match(heat, /aria-live="polite"/);
+});
+
+test("real GitHub contributions render as their own labelled calendar, never mixed into usage", () => {
+  // Shown whenever the CLI captured the viber's github_activity signal (any user, not just this one).
+  assert.match(page, /const githubSignal = profile\.trustSignals\.find/);
+  assert.match(page, /s\.kind === "github_activity" && Array\.isArray\(s\.days\)/);
+  assert.match(page, /<GitHubContributions/);
+  assert.match(heat, /export function GitHubContributions/);
+  // GitHub's own green ramp, and its own per-day levels — reads unmistakably as the git graph.
+  assert.match(heatStyles, /\.vheat--github \.vheat-l4 \{ background: #39d353/);
+  assert.match(heatStyles, /\.vheat \.vprofile-panel-sub[\s\S]*white-space: normal/);
+  assert.match(heat, /activity evidence, not AI usage/);
+  // Activity evidence never feeds spend/ops/score: the panel gets counts, not usd, and the
+  // signal is loaded with affectsTotals:false upstream (profile-trust guard).
+  assert.doesNotMatch(heat, /GitHubContributions[\s\S]*?usd/);
 });
 
 test("C0VIBE band carries real brand identity, not a bare link", () => {
@@ -118,6 +137,24 @@ test("profile chart supports range controls, pointer inspection, and keyboard in
   assert.match(chart, /event\.key === "Escape"/);
   assert.match(chart, /aria-live="polite"/);
   assert.match(chart, /vprofile-series-chip/); // per-source selector chips
+});
+
+test("delta scope compares adjacent real usage windows without mixing trust signals", () => {
+  assert.match(page, /<UsageTelemetry days=\{profile\.usageDays\} providers=\{chartSeries\}/);
+  assert.match(telemetryModel, /export type TelemetryRange = 7 \| 30 \| 90/);
+  assert.match(telemetryModel, /const previousEnd = currentStart - DAY_MS/);
+  assert.match(telemetryModel, /const previousStart = previousEnd - \(range - 1\) \* DAY_MS/);
+  assert.match(telemetry, /role="group" aria-label="Comparison window"/);
+  assert.match(telemetry, /role="group" aria-label="Comparison metric"/);
+  assert.match(telemetry, /USAGE DELTA \/ ADJACENT WINDOWS \/ ZERO TRUST MIXING/);
+  assert.match(telemetry, /usage aggregates only/);
+  assert.doesNotMatch(telemetry, /trustSignals|github|creator_activity/);
+  assert.match(telemetryStyles, /\.vtelemetry-comb/);
+  assert.match(telemetryStyles, /--vt-current: #2ee8d6/);
+  assert.match(telemetryStyles, /--vt-previous: #ffc64d/);
+  assert.match(telemetryStyles, /@media \(min-width: 2200px\)/);
+  assert.match(telemetryStyles, /@media \(max-width: 640px\)/);
+  assert.match(telemetryStyles, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
 test("profile route-local styling stays responsive and motion-safe", () => {

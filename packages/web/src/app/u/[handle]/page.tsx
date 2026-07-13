@@ -22,10 +22,12 @@ import {
 } from "./panels";
 import { ProfileHero, type HeroDiscipline } from "./profile-hero";
 import { C0vibeBand } from "./profile-cta";
-import { SyncRhythm } from "./profile-heatmap";
+import { SyncRhythm, GitHubContributions } from "./profile-heatmap";
+import { UsageTelemetry } from "./profile-telemetry";
 import "./profile.css";
 import "./profile-hero.css";
 import "./profile-heatmap.css";
+import "./profile-telemetry.css";
 
 // The two C0VIBE doors on every profile: a free account, and the device-auth flow that
 // migrates a CLI-uploaded (self-reported) board onto that account as attested.
@@ -311,7 +313,12 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     <StatCards cards={cards} key="stats" />,
   );
   const revealed: ReactNode[] = [];
-  if (reveal.chart) revealed.push(<UsagePanel days={profile.usageDays} providers={chartSeries} key="usage" />);
+  if (reveal.chart) {
+    revealed.push(
+      <UsageTelemetry days={profile.usageDays} providers={chartSeries} key="telemetry" />,
+      <UsagePanel days={profile.usageDays} providers={chartSeries} key="usage" />,
+    );
+  }
   const showProviderMix = reveal.providerMix && mix.rows.length > 0;
   if (showProviderMix || reveal.insights) {
     revealed.push(<MixRow mix={showProviderMix ? mix : null} insights={reveal.insights ? insights : null} key="mix" />);
@@ -320,6 +327,23 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   if (reveal.rhythm) {
     revealed.push(
       <SyncRhythm days={profile.usageDays.map((d) => ({ date: d.date, ops: d.ops, usd: d.usd }))} key="rhythm" />,
+    );
+  }
+  // The real GitHub contribution graph, whenever the viber's CLI captured it. Always shown when
+  // present (not tier-gated) — it is the viber's own git, and it reads as activity evidence, kept
+  // deliberately distinct from AI spend. Never affects spend, ops, credits, or the signal score.
+  const githubSignal = profile.trustSignals.find(
+    (s): s is Extract<typeof s, { kind: "github_activity" }> =>
+      s.kind === "github_activity" && Array.isArray(s.days) && s.days.length > 0,
+  );
+  if (githubSignal) {
+    revealed.push(
+      <GitHubContributions
+        handle={githubSignal.handle}
+        total={githubSignal.totalContributions}
+        days={githubSignal.days ?? []}
+        key="github"
+      />,
     );
   }
   if (reveal.trust) revealed.push(<TrustRow tier={tier} signals={trustChips} key="trust" />);

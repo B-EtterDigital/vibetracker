@@ -5,7 +5,7 @@
     "name": "Adaptive Public Profile",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "language": [
       "typescript",
       "tsx",
@@ -18,6 +18,7 @@
     "domain": [
       "public-profile",
       "usage-analytics",
+      "period-comparison",
       "adaptive-disclosure"
     ]
   },
@@ -37,13 +38,14 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "bb4a030",
+    "commit": "bed0df8",
     "paths": [
       "packages/web/src/app/u/[handle]",
       "packages/web/src/lib/profile-complexity.ts",
       "packages/web/src/lib/__tests__/profile-complexity.test.ts",
       "packages/web/src/lib/__tests__/profile-route.test.ts",
-      "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts"
+      "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts",
+      "packages/web/src/lib/__tests__/profile-telemetry.test.ts"
     ]
   },
   "owner": {
@@ -57,19 +59,24 @@
       "packages/web/src/lib/profile-complexity.ts",
       "packages/web/src/lib/__tests__/profile-complexity.test.ts",
       "packages/web/src/lib/__tests__/profile-route.test.ts",
-      "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts"
+      "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts",
+      "packages/web/src/lib/__tests__/profile-telemetry.test.ts"
     ],
     "public_paths": [
       "packages/web/src/app/u/[handle]/page.tsx",
       "packages/web/src/lib/profile-complexity.ts",
       "packages/web/src/app/u/[handle]/panels.tsx",
-      "packages/web/src/app/u/[handle]/profile-chart.tsx"
+      "packages/web/src/app/u/[handle]/profile-chart.tsx",
+      "packages/web/src/app/u/[handle]/profile-telemetry.tsx",
+      "packages/web/src/app/u/[handle]/profile-telemetry-model.ts"
     ],
     "private_paths": [
       "packages/web/src/app/u/[handle]/profile.css",
       "packages/web/src/lib/__tests__/profile-complexity.test.ts",
       "packages/web/src/lib/__tests__/profile-route.test.ts",
-      "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts"
+      "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts",
+      "packages/web/src/lib/__tests__/profile-telemetry.test.ts",
+      "packages/web/src/app/u/[handle]/profile-telemetry.css"
     ],
     "forbidden_imports": [
       "packages/web/src/lib/supabase-admin.ts",
@@ -93,10 +100,11 @@
     "ssa_v2": {
       "status": "passing",
       "score": 90,
-      "notes": "Route orchestration, deterministic policy, panels, chart, and route-local CSS are separated below the 500-line local limit.",
+      "notes": "Route orchestration, deterministic policy, panels, chart, and period model keep TypeScript files below 400 lines; route-local CSS remains below the 600-line Gen3 ceiling.",
       "evidence": [
         "packages/web/src/app/u/[handle]/page.tsx",
-        "packages/web/src/lib/profile-complexity.ts"
+        "packages/web/src/lib/profile-complexity.ts",
+        "packages/web/src/app/u/[handle]/profile-telemetry-model.ts"
       ]
     },
     "ssi": {
@@ -114,7 +122,8 @@
       "notes": "Focused profile contracts and the full package suite pass on the current tree.",
       "evidence": [
         "packages/web/src/lib/__tests__/profile-route.test.ts",
-        "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts"
+        "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts",
+        "packages/web/src/lib/__tests__/profile-telemetry.test.ts"
       ]
     },
     "spe": {
@@ -191,14 +200,17 @@
       "notes": "Lease, intent, decision, source commit, and identity/progress edit plan are recorded.",
       "evidence": [
         ".smarch/agent-context/adaptive-profile-depth.ndjson",
-        ".smarch/agent-context/public-profile-identity-progress.ndjson"
+        ".smarch/agent-context/public-profile-identity-progress.ndjson",
+        ".smarch/agent-context/dirty-packages-web.ndjson",
+        ".smarch/agent-context/000-vibetracker.web.profile-delta-scope-design.ndjson"
       ]
     }
   },
   "interfaces": {
     "public_api": [
       "GET /u/[handle]",
-      "readComplexity(profile, registry)"
+      "readComplexity(profile, registry)",
+      "buildTelemetryModel(days, providers, range, metric)"
     ],
     "adapters": [
       "Supabase public aggregate views",
@@ -289,18 +301,18 @@
   "quality": {
     "score": 90,
     "line_count": {
-      "max_file_lines": 397,
+      "max_file_lines": 515,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1663,
-      "file_count": 9,
+      "feature_lines": 2367,
+      "file_count": 12,
       "dependency_count": 3,
-      "notes": "The route is split by responsibility; no owned implementation file exceeds 500 lines."
+      "notes": "The route is split by responsibility; every TypeScript implementation file is below 400 lines and every owned implementation file is below the 600-line Gen3 ceiling."
     },
     "test_commands": [
-      "node --test packages/web/src/lib/__tests__/profile-complexity.test.ts packages/web/src/lib/__tests__/profile-route.test.ts packages/web/src/lib/__tests__/profile-data-telemetry.test.ts"
+      "node --test packages/web/src/lib/__tests__/profile-complexity.test.ts packages/web/src/lib/__tests__/profile-route.test.ts packages/web/src/lib/__tests__/profile-data-telemetry.test.ts packages/web/src/lib/__tests__/profile-telemetry.test.ts"
     ],
     "verification": [
       {
@@ -314,6 +326,12 @@
         "status": "pass",
         "timestamp": "2026-07-10T17:16:18Z",
         "notes": "17 focused profile tests, 15 control-plane tests, 482 package tests, strict VTRS, TypeScript, dependency audit, clean Next build, and hosted desktop/mobile proof passed."
+      },
+      {
+        "command": "focused profile tests + pnpm sma:release-gate + pnpm --dir packages/web build + Playwright production proof",
+        "status": "pass",
+        "timestamp": "2026-07-13T18:17:40Z",
+        "notes": "26 focused profile tests, 15 control-plane tests, 554 package tests, strict VTRS, TypeScript, dependency audit, production Next build, interactive Delta Scope proof, and overflow-free 390x844, 1440x1200, and 3840x2160 renders passed."
       }
     ]
   },
@@ -334,7 +352,8 @@
       "Trust signals are evidence, never usage or rank input.",
       "Maker identity is weighted by operations or credits and must never derive from spend.",
       "Missing profiles return 404; backend failures must remain observable and rethrow.",
-      "Optional rollout tables may degrade only with a VTRS warning breadcrumb."
+      "Optional rollout tables may degrade only with a VTRS warning breadcrumb.",
+      "Adjacent comparison windows must be non-overlapping and anchored to the latest real usage day."
     ]
   },
   "provenance": {
