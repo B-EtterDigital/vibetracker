@@ -69,6 +69,7 @@ import { renderShareBadgeMarkdown, renderShareBadgeSvg } from "./badge.ts";
 import { renderDoctorReport } from "./doctor.ts";
 import { lifeDemoInput, renderLifeCommand } from "./life.ts";
 import { resolveMissionCommand } from "./mission/mission-command.ts";
+import { resolveUsageCompareCommand } from "./compare/usage-compare-command.ts";
 import { formatTable, money } from "./format.ts";
 import { renderUploadBlocked, renderUploadFailure, renderUploadPreview, renderUploadSuccess, type UploadResponseProof } from "./upload.ts";
 import { runLogin, createHttpAuthTransport } from "./login.ts";
@@ -134,6 +135,7 @@ const USAGE = [
   "  sync [--demo] [--receipt --out dir]",
   "  receipts [--dir path] [--json] [--html --out path] [--open]   local sync receipt vault",
   "  mission | pulse | now [--budget N] [--json] [--html --out path] [--open] [--no-trust]   read-only operating picture",
+  "  compare | delta | trend [--days N] [--as-of ISO] [--json] [--html --out path] [--open]   adjacent usage windows",
   "  total | stats | audit | trust | insights | profile | life | roadmap | privacy | detect [--target url] [--json] [--html --out path]",
   "    [--by provider|category|model|day] [--since 30d]",
   "    [--domain ai|dev|creative] [--provider a,b] [--category c]",
@@ -900,6 +902,24 @@ async function main() {
     mkdirSync(dirname(result.path), { recursive: true });
     writeFileSync(result.path, result.html);
     console.log(`  ${ok("✓")} mission control → ${dim(result.path)}`);
+    console.log(`  ${dim("static HTML; ledger read-only, no usage writes, no uploads, no scripts")}`);
+    if (result.open) openBrowser(result.path);
+    return;
+  }
+
+  if (cmd === "compare" || cmd === "delta" || cmd === "trend") {
+    const result = resolveUsageCompareCommand({
+      argv,
+      records: filterRecords(readRecords(STORE), parseFilters(argv)),
+      defaultHtmlPath: join(homedir(), ".vibetracker", "usage-compare.html"),
+    });
+    if (result.kind === "stdout") {
+      console.log(result.text);
+      return;
+    }
+    mkdirSync(dirname(result.path), { recursive: true });
+    writeFileSync(result.path, result.html);
+    console.log(`  ${ok("✓")} usage comparison → ${dim(result.path)}`);
     console.log(`  ${dim("static HTML; ledger read-only, no usage writes, no uploads, no scripts")}`);
     if (result.open) openBrowser(result.path);
     return;

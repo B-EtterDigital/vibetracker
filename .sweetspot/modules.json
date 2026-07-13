@@ -62,6 +62,13 @@
       "notes": "Read-only real-ledger Mission Control with terminal, JSON, and responsive static HTML output."
     },
     {
+      "brick_id": "000-vibetracker.cli.usage-compare",
+      "manifest_path": "packages/cli/src/compare/module.sweetspot.json",
+      "status": "project_bound",
+      "score": 93,
+      "notes": "Read-only adjacent-window usage comparison with provider, category, proof, terminal, JSON, and responsive static HTML output."
+    },
+    {
       "brick_id": "000-vibetracker.package.packages-contributors.28667e9a",
       "manifest_path": "packages/contributors/module.sweetspot.json",
       "status": "project_bound",
