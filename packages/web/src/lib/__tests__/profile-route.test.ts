@@ -46,8 +46,13 @@ test("profile hero carries the identity surface, the full discipline set, and th
   assert.match(page, /const C0VIBE_JOIN_HREF = "https:\/\/c0vibe\.app"/);
   assert.match(page, /const C0VIBE_MIGRATE_HREF = "\/cli-login"/);
   assert.match(hero, /export function ProfileHero/);
-  assert.match(hero, /vhero-sigil/);
+  // Oriented to the C0VIBE profile header: a big banner with a large square avatar, so migrating
+  // to C0VIBE reads as the same profile.
+  assert.match(hero, /vhero-banner/);
+  assert.match(hero, /vhero-avatar/);
   assert.match(hero, /vhero-name/);
+  assert.match(heroStyles, /url\("\/brand\/c0vibe-starfield\.webp"\)/);  // the C0VIBE banner
+  assert.match(heroStyles, /aspect-ratio: 1/);                            // the square avatar
   assert.match(hero, /\{signalTier\} signal/);
   // Every discipline gets a pill: an all-rounder is shown as the FULL set, never collapsed.
   assert.match(hero, /disciplines\.map/);

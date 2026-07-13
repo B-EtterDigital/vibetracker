@@ -1,82 +1,125 @@
 /* Profile hero + C0VIBE band.
-   C0LINK's identity architecture (glow sigil, oversized name, quick-state rail, CTA row)
-   rendered in the locked VibeTRACKER language: terminal panel, monospace display, locked
-   palette (#040607 / #0d1419 / #2ee8d6). The wash colour is the viber's OWN top-discipline
-   colour — signal, never decoration. No nested cards, no blobs, no purple-blue gradient. */
-
-/* ---------------------------------- hero ---------------------------------- */
+   Oriented to the C0VIBE / C0LINK public-profile header so migrating to C0VIBE reads as the same
+   profile: a big banner with a large SQUARE avatar (C0VIBE's 132px square + animated accent ring)
+   and the name bottom-aligned over the banner. Rendered in the locked VibeTRACKER language —
+   monospace, locked palette (#040607 / #0d1419 / #2ee8d6), the C0VIBE starfield as the banner, and
+   a wash taken from the viber's OWN top-discipline colour (signal, never decoration). */
 
 .vhero {
   position: relative;
-  isolation: isolate;
   overflow: hidden;
-  padding: clamp(22px, 3vw, 38px);
-  border: 1px solid rgba(46, 232, 214, 0.16);
+  border: 1px solid rgba(46, 232, 214, 0.18);
   border-radius: 14px;
-  background: linear-gradient(178deg, #0e161c, #0a1015 70%);
+  background: #0c1318;
 }
 
-/* Identity-derived wash: the top discipline's colour bleeds from the sigil corner. */
-.vhero-wash {
+/* ---------------------------------- banner --------------------------------- */
+
+.vhero-banner {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: flex-end;
+  min-height: clamp(300px, 30vw, 440px);
+  padding: clamp(20px, 3vw, 34px);
+  overflow: hidden;
+}
+.vhero-banner-art {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  background-image: url("/brand/c0vibe-starfield.webp");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.55;
+}
+/* discipline wash — the viber's own colour bleeding up from the avatar corner, plus a bottom
+   scrim so the name and identity keep full contrast over the banner */
+.vhero-banner-wash {
   position: absolute;
   inset: 0;
   z-index: -2;
   pointer-events: none;
   background:
-    radial-gradient(78% 120% at 6% 0%, color-mix(in srgb, var(--vhero-accent) 22%, transparent), transparent 58%),
-    radial-gradient(50% 90% at 100% 0%, rgba(46, 232, 214, 0.09), transparent 60%);
+    radial-gradient(78% 120% at 7% 110%, color-mix(in srgb, var(--vhero-accent) 40%, transparent), transparent 60%),
+    linear-gradient(0deg, rgba(5, 9, 12, 0.94) 3%, rgba(5, 9, 12, 0.36) 44%, rgba(5, 9, 12, 0.1));
 }
-
-/* Terminal soul: hairline scanlines, barely there. */
-.vhero-scan {
+.vhero-banner-grid {
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.5;
-  background: repeating-linear-gradient(180deg, rgba(217, 255, 242, 0.03) 0 1px, transparent 1px 4px);
+  opacity: 0.4;
+  background-image:
+    linear-gradient(rgba(217, 255, 242, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(217, 255, 242, 0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: linear-gradient(0deg, transparent, #000 72%);
+  -webkit-mask-image: linear-gradient(0deg, transparent, #000 72%);
 }
 
-.vhero-grid {
+.vhero-banner-foot {
   position: relative;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: clamp(18px, 2.2vw, 32px);
-  align-items: start;
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(14px, 1.8vw, 22px);
+  width: 100%;
 }
 
-/* --- sigil --- */
-.vhero-sigil {
+/* ---- square avatar ---- */
+.vhero-avatar {
   position: relative;
   display: grid;
   place-items: center;
-  width: clamp(72px, 7.5vw, 100px);
+  width: clamp(96px, 9vw, 132px);
   aspect-ratio: 1;
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--vhero-accent) 42%, transparent);
-  background:
-    linear-gradient(152deg,
-      color-mix(in srgb, var(--vhero-accent) 22%, transparent),
-      color-mix(in srgb, var(--vhero-accent) 5%, transparent));
+  flex: 0 0 auto;
+  border-radius: 10px;
+  border: 2px solid color-mix(in srgb, var(--vhero-accent) 82%, white);
+  background: rgba(3, 8, 11, 0.9);
   box-shadow:
-    0 0 44px -8px color-mix(in srgb, var(--vhero-accent) 55%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 0 0 7px rgba(3, 8, 11, 0.5),
+    0 0 44px -6px color-mix(in srgb, var(--vhero-accent) 45%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
-.vhero-sigil-mark {
-  font: 700 clamp(24px, 2.8vw, 36px) / 1 var(--vp-mono);
-  letter-spacing: -0.03em;
-  color: #eafff8;
-  text-shadow: 0 0 20px color-mix(in srgb, var(--vhero-accent) 65%, transparent);
+@property --vhero-ring {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
 }
-.vhero-sigil-tier {
+.vhero-avatar-ring {
   position: absolute;
-  bottom: -10px;
+  inset: -6px;
+  z-index: 0;
+  border-radius: 13px;
+  background: conic-gradient(from var(--vhero-ring),
+    var(--vhero-accent), color-mix(in srgb, var(--vhero-accent) 12%, transparent), var(--vhero-accent));
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  padding: 3px;
+  animation: vhero-ring 22s linear infinite;
+}
+@keyframes vhero-ring { to { --vhero-ring: 360deg; } }
+.vhero-avatar-mark {
+  position: relative;
+  z-index: 1;
+  font: 800 clamp(30px, 3.4vw, 44px) / 1 var(--vp-mono);
+  letter-spacing: -0.04em;
+  color: #eafff8;
+  text-shadow: 0 0 22px color-mix(in srgb, var(--vhero-accent) 60%, transparent);
+}
+.vhero-avatar-tier {
+  position: absolute;
+  z-index: 2;
+  bottom: -11px;
   left: 50%;
   transform: translateX(-50%);
   padding: 4px 9px;
   border-radius: 999px;
-  border: 1px solid rgba(217, 255, 242, 0.16);
-  background: #0b1216;
+  border: 1px solid rgba(217, 255, 242, 0.18);
+  background: #0a1014;
   font: 700 9px/1 var(--vp-mono);
   font-style: normal;
   text-transform: uppercase;
@@ -84,9 +127,10 @@
   white-space: nowrap;
 }
 
-/* --- identity column --- */
+/* ---- headline over the banner ---- */
+.vhero-headline { min-width: 0; padding-bottom: 4px; }
 .vhero-eyebrow {
-  margin: 0 0 11px;
+  margin: 0 0 9px;
   font: 700 10px/1 var(--vp-mono);
   text-transform: uppercase;
   letter-spacing: 0.24em;
@@ -94,51 +138,50 @@
 }
 .vhero-name {
   margin: 0;
-  font: 700 clamp(2rem, 5vw, 3.7rem) / 1.02 var(--vp-mono);
-  letter-spacing: -0.04em;
-  color: #eafff8;
+  font: 800 clamp(2rem, 4.6vw, 3.4rem) / 1.02 var(--vp-mono);
+  letter-spacing: -0.045em;
+  color: #f2fffb;
   overflow-wrap: anywhere;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
 }
 .vhero-identity {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 9px;
-  margin: 13px 0 0;
+  margin: 12px 0 0;
   font: 600 13px/1 var(--vp-mono);
-  color: var(--vhero-accent);
+  color: color-mix(in srgb, var(--vhero-accent) 88%, white);
 }
-.vhero-dot {
-  width: 3px;
-  height: 3px;
-  border-radius: 999px;
-  background: currentColor;
-  opacity: 0.45;
-}
+.vhero-dot { width: 3px; height: 3px; border-radius: 999px; background: currentColor; opacity: 0.45; }
 .vhero-tier-chip {
   padding: 4px 9px;
   border-radius: 999px;
-  border: 1px solid rgba(217, 255, 242, 0.14);
+  border: 1px solid rgba(217, 255, 242, 0.18);
+  background: rgba(4, 8, 11, 0.55);
   font: 600 10px/1 var(--vp-mono);
   letter-spacing: 0.08em;
-  color: rgba(217, 255, 242, 0.55);
-}
-.vhero-bio {
-  margin: 15px 0 0;
-  max-width: 64ch;
-  font: 400 14.5px/1.65 var(--vp-mono);
-  color: rgba(217, 255, 242, 0.68);
+  color: rgba(217, 255, 242, 0.7);
 }
 
-/* --- disciplines: the FULL set, never collapsed to "generalist" --- */
-.vhero-disciplines {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin: 18px 0 0;
-  padding: 0;
-  list-style: none;
+/* ---------------------------------- body ----------------------------------- */
+
+.vhero-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(216px, 0.5fr);
+  gap: clamp(16px, 2.2vw, 30px);
+  padding: clamp(18px, 2.4vw, 28px);
 }
+.vhero-lead { min-width: 0; }
+.vhero-bio {
+  margin: 0;
+  max-width: 62ch;
+  font: 400 14.5px/1.65 var(--vp-mono);
+  color: rgba(217, 255, 242, 0.7);
+}
+
+/* disciplines — the FULL set, never collapsed to "generalist" */
+.vhero-disciplines { display: flex; flex-wrap: wrap; gap: 7px; margin: 16px 0 0; padding: 0; list-style: none; }
 .vhero-discipline {
   display: inline-flex;
   align-items: center;
@@ -150,26 +193,11 @@
   font: 600 11.5px/1 var(--vp-mono);
   color: #e6fff7;
 }
-.vhero-discipline i {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--vd);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--vd) 70%, transparent);
-}
-.vhero-discipline b {
-  font-weight: 500;
-  color: rgba(217, 255, 242, 0.45);
-  font-variant-numeric: tabular-nums;
-}
+.vhero-discipline i { width: 6px; height: 6px; border-radius: 999px; background: var(--vd); box-shadow: 0 0 8px color-mix(in srgb, var(--vd) 70%, transparent); }
+.vhero-discipline b { font-weight: 500; color: rgba(217, 255, 242, 0.45); font-variant-numeric: tabular-nums; }
 
-/* --- CTAs --- */
-.vhero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 22px 0 0;
-}
+/* --- CTAs (shared base with the C0VIBE band buttons) --- */
+.vhero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 0; }
 .vhero-cta,
 .vjoin-btn {
   display: inline-flex;
@@ -204,14 +232,11 @@
   border-color: transparent;
 }
 .vhero-cta i,
-.vjoin-btn i {
-  font-style: normal;
-  opacity: 0.7;
-}
+.vjoin-btn i { font-style: normal; opacity: 0.7; }
 
-/* --- quick-state rail (C0LINK's "quick state", terminal-ised) --- */
+/* --- viber-state rail (C0VIBE's hero-meta, terminal-ised) --- */
 .vhero-state {
-  min-width: 208px;
+  align-self: start;
   padding: 13px 14px 11px;
   border: 1px solid rgba(217, 255, 242, 0.1);
   border-radius: 10px;
@@ -234,10 +259,7 @@
   border-radius: 8px;
   overflow: hidden;
 }
-.vhero-state-cell {
-  padding: 9px 10px;
-  background: #0b1216;
-}
+.vhero-state-cell { padding: 9px 10px; background: #0b1216; }
 .vhero-state-cell dt {
   font: 500 9px/1 var(--vp-mono);
   text-transform: uppercase;
@@ -251,11 +273,7 @@
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
-.vhero-state-foot {
-  margin: 10px 0 0;
-  font: 500 10px/1 var(--vp-mono);
-  color: rgba(217, 255, 242, 0.35);
-}
+.vhero-state-foot { margin: 10px 0 0; font: 500 10px/1 var(--vp-mono); color: rgba(217, 255, 242, 0.35); }
 
 /* --- source pills --- */
 .vhero-brands {
@@ -263,18 +281,16 @@
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-  margin: clamp(20px, 2.4vw, 28px) 0 0;
-  padding: 16px 0 0;
-  border-top: 1px solid rgba(217, 255, 242, 0.08);
+  margin: 0;
+  padding: 4px clamp(18px, 2.4vw, 28px) clamp(18px, 2.4vw, 26px);
 }
 
-@media (max-width: 1080px) {
-  .vhero-grid { grid-template-columns: auto minmax(0, 1fr); }
-  .vhero-state { grid-column: 1 / -1; min-width: 0; }
+@media (max-width: 1000px) {
+  .vhero-body { grid-template-columns: 1fr; }
   .vhero-state-grid { grid-template-columns: repeat(4, 1fr); }
 }
-@media (max-width: 640px) {
-  .vhero-grid { grid-template-columns: 1fr; }
+@media (max-width: 620px) {
+  .vhero-banner-foot { align-items: flex-start; gap: 14px; }
   .vhero-state-grid { grid-template-columns: 1fr 1fr; }
   .vhero-actions .vhero-cta { flex: 1 1 auto; justify-content: center; }
 }
@@ -288,15 +304,11 @@
   padding: 0;
   overflow: hidden;
 }
-.vjoin-lane {
-  padding: clamp(18px, 2.2vw, 26px);
-  min-width: 0;
-}
+.vjoin-lane { padding: clamp(18px, 2.2vw, 26px); min-width: 0; }
 .vjoin-lane--claim {
   position: relative;
   border-right: 1px solid rgba(46, 232, 214, 0.14);
-  background:
-    radial-gradient(80% 130% at 0% 0%, rgba(46, 232, 214, 0.07), transparent 62%);
+  background: radial-gradient(80% 130% at 0% 0%, rgba(46, 232, 214, 0.07), transparent 62%);
 }
 .vjoin-eyebrow {
   margin: 0 0 9px;
@@ -320,14 +332,7 @@
   font: 400 13px/1.65 var(--vp-mono);
   color: rgba(217, 255, 242, 0.62);
 }
-.vjoin-points {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  margin: 14px 0 0;
-  padding: 0;
-  list-style: none;
-}
+.vjoin-points { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 14px 0 0; padding: 0; list-style: none; }
 .vjoin-points li {
   display: inline-flex;
   align-items: center;
@@ -335,30 +340,16 @@
   font: 500 11.5px/1 var(--vp-mono);
   color: rgba(217, 255, 242, 0.62);
 }
-.vjoin-points i {
-  width: 5px;
-  height: 5px;
-  border-radius: 999px;
-  background: #36e39b;
-  box-shadow: 0 0 7px rgba(54, 227, 155, 0.7);
-}
-.vjoin-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  margin: 18px 0 0;
-}
+.vjoin-points i { width: 5px; height: 5px; border-radius: 999px; background: #36e39b; box-shadow: 0 0 7px rgba(54, 227, 155, 0.7); }
+.vjoin-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 18px 0 0; }
 
 @media (max-width: 860px) {
   .vjoin { grid-template-columns: 1fr; }
-  .vjoin-lane--claim {
-    border-right: 0;
-    border-bottom: 1px solid rgba(46, 232, 214, 0.14);
-  }
+  .vjoin-lane--claim { border-right: 0; border-bottom: 1px solid rgba(46, 232, 214, 0.14); }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .vhero-avatar-ring { animation: none; }
   .vhero-cta,
   .vjoin-btn { transition: none; }
   .vhero-cta:hover,
