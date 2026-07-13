@@ -39,6 +39,7 @@ test("instrument CSS preserves desktop hierarchy, mobile fit, focus, and reduced
   assert.match(css, /\.hdr-menu > summary:focus-visible/);
   assert.match(css, /\.usage-instrument__actions a:hover,[\s\S]*:focus-visible/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.usage-instrument \{ grid-template-columns: 1fr/);
+  assert.match(css, /@media \(max-width: 430px\)[\s\S]*\.hdr \.hdr-primary \{ display: none; \}/);
   assert.match(css, /@media \(max-width: 430px\)[\s\S]*\.usage-channel/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.usage-channel__wave i/);
 });

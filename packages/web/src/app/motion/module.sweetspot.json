@@ -281,6 +281,7 @@
         "packages/web/src/lib/__tests__/ascii-motion-lab.test.ts",
         "packages/web/src/lib/__tests__/motion-route.test.ts",
         "packages/web/src/app/globals.css",
+        "packages/web/src/lib/__tests__/app-shell-instrument.test.ts",
         "packages/web/src/app/motion/module.sweetspot.json",
         ".sweetspot/modules.json",
         "sma.gen3.json",

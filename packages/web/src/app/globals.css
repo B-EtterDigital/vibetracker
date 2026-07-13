@@ -4630,8 +4630,8 @@ code, pre, .console-top {
 
 @media (max-width: 430px) {
   .hdr-cli { display: none; }
-  .hdr { min-height: 108px; }
-  .hdr .hdr-primary a { font-size: 11px; }
+  .hdr { min-height: 62px; padding-bottom: 12px; }
+  .hdr .hdr-primary { display: none; }
   .hdr-menu > nav { grid-template-columns: 1fr; max-height: calc(100dvh - 82px); overflow-y: auto; }
   .usage-instrument__copy { min-height: 232px; padding: 22px 17px 24px; }
   .usage-instrument__kicker { margin-bottom: 17px; }
