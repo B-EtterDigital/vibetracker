@@ -40,12 +40,6 @@ const TIER_MARKS: Array<{ id: SignalTierName; at: number }> = [
   { id: "supernova", at: 85 },
 ];
 
-function identityColor(identity: IdentityRead): string {
-  if (identity.kind === "allrounder") return "#2ee8d6";
-  if (identity.kind === "forming") return "#ffc64d";
-  return vibeColor(identity.topCategory);
-}
-
 export interface BrandChip {
   id: string;
   label: string;
@@ -102,67 +96,8 @@ function PanelHead({ title, sub }: { title: string; sub?: string }) {
   );
 }
 
-export function ProfileHeader({
-  handle,
-  since,
-  tierChip,
-  signalTier,
-  signalHint,
-  identity,
-  brands,
-}: {
-  handle: string;
-  since: string;
-  tierChip: string;
-  signalTier: SignalTierName;
-  signalHint: string;
-  identity: IdentityRead;
-  brands: BrandChip[];
-}) {
-  return (
-    <section className="vprofile-header">
-      <div className="vprofile-header-main">
-        <span className="vprofile-monogram" aria-hidden="true">{handle.slice(0, 2)}</span>
-        <div className="vprofile-header-id">
-          <h1 className="vprofile-handle">@{handle}</h1>
-          <p className="vprofile-identity" style={{ color: identityColor(identity) }}>
-            {identity.label}
-            <span> · {signalTier} signal</span>
-          </p>
-          <div className="vprofile-header-chips">
-            <span className="vprofile-chip vprofile-chip-tier">{tierChip}</span>
-            <span className={`vprofile-chip vprofile-chip-signal vprofile-signal-${signalTier}`} title={signalHint}>
-              <i>signal read</i> {signalTier}
-            </span>
-            <span className="vprofile-joined">viber since {since}</span>
-          </div>
-        </div>
-      </div>
-      {brands.length ? (
-        <div className="vprofile-header-brands" aria-label="Top providers by estimated spend">
-          {brands.map((b) => (
-            <span className="vprofile-brand-pill" key={b.id}>
-              {b.logo ? (
-                <i className="vprofile-mark vprofile-mark--logo" aria-hidden="true">
-                  <img src={b.logo} alt="" width={14} height={14} loading="lazy" decoding="async" />
-                </i>
-              ) : (
-                <i
-                  className="vprofile-mark"
-                  style={{ background: `linear-gradient(135deg, ${b.from}, ${b.to})`, color: b.ink }}
-                  aria-hidden="true"
-                >
-                  {b.mark}
-                </i>
-              )}
-              {b.label}
-            </span>
-          ))}
-        </div>
-      ) : null}
-    </section>
-  );
-}
+// The identity header now lives in profile-hero.tsx (ProfileHero) — the C0LINK-adapted
+// hero with the glow sigil, discipline pills, quick-state rail, and C0VIBE CTAs.
 
 // Small geometric stat marks: stroke-only inline SVG, no icon library.
 const WEEK_DOTS = [1.5, 3.67, 5.83, 8, 10.17, 12.33, 14.5];
@@ -480,14 +415,5 @@ export function LockedPanels({ note, items }: { note: string; items: GhostPanel[
   );
 }
 
-export function TrackYours({ providerCount }: { providerCount: number }) {
-  return (
-    <section className="vprofile-panel vprofile-cta">
-      <p className="vprofile-cta-copy">Track yours, locally first. Upload only when you choose.</p>
-      <div className="vprofile-cta-actions">
-        <CopyInitChip />
-        <a className="vprofile-cta-link" href="/providers">browse {providerCount} providers</a>
-      </div>
-    </section>
-  );
-}
+// The profile's closing CTA now lives in profile-cta.tsx (C0vibeBand): claim/migrate the
+// board into a free C0VIBE account, alongside the local-first "track yours" lane.

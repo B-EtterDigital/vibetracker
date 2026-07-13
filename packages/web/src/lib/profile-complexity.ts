@@ -4,6 +4,7 @@
 
 import type { ProfileView } from "./data";
 import type { ProviderDescriptor } from "../../../adapters/src/index";
+import { profileOps } from "./profile-ops.ts";
 
 // Five signal tiers, an energy ladder. Deliberately hard: Supernova (85+) needs a footprint far
 // beyond even a heavy multi-tool user, so it stays top-percentile rather than a default finish line.
@@ -114,7 +115,7 @@ function readFacts(profile: ProfileView, matched: readonly MatchedProvider[]): C
     // usd/ops prefer the reviewed submission totals; the provider sum is the fallback and spans
     // every provider row (matched or not) because spend is spend regardless of registry coverage.
     usd: profile.latest?.total_usd ?? sumBy(profile.providers, (provider) => provider.usd),
-    ops: profile.latest?.record_count ?? sumBy(profile.providers, (provider) => provider.ops),
+    ops: profileOps(profile),
     hasLocal: descriptors.some(isLocalDescriptor),
     hasMedia: descriptors.some((descriptor) => MEDIA_PRIMARY.has(primaryCategory(descriptor))),
   };

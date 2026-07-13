@@ -6,6 +6,9 @@ const page = readFileSync("packages/web/src/app/u/[handle]/page.tsx", "utf8");
 const panels = readFileSync("packages/web/src/app/u/[handle]/panels.tsx", "utf8");
 const chart = readFileSync("packages/web/src/app/u/[handle]/profile-chart.tsx", "utf8");
 const styles = readFileSync("packages/web/src/app/u/[handle]/profile.css", "utf8");
+const hero = readFileSync("packages/web/src/app/u/[handle]/profile-hero.tsx", "utf8");
+const heroStyles = readFileSync("packages/web/src/app/u/[handle]/profile-hero.css", "utf8");
+const cta = readFileSync("packages/web/src/app/u/[handle]/profile-cta.tsx", "utf8");
 
 test("public profile route reveals panels from deterministic signal depth", () => {
   assert.match(page, /import \{ PROVIDERS \} from "\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/adapters\/src\/index"/);
@@ -17,7 +20,7 @@ test("public profile route reveals panels from deterministic signal depth", () =
   assert.match(page, /const \{ facts, reveal \} = read/);
   assert.match(page, /signalTier=\{read\.tier\}/);
   assert.match(page, /signalHint=\{read\.hint\}/);
-  assert.match(page, /identity=\{read\.identity\}/);
+  assert.match(page, /identity=\{read\.identity\.label\}/);
   assert.match(page, /<SignalProgress tier=\{read\.tier\} progress=\{read\.progress\}/);
   assert.match(page, /if \(reveal\.chart\)/);
   assert.match(page, /const showProviderMix = reveal\.providerMix && mix\.rows\.length > 0/);
@@ -31,9 +34,39 @@ test("public profile route reveals panels from deterministic signal depth", () =
   assert.doesNotMatch(page, /<main className="vprofile">/);
 });
 
+// The identity surface and the closing CTA moved out of panels.tsx into their own modules
+// (profile-hero.tsx / profile-cta.tsx) when the profile took on the C0LINK hero language.
+test("profile hero carries the identity surface, the full discipline set, and the C0VIBE doors", () => {
+  assert.match(page, /<ProfileHero/);
+  assert.match(page, /const C0VIBE_JOIN_HREF = "https:\/\/c0vibe\.app"/);
+  assert.match(page, /const C0VIBE_MIGRATE_HREF = "\/cli-login"/);
+  assert.match(hero, /export function ProfileHero/);
+  assert.match(hero, /vhero-sigil/);
+  assert.match(hero, /vhero-name/);
+  assert.match(hero, /\{signalTier\} signal/);
+  // Every discipline gets a pill: an all-rounder is shown as the FULL set, never collapsed.
+  assert.match(hero, /disciplines\.map/);
+  assert.match(hero, /Join C0VIBE/);
+  assert.match(hero, /Migrate this profile/);
+  // The hero wash takes the viber's own discipline colour — a signal, not decoration.
+  assert.match(hero, /"--vhero-accent": accent/);
+  assert.match(heroStyles, /--vhero-accent/);
+  assert.match(heroStyles, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
+test("C0VIBE band offers claim + migrate without overclaiming verification", () => {
+  assert.match(cta, /export function C0vibeBand/);
+  assert.match(cta, /Claim @\{handle\} on C0VIBE/);
+  assert.match(cta, /self-reported → attested/);
+  assert.match(cta, /free forever, no card/);
+  // Attested = a real identity owns the handle. The user-facing lede must never promise
+  // that linking an account verifies the NUMBERS — that is a separate tier.
+  assert.match(cta, /uploaded from the CLI with no account behind it/);
+  assert.doesNotMatch(cta, /uploads as verified|becomes verified/);
+  assert.match(cta, /Track yours, locally first/);
+});
+
 test("profile panels keep public aggregates, trust, and local-first onboarding explicit", () => {
-  assert.match(panels, /ProfileHeader/);
-  assert.match(panels, /signal read/);
   assert.match(panels, /export function SignalProgress/);
   assert.match(panels, /usage builds your profile/);
   assert.match(panels, /role="img" aria-label=\{`signal progress/);
@@ -48,10 +81,9 @@ test("profile panels keep public aggregates, trust, and local-first onboarding e
   assert.match(panels, /Sync rhythm/);
   assert.match(panels, /Trust signals/);
   assert.match(panels, /labelled evidence, never usage/);
-  assert.match(panels, /Track yours, locally first\. Upload only when you choose\./);
   assert.match(panels, /copyState === "blocked"/);
   assert.match(panels, /aria-live="polite"/);
-  assert.match(panels, /browse \{providerCount\} providers/);
+  assert.match(cta, /browse \{providerCount\} sources/);
 });
 
 test("profile chart supports range controls, pointer inspection, and keyboard inspection", () => {

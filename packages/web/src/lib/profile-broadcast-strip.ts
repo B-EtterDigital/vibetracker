@@ -1,5 +1,6 @@
 import type { ProfileView } from "./data.ts";
 import { providerBrand } from "./provider-brand.ts";
+import { profileOps } from "./profile-ops.ts";
 
 export type ProfileBroadcastImpact = "usage" | "local_only" | "not_usage" | "publish";
 
@@ -98,7 +99,7 @@ function seedFor(profile: ProfileView): number {
   const source = [
     profile.handle,
     latest?.created_at ?? "",
-    latest?.record_count ?? 0,
+    profileOps(profile),
     latest?.total_usd ?? 0,
     profile.providers.map((provider) => `${provider.provider}:${provider.ops}:${provider.usd}`).join("|"),
     profile.trustSignals.length,
@@ -186,7 +187,7 @@ function buildPulses(rails: ProfileBroadcastRail[]): ProfileBroadcastPulse[] {
 
 export function buildProfileBroadcastStrip(profile: ProfileView): ProfileBroadcastStrip {
   const latest = profile.latest;
-  const totalOps = latest?.record_count ?? 0;
+  const totalOps = profileOps(profile);
   const totalUsd = latest?.total_usd ?? 0;
   const totalCredits = latest?.total_credits ?? 0;
   const top = topProvider(profile);

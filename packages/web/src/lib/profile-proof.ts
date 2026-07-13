@@ -1,5 +1,6 @@
 import type { ProfileView } from "./data";
 import { providerBrand } from "./provider-brand.ts";
+import { profileOps } from "./profile-ops.ts";
 
 export interface ProfileProofCell {
   id: "usage" | "providers" | "trust" | "publish";
@@ -88,7 +89,7 @@ export function buildProfileProofSpine(profile: ProfileView): ProfileProofCell[]
     {
       id: "usage",
       label: "Usage counted",
-      value: latest ? int(latest.record_count) : "0",
+      value: latest ? int(profileOps(profile)) : "0",
       note: latest ? "Latest uploaded usage bundle feeds spend, credits, and operations." : "No usage upload yet.",
       tone: "usage",
     },

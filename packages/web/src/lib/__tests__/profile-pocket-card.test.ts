@@ -125,7 +125,7 @@ test("public profile route retires the pocket deck for the calm dashboard", () =
   const page = readFileSync("packages/web/src/app/u/[handle]/page.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
-  assert.match(page, /ProfileHeader/);
+  assert.match(page, /ProfileHero/);
   assert.match(page, /StatCards/);
   assert.doesNotMatch(page, /ProfilePocketCardPanel/);
   assert.doesNotMatch(page, /ProfileWalletPassPanel/);

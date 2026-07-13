@@ -13,6 +13,10 @@ Palette: bg #040607, panel #0d1419, accent #2ee8d6, verified #36e39b, self #ffc6
 
 Layout primitive / signature: full-width terminal panels, scan rooms, theatre grids, heatgrid/profile proof surfaces, and compact bordered command rails. Cards are individual data units only, never nested page sections. ## LOCKED
 
+Profile identity surface (added 2026-07-13, adapted from the C0LINK public profile): every `/u/<handle>` opens on a hero panel — glow sigil carrying the signal-tier badge, oversized monospace handle, identity + tier line, a bio written from the viber's own numbers, the FULL discipline set as coloured pills, a compact viber-state rail (signal / operations / top source / top model), and the two C0VIBE doors. The hero wash and sigil take the viber's OWN top-discipline colour: signal, never decoration. An all-rounder is shown as every discipline they create in, never collapsed to "generalist". Files: `profile-hero.tsx`, `profile-cta.tsx`, `profile-hero.css`. ## LOCKED
+
+C0VIBE doors: a profile always offers "Join C0VIBE — free" (c0vibe.app) and, while the board is self-reported, "Migrate this profile" (/cli-login device auth). Migration copy states what it actually does — future syncs upload as ATTESTED, a real identity owns the handle — and never implies the numbers become provider-verified. ## LOCKED
+
 Motion language: scanline sweeps, meter fills, turntable frames, braille/globe texture, and provider pulse marks. Motion uses transform/opacity, respects reduced motion, and must always label whether a signal is usage, trust, local-only, privacy, or publish.
 
 Open-source motion references: cli-spinners for terminal frame timing, ascii-globe for global source-field inspiration, drawille/node-drawille for Unicode braille signal texture. Credit remains visible in the ASCII Motion Lab.

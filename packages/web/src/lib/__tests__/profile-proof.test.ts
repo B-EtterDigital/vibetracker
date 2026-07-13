@@ -15,8 +15,8 @@ const profile: ProfileView = {
     tier: "self_reported",
   },
   providers: [
-    { provider: "higgsfield", ops: 3, credits: 20, usd: 10 },
-    { provider: "claude-code", ops: 10, credits: 22, usd: 2.34 },
+    { provider: "higgsfield", ops: 300, credits: 20, usd: 10 },
+    { provider: "claude-code", ops: 900, credits: 22, usd: 2.34 },
   ],
   usageDays: [
     { date: "2026-07-05", ops: 1200, credits: 42, usd: 12.34 },

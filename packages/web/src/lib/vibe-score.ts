@@ -1,4 +1,5 @@
 import type { ProfileView } from "./data.ts";
+import { profileOps } from "./profile-ops.ts";
 
 export type VibeScoreTone = "usage" | "rhythm" | "coverage" | "freshness" | "trust";
 export type VibeScoreImpact = "score" | "not_usage";
@@ -238,7 +239,7 @@ function stableSeal(parts: string[]): string {
 }
 
 export function buildVibeScoreReceipt(profile: ProfileView): VibeScoreReceipt {
-  const ops = profile.latest?.record_count ?? 0;
+  const ops = profileOps(profile);
   const usd = profile.latest?.total_usd ?? 0;
   const providerCount = profile.providers.length;
   const activeDays = profile.usageDays.filter((day) => day.ops > 0).length || (profile.latest ? 1 : 0);
@@ -342,7 +343,7 @@ export function buildVibeScoreCalibrationChamber(
   const coverage = factorById.get("coverage");
   const freshness = factorById.get("freshness");
   const trust = factorById.get("trust");
-  const ops = profile.latest?.record_count ?? 0;
+  const ops = profileOps(profile);
   const usd = profile.latest?.total_usd ?? 0;
   const providerRows = profile.providers.length;
   const dailyRows = profile.usageDays.length;
@@ -729,7 +730,7 @@ export function buildVibeScoreReactor(profile: ProfileView, receipt: VibeScoreRe
     profile.handle,
     String(receipt.score),
     receipt.tier,
-    String(profile.latest?.record_count ?? 0),
+    String(profileOps(profile)),
     String(profile.latest?.total_usd ?? 0),
     profile.providers.map((provider) => provider.provider).sort().join(","),
     String(profile.trustSignals.length),

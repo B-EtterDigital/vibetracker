@@ -1,5 +1,6 @@
 import type { ProfileView } from "./data.ts";
 import { providerBrand } from "./provider-brand.ts";
+import { profileOps } from "./profile-ops.ts";
 
 export type ProfilePosterImpact = "usage" | "not_usage" | "publish";
 
@@ -75,7 +76,7 @@ function seedFor(profile: ProfileView): number {
   const source = [
     profile.handle,
     latest?.total_usd ?? 0,
-    latest?.record_count ?? 0,
+    profileOps(profile),
     latest?.total_credits ?? 0,
     profile.providers.map((provider) => `${provider.provider}:${provider.ops}:${provider.usd}`).join("|"),
     profile.trustSignals.length,
@@ -124,7 +125,7 @@ export function buildProfileOperatorPoster(profile: ProfileView): ProfileOperato
   const activeDays = profile.usageDays.filter((day) => day.ops > 0 || day.usd > 0).length || (latest ? 1 : 0);
   const trustCount = profile.trustSignals.length;
   const totalUsd = latest?.total_usd ?? 0;
-  const totalOps = latest?.record_count ?? 0;
+  const totalOps = profileOps(profile);
   const tier = latest?.tier ?? "not_synced";
   const relay = panelBrand("c0vibe");
   const sourceBrand = top ? panelBrand(top.provider) : relay;

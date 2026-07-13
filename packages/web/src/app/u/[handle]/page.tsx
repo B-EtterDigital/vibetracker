@@ -7,23 +7,29 @@ import { providerBrand } from "../../../lib/provider-brand";
 import { readComplexity } from "../../../lib/profile-complexity";
 import { trustSignalMark, trustSignalMetric, trustSignalTitle, trustSignalWindow } from "../../../lib/profile-trust";
 import { PROVIDERS } from "../../../../../adapters/src/index";
-import { vibeCategoryFor, vibeLabel } from "../../../../../core/src/vibe-categories";
+import { vibeCategoryFor, vibeColor, vibeLabel } from "../../../../../core/src/vibe-categories";
 import {
   CategoryMix,
   DemoBanner,
   LockedPanels,
   MixRow,
-  ProfileHeader,
   RhythmStrip,
   SignalProgress,
   StatCards,
-  TrackYours,
   TrustRow,
   UsagePanel,
   type KeyValueRow,
   type MixBar,
 } from "./panels";
+import { ProfileHero, type HeroDiscipline } from "./profile-hero";
+import { C0vibeBand } from "./profile-cta";
 import "./profile.css";
+import "./profile-hero.css";
+
+// The two C0VIBE doors on every profile: a free account, and the device-auth flow that
+// migrates a CLI-uploaded (self-reported) board onto that account as attested.
+const C0VIBE_JOIN_HREF = "https://c0vibe.app";
+const C0VIBE_MIGRATE_HREF = "/cli-login";
 
 export const revalidate = 60;
 
@@ -63,6 +69,11 @@ function shareLabel(usd: number, total: number): string {
 
 function providerLabel(id: string): string {
   return PROVIDERS.find((d) => d.id === id)?.label ?? id;
+}
+
+// Model ids carry a build date suffix (claude-haiku-4-5-20251001); the rail wants the model.
+function prettyModel(model: string): string {
+  return model.replace(/-\d{8}$/, "");
 }
 
 function primaryCategory(id: string): string {
@@ -149,7 +160,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       label: "total credits",
       mark: "credits" as const,
       value: formatInt(profile.latest?.total_credits ?? creditsSum),
-      sub: `${formatInt(facts.ops)} records`,
+      sub: `${formatInt(facts.ops)} operations`,
     },
     {
       label: "days active",
@@ -245,18 +256,55 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     note: signal.note,
   }));
 
+  // Hero identity, C0LINK-style: the wash and sigil take the viber's OWN top-discipline
+  // colour, every discipline gets a pill (an all-rounder is shown as the full set, never
+  // collapsed), and the quick-state rail carries facts the stat cards don't: the headline
+  // operation count, the busiest source, and the model they actually reach for.
+  const heroAccent =
+    read.identity.kind === "allrounder" ? "#2ee8d6"
+      : read.identity.kind === "forming" ? "#ffc64d"
+        : vibeColor(read.identity.topCategory);
+
+  const disciplines: HeroDiscipline[] = categories.slice(0, 6).map((c) => ({
+    id: c.id,
+    label: c.label,
+    color: vibeColor(c.id),
+    share: c.share,
+  }));
+
+  const byOps = profile.providers.slice().sort((a, b) => b.ops - a.ops);
+  const topModel = profile.providerModels.slice().sort((a, b) => b.ops - a.ops)[0];
+  const heroState = [
+    { label: "signal", value: read.tier },
+    { label: "operations", value: formatInt(facts.ops) },
+    { label: "top source", value: byOps[0] ? providerLabel(byOps[0].provider) : "—" },
+    { label: "top model", value: topModel ? prettyModel(topModel.model) : "—" },
+  ];
+
+  const bio = `${formatInt(facts.ops)} operations across ${facts.providers} sources and ${facts.categories} disciplines. `
+    + `${formatUsd(facts.usd)} tracked over ${facts.days} active days.`;
+
+  const claimed = tierRaw !== "self_reported";
+
   const sections: ReactNode[] = [];
   if (isDemo) sections.push(<DemoBanner key="demo" />);
   sections.push(
-    <ProfileHeader
+    <ProfileHero
       handle={profile.handle}
-      since={fmtDate(profile.usageDays[0]?.date ?? profile.created_at)}
-      tierChip={tierRaw}
+      accent={heroAccent}
+      eyebrow="viber profile"
+      identity={read.identity.label}
       signalTier={read.tier}
       signalHint={read.hint}
-      identity={read.identity}
+      tierChip={tierRaw}
+      bio={bio}
+      since={fmtDate(profile.usageDays[0]?.date ?? profile.created_at)}
+      disciplines={disciplines}
+      state={heroState}
       brands={brands}
-      key="header"
+      joinHref={C0VIBE_JOIN_HREF}
+      migrateHref={C0VIBE_MIGRATE_HREF}
+      key="hero"
     />,
     <SignalProgress tier={read.tier} progress={read.progress} key="progress" />,
     <StatCards cards={cards} key="stats" />,
@@ -272,7 +320,16 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     revealed.push(<RhythmStrip days={profile.usageDays.map((d) => ({ date: d.date, ops: d.ops }))} key="rhythm" />);
   }
   if (reveal.trust) revealed.push(<TrustRow tier={tier} signals={trustChips} key="trust" />);
-  const cta = <TrackYours providerCount={PROVIDERS.length} key="cta" />;
+  const cta = (
+    <C0vibeBand
+      handle={profile.handle}
+      claimed={claimed}
+      joinHref={C0VIBE_JOIN_HREF}
+      migrateHref={C0VIBE_MIGRATE_HREF}
+      providerCount={PROVIDERS.length}
+      key="cta"
+    />
+  );
   const locked: Array<{ name: string; unlock: string }> = [];
   if (!reveal.chart) locked.push({ name: "usage over time", unlock: "unlocks after a week of history" });
   if (!reveal.insights) locked.push({ name: "usage insights", unlock: "unlocks at spark" });
