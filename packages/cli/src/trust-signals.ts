@@ -81,9 +81,13 @@ export function collectGitHubActivityTrustSignal(opts: TrustSignalCollectOpts = 
   const from = new Date(now.getTime() - windowDays * 24 * 60 * 60 * 1000).toISOString();
   const to = now.toISOString();
   const run = opts.run ?? defaultRun;
+
+  // The authenticated `gh` CLI. This works for a new user whether they ran `gh auth login` OR have
+  // GH_TOKEN / GITHUB_TOKEN in the environment — `gh` reads those automatically, so CI, devcontainer,
+  // and headless runs are covered without the token ever touching this process's argv. It also picks
+  // up private-repo contributions, which are most of a working dev's graph.
   const res = run("gh", [
-    "api",
-    "graphql",
+    "api", "graphql",
     "-f", `query=${GITHUB_ACTIVITY_QUERY}`,
     "-F", `from=${from}`,
     "-F", `to=${to}`,
