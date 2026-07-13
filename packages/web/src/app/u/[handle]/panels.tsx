@@ -283,56 +283,8 @@ function isoDate(t: number): string {
   return new Date(t).toISOString().slice(0, 10);
 }
 
-export function RhythmStrip({ days }: { days: { date: string; ops: number }[] }) {
-  const byDate = new Map(days.map((d) => [d.date, d.ops]));
-  const stamps = days
-    .map((d) => Date.parse(`${d.date}T00:00:00Z`))
-    .filter((t) => Number.isFinite(t));
-  const cells: Array<{ date: string; ops: number; level: number } | null> = [];
-  if (stamps.length) {
-    const end = Math.max(...stamps);
-    const start = Math.max(Math.min(...stamps), end - (26 * 7 - 1) * DAY_MS);
-    const gridStart = start - new Date(start).getUTCDay() * DAY_MS;
-    let max = 0;
-    for (let t = start; t <= end; t += DAY_MS) max = Math.max(max, byDate.get(isoDate(t)) ?? 0);
-    for (let t = gridStart; t <= end; t += DAY_MS) {
-      if (t < start) {
-        cells.push(null);
-        continue;
-      }
-      const date = isoDate(t);
-      const ops = byDate.get(date) ?? 0;
-      const level = ops === 0 || max === 0 ? 0 : Math.min(4, Math.max(1, Math.ceil((ops / max) * 4)));
-      cells.push({ date, ops, level });
-    }
-  }
-  return (
-    <section className="vprofile-panel">
-      <PanelHead title="Sync rhythm" sub="(ops per day)" />
-      {cells.length ? (
-        <div className="vprofile-heat-scroll">
-          <div className="vprofile-heat" aria-label="Ops per day heat strip, one column per week">
-            {cells.map((cell, index) =>
-              cell ? (
-                <span
-                  className="vprofile-heat-cell"
-                  style={{ background: GITHUB_LEVEL_COLORS[cell.level] }}
-                  title={`${cell.date}: ${cell.ops} ops`}
-                  key={cell.date}
-                />
-              ) : (
-                <span className="vprofile-heat-cell vprofile-heat-blank" key={`pad-${index}`} />
-              ),
-            )}
-          </div>
-        </div>
-      ) : (
-        <p className="vprofile-dim-note">no daily series in this submission</p>
-      )}
-    </section>
-  );
-}
-
+// Sync rhythm moved to profile-heatmap.tsx (SyncRhythm): a real GitHub-geometry contribution
+// calendar keyed on daily spend — the one signal we hold for every day of the history.
 export function TrustRow({ tier, signals }: { tier: Tier; signals: TrustChip[] }) {
   return (
     <section className="vprofile-panel">

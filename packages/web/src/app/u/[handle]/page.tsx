@@ -13,7 +13,6 @@ import {
   DemoBanner,
   LockedPanels,
   MixRow,
-  RhythmStrip,
   SignalProgress,
   StatCards,
   TrustRow,
@@ -23,8 +22,10 @@ import {
 } from "./panels";
 import { ProfileHero, type HeroDiscipline } from "./profile-hero";
 import { C0vibeBand } from "./profile-cta";
+import { SyncRhythm } from "./profile-heatmap";
 import "./profile.css";
 import "./profile-hero.css";
+import "./profile-heatmap.css";
 
 // The two C0VIBE doors on every profile: a free account, and the device-auth flow that
 // migrates a CLI-uploaded (self-reported) board onto that account as attested.
@@ -317,7 +318,9 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   }
   if (reveal.categoryMix) revealed.push(<CategoryMix rows={categories} sub={read.identity.label} key="categories" />);
   if (reveal.rhythm) {
-    revealed.push(<RhythmStrip days={profile.usageDays.map((d) => ({ date: d.date, ops: d.ops }))} key="rhythm" />);
+    revealed.push(
+      <SyncRhythm days={profile.usageDays.map((d) => ({ date: d.date, ops: d.ops, usd: d.usd }))} key="rhythm" />,
+    );
   }
   if (reveal.trust) revealed.push(<TrustRow tier={tier} signals={trustChips} key="trust" />);
   const cta = (

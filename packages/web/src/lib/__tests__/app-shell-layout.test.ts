@@ -34,3 +34,25 @@ test("home-owned dock escapes the route content width without affecting other pa
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.usage-diagnostics/);
   assert.match(css, /@media \(max-width: 430px\)[\s\S]*\.wrap > \.app-shell-dock/);
 });
+
+// The header used to open with "Verified" and "Self-reported" — two tier words for the same
+// page — and never said the word Leaderboard, so the board (the second-most-important surface
+// after a profile) had no name in the nav. Four destinations now, each carrying what it is.
+test("header names the leaderboard and explains every primary destination", () => {
+  const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
+  const primary = layout.slice(layout.indexOf('className="hdr-primary"'), layout.indexOf("hdr-actions"));
+
+  assert.match(primary, /<a href="\/" title="[^"]+">Leaderboard<\/a>/);
+  assert.ok(primary.indexOf("Leaderboard") < primary.indexOf("Profile"), "leaderboard leads the nav");
+  assert.match(primary, />Profile</);
+  assert.match(primary, />Sources</);
+  assert.match(primary, />Insights</);
+
+  // no unexplained item: every primary link says what it does on hover
+  const links = primary.match(/<a href="[^"]+"[^>]*>/g) ?? [];
+  assert.equal(links.length, 4, "exactly four primary destinations");
+  for (const link of links) assert.match(link, /title="/, `unexplained nav item: ${link}`);
+
+  // the two tier words are no longer top-level nav — they are the boards on the leaderboard page
+  assert.doesNotMatch(primary, /Self-reported/);
+});

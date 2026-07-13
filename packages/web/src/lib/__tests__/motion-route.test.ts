@@ -11,7 +11,7 @@ test("motion route is a route-local interactive credited sequencer", () => {
   const manifest = readFileSync("packages/web/src/app/motion/module.sweetspot.json", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 
-  assert.match(layout, /href="\/motion"><span>06<\/span>Motion lab/);
+  assert.match(layout, /href="\/motion"/);   // reachable from the header
   assert.match(page, /buildAsciiMotionLab/);
   assert.match(page, /<MotionSequencer lab=/);
   assert.match(page, /\.\/motion\.css/);

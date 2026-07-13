@@ -10,7 +10,7 @@ test("scan route is the calm Make-your-scan page with a scripted local demo", ()
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
   // ---- nav (layout) still links the scan route ----
-  assert.match(layout, /href="\/scan"><span>02<\/span>Scan<\/a>/);
+  assert.match(layout, /href="\/scan"/);   // reachable from the header
 
   // ---- new page composition: calm "Make your scan" ----
   assert.match(page, /title: "Make your scan — VibeUsage"/);

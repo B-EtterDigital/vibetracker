@@ -8,7 +8,7 @@ test("AI life dashboard is exposed as a first-class labelled route", () => {
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
-  assert.match(layout, /href="\/life">AI Life/);
+  assert.match(layout, /href="\/life"/);   // reachable from the header
   // ---- new calm whole-practice composition (old broadcast-theatre pins replaced) ----
   assert.match(page, /import \{ CopyChip \} from "\.\/life-chips"/);
   assert.match(page, /import "\.\/life\.css"/);

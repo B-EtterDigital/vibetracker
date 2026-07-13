@@ -7,7 +7,7 @@ test("roadmap route exposes the marked-list mission radar", () => {
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
-  assert.match(layout, /href="\/roadmap"><span>09<\/span>Roadmap/);
+  assert.match(layout, /href="\/roadmap"/);   // reachable from the header
   assert.match(page, /buildRoadmapMissionRadar/);
   assert.match(page, /RoadmapMissionRadarPanel/);
   assert.match(page, /roadmap-mission-radar/);

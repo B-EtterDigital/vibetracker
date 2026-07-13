@@ -9,6 +9,7 @@ const styles = readFileSync("packages/web/src/app/u/[handle]/profile.css", "utf8
 const hero = readFileSync("packages/web/src/app/u/[handle]/profile-hero.tsx", "utf8");
 const heroStyles = readFileSync("packages/web/src/app/u/[handle]/profile-hero.css", "utf8");
 const cta = readFileSync("packages/web/src/app/u/[handle]/profile-cta.tsx", "utf8");
+const heat = readFileSync("packages/web/src/app/u/[handle]/profile-heatmap.tsx", "utf8");
 
 test("public profile route reveals panels from deterministic signal depth", () => {
   assert.match(page, /import \{ PROVIDERS \} from "\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/adapters\/src\/index"/);
@@ -66,6 +67,24 @@ test("C0VIBE band offers claim + migrate without overclaiming verification", () 
   assert.match(cta, /Track yours, locally first/);
 });
 
+test("sync rhythm is a real contribution calendar keyed on a signal we hold for every day", () => {
+  assert.match(page, /<SyncRhythm/);
+  assert.match(heat, /export function SyncRhythm/);
+  assert.match(heat, /const WEEKS = 53/);                 // a GitHub year, not an arbitrary window
+  assert.match(heat, /function quartiles/);               // levels cut at quartiles of ACTIVE days
+  assert.doesNotMatch(heat, /ops \/ max/);                 // never a linear share of one outlier
+  assert.match(heat, /usd > q3 \? 4 : usd > q2 \? 3 : usd > q1 \? 2 : 1/);
+  assert.match(heat, /longest streak/);
+  assert.match(heat, /aria-live="polite"/);
+});
+
+test("C0VIBE band carries real brand identity, not a bare link", () => {
+  assert.match(cta, /brand\/c0vibe-logo\.png/);
+  assert.match(cta, /vjoin-art/);                          // the brand starfield surface
+  assert.match(cta, /vibers unite/);
+  assert.match(cta, /vjoin-btn--brand/);
+});
+
 test("profile panels keep public aggregates, trust, and local-first onboarding explicit", () => {
   assert.match(panels, /export function SignalProgress/);
   assert.match(panels, /usage builds your profile/);
@@ -78,7 +97,6 @@ test("profile panels keep public aggregates, trust, and local-first onboarding e
   assert.match(panels, /Provider mix/);
   assert.match(panels, /Usage insights/);
   assert.match(panels, /Where the usage lives/);
-  assert.match(panels, /Sync rhythm/);
   assert.match(panels, /Trust signals/);
   assert.match(panels, /labelled evidence, never usage/);
   assert.match(panels, /copyState === "blocked"/);

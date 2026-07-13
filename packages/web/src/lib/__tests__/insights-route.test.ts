@@ -14,7 +14,7 @@ test("insights route is a route-local interactive decision console", () => {
   const manifest = readFileSync("packages/web/src/app/insights/module.sweetspot.json", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 
-  assert.match(layout, /href="\/insights">Insights/);
+  assert.match(layout, /href="\/insights"/);   // reachable from the header
   assert.match(page, /buildInsightsRunwaySource/);
   assert.match(page, /<RunwayDecisionConsole/);
   assert.match(page, /\.\/insights\.css/);

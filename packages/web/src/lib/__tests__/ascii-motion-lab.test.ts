@@ -111,7 +111,7 @@ test("ASCII motion lab is exposed as a first-class credited route", () => {
   const controls = readFileSync("packages/web/src/app/motion/motion-controls.css", "utf8");
   const responsive = readFileSync("packages/web/src/app/motion/motion-responsive.css", "utf8");
 
-  assert.match(layout, /href="\/motion"><span>06<\/span>Motion lab/);
+  assert.match(layout, /href="\/motion"/);   // reachable from the header
   assert.match(page, /buildAsciiMotionLab/);
   assert.match(page, /<MotionSequencer lab=/);
   assert.match(sequencer, /^"use client";/);

@@ -1,6 +1,9 @@
 // The C0VIBE band — two honest lanes at the foot of a profile:
 //   claim/migrate this board into a free C0VIBE account (self-reported → attested), and
 //   track your own usage from the CLI.
+//
+// The claim lane wears real C0VIBE branding: the C0:VIBE mark and the starfield the brand
+// uses on its own surfaces, so the door out of VibeUsage looks like the place it leads to.
 // No overclaiming: linking an account makes an upload ATTESTED (a real identity owns the
 // handle). It does not make the numbers provider-verified — that stays a separate tier.
 
@@ -25,7 +28,22 @@ export function C0vibeBand({ handle, claimed, joinHref, migrateHref, providerCou
   return (
     <section className="vprofile-panel vjoin" aria-label="Join C0VIBE">
       <div className="vjoin-lane vjoin-lane--claim">
-        <p className="vjoin-eyebrow">vibers unite</p>
+        <span className="vjoin-art" aria-hidden="true" />
+        <span className="vjoin-seam" aria-hidden="true" />
+
+        <div className="vjoin-brand">
+          <img
+            className="vjoin-logo"
+            src="/brand/c0vibe-logo.png"
+            alt="C0VIBE"
+            width={707}
+            height={133}
+            loading="lazy"
+            decoding="async"
+          />
+          <span className="vjoin-motto">vibers unite</span>
+        </div>
+
         <h2 className="vjoin-title">
           {claimed ? <>@{handle} is linked to C0VIBE</> : <>Claim @{handle} on C0VIBE</>}
         </h2>
@@ -43,7 +61,7 @@ export function C0vibeBand({ handle, claimed, joinHref, migrateHref, providerCou
           ))}
         </ul>
         <div className="vjoin-actions">
-          <a className="vjoin-btn vjoin-btn--primary" href={joinHref}>
+          <a className="vjoin-btn vjoin-btn--brand" href={joinHref}>
             Join C0VIBE — free
             <i aria-hidden="true">&#8599;</i>
           </a>

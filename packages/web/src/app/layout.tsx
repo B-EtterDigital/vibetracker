@@ -30,13 +30,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <i aria-hidden="true" />
             <span>Vibe</span><strong>Usage</strong>
           </a>
+          {/* Four destinations, each named for what it is. The board lives at "/" and is now
+              called what it is — Leaderboard — instead of being split into two unexplained
+              tier words ("Verified" / "Self-reported"), which are the two boards ON that page.
+              Everything else moves into the product menu, where a label can carry a sentence. */}
           <nav className="hdr-primary" aria-label="Primary navigation">
-            <a href="/#verified">Verified</a>
-            <a href="/#self">Self-reported</a>
-            <a href="/providers">Providers</a>
-            <a href="/insights">Insights</a>
-            <a href="/life">AI Life</a>
-            <a href="/u/demo">Profile</a>
+            <a href="/" title="The public boards: who tracks the most AI usage">Leaderboard</a>
+            <a href="/u/demo" title="A viber profile: usage, disciplines, models, rhythm">Profile</a>
+            <a href="/providers" title="Every AI source VibeTRACKER can track, and its status">Sources</a>
+            <a href="/insights" title="What the tracked data says across all AI work, not just coding">Insights</a>
           </nav>
           <div className="hdr-actions">
             <a className="hdr-cli" href="/how-to">Get the CLI</a>
@@ -45,15 +47,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <i aria-hidden="true"><span /><span /><span /></i>
               </summary>
               <nav aria-label="Product menu">
-                <a href="/sources"><span>01</span>Sources</a>
-                <a href="/scan"><span>02</span>Scan</a>
-                <a href="/proof"><span>03</span>Proof center</a>
-                <a href="/score"><span>04</span>Score lab</a>
-                <a href="/wizard"><span>05</span>Wizard</a>
-                <a href="/motion"><span>06</span>Motion lab</a>
-                <a href="/contributors"><span>07</span>Contributors</a>
-                <a href="/passkeys"><span>08</span>Passkeys</a>
-                <a href="/roadmap"><span>09</span>Roadmap</a>
+                <a href="/life"><span>01</span><b>AI Life<small>your whole AI practice</small></b></a>
+                <a href="/score"><span>02</span><b>Score lab<small>how the signal score is built</small></b></a>
+                <a href="/proof"><span>03</span><b>Proof center<small>what is verified vs self-reported</small></b></a>
+                <a href="/scan"><span>04</span><b>Scan<small>run a local usage scan</small></b></a>
+                <a href="/wizard"><span>05</span><b>Wizard<small>set up tracking step by step</small></b></a>
+                <a href="/sources"><span>06</span><b>Source atlas<small>every source lane, mapped</small></b></a>
+                <a href="/motion"><span>07</span><b>Motion lab<small>the ASCII motion references</small></b></a>
+                <a href="/contributors"><span>08</span><b>Contributors<small>open-source credit</small></b></a>
+                <a href="/passkeys"><span>09</span><b>Passkeys<small>account keys</small></b></a>
+                <a href="/roadmap"><span>10</span><b>Roadmap<small>what ships next</small></b></a>
               </nav>
             </details>
           </div>

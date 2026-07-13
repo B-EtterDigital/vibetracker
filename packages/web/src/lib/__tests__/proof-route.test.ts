@@ -8,7 +8,7 @@ test("proof center is exposed as a first-class local-first evidence route", () =
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
   const evidence = readFileSync("packages/web/src/lib/evidence-cockpit.ts", "utf8");
 
-  assert.match(layout, /href="\/proof"><span>03<\/span>Proof center/);
+  assert.match(layout, /href="\/proof"/);   // reachable from the header
   assert.match(page, /buildEvidenceCockpit/);
   assert.match(page, /proof-route-intro/);
   assert.match(page, /proof-route-cockpit evidence-cockpit/);

@@ -17,7 +17,7 @@ test("wizard route is a focused interactive command deck", () => {
   const manifest = readFileSync("packages/web/src/app/wizard/module.sweetspot.json", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 
-  assert.match(layout, /href="\/wizard"><span>05<\/span>Wizard/);
+  assert.match(layout, /href="\/wizard"/);   // reachable from the header
   assert.match(page, /buildInstallRunway/);
   assert.match(page, /buildLaunchSequence/);
   assert.match(page, /buildWizardFlightRecorder/);

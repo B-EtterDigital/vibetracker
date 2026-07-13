@@ -16,7 +16,7 @@ test("score route is a focused interactive production-formula instrument", () =>
   const manifest = readFileSync("packages/web/src/app/score/module.sweetspot.json", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 
-  assert.match(layout, /href="\/score"><span>04<\/span>Score lab/);
+  assert.match(layout, /href="\/score"/);   // reachable from the header
   assert.match(page, /<ScoreLab \/>/);
   assert.match(page, /\.\/score\.css/);
   assert.match(page, /\.\/score-controls\.css/);

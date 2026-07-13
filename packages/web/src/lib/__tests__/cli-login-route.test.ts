@@ -7,7 +7,7 @@ test("cli login route exposes the zero-movement auth control room", () => {
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
-  assert.match(layout, /href="\/how-to">Get the CLI/);
+  assert.match(layout, /href="\/how-to"/);   // reachable from the header
   assert.match(page, /buildDeviceAuthControlRoom/);
   assert.match(page, /buildDeviceApprovalChamber/);
   assert.match(page, /DeviceAuthControlRoomPanel/);

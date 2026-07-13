@@ -173,7 +173,7 @@ test("source atlas is exposed as a first-class all-source cockpit route", () => 
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
-  assert.match(layout, /href="\/sources"><span>01<\/span>Sources/);
+  assert.match(layout, /href="\/sources"/);   // reachable from the header
   assert.match(page, /buildSourceAtlas/);
   assert.match(page, /buildSourceCoverageConstellation/);
   assert.match(page, /buildSourceIntakeStack/);
