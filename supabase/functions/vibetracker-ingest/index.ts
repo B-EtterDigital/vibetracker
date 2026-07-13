@@ -78,6 +78,13 @@ async function sha256Hex(input: string): Promise<string> {
     await admin.from("vibetracker_members").upsert({ user_id: userId }, { onConflict: "user_id" });
   }
 
+  // The viber's own bio: client-supplied free text, capped and stripped of control chars. It is
+  // profile decoration only — never usage — so it rides on the submission row, not the aggregates.
+  const rawBio = (payload as { bio?: unknown } | null)?.bio;
+  const bio = typeof rawBio === "string"
+    ? rawBio.replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 280) || null
+    : null;
+
   const { data: sub, error: sErr } = await admin.from("vibetracker_submissions").insert({
     user_id: userId ?? null,
     handle: userId ? null : result.handle,   // authed rows use the account handle via the view
@@ -85,6 +92,7 @@ async function sha256Hex(input: string): Promise<string> {
     record_count: result.accepted,
     total_credits: result.totals.credits,
     total_usd: result.totals.usd ?? 0,
+    bio,
   }).select("id").single();
   if (sErr) return json({ ok: false, error: `submission: ${sErr.message}` }, 500);
 

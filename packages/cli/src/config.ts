@@ -17,6 +17,7 @@ export interface VtConfig {
   creds?: Record<string, ProviderCreds>; // in-memory only after migration; never written to disk
   uploadUrl?: string;
   handle?: string;
+  bio?: string;     // the viber's own profile bio, shown on the public profile; set with `profile --bio`
   token?: string;   // C0VIBE session token → attested uploads; stored in the keyring, not on disk
   anonymousTelemetry?: boolean;
 }

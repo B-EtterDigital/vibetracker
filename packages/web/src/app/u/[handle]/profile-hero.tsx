@@ -11,6 +11,10 @@
 import type { CSSProperties } from "react";
 import type { BrandChip } from "./panels";
 
+// The five signal tiers, low → high. "Signal" measures how complete/deep a tracked profile is
+// (sources, disciplines, history, spend, activity) — not a ranking of who spends most.
+const SIGNAL_TIERS = ["ember", "spark", "current", "surge", "supernova"] as const;
+
 export interface HeroDiscipline {
   id: string;
   label: string;
@@ -23,6 +27,11 @@ export interface HeroState {
   value: string;
 }
 
+export interface HeroModel {
+  model: string;
+  spend: string;
+}
+
 export interface ProfileHeroProps {
   handle: string;
   accent: string;
@@ -32,31 +41,33 @@ export interface ProfileHeroProps {
   signalHint: string;
   tierChip: string;
   bio: string;
+  userBio: string;
   since: string;
   disciplines: HeroDiscipline[];
   state: HeroState[];
+  topModels: HeroModel[];
   brands: BrandChip[];
   joinHref: string;
   migrateHref: string;
 }
 
-function BrandPill({ brand }: { brand: BrandChip }) {
+// Source = a big logo tile, no label until you hover — the name floats up on hover / focus. The
+// title attribute keeps it accessible and gives a native tooltip.
+function SourceTile({ brand }: { brand: BrandChip }) {
   return (
-    <span className="vhero-brand-pill">
+    <span className="vhero-source" tabIndex={0} title={brand.label} aria-label={brand.label}>
       {brand.logo ? (
-        <i className="vprofile-mark vprofile-mark--logo" aria-hidden="true">
-          <img src={brand.logo} alt="" width={14} height={14} loading="lazy" decoding="async" />
-        </i>
+        <img className="vhero-source-logo" src={brand.logo} alt="" width={40} height={40} loading="lazy" decoding="async" />
       ) : (
         <i
-          className="vprofile-mark"
+          className="vhero-source-glyph"
           style={{ background: `linear-gradient(135deg, ${brand.from}, ${brand.to})`, color: brand.ink }}
           aria-hidden="true"
         >
           {brand.mark}
         </i>
       )}
-      {brand.label}
+      <em className="vhero-source-name">{brand.label}</em>
     </span>
   );
 }
@@ -70,9 +81,11 @@ export function ProfileHero({
   signalHint,
   tierChip,
   bio,
+  userBio,
   since,
   disciplines,
   state,
+  topModels,
   brands,
   joinHref,
   migrateHref,
@@ -142,15 +155,59 @@ export function ProfileHero({
               </div>
             ))}
           </dl>
-          <p className="vhero-state-foot">viber since {since}</p>
+
+          {topModels.length ? (
+            <div className="vhero-topmodels">
+              <p className="vhero-topmodels-head">top 5 models · by spend</p>
+              <ol className="vhero-topmodels-list">
+                {topModels.map((m, i) => (
+                  <li key={m.model}>
+                    <span className="vhero-topmodels-rank">{i + 1}</span>
+                    <span className="vhero-topmodels-name" title={m.model}>{m.model}</span>
+                    <span className="vhero-topmodels-spend">{m.spend}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
+
+          <p className="vhero-state-foot">
+            viber since {since}
+            <span className="vhero-signal-note" title={signalHint}>
+              signal = how deep your tracked profile is ·{" "}
+              {SIGNAL_TIERS.map((t, i) => (
+                <span key={t}>
+                  {i > 0 ? " → " : " "}
+                  {t === signalTier ? <b>{t}</b> : t}
+                </span>
+              ))}
+            </span>
+          </p>
         </aside>
       </div>
 
       {brands.length ? (
-        <div className="vhero-brands" aria-label="Top sources by estimated spend">
-          {brands.map((brand) => <BrandPill brand={brand} key={brand.id} />)}
+        <div className="vhero-sources" aria-label="Sources tracked on this profile">
+          <p className="vhero-sources-head">
+            Sources
+            <span>{brands.length} tracked · full stack below</span>
+          </p>
+          <div className="vhero-source-row">
+            {brands.map((brand) => <SourceTile brand={brand} key={brand.id} />)}
+          </div>
         </div>
       ) : null}
+
+      <div className="vhero-biobar">
+        {userBio ? (
+          <p className="vhero-userbio">{userBio}</p>
+        ) : (
+          <p className="vhero-addbio">
+            <i aria-hidden="true">+</i>
+            Add a bio — <code>vibetracker profile --bio &quot;…&quot;</code> then re-sync
+          </p>
+        )}
+      </div>
     </section>
   );
 }

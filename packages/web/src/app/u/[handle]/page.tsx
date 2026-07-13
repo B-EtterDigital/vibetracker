@@ -112,10 +112,15 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const tier = (tierRaw === "verified" ? "verified" : "self_reported") as Tier;
   const byUsd = profile.providers.slice().sort((a, b) => b.usd - a.usd);
 
-  const brands = byUsd.slice(0, 6).map((p) => {
-    const brand = providerBrand(p.provider);
-    return { id: p.provider, label: providerLabel(p.provider), mark: brand.mark, from: brand.from, to: brand.to, ink: brand.ink, logo: brand.logo };
-  });
+  // Every source with real activity, ranked by spend — shown as the hero's labelled "Sources" row
+  // so the question "where are the sources?" is answered at the top, with the full stack (spend +
+  // ops per source) in the Usage → Your stack panel below.
+  const brands = byUsd
+    .filter((p) => p.usd > 0 || p.ops > 0)
+    .map((p) => {
+      const brand = providerBrand(p.provider);
+      return { id: p.provider, label: providerLabel(p.provider), mark: brand.mark, from: brand.from, to: brand.to, ink: brand.ink, logo: brand.logo };
+    });
 
   // Per-provider daily series for the interactive chart. Ranked by ops (activity), not spend, so
   // the media powerhouse (Higgsfield, high ops / ~$0 spend) surfaces alongside the coding sources;
@@ -275,17 +280,29 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     share: c.share,
   }));
 
-  const byOps = profile.providers.slice().sort((a, b) => b.ops - a.ops);
-  const topModel = profile.providerModels.slice().sort((a, b) => b.ops - a.ops)[0];
+  // Rank the state rail by SPEND, not op-count. Op-count made a cheap high-volume model (haiku)
+  // read as the "top model" and a high-message source outrank the one that actually cost the most;
+  // spend is the honest headline and it stays consistent with the money everywhere else.
+  const topSource = byUsd[0] ? providerLabel(byUsd[0].provider) : "—";
+  const compactUsd = (n: number) =>
+    n >= 1000 ? `$${Math.round(n / 1000)}k` : n >= 1 ? `$${Math.round(n)}` : `$${n.toFixed(2)}`;
+  const topModels = profile.providerModels
+    .slice()
+    .sort((a, b) => b.usd - a.usd || b.ops - a.ops)
+    .slice(0, 5)
+    .map((m) => ({ model: prettyModel(m.model), spend: compactUsd(m.usd) }));
   const heroState = [
     { label: "signal", value: read.tier },
+    { label: "total spent", value: formatUsd(facts.usd) },
     { label: "operations", value: formatInt(facts.ops) },
-    { label: "top source", value: byOps[0] ? providerLabel(byOps[0].provider) : "—" },
-    { label: "top model", value: topModel ? prettyModel(topModel.model) : "—" },
+    { label: "top source", value: topSource },
   ];
 
   const bio = `${formatInt(facts.ops)} operations across ${facts.providers} sources and ${facts.categories} disciplines. `
     + `${formatUsd(facts.usd)} tracked over ${facts.days} active days.`;
+  // A viber's own bio (set with `vibetracker profile --bio`), shown below the sources. Empty for
+  // most profiles today, which surfaces the "add a bio" affordance instead.
+  const userBio = (profile.bio ?? "").trim();
 
   const claimed = tierRaw !== "self_reported";
 
@@ -330,9 +347,11 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       signalHint={read.hint}
       tierChip={tierRaw}
       bio={bio}
+      userBio={userBio}
       since={fmtDate(profile.usageDays[0]?.date ?? profile.created_at)}
       disciplines={disciplines}
       state={heroState}
+      topModels={topModels}
       brands={brands}
       joinHref={C0VIBE_JOIN_HREF}
       migrateHref={C0VIBE_MIGRATE_HREF}

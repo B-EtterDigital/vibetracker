@@ -946,6 +946,15 @@ async function main() {
   }
 
   if (cmd === "profile") {
+    // `profile --bio "..."` sets the bio shown on your public profile (uploaded on the next sync).
+    const bioFlag = flag(argv, "--bio");
+    if (bioFlag !== undefined || argv.includes("--clear-bio")) {
+      const cfg = loadConfig();
+      cfg.bio = argv.includes("--clear-bio") ? undefined : bioFlag.replace(/\s+/g, " ").trim().slice(0, 280) || undefined;
+      saveConfig(cfg);
+      console.log(cfg.bio ? `  ${ok("✓")} bio set — uploads on your next \`vibetracker upload\`` : `  ${ok("✓")} bio cleared`);
+      return;
+    }
     const records = readRecords(STORE);
     if (!records.length) { console.log(emptyUsageState("PROFILE READY", "No usage records yet. Connect, import, proxy, or add one source first.")); return; }
     const trustSignals = collectTrustSignals();
@@ -1646,6 +1655,7 @@ async function main() {
       count: accepted.length,
       records: accepted,
       trustSignals,
+      ...(cfg.bio ? { bio: cfg.bio } : {}),
       integrity: audit.integrity,
     };
     const findings = scanSecrets(bundle);

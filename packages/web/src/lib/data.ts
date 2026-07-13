@@ -46,6 +46,7 @@ export interface ProfileView {
   handle: string;
   created_at: string;
   isPremium: boolean;
+  bio?: string;
   latest: { total_usd: number; total_credits: number; record_count: number; created_at: string; tier: string } | null;
   providers: Array<{ provider: string; ops: number; credits: number; usd: number }>;
   usageDays: Array<{ date: string; ops: number; credits: number; usd: number }>;
@@ -204,6 +205,9 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
       handle: h?.handle ?? handle,
       created_at: h?.created_at ?? latest?.created_at ?? "",
       isPremium: Boolean(h?.is_premium),
+      // The viber's own bio, set with `vibetracker profile --bio` and carried on the submission.
+      // Additive column — older rows return undefined and the profile shows the "add a bio" hint.
+      bio: (latest as { bio?: string | null } | null)?.bio?.trim() || undefined,
       latest: latest ? { total_usd: latest.total_usd, total_credits: latest.total_credits, record_count: latest.record_count, created_at: latest.created_at, tier: latest.tier } : null,
       providers,
       usageDays,

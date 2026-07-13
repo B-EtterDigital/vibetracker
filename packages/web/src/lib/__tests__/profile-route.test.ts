@@ -64,6 +64,34 @@ test("profile hero carries the identity surface, the full discipline set, and th
   assert.match(heroStyles, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
+test("vibe state ranks by spend, lists top 5 models, and explains the signal tier", () => {
+  // Op-count made cheap high-volume haiku read as top model and mis-ranked the top source; spend
+  // is the honest headline and stays consistent with the money everywhere.
+  assert.match(page, /const topSource = byUsd\[0\]/);
+  assert.match(page, /sort\(\(a, b\) => b\.usd - a\.usd \|\| b\.ops - a\.ops\)/);
+  assert.match(page, /\.slice\(0, 5\)/);
+  assert.match(hero, /top 5 models/);
+  assert.match(hero, /topModels\.map/);
+  // signal tier is explained inline (answers "what is signal surge")
+  assert.match(hero, /how deep your tracked profile is/);
+  assert.match(hero, /SIGNAL_TIERS/);
+});
+
+test("sources are a labelled big-logo row with the brand on hover, and a bio can be added", () => {
+  // every source with real activity is shown (not a top-6 slice), so the list is complete
+  assert.match(page, /\.filter\(\(p\) => p\.usd > 0 \|\| p\.ops > 0\)/);
+  assert.match(hero, /vhero-sources/);
+  assert.match(hero, /vhero-sources-head/);
+  assert.match(hero, />\s*Sources\s*<span>/);
+  assert.match(hero, /function SourceTile/);
+  assert.match(hero, /vhero-source-name/);               // brand name revealed on hover
+  assert.match(heroStyles, /\.vhero-source:hover \.vhero-source-name/);
+  // bio: render the viber's own, else the "add a bio" affordance with the CLI command
+  assert.match(hero, /userBio \?/);
+  assert.match(hero, /Add a bio/);
+  assert.match(hero, /vibetracker profile --bio/);
+});
+
 test("C0VIBE band offers claim + migrate without overclaiming verification", () => {
   assert.match(cta, /export function C0vibeBand/);
   assert.match(cta, /Claim @\{handle\} on C0VIBE/);
