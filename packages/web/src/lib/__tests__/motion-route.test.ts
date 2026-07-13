@@ -38,6 +38,7 @@ test("motion route is a route-local interactive credited sequencer", () => {
   assert.match(sequencer, /lab\.references\.length/);
   assert.match(styles, /\.seq-console/);
   assert.match(styles, /\.seq-timeline/);
+  assert.match(styles, /\.seq-timeline button i[\s\S]*color: var\(--seq-ink\)/);
   assert.match(styles, /\.seq-screen pre/);
   assert.match(styles, /\.seq-proof/);
   assert.match(controls, /\.seq-modes/);

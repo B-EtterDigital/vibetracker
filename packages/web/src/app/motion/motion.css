@@ -157,7 +157,7 @@
   height: 34px;
   border: 1px solid var(--cue-from);
   border-radius: 4px;
-  color: var(--cue-to);
+  color: var(--seq-ink);
   background: #07100f;
   font-size: 11px;
   font-style: normal;
