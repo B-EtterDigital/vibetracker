@@ -231,7 +231,7 @@
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1489,
+      "feature_lines": 1493,
       "file_count": 9,
       "dependency_count": 2,
       "notes": "The former 623-line static route is now a 14-line server surface plus a focused interactive sequencer, split route-local styles, and a dedicated static attribution catalog; every owned file is below the 400-line target."

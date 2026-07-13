@@ -44,6 +44,7 @@ test("motion route is a route-local interactive credited sequencer", () => {
   assert.match(controls, /\.seq-tempo/);
   assert.match(responsive, /\.seq-sources/);
   assert.match(responsive, /@media \(max-width: 760px\)/);
+  assert.match(responsive, /\.seq-cue-copy button \{ min-height: 44px; \}/);
   assert.match(responsive, /prefers-reduced-motion/);
   assert.match(manifest, /000-vibetracker\.web\.motion-sequencer/);
   assert.doesNotMatch(page, /MotionScanDirectorBoard|MotionSignalTheatre|MotionRunwayPanel/);

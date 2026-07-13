@@ -51,6 +51,9 @@
   .seq-contract span:nth-child(3) { border-top: 1px solid var(--seq-line); border-left: 0; }
   .seq-contract span:nth-child(4) { border-top: 1px solid var(--seq-line); }
   .seq-toolbar { grid-template-columns: 1fr auto; gap: 12px; }
+  .seq-modes button,
+  .seq-transport button,
+  .seq-cue-copy button { min-height: 44px; }
   .seq-tempo { grid-column: 1 / -1; justify-self: stretch; width: 100%; }
   .seq-workspace { grid-template-columns: 1fr; }
   .seq-timeline { border-right: 0; border-bottom: 1px solid var(--seq-line); }
