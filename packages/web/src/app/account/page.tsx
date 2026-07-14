@@ -13,22 +13,22 @@ export default function AccountPage() {
       <section className="account-hero" aria-labelledby="account-title">
         <div className="account-hero__copy">
           <p className="eyebrow">Identity control room</p>
-          <h1 id="account-title">Sign in with GitHub. Keep your usage history.</h1>
-          <p>Authenticate on GitHub, return through a secure server callback, and continue with a real browser session. Existing CLI submissions attach after identity proof; they are not the login flow.</p>
+          <h1 id="account-title">Prove your GitHub. Keep your usage history.</h1>
+          <p>Use browser sign-in when configured or verify immediately through the GitHub CLI already on your machine. Both resolve to the same identity without moving usage.</p>
           <div className="account-hero__rails" aria-label="Identity guarantees">
-            <span>GitHub OAuth</span><span>server callback</span><span>cookie session</span><span>linked history</span>
+            <span>GitHub first</span><span>CLI live now</span><span>OAuth ready</span><span>linked history</span>
           </div>
         </div>
         <div className="account-hero__terminal" aria-label="GitHub identity migration terminal">
           <div className="console-top"><span>identity@vibeusage</span><b>ZERO USAGE MOVEMENT</b></div>
           <pre>{[
             "+--------------------------------------------------+",
-            "| VTRK://GITHUB-OAUTH//ACCOUNT-SESSION             |",
+            "| VTRK://GITHUB-PROOF//ADAPTIVE-ACCOUNT           |",
             "|--------------------------------------------------|",
             "| github id       immutable identity anchor        |",
-            "| browser session secure callback exchange          |",
+            "| auth channel    browser OAuth or existing gh CLI |",
             "| blue check      identity only, NOT usage truth    |",
-            "| cli history     linked, never used as login        |",
+            "| cli history     linked after identity proof       |",
             "+--------------------------------------------------+",
           ].join("\n")}</pre>
         </div>
@@ -37,7 +37,7 @@ export default function AccountPage() {
       <AccountConsole />
 
       <section className="account-boundary" aria-label="Account trust boundary">
-        <article><b>01 / identity</b><span>GitHub OAuth proves who owns the handle. Verified identities receive the blue check; handle-only batches stay marked CLI.</span></article>
+        <article><b>01 / identity</b><span>GitHub OAuth or an authenticated GitHub CLI session proves who owns the handle. Verified identities receive the blue check.</span></article>
         <article><b>02 / usage</b><span>Identity proof does not verify spend, tokens, credits, records, or rank inputs.</span></article>
         <article><b>03 / migration</b><span>A later C0VIBE account attaches to the same identity instead of creating a second profile.</span></article>
       </section>

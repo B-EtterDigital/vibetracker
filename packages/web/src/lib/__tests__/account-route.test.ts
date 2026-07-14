@@ -53,18 +53,24 @@ test("global shell exposes an obvious sign-in control without claiming verificat
   assert.doesNotMatch(control, /signInWithOAuth|provider_token|localStorage|sessionStorage/);
 });
 
-test("account console uses real GitHub OAuth without turning the CLI token into login UI", () => {
-  assert.match(page, /Sign in with GitHub\. Keep your usage history\./);
-  assert.match(page, /GitHub OAuth/);
-  assert.match(page, /server callback/);
+test("account console uses real GitHub OAuth when available and the verified CLI path otherwise", () => {
+  assert.match(page, /Prove your GitHub\. Keep your usage history\./);
+  assert.match(page, /browser sign-in when configured or verify immediately through the GitHub CLI/);
+  assert.match(page, /browser OAuth or existing gh CLI/);
   assert.match(page, /blue check.*identity only, NOT usage truth/i);
   assert.match(consoleSource, /signInWithOAuth\(\{/);
   assert.match(consoleSource, /provider: "github"/);
   assert.match(consoleSource, /scopes: "read:user user:email"/);
   assert.match(consoleSource, /continue with GitHub/);
+  assert.match(consoleSource, /const CLI_COMMAND = "npx vibetracker login"/);
+  assert.match(consoleSource, /navigator\.clipboard\.writeText\(CLI_COMMAND\)/);
+  assert.match(consoleSource, /copy npx vibetracker login/);
+  assert.match(consoleSource, /GitHub CLI verification is live now/);
+  assert.match(consoleSource, /browserReady \? signIn : copyCliCommand/);
+  assert.match(consoleSource, /The raw GitHub token is used once for identity verification and is never persisted/);
+  assert.match(consoleSource, /OAuth and GitHub CLI proof resolve to the same immutable subject/);
   assert.match(consoleSource, /No copied token, terminal command, or separate password/);
   assert.match(consoleSource, /signOut\(\{ scope: "local" \}\)/);
-  assert.doesNotMatch(consoleSource, /npx vibetracker login|gh auth status|copy GitHub CLI sign-in/);
   assert.doesNotMatch(consoleSource, /localStorage|sessionStorage|provider_refresh_token/);
 });
 
@@ -88,6 +94,7 @@ test("account layout remains bounded, responsive, and motion-safe", () => {
   assert.match(styles, /@media \(min-width: 2200px\)/);
   assert.match(styles, /width: min\(1680px, calc\(100% - 64px\)\)/);
   assert.match(styles, /account-console__oauth li > span \{ color: #5ba9ff/);
+  assert.match(styles, /account-console__primary\[data-channel="terminal"\]/);
   assert.match(styles, /account-console__oauth li small/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(styles, /width: min\(1320px, calc\(100% - 32px\)\)/);

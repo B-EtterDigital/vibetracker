@@ -15,6 +15,22 @@ interface LinkedIdentity {
   verifiedAt?: string | null;
 }
 
+const CLI_COMMAND = "npx vibetracker login";
+
+const BROWSER_STEPS = [
+  ["GitHub consent", "You authenticate on github.com, never in a copied terminal command."],
+  ["Server callback", "VibeUsage exchanges the one-time authorization code server-side."],
+  ["Account session", "Supabase stores the browser session in secure cookies."],
+  ["Identity link", "Your immutable GitHub user ID anchors existing and future usage."],
+] as const;
+
+const CLI_STEPS = [
+  ["Existing GitHub session", "The CLI asks gh for the already-authenticated account only after you run login."],
+  ["One-time verification", "The server validates the GitHub token and immutable user ID; VibeTRACKER never stores the raw token."],
+  ["Identity token", "The issued VibeTRACKER token is stored in the OS keyring when available."],
+  ["Blue identity check", "The check proves account ownership only. Usage and rank evidence remain separate."],
+] as const;
+
 function oauthMessage(value: string | null): string {
   if (value === "success") return "GitHub sign-in complete. This browser now has a real account session.";
   if (value === "denied") return "GitHub sign-in was cancelled before any account was linked.";
@@ -77,12 +93,12 @@ export function AccountConsole() {
       .then((availability) => {
         if (!active) return;
         setProvider(availability.github ? "available" : "disabled");
-        if (!availability.github) setMessage("GitHub browser sign-in is not enabled for this deployment.");
+        if (!availability.github) setMessage("Browser GitHub sign-in is not enabled yet. GitHub CLI verification is live now and does not require a C0VIBE account.");
       })
       .catch(() => {
         if (!active) return;
         setProvider("unavailable");
-        setMessage("GitHub provider status is temporarily unavailable.");
+        setMessage("Browser provider status is unavailable. GitHub CLI verification is still live.");
       });
     void client.auth.getSession().then(({ data, error }) => {
       if (error) {
@@ -136,8 +152,20 @@ export function AccountConsole() {
     }
   }
 
-  const providerCopy = provider === "available" ? "GitHub OAuth ready" : provider === "checking" ? "checking GitHub OAuth" : "GitHub OAuth unavailable";
+  async function copyCliCommand() {
+    try {
+      await navigator.clipboard.writeText(CLI_COMMAND);
+      setMessage(`Copied ${CLI_COMMAND}. Run it in a terminal where gh auth status passes.`);
+    } catch {
+      setMessage(`Clipboard access failed. Run ${CLI_COMMAND} in your terminal.`);
+    }
+  }
+
+  const browserReady = provider === "available";
+  const browserChecking = provider === "checking";
+  const providerCopy = browserReady ? "GitHub OAuth ready" : browserChecking ? "checking browser OAuth" : "GitHub CLI ready";
   const linkCopy = linkState === "linked" ? "identity linked" : linkState === "checking" ? "checking account link" : linkState === "unlinked" ? "session ready, link pending" : linkState === "error" ? "link needs attention" : "no browser session";
+  const proofSteps = browserReady ? BROWSER_STEPS : CLI_STEPS;
 
   return (
     <section className="account-console" aria-labelledby="account-console-title">
@@ -170,37 +198,41 @@ export function AccountConsole() {
             <>
               <div className="account-console__pitch">
                 <span className="account-console__github" aria-hidden="true">GH</span>
-                <div><h3>Sign in through GitHub itself.</h3><p>GitHub handles consent, Supabase exchanges the callback securely, and VibeUsage creates a browser session.</p></div>
+                {browserReady || browserChecking
+                  ? <div><h3>Sign in through GitHub itself.</h3><p>GitHub handles consent, Supabase exchanges the callback securely, and VibeUsage creates a browser session.</p></div>
+                  : <div><h3>Verify the GitHub identity already on this machine.</h3><p>Reuse your authenticated GitHub CLI session now. No C0VIBE account, new password, or usage upload is required.</p></div>}
               </div>
               <button
                 className="account-console__primary"
                 type="button"
-                onClick={signIn}
-                disabled={busy || provider !== "available"}
+                data-channel={browserReady ? "browser" : "terminal"}
+                onClick={browserReady ? signIn : copyCliCommand}
+                disabled={busy || browserChecking}
               >
-                {busy ? "opening GitHub" : provider === "checking" ? "checking GitHub sign-in" : provider === "available" ? "continue with GitHub" : "GitHub sign-in unavailable"}
+                {busy ? "opening GitHub" : browserChecking ? "checking GitHub sign-in" : browserReady ? "continue with GitHub" : "copy npx vibetracker login"}
               </button>
-              <small className="account-console__path-note">No copied token, terminal command, or separate password. GitHub redirects back to a secure VibeUsage session.</small>
+              <small className="account-console__path-note">
+                {browserReady
+                  ? "No copied token, terminal command, or separate password. GitHub redirects back to a secure VibeUsage session."
+                  : "Run the copied command where gh auth status passes. The raw GitHub token is used once for identity verification and is never persisted by VibeTRACKER."}
+              </small>
             </>
           )}
           <p className="account-console__message" aria-live="polite">{message || "Identity proof and usage proof remain separate at every step."}</p>
         </div>
 
-        <div className="account-console__oauth" aria-label="GitHub OAuth flow">
-          <div className="console-top"><span>oauth@browser</span><b>REAL SESSION</b></div>
-          <h3>One browser flow. Four verifiable steps.</h3>
+        <div className="account-console__oauth" data-channel={browserReady ? "browser" : "terminal"} aria-label={browserReady ? "GitHub OAuth flow" : "GitHub CLI identity flow"}>
+          <div className="console-top"><span>{browserReady ? "oauth@browser" : "proof@terminal"}</span><b>{browserReady ? "REAL SESSION" : "LIVE NOW"}</b></div>
+          <h3>{browserReady ? "One browser flow." : "One terminal command."} Four verifiable steps.</h3>
           <ol>
-            <li><span>01</span><div><b>GitHub consent</b><small>You authenticate on github.com, never in a copied terminal command.</small></div></li>
-            <li><span>02</span><div><b>Server callback</b><small>VibeUsage exchanges the one-time authorization code server-side.</small></div></li>
-            <li><span>03</span><div><b>Account session</b><small>Supabase stores the browser session in secure cookies.</small></div></li>
-            <li><span>04</span><div><b>Identity link</b><small>Your immutable GitHub user ID anchors existing and future usage.</small></div></li>
+            {proofSteps.map(([title, detail], index) => <li key={title}><span>{String(index + 1).padStart(2, "0")}</span><div><b>{title}</b><small>{detail}</small></div></li>)}
           </ol>
         </div>
       </div>
 
       <div className="account-console__migration">
-        <b>GitHub is the account gate.</b>
-        <span>Your GitHub subject stays the identity anchor. Existing CLI submissions attach to the same identity without becoming the login mechanism.</span>
+        <b>GitHub is the identity anchor.</b>
+        <span>OAuth and GitHub CLI proof resolve to the same immutable subject. Existing submissions attach without changing usage evidence.</span>
         <a href="/proof">inspect proof labels</a>
       </div>
     </section>
