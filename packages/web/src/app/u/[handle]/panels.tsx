@@ -338,7 +338,7 @@ export function CopyInitChip() {
       className="vprofile-cta-cmd"
       onClick={copy}
       data-state={copyState}
-      aria-label="Copy npx vibetrack init to clipboard"
+      title="Copy npx vibetrack init to clipboard"
     >
       <code>npx vibetrack init</code>
       <span aria-live="polite">{stateWord}</span>

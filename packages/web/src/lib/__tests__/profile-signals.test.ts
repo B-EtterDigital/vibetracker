@@ -56,17 +56,19 @@ test("heavy media output + orchestration reads as All-rounder", () => {
   assert.ok(s.archetypes.includes("Swarm Orchestrator") && s.archetypes.includes("Media Generator"), s.archetypes.join());
 });
 
-test("subscription footprint estimates parallel accounts from last-30-day spend", () => {
+test("subscription footprint estimates parallel accounts from last-30-day spend (reset-calibrated)", () => {
+  // Reference is ~$30k/mo API-equivalent per maxed $200 account (generous resets), so numbers stay
+  // gentle: only a genuinely heavy operator reads above 1x.
   const days = Array.from({ length: 30 }, (_v, i) => `2026-06-${String(i + 1).padStart(2, "0")}`);
   const providerDays = days.flatMap((date) => [
-    { provider: "codex", date, ops: 0, credits: 0, usd: 500 },        // $15k/30d → ~3x ChatGPT Pro
-    { provider: "claude-code", date, ops: 0, credits: 0, usd: 200 },  // $6k/30d → ~1x Claude Max
+    { provider: "codex", date, ops: 0, credits: 0, usd: 2000 },       // $60k/30d → ~2x ChatGPT Pro
+    { provider: "claude-code", date, ops: 0, credits: 0, usd: 1000 }, // $30k/30d → ~1x Claude Max
   ]);
   const s = computeProfileSignals(base({ providerDays }));
   const gpt = s.footprint.find((f) => f.label === "ChatGPT Pro");
   const claude = s.footprint.find((f) => f.label === "Claude Max");
-  assert.ok(gpt && gpt.count >= 2, JSON.stringify(s.footprint));
-  assert.ok(claude && claude.count >= 1, JSON.stringify(s.footprint));
+  assert.equal(gpt?.count, 2, JSON.stringify(s.footprint));
+  assert.equal(claude?.count, 1, JSON.stringify(s.footprint));
 });
 
 test("ship rate is commits per billion tokens from the github signal", () => {

@@ -113,7 +113,7 @@
 .vprofile-readout__eyebrow,
 .vprofile-readout__head time,
 .vprofile-readout__facts dt,
-.vprofile-readout__facts small {
+.vprofile-readout__note {
   font-family: var(--vp-mono); text-transform: uppercase; letter-spacing: 0.08em;
 }
 
@@ -142,9 +142,10 @@
 .vprofile-readout__facts > div { min-width: 0; padding: 14px 18px 13px 0; }
 .vprofile-readout__facts > div + div { padding-left: 18px; border-left: 1px solid rgba(217, 255, 242, 0.1); }
 .vprofile-readout__facts dt { margin-bottom: 7px; font-size: 9px; font-weight: 700; color: rgba(217, 255, 242, 0.42); }
-.vprofile-readout__facts dd { margin: 0 0 5px; font: 650 19px/1.1 var(--vp-mono); color: #effbf7; overflow-wrap: anywhere; }
-.vprofile-readout__facts > div:first-child dd { color: var(--readout-accent); }
-.vprofile-readout__facts small { display: block; font-size: 9px; line-height: 1.35; color: rgba(217, 255, 242, 0.38); }
+.vprofile-readout__facts dd { margin: 0; overflow-wrap: anywhere; }
+.vprofile-readout__value { margin-bottom: 5px !important; font: 650 19px/1.1 var(--vp-mono); color: #effbf7; }
+.vprofile-readout__facts > div:first-child .vprofile-readout__value { color: var(--readout-accent); }
+.vprofile-readout__note { display: block; font-size: 9px; line-height: 1.35; color: rgba(217, 255, 242, 0.62); }
 
 .vprofile-readout__plain {
   margin: 14px 0 0; font: 500 12px/1.6 var(--vp-mono); color: rgba(217, 255, 242, 0.56);

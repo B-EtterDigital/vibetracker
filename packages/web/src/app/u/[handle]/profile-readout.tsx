@@ -77,23 +77,23 @@ export function ProfileReadout({ model, category, trust, hasGitHubEvidence, thro
       <dl className="vprofile-readout__facts">
         <div>
           <dt>Momentum</dt>
-          <dd>{deltaPercent(model.deltaPercent)}</dd>
-          <small>vs previous 30d</small>
+          <dd className="vprofile-readout__value">{deltaPercent(model.deltaPercent)}</dd>
+          <dd className="vprofile-readout__note">vs previous 30d</dd>
         </div>
         <div>
           <dt>Lead source</dt>
-          <dd>{lead?.label ?? "No signal"}</dd>
-          <small>{lead ? `${compactUsd(lead.value)} this window` : "no source activity"}</small>
+          <dd className="vprofile-readout__value">{lead?.label ?? "No signal"}</dd>
+          <dd className="vprofile-readout__note">{lead ? `${compactUsd(lead.value)} this window` : "no source activity"}</dd>
         </div>
         <div>
           <dt>Work mix</dt>
-          <dd>{category ? `${Math.round(category.share)}%` : "No signal"}</dd>
-          <small>{category ? `${category.label} operations` : "no category activity"}</small>
+          <dd className="vprofile-readout__value">{category ? `${Math.round(category.share)}%` : "No signal"}</dd>
+          <dd className="vprofile-readout__note">{category ? `${category.label} operations` : "no category activity"}</dd>
         </div>
         <div>
           <dt>Trust boundary</dt>
-          <dd>{trustLabel}</dd>
-          <small>{hasGitHubEvidence ? "GitHub evidence attached" : "usage totals only"}</small>
+          <dd className="vprofile-readout__value">{trustLabel}</dd>
+          <dd className="vprofile-readout__note">{hasGitHubEvidence ? "GitHub evidence attached" : "usage totals only"}</dd>
         </div>
       </dl>
 

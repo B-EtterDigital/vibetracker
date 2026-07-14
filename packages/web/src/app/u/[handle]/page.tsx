@@ -35,6 +35,7 @@ import "./profile-heatmap.css";
 import "./profile-tokens.css";
 import "./profile-signals.css";
 import "./profile-telemetry.css";
+import "./profile-accessibility.css";
 
 // The two C0VIBE doors on every profile: a free account, and the device-auth flow that
 // migrates a CLI-uploaded (self-reported) board onto that account as attested.

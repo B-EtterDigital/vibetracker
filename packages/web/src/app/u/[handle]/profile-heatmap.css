@@ -63,8 +63,7 @@
   cursor: default;
   transition: transform 110ms ease;
 }
-button.vheat-cell:hover,
-button.vheat-cell:focus-visible {
+.vheat-cells .vheat-cell:hover {
   transform: scale(1.28);
   outline: 1px solid rgba(217, 255, 242, 0.55);
   outline-offset: 1px;
@@ -114,8 +113,7 @@ button.vheat-cell:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .vheat-cell { transition: none; }
-  button.vheat-cell:hover,
-  button.vheat-cell:focus-visible { transform: none; }
+  .vheat-cells .vheat-cell:hover { transform: none; }
 }
 
 @media (max-width: 640px) {

@@ -1,0 +1,36 @@
+/* Profile-only AA contrast corrections. This loads after the visual modules so
+   muted instrument labels remain legible without changing their hierarchy. */
+.vprofile :is(
+  .vhero-discipline b,
+  .vhero-state-head,
+  .vhero-state-cell dt,
+  .vhero-state-foot,
+  .vhero-signal-note,
+  .vhero-signal-note span,
+  .vhero-topmodels-head,
+  .vhero-sources-head span,
+  .vprofile-stack-tag,
+  .vprofile-panel-sub,
+  .vprofile-stat-sub,
+  .vprofile-progress__tier,
+  .vdeleg-note,
+  .vtok-providers-head,
+  .vheat-months,
+  .vheat-dows,
+  .vheat-legend,
+  .vprofile-chart-xlabels,
+  .vsignals-read-label,
+  .vsignals-arch-eyebrow,
+  .vsignals-cost-eyebrow,
+  .vsignals-cost-note,
+  .vtelemetry-control > span,
+  .vtelemetry-readouts span,
+  .vtelemetry-readouts small,
+  .vtelemetry-readouts strong i,
+  .vtelemetry-scope-head code,
+  .vjoin-eyebrow,
+  .vprofile-readout__facts dt,
+  .vprofile-readout__note
+) {
+  color: rgba(217, 255, 242, 0.68);
+}

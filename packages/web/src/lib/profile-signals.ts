@@ -8,14 +8,15 @@
 
 import type { ProfileView } from "./data";
 
-// Monthly API-equivalent value a single maxed subscription realistically sustains — rough,
-// clearly-labelled references used to turn token/spend volume into a "how many accounts" estimate.
-// These are estimates, not published figures; agentic coding is cache-heavy so a maxed account
-// racks up a lot of API-equivalent value.
+// Monthly API-equivalent value one maxed $200 subscription realistically sustains — a rough,
+// clearly-labelled reference used to turn spend volume into a "how many accounts" estimate.
+// This planning estimate avoids equating sticker price with delivered API-equivalent throughput:
+// generous resets mean one account can deliver far more than its subscription price. Vendors do
+// not publish a fixed API-equivalent capacity, so this is not a literal account-count claim.
 const SUB_MONTHLY_API_EQUIV: Record<string, { label: string; usd: number }> = {
-  codex: { label: "ChatGPT Pro", usd: 5000 },
-  "claude-code": { label: "Claude Max", usd: 5000 },
-  openclaw: { label: "OpenClaw", usd: 2000 },
+  codex: { label: "ChatGPT Pro", usd: 30000 },
+  "claude-code": { label: "Claude Max", usd: 30000 },
+  openclaw: { label: "OpenClaw", usd: 10000 },
 };
 const MEDIA_PROVIDERS = new Set(["higgsfield", "suno", "falai", "replicate", "runway", "kling", "elevenlabs"]);
 const CREATIVE_CATEGORIES = new Set(["image", "video", "music", "voice", "threed", "3d", "audio"]);

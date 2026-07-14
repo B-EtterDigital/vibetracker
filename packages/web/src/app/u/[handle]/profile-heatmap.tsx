@@ -127,15 +127,12 @@ function Calendar({
           </div>
           <div className="vheat-cells" role="img" aria-label={label} onMouseLeave={() => setHover(null)}>
             {cells.map((c) => (
-              <button
-                type="button"
+              <span
                 className={`vheat-cell vheat-l${c.level}`}
                 style={{ gridColumn: c.week + 1, gridRow: c.day + 1 }}
                 onMouseEnter={() => setHover(c)}
-                onFocus={() => setHover(c)}
-                onBlur={() => setHover(null)}
                 title={c.title}
-                tabIndex={c.active ? 0 : -1}
+                aria-hidden="true"
                 key={c.date}
               />
             ))}

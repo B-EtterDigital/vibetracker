@@ -15,6 +15,7 @@ const telemetry = readFileSync("packages/web/src/app/u/[handle]/profile-telemetr
 const telemetryModel = readFileSync("packages/web/src/app/u/[handle]/profile-telemetry-model.ts", "utf8");
 const telemetryStyles = readFileSync("packages/web/src/app/u/[handle]/profile-telemetry.css", "utf8");
 const readout = readFileSync("packages/web/src/app/u/[handle]/profile-readout.tsx", "utf8");
+const accessibilityStyles = readFileSync("packages/web/src/app/u/[handle]/profile-accessibility.css", "utf8");
 
 test("public profile route reveals panels from deterministic signal depth", () => {
   assert.match(page, /import \{ PROVIDERS \} from "\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/adapters\/src\/index"/);
@@ -106,7 +107,7 @@ test("skill signals lead the profile and reframe money as API-equivalent referen
   assert.match(signalsSrc, /Work style/);          // human-in-loop vs agentic
   assert.match(signalsSrc, /Orchestration/);
   assert.match(signalsSrc, /Ship rate/);           // git commits per billion tokens
-  assert.match(signalsSrc, /running in parallel/); // subscription footprint
+  assert.match(signalsSrc, /maxed \$200 subscriptions/); // subscription footprint
   // money is reframed, not the flex
   assert.match(signalsSrc, /API-equivalent cost/);
   assert.match(signalsSrc, /Burning budget isn/);
@@ -154,6 +155,8 @@ test("sync rhythm is a real contribution calendar keyed on a signal we hold for 
   assert.match(heat, /d\.usd > q3 \? 4 : d\.usd > q2 \? 3 : d\.usd > q1 \? 2 : 1/);
   assert.match(heat, /longest streak/);
   assert.match(heat, /aria-live="polite"/);
+  assert.match(heat, /<span[\s\S]*?className=\{`vheat-cell/);
+  assert.doesNotMatch(heat, /<button[\s\S]*?vheat-cell/);
 });
 
 test("real GitHub contributions render as their own labelled calendar, never mixed into usage", () => {
@@ -239,6 +242,8 @@ test("profile leads with a plain-language latest read derived from the telemetry
   assert.match(readout, /What this tells you:/);
   assert.match(readout, /API-equivalent usage/);
   assert.match(readout, /GitHub activity is separate work evidence, not verification of usage totals/);
+  assert.match(readout, /vprofile-readout__note/);
+  assert.doesNotMatch(readout, /<small>/);
   assert.doesNotMatch(readout, /verified usage|verifies usage/);
   assert.doesNotMatch(readout, /changed \+|ai coding dominating/);
 });
@@ -260,4 +265,5 @@ test("profile route-local styling stays responsive and motion-safe", () => {
   assert.match(styles, /@media \(max-width: 900px\)/);
   assert.match(styles, /@media \(max-width: 640px\)/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(accessibilityStyles, /Profile-only AA contrast corrections/);
 });

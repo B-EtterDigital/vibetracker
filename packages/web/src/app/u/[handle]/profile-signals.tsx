@@ -92,7 +92,7 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
 
       {footprint.length ? (
         <div className="vsignals-footprint">
-          <span className="vsignals-footprint-head">last 30 days ≈ running in parallel</span>
+          <span className="vsignals-footprint-head">last 30 days ≈ maxed $200 subscriptions</span>
           <div className="vsignals-footprint-row">
             {footprint.map((f, i) => (
               <span className="vsignals-footprint-item" key={f.label}>
@@ -101,7 +101,9 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
               </span>
             ))}
           </div>
-          <span className="vsignals-footprint-note">estimated from token volume at maxed-subscription throughput · not exact</span>
+          <span className="vsignals-footprint-note">
+            generous weekly resets mean one $200 account delivers far more than its price · this estimates throughput, not literal accounts
+          </span>
         </div>
       ) : null}
     </section>
