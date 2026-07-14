@@ -7,6 +7,9 @@ const EDGE = process.env.INGEST_EDGE_URL;
 const projectRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 const nextConfig: NextConfig = {
+  // Keep titles and descriptions in the initial <head> for audits, link unfurlers, and
+  // clients that do not execute Next's streamed metadata scripts.
+  htmlLimitedBots: /.*/,
   turbopack: {
     root: projectRoot,
   },
