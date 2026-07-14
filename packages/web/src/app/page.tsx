@@ -10,6 +10,7 @@ import {
   type HomeBoardSnapshot,
 } from "./home/leaderboard-console";
 import "./home/home.css";
+import "./home/leaderboard-brief.css";
 import "./home/signal-uplink.css";
 
 export const revalidate = 60;
@@ -53,6 +54,8 @@ async function loadBoard(tier: Tier): Promise<HomeBoardSnapshot> {
         rank: row.rank,
         medal: row.medal,
         usd: row.total_usd,
+        credits: row.total_credits,
+        ops: row.record_count,
         usdLabel: formatUsd(row.total_usd),
         creditsLabel: formatInt(row.total_credits),
         opsLabel: formatInt(row.record_count),

@@ -5,7 +5,7 @@
     "name": "Home Leaderboard Console",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["leaderboard", "usage-analytics", "operator-console"]
@@ -15,7 +15,7 @@
     "group_id": "000-vibetracker:packages/web/src/app",
     "contains": ["route", "component", "style", "test"],
     "component_policy": "internal_by_default",
-    "notes": "Primary repeated-use surface: one trust-separated public usage leaderboard instrument."
+    "notes": "Primary repeated-use surface: one trust-separated public usage leaderboard instrument with an explicit derived field readout."
   },
   "source": {
     "project": "000-vibetracker",
@@ -51,6 +51,9 @@
     "public_paths": [
       "packages/web/src/app/page.tsx",
       "packages/web/src/app/home/leaderboard-console.tsx",
+      "packages/web/src/app/home/leaderboard-readout.ts",
+      "packages/web/src/app/home/leaderboard-brief.tsx",
+      "packages/web/src/app/home/leaderboard-brief.css",
       "packages/web/src/app/home/home.css",
       "packages/web/src/app/home/signal-uplink.tsx",
       "packages/web/src/app/home/signal-uplink.css"
@@ -82,43 +85,43 @@
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Server orchestration, leaderboard interaction, empty-lane guidance, and route-local styling are separate and below 300 lines each.",
-      "evidence": ["packages/web/src/app/page.tsx", "packages/web/src/app/home/leaderboard-console.tsx", "packages/web/src/app/home/home.css", "packages/web/src/app/home/signal-uplink.tsx", "packages/web/src/app/home/signal-uplink.css"]
+      "notes": "Server orchestration, leaderboard interaction, pure field interpretation, empty-lane guidance, and route-local styling are separate and below 300 lines each.",
+      "evidence": ["packages/web/src/app/page.tsx", "packages/web/src/app/home/leaderboard-console.tsx", "packages/web/src/app/home/leaderboard-readout.ts", "packages/web/src/app/home/leaderboard-brief.tsx", "packages/web/src/app/home/home.css", "packages/web/src/app/home/leaderboard-brief.css", "packages/web/src/app/home/signal-uplink.tsx", "packages/web/src/app/home/signal-uplink.css"]
     },
     "ssi": {
       "status": "passing",
       "score": 90,
-      "notes": "Serializable board snapshots are the only server-to-client contract.",
-      "evidence": ["packages/web/src/app/home/leaderboard-console.tsx"]
+      "notes": "Serializable board snapshots are the only server-to-client contract; the readout derives concentration, unit cost, active depth, and identity coverage from those same rows.",
+      "evidence": ["packages/web/src/app/home/leaderboard-console.tsx", "packages/web/src/app/home/leaderboard-readout.ts"]
     },
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Focused empty/degraded-state contracts and the complete 568-test package suite pass on the current tree.",
+      "notes": "Focused interpretation, empty, and degraded-state contracts plus the complete 598-test package suite pass on the current tree.",
       "evidence": ["packages/web/src/lib/__tests__/home-route.test.ts", "packages/web/src/lib/__tests__/home-leaderboard-console.test.ts"]
     },
     "spe": {
       "status": "passing",
       "score": 90,
-      "notes": "The default table is capped at 25 rows and the hero chart at 10 rows.",
+      "notes": "The default table is capped at 25 rows, the hero chart at 10 rows, and field interpretation stays linear in the visible lane size.",
       "evidence": ["packages/web/src/app/home/leaderboard-console.tsx"]
     },
     "srs": {
       "status": "passing",
       "score": 90,
-      "notes": "Leaderboard query failures are captured by VTRS before the public degraded state renders.",
+      "notes": "Leaderboard query failures are captured by VTRS before the public degraded state renders; derived interpretation is visibly labelled as zero rank weight.",
       "evidence": ["packages/web/src/lib/data.ts", "packages/web/src/app/page.tsx"]
     },
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Release gate, production build, Netlify deployment, desktop/mobile visual proof, copy interaction, and reduced-motion behavior passed.",
-      "evidence": ["scripts/release-gate.mjs", "Netlify deploy 6a55b9e4e49edbad1a7888d2"]
+      "notes": "Preview 6a560373e181c8564f57ded3 passed live-data interpretation, tier switching, waiting state, search/reset, copy, network, console, overflow, and visual checks at 390px, 1440px, and 3840px 4K fullscreen.",
+      "evidence": ["https://6a560373e181c8564f57ded3--vibetracker-betterdigital.netlify.app/", "packages/web/src/app/home/leaderboard-brief.css", "packages/web/src/lib/__tests__/home-leaderboard-console.test.ts"]
     },
     "sas": {
       "status": "passing",
       "score": 95,
-      "notes": "The route owns one explicit manifest boundary and an isolated client component.",
+      "notes": "The route owns one explicit manifest boundary with isolated client, pure interpretation, and style components.",
       "evidence": ["packages/web/src/app/home/module.sweetspot.json"]
     },
     "sva": {
@@ -149,7 +152,7 @@
       "status": "passing",
       "score": 90,
       "notes": "Lease, intent, decision, and source commit are recorded.",
-      "evidence": [".smarch/agent-context/home-leaderboard-console.ndjson", ".smarch/agent-context/vibetracker-sma-home-boundary.ndjson"]
+      "evidence": [".smarch/agent-context/000-vibetracker.web.home-leaderboard-console.ndjson", ".smarch/agent-context/home-leaderboard-console.ndjson", ".smarch/agent-context/vibetracker-sma-home-boundary.ndjson"]
     }
   },
   "interfaces": {
@@ -202,20 +205,20 @@
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 952,
-      "file_count": 5,
+      "feature_lines": 1190,
+      "file_count": 8,
       "dependency_count": 3,
-      "notes": "The former 3,409-line route remains a small server seam plus focused leaderboard and signal-uplink modules with no new dependency."
+      "notes": "The former 3,409-line route remains a small server seam plus focused leaderboard, field-readout, and signal-uplink modules with no new dependency."
     },
     "test_commands": [
       "node --test packages/web/src/lib/__tests__/home-route.test.ts packages/web/src/lib/__tests__/home-leaderboard-console.test.ts packages/web/src/lib/__tests__/leaderboard.test.ts"
     ],
     "verification": [
       {
-        "command": "focused home tests + pnpm sma:release-gate + pnpm --dir packages/web build",
+        "command": "focused home tests + pnpm sma:release-gate + pnpm audit --audit-level high + pnpm build + pnpm --dir packages/web build + responsive browser proof",
         "status": "pass",
-        "timestamp": "2026-07-14T04:20:17Z",
-        "notes": "23 focused tests, 15 control-plane tests, 568 package tests, strict VTRS, TypeScript, build, Netlify deploy 6a55b9e4e49edbad1a7888d2, live desktop/mobile proof, copy interaction, zero mobile overflow, and reduced-motion checks passed."
+        "timestamp": "2026-07-14T09:41:58Z",
+        "notes": "22 focused leaderboard tests, 15 control-plane tests, 598 package tests, strict VTRS with zero violations, TypeScript, dependency audit with no known vulnerabilities, CLI build, clean 27-route Next build, and preview proof at 390px, 1440px, and 3840px passed with no overflow, overlaps, console errors, or failed requests."
       }
     ]
   },

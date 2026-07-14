@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type CSSProperties } from "react";
+import { LeaderboardBrief } from "./leaderboard-brief";
 import { SignalUplink, type UplinkCopyState } from "./signal-uplink";
 
 export type HomeBoardTier = "verified" | "self_reported";
@@ -10,6 +11,8 @@ export interface HomeBoardRow {
   rank: number;
   medal: string;
   usd: number;
+  credits: number;
+  ops: number;
   usdLabel: string;
   creditsLabel: string;
   opsLabel: string;
@@ -156,6 +159,8 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
         <div><dt>Credits</dt><dd>{active.totals.credits}</dd></div>
         <div><dt>Operations</dt><dd>{active.totals.ops}</dd></div>
       </dl>
+
+      {active.status !== "error" ? <LeaderboardBrief rows={active.rows} /> : null}
 
       {isWaitingEmpty ? (
         <SignalUplink tier={active.tier} copyState={copyState} onCopy={copyCommand} />

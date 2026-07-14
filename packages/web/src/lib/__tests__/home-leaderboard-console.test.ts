@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { buildLeaderboardReadout } from "../../app/home/leaderboard-readout.ts";
 
 const source = readFileSync("packages/web/src/app/home/leaderboard-console.tsx", "utf8");
+const page = readFileSync("packages/web/src/app/page.tsx", "utf8");
+const brief = readFileSync("packages/web/src/app/home/leaderboard-brief.tsx", "utf8");
+const briefCss = readFileSync("packages/web/src/app/home/leaderboard-brief.css", "utf8");
 const uplink = readFileSync("packages/web/src/app/home/signal-uplink.tsx", "utf8");
 const uplinkCss = readFileSync("packages/web/src/app/home/signal-uplink.css", "utf8");
 
@@ -50,4 +54,36 @@ test("leaderboard distinguishes verified identity from handle-only CLI uploads",
   assert.match(source, /identity-attested CLI usage/);
   assert.match(source, /CLI upload; identity not verified/);
   assert.match(source, /home-board__identity-proof--cli/);
+});
+
+test("leaderboard explains concentration, unit cost, active depth, and identity coverage without changing rank", () => {
+  const readout = buildLeaderboardReadout([
+    { handle: "alpha", usd: 900, credits: 12, ops: 90, identityVerified: true },
+    { handle: "beta", usd: 100, credits: 0, ops: 10, identityVerified: false },
+    { handle: "idle", usd: 0, credits: 0, ops: 0, identityVerified: false },
+  ]);
+
+  assert.match(readout.summary, /top-heavy/);
+  assert.deepEqual(readout.signals.map((signal) => signal.id), ["concentration", "unit-cost", "active-depth", "identity"]);
+  assert.equal(readout.signals[0].value, "90%");
+  assert.equal(readout.signals[1].value, "$10.00 / op");
+  assert.equal(readout.signals[2].value, "2 / 3");
+  assert.equal(readout.signals[3].value, "1 / 3");
+  assert.match(brief, /What the ranking actually means/);
+  assert.match(brief, /ZERO RANK WEIGHT/);
+  assert.match(source, /<LeaderboardBrief rows=\{active\.rows\}/);
+  assert.match(page, /credits: row\.total_credits/);
+  assert.match(page, /ops: row\.record_count/);
+  assert.match(page, /\.\/home\/leaderboard-brief\.css/);
+  assert.match(briefCss, /@media \(max-width: 560px\)/);
+  assert.match(briefCss, /@media \(min-width: 2200px\)/);
+  assert.match(briefCss, /width: min\(1760px, calc\(100vw - 120px\)\)/);
+  assert.match(briefCss, /var\(--hb-line\)/);
+  assert.doesNotMatch(briefCss, /var\(--home-/);
+});
+
+test("leaderboard readout has an honest waiting state", () => {
+  const readout = buildLeaderboardReadout([]);
+  assert.match(readout.summary, /No ranked signal yet/);
+  assert.deepEqual(readout.signals.map((signal) => signal.value), ["—", "—", "0 / 0", "0 / 0"]);
 });
