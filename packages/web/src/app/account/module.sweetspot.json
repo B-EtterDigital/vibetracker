@@ -20,7 +20,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "c410a57",
+    "commit": "c1d2195",
     "paths": [
       "packages/web/src/app/account",
       "packages/web/src/app/api/identity/github/status",
@@ -104,8 +104,8 @@
     "ssra": {
       "status": "partial",
       "score": 94,
-      "notes": "Focused tests, release gate, production builds, immutable preview, account interaction, mobile/desktop/4K layout proof, and live CLI start/poll/rejection probes pass. Browser OAuth remains visibly unavailable because no dedicated GitHub OAuth app is configured; GitHub CLI sign-in is the live account-free path.",
-      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/__tests__/account-route.test.ts", "Netlify deploy 6a561d9d27546731cca4f52a"]
+      "notes": "Focused tests, release gate, production builds, stable-domain account interaction, mobile/desktop/4K layout proof, Lighthouse, and live CLI start/poll/rejection probes pass. Browser OAuth remains visibly unavailable because no dedicated GitHub OAuth app is configured; GitHub CLI sign-in is the live account-free path.",
+      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/__tests__/account-route.test.ts", "https://vibeusage.c0vibe.app/account", "Netlify production deploy 6a561ed964e7fc3860233003"]
     },
     "sas": {
       "status": "passing",
@@ -129,7 +129,7 @@
       "status": "passing",
       "score": 96,
       "notes": "Public Supabase configuration is guarded client-side, the service-role key is secret-scoped in Netlify, and live invalid-token/session probes fail without returning credentials.",
-      "evidence": ["packages/web/src/lib/supabase-browser.ts", "packages/web/src/lib/supabase-admin.ts", "Netlify deploy 6a561d9d27546731cca4f52a"]
+      "evidence": ["packages/web/src/lib/supabase-browser.ts", "packages/web/src/lib/supabase-admin.ts", "Netlify production deploy 6a561ed964e7fc3860233003"]
     },
     "ssc": {
       "status": "passing",
@@ -220,8 +220,8 @@
       {
         "command": "focused auth tests + pnpm sma:release-gate + pnpm build + pnpm --dir packages/web build",
         "status": "pass",
-        "timestamp": "2026-07-14T11:34:03Z",
-        "notes": "11 focused auth tests, 15 control-plane tests, 600 package tests, strict telemetry with zero violations, typecheck, root build, Next production build, and high-severity dependency audit pass. Netlify deploy 6a561d9d27546731cca4f52a is live; CLI start returns 200, poll remains pending without a token, invalid GitHub verification and browser sessions return 401 without credentials, and mobile/desktop/4K interaction proofs pass without horizontal overflow."
+        "timestamp": "2026-07-14T11:38:52Z",
+        "notes": "11 focused auth tests, 15 control-plane tests, 600 package tests, strict telemetry with zero violations, typecheck, root build, Next production build, and high-severity dependency audit pass. Production deploy 6a561ed964e7fc3860233003 is live at vibeusage.c0vibe.app; CLI start returns 200, poll remains pending without a token, invalid GitHub verification and browser sessions return 401 without credentials, mobile/desktop/4K interaction proofs pass without horizontal overflow, and Lighthouse scores 100/100/100/100."
       }
     ]
   },
@@ -283,6 +283,37 @@
           "method": "agent_runner",
           "reference": "lease-1784010410298-5a56945d"
         }
+      },
+      {
+        "actor_kind": "ai_model",
+        "actor_id": "codex",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "files_touched": [
+          "packages/web/src/app/account/account-console.tsx",
+          "packages/web/src/app/account/account.css",
+          "packages/web/src/app/account/page.tsx",
+          "packages/web/src/components/account-control.module.css",
+          "packages/web/src/components/account-control.tsx",
+          "packages/web/src/lib/__tests__/account-route.test.ts",
+          "packages/web/src/app/account/module.sweetspot.json"
+        ],
+        "verification": [
+          {
+            "command": "focused auth tests + pnpm sma:release-gate + pnpm audit --audit-level high + production builds + stable-domain browser and API proof",
+            "status": "pass",
+            "timestamp": "2026-07-14T11:38:52Z",
+            "notes": "GitHub CLI sign-in is visible and usable without a C0VIBE account; production API, mobile, desktop, 4K, copy interaction, and Lighthouse proofs pass."
+          }
+        ],
+        "timestamp": "2026-07-14T11:38:52Z",
+        "summary": "Promoted GitHub-first sign-in, made the live CLI path actionable when browser OAuth is unavailable, and recorded production proof.",
+        "attestation": {
+          "method": "agent_runner",
+          "reference": "lease-1784027364589-3ef7794b"
+        }
       }
     ],
     "reviewed_by": [],
@@ -294,6 +325,14 @@
         "path": "packages/web/src/app/account",
         "event": "created",
         "timestamp": "2026-07-14T06:45:13Z"
+      },
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.github-first-account-console",
+        "commit": "c1d2195",
+        "path": "packages/web/src/app/account",
+        "event": "updated",
+        "timestamp": "2026-07-14T11:38:52Z"
       }
     ]
   }
