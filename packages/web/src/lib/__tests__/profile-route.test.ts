@@ -16,12 +16,15 @@ const telemetryModel = readFileSync("packages/web/src/app/u/[handle]/profile-tel
 const telemetryStyles = readFileSync("packages/web/src/app/u/[handle]/profile-telemetry.css", "utf8");
 const readout = readFileSync("packages/web/src/app/u/[handle]/profile-readout.tsx", "utf8");
 const accessibilityStyles = readFileSync("packages/web/src/app/u/[handle]/profile-accessibility.css", "utf8");
+const layout = readFileSync("packages/web/src/app/u/[handle]/layout.tsx", "utf8");
 
 test("public profile route reveals panels from deterministic signal depth", () => {
   assert.match(page, /import \{ PROVIDERS \} from "\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/adapters\/src\/index"/);
   assert.doesNotMatch(page, /adapters\/src\/registry/);
   assert.match(page, /const loadProfile = cache/);
   assert.match(page, /export async function generateMetadata/);
+  assert.match(layout, /export const metadata: Metadata/);
+  assert.match(layout, /recent momentum, work mix, source activity, signal depth/);
   assert.match(page, /read\.identity\.label/);
   assert.match(page, /readComplexity\(profile, PROVIDERS\)/);
   assert.match(page, /const \{ facts, reveal \} = read/);

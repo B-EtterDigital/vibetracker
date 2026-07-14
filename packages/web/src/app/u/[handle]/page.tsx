@@ -96,7 +96,6 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
   if (handle === DEMO_HANDLE) {
     return {
       title: "demo — sample profile · VibeUsage",
-      description: "Bundled sample profile showing a fully unlocked board. Not real tracked usage: run npx vibetrack init to build your own.",
     };
   }
   const profile = await loadProfile(handle);
@@ -104,7 +103,6 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
   const read = readComplexity(profile, PROVIDERS);
   return {
     title: `${profile.handle} — ${read.identity.label} · VibeUsage`,
-    description: `${read.identity.label}, ${read.tier} signal. ${read.facts.providers} sources across ${read.facts.categories} categories on VibeUsage.`,
   };
 }
 

@@ -21,9 +21,8 @@ const SUB_MONTHLY_API_EQUIV: Record<string, { label: string; usd: number }> = {
 const MEDIA_PROVIDERS = new Set(["higgsfield", "suno", "falai", "replicate", "runway", "kling", "elevenlabs"]);
 const CREATIVE_CATEGORIES = new Set(["image", "video", "music", "voice", "threed", "3d", "audio"]);
 
-// Token throughput one heavy agent session realistically pushes in a busy day (cache-read-heavy
-// agentic coding), used to estimate how many agents ran in PARALLEL on the peak day — the distinct
-// CLI count undersells a swarm that fans out ~10 concurrent Codex plus others. A reference, not exact.
+// Daily token throughput for one heavily used, cache-read-heavy coding agent. This turns the peak
+// day into a directional workload equivalent; daily totals cannot prove simultaneous concurrency.
 const SINGLE_AGENT_DAILY_TOKENS = 600_000_000;
 
 export interface Footprint { label: string; count: number }
@@ -34,7 +33,7 @@ export interface ProfileSignals {
   outputShare: number;       // output / total
   hasTokens: boolean;
   agentCount: number;
-  peakParallelAgents: number;   // estimated agents running in parallel on the busiest day
+  peakAgentLoad: number;     // busiest day in heavy-agent workload equivalents
   crossProviderDays: number;
   mediaGenerations: number;
   commits: number;
@@ -78,14 +77,14 @@ export function computeProfileSignals(profile: ProfileView): ProfileSignals {
   const agentCount = agents.length;
   const crossProviderDays = profile.crossProviderDays ?? 0;
 
-  // Peak parallel agents: the distinct-CLI count (agentCount) undersells a swarm that fans out many
-  // concurrent instances. Estimate it from the busiest day's real token throughput ÷ what one agent
-  // pushes in a day. Peak-day tokens = peak-day spend × the token/$ ratio (both real).
+  // Estimate the busiest day's workload from peak API-equivalent cost and the profile's lifetime
+  // average token/USD ratio. Model mix can vary, so this remains directional rather than observed
+  // concurrency. Never report less than the number of distinct active CLIs.
   const apiCost = profile.latest?.total_usd ?? 0;
   const peakDayUsd = (profile.usageDays ?? []).reduce((m, d) => Math.max(m, d.usd), 0);
   const tokensPerUsd = apiCost > 0 ? totalTokens / apiCost : 0;
   const peakDayTokens = peakDayUsd * tokensPerUsd;
-  const peakParallelAgents = peakDayTokens > 0
+  const peakAgentLoad = peakDayTokens > 0
     ? Math.max(agentCount, Math.round(peakDayTokens / SINGLE_AGENT_DAILY_TOKENS))
     : agentCount;
 
@@ -127,7 +126,7 @@ export function computeProfileSignals(profile: ProfileView): ProfileSignals {
   return {
     apiCostUsd: profile.latest?.total_usd ?? 0,
     humanRatio, cacheReuse, outputShare, hasTokens,
-    agentCount, peakParallelAgents, crossProviderDays, mediaGenerations,
+    agentCount, peakAgentLoad, crossProviderDays, mediaGenerations,
     commits, shipRate, archetypes, archetypeLabel, archetypeBlurb, footprint,
   };
 }

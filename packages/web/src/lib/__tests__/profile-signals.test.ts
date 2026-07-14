@@ -78,3 +78,38 @@ test("ship rate is commits per billion tokens from the github signal", () => {
   }));
   assert.equal(s.shipRate, 50);   // 500 commits / 10B tokens
 });
+
+test("peak agent load uses peak-day cost and the lifetime-average token rate", () => {
+  const s = computeProfileSignals(base({
+    ...tokens(1e9, 0, 11e9, 0), // 12B tokens / $1,200 = 10M tokens per API-equivalent dollar
+    latest: { total_usd: 1200, total_credits: 0, record_count: 1, created_at: "2026-01-01", tier: "self_reported" },
+    usageDays: [{ date: "2026-01-01", ops: 0, credits: 0, usd: 120 }], // 1.2B estimated peak-day tokens
+    agents: [{ agent: "codex", activeDays: 1, cost: 1, tokens: 12e9 }],
+  }));
+  assert.equal(s.peakAgentLoad, 2);
+});
+
+test("peak agent load never understates distinct active CLIs", () => {
+  const agents = ["codex", "claude", "gemini"].map((agent) => ({
+    agent, activeDays: 1, cost: 1, tokens: 1e9,
+  }));
+  const s = computeProfileSignals(base({
+    ...tokens(1e9, 0, 2e9, 0),
+    usageDays: [{ date: "2026-01-01", ops: 0, credits: 0, usd: 1 }],
+    agents,
+  }));
+  assert.equal(s.peakAgentLoad, 3);
+});
+
+test("peak agent load falls back to distinct CLIs without usable cost data", () => {
+  const agents = ["codex", "claude"].map((agent) => ({
+    agent, activeDays: 1, cost: 1, tokens: 1e9,
+  }));
+  const s = computeProfileSignals(base({
+    ...tokens(1e9, 0, 1e9, 0),
+    latest: { total_usd: 0, total_credits: 0, record_count: 1, created_at: "2026-01-01", tier: "self_reported" },
+    usageDays: [{ date: "2026-01-01", ops: 0, credits: 0, usd: 100 }],
+    agents,
+  }));
+  assert.equal(s.peakAgentLoad, 2);
+});
