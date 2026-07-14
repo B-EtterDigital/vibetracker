@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 const verifyRoute = readFileSync("packages/web/src/app/api/cli/github-verify/route.ts", "utf8");
 const linkRoute = readFileSync("packages/web/src/app/api/identity/github/link/route.ts", "utf8");
 const statusRoute = readFileSync("packages/web/src/app/api/identity/github/status/route.ts", "utf8");
+const accountLink = readFileSync("packages/web/src/lib/github-account-link.ts", "utf8");
 const migration = readFileSync("supabase/migrations/009_vibetracker_github_identity.sql", "utf8");
 
 test("GitHub device verification exchanges an existing gh credential without persisting it", () => {
@@ -17,8 +18,9 @@ test("GitHub device verification exchanges an existing gh credential without per
 
 test("WorkOS migration requires both an account session and fresh GitHub proof", () => {
   assert.match(linkRoute, /admin\.auth\.getUser\(authorization\.slice\(7\)\)/);
-  assert.match(linkRoute, /verifyGitHubAccessToken/);
-  assert.match(linkRoute, /vibetracker_link_github_identity/);
+  assert.match(linkRoute, /linkGitHubAccount/);
+  assert.match(accountLink, /verifyGitHubAccessToken\(providerToken\)/);
+  assert.match(accountLink, /vibetracker_link_github_identity/);
   assert.match(migration, /already linked to another account/);
   assert.match(migration, /set user_id = p_user_id, identity_id = v_identity\.id/);
 });

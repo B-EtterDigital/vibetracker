@@ -60,7 +60,7 @@ export function AccountControl() {
       ? `Signed in as @${handle}; identity status is unavailable`
     : state === "session"
       ? `Signed in as @${handle}; finish GitHub linking`
-      : "Sign in with GitHub or verify through your existing GitHub CLI session";
+      : "Sign in with GitHub";
 
   return (
     <a className={styles.control} data-state={state} href="/account" title={title} aria-label={title} aria-busy={state === "loading"}>

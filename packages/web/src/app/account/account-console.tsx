@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { authProviderAvailability, supabaseBrowser, supabaseBrowserConfigured } from "../../lib/supabase-browser";
 import { accountIdentityFromSession, accountRedirectUrl, safeNextPath } from "./account-session";
 
 type ProviderState = "checking" | "available" | "disabled" | "unavailable";
-type LinkState = "signed-out" | "checking" | "linking" | "linked" | "unlinked" | "error";
+type LinkState = "signed-out" | "checking" | "linked" | "unlinked" | "error";
 
 interface LinkedIdentity {
   handle: string;
@@ -15,83 +15,61 @@ interface LinkedIdentity {
   verifiedAt?: string | null;
 }
 
+function oauthMessage(value: string | null): string {
+  if (value === "success") return "GitHub sign-in complete. This browser now has a real account session.";
+  if (value === "denied") return "GitHub sign-in was cancelled before any account was linked.";
+  if (value === "error") return "GitHub sign-in could not be completed. Please try again.";
+  return "";
+}
+
 export function AccountConsole() {
   const [provider, setProvider] = useState<ProviderState>(supabaseBrowserConfigured() ? "checking" : "disabled");
   const [session, setSession] = useState<Session | null>(null);
   const [linkState, setLinkState] = useState<LinkState>("signed-out");
   const [linked, setLinked] = useState<LinkedIdentity | null>(null);
-  const [migrated, setMigrated] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [returnPath, setReturnPath] = useState<string | null>(null);
-  const consumedProviderToken = useRef("");
   const identity = accountIdentityFromSession(session);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setReturnPath(safeNextPath(params.get("next")));
+    setMessage(oauthMessage(params.get("oauth")));
     if (!supabaseBrowserConfigured()) {
-      setMessage("Browser auth is not configured in this environment. The GitHub CLI path remains available.");
+      setMessage("GitHub browser sign-in is not configured in this environment.");
       return;
     }
+
     const client = supabaseBrowser();
     const controller = new AbortController();
     let active = true;
-    setReturnPath(safeNextPath(new URLSearchParams(window.location.search).get("next")));
 
-    async function readStatus(next: Session): Promise<boolean> {
-      setLinkState("checking");
-      const response = await fetch("/api/identity/github/status", {
-        cache: "no-store",
-        headers: { authorization: `Bearer ${next.access_token}` },
-        signal: controller.signal,
-      });
-      const payload = await response.json() as { linked?: boolean; identity?: LinkedIdentity; error?: string };
-      if (!active) return false;
-      if (!response.ok) throw new Error(payload.error || `Identity status failed (${response.status})`);
-      setLinked(payload.linked ? payload.identity ?? null : null);
-      setLinkState(payload.linked ? "linked" : "unlinked");
-      return Boolean(payload.linked);
-    }
-
-    async function linkWithProviderToken(next: Session, providerToken: string) {
-      setLinkState("linking");
-      const response = await fetch("/api/identity/github/link", {
-        method: "POST",
-        headers: { "content-type": "application/json", authorization: `Bearer ${next.access_token}` },
-        body: JSON.stringify({ github_token: providerToken }),
-        signal: controller.signal,
-      });
-      const payload = await response.json() as {
-        error?: string;
-        identity?: { handle?: string };
-        migrated_submissions?: number;
-      };
-      if (!active) return;
-      if (!response.ok) throw new Error(payload.error || `GitHub link failed (${response.status})`);
-      setLinked({ handle: payload.identity?.handle || accountIdentityFromSession(next)?.handle || "github-user" });
-      setMigrated(Number(payload.migrated_submissions ?? 0));
-      setLinkState("linked");
-      setMessage("GitHub identity linked. Existing CLI history now resolves through the same identity.");
-    }
-
-    async function synchronize(next: Session | null, providerToken?: string | null) {
+    async function synchronize(next: Session | null) {
       if (!active) return;
       setSession(next);
       setLinked(null);
-      setMigrated(null);
       if (!next) {
         setLinkState("signed-out");
         return;
       }
+
+      setLinkState("checking");
       try {
-        const alreadyLinked = await readStatus(next);
-        if (!alreadyLinked && providerToken && consumedProviderToken.current !== providerToken) {
-          consumedProviderToken.current = providerToken;
-          await linkWithProviderToken(next, providerToken);
-        }
+        const response = await fetch("/api/identity/github/status", {
+          cache: "no-store",
+          headers: { authorization: `Bearer ${next.access_token}` },
+          signal: controller.signal,
+        });
+        const payload = await response.json() as { linked?: boolean; identity?: LinkedIdentity; error?: string };
+        if (!active) return;
+        if (!response.ok) throw new Error(payload.error || `Identity status failed (${response.status})`);
+        setLinked(payload.linked ? payload.identity ?? null : null);
+        setLinkState(payload.linked ? "linked" : "unlinked");
       } catch (error) {
         if (!active || controller.signal.aborted) return;
         setLinkState("error");
-        setMessage(error instanceof Error ? error.message : "Identity link failed");
+        setMessage(error instanceof Error ? error.message : "Identity status failed");
       }
     }
 
@@ -99,14 +77,12 @@ export function AccountConsole() {
       .then((availability) => {
         if (!active) return;
         setProvider(availability.github ? "available" : "disabled");
-        if (!availability.github) {
-          setMessage("Browser GitHub sign-in is not enabled yet. GitHub CLI verification is live now and does not require a C0VIBE account.");
-        }
+        if (!availability.github) setMessage("GitHub browser sign-in is not enabled for this deployment.");
       })
       .catch(() => {
         if (!active) return;
         setProvider("unavailable");
-        setMessage("Browser provider status is unavailable. GitHub CLI verification remains available.");
+        setMessage("GitHub provider status is temporarily unavailable.");
       });
     void client.auth.getSession().then(({ data, error }) => {
       if (error) {
@@ -114,10 +90,10 @@ export function AccountConsole() {
         setMessage(error.message);
         return;
       }
-      void synchronize(data.session, data.session?.provider_token);
+      void synchronize(data.session);
     });
     const { data } = client.auth.onAuthStateChange((_event, next) => {
-      window.setTimeout(() => void synchronize(next, next?.provider_token), 0);
+      window.setTimeout(() => void synchronize(next), 0);
     });
     return () => {
       active = false;
@@ -128,7 +104,7 @@ export function AccountConsole() {
 
   async function signIn() {
     if (provider !== "available") {
-      setMessage("GitHub browser OAuth is not enabled yet. Use the verified CLI path below.");
+      setMessage("GitHub browser sign-in is currently unavailable.");
       return;
     }
     setBusy(true);
@@ -136,7 +112,10 @@ export function AccountConsole() {
     const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
     const { error } = await supabaseBrowser().auth.signInWithOAuth({
       provider: "github",
-      options: { redirectTo: accountRedirectUrl(window.location.origin, next), scopes: "read:user" },
+      options: {
+        redirectTo: accountRedirectUrl(window.location.origin, next),
+        scopes: "read:user user:email",
+      },
     });
     if (error) {
       setBusy(false);
@@ -153,21 +132,13 @@ export function AccountConsole() {
       setSession(null);
       setLinked(null);
       setLinkState("signed-out");
-      setMessage("This browser session is signed out. Your CLI identity and public history remain intact.");
+      setMessage("This browser session is signed out. Your public usage history remains intact.");
     }
   }
 
-  async function copyCliCommand() {
-    try {
-      await navigator.clipboard.writeText("npx vibetracker login");
-      setMessage("CLI verification command copied.");
-    } catch {
-      setMessage("Clipboard blocked. Run: npx vibetracker login");
-    }
-  }
+  const providerCopy = provider === "available" ? "GitHub OAuth ready" : provider === "checking" ? "checking GitHub OAuth" : "GitHub OAuth unavailable";
+  const linkCopy = linkState === "linked" ? "identity linked" : linkState === "checking" ? "checking account link" : linkState === "unlinked" ? "session ready, link pending" : linkState === "error" ? "link needs attention" : "no browser session";
 
-  const providerCopy = provider === "available" ? "browser sign-in ready" : provider === "checking" ? "checking browser sign-in" : "GitHub CLI ready";
-  const linkCopy = linkState === "linked" ? "identity linked" : linkState === "linking" ? "attaching CLI history" : linkState === "checking" ? "checking account link" : linkState === "unlinked" ? "session ready, link pending" : linkState === "error" ? "link needs attention" : "no browser session";
   return (
     <section className="account-console" aria-labelledby="account-console-title">
       <div className="account-console__head">
@@ -187,57 +158,49 @@ export function AccountConsole() {
                   ? <img src={linked?.avatarUrl || identity.avatarUrl || ""} alt="" width={64} height={64} />
                   : <span aria-hidden="true">GH</span>}
                 <div><small>authenticated GitHub identity</small><h3>@{linked?.handle || identity.handle}</h3><p>{linked?.displayName || identity.displayName}</p></div>
-                <b data-linked={linkState === "linked"}>{linkState === "linked" ? "✓ identity verified" : "session only"}</b>
+                <b data-linked={linkState === "linked"}>{linkState === "linked" ? "✓ identity verified" : "session active"}</b>
               </div>
               <div className="account-identity__actions">
                 {linkState === "unlinked" || linkState === "error" ? <button type="button" onClick={signIn} disabled={busy || provider !== "available"}>reconnect GitHub</button> : null}
-                {returnPath ? <a href={returnPath}>return to authorization</a> : null}
-                <button type="button" onClick={signOut} disabled={busy}>sign out here</button>
+                {returnPath ? <a href={returnPath}>continue</a> : null}
+                <button type="button" onClick={signOut} disabled={busy}>sign out</button>
               </div>
             </>
           ) : (
             <>
               <div className="account-console__pitch">
                 <span className="account-console__github" aria-hidden="true">GH</span>
-                <div><h3>Sign in with the GitHub identity you already have.</h3><p>No new password, no billing profile, and no usage moves during identity proof.</p></div>
+                <div><h3>Sign in through GitHub itself.</h3><p>GitHub handles consent, Supabase exchanges the callback securely, and VibeUsage creates a browser session.</p></div>
               </div>
               <button
                 className="account-console__primary"
-                data-path={provider === "available" ? "browser" : "cli"}
                 type="button"
-                onClick={provider === "available" ? signIn : copyCliCommand}
-                disabled={busy || provider === "checking"}
+                onClick={signIn}
+                disabled={busy || provider !== "available"}
               >
-                {provider === "available" ? "sign in with GitHub" : provider === "checking" ? "checking GitHub sign-in" : "copy GitHub CLI sign-in"}
+                {busy ? "opening GitHub" : provider === "checking" ? "checking GitHub sign-in" : provider === "available" ? "continue with GitHub" : "GitHub sign-in unavailable"}
               </button>
-              <small className="account-console__path-note">
-                {provider === "available"
-                  ? "Browser sign-in creates the account session; GitHub identity linking still happens as a separate proof step."
-                  : "Run the copied command in a terminal with gh already authenticated. This verifies identity without creating a C0VIBE account."}
-              </small>
+              <small className="account-console__path-note">No copied token, terminal command, or separate password. GitHub redirects back to a secure VibeUsage session.</small>
             </>
           )}
           <p className="account-console__message" aria-live="polite">{message || "Identity proof and usage proof remain separate at every step."}</p>
         </div>
 
-        <div className="account-console__cli" id="github-cli-verification">
-          <div className="console-top"><span>fallback@terminal</span><b>LIVE NOW</b></div>
-          <h3>Verify through your existing GitHub CLI session.</h3>
-          <p>If <code>gh auth status</code> passes, VibeTRACKER verifies the immutable GitHub user ID and issues an identity-bound CLI token.</p>
-          <div className="account-console__preflight"><span>preflight</span><code>gh auth status</code></div>
-          <div className="account-console__command"><code>npx vibetracker login</code><button type="button" onClick={copyCliCommand} title="Copy CLI verification command">copy</button></div>
-          <ul>
-            <li><span>credential storage</span><b>raw token never persisted</b></li>
-            <li><span>leaderboard badge</span><b>blue identity check</b></li>
-            <li><span>usage tier</span><b>still labelled separately</b></li>
-            <li><span>migrated rows</span><b>{migrated == null ? "shown after link" : migrated}</b></li>
-          </ul>
+        <div className="account-console__oauth" aria-label="GitHub OAuth flow">
+          <div className="console-top"><span>oauth@browser</span><b>REAL SESSION</b></div>
+          <h3>One browser flow. Four verifiable steps.</h3>
+          <ol>
+            <li><span>01</span><div><b>GitHub consent</b><small>You authenticate on github.com, never in a copied terminal command.</small></div></li>
+            <li><span>02</span><div><b>Server callback</b><small>VibeUsage exchanges the one-time authorization code server-side.</small></div></li>
+            <li><span>03</span><div><b>Account session</b><small>Supabase stores the browser session in secure cookies.</small></div></li>
+            <li><span>04</span><div><b>Identity link</b><small>Your immutable GitHub user ID anchors existing and future usage.</small></div></li>
+          </ol>
         </div>
       </div>
 
       <div className="account-console__migration">
-        <b>WorkOS is the upgrade, not the gate.</b>
-        <span>Your GitHub subject stays the identity anchor. A later C0VIBE account can attach settings and prior CLI submissions to it without forking the profile.</span>
+        <b>GitHub is the account gate.</b>
+        <span>Your GitHub subject stays the identity anchor. Existing CLI submissions attach to the same identity without becoming the login mechanism.</span>
         <a href="/proof">inspect proof labels</a>
       </div>
     </section>

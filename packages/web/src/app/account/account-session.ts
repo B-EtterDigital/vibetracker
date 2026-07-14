@@ -63,7 +63,7 @@ export function safeNextPath(value: string | null | undefined): string | null {
 }
 
 export function accountRedirectUrl(origin: string, next?: string | null): string {
-  const url = new URL("/account", origin);
+  const url = new URL("/auth/callback", origin);
   const safe = safeNextPath(next);
   if (safe) url.searchParams.set("next", safe);
   return url.toString();
