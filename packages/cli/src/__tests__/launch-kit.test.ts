@@ -284,7 +284,7 @@ test("launch-kit command writes all offline files", () => {
   assert.match(result.stdout, /open:/);
   assert.match(result.stdout, /index\.html/);
   assert.match(result.stdout, /open target:/);
-  assert.match(result.stdout, /vibetracker-launch-kit-[^\\s]+\/index\.html/);
+  assert.match(result.stdout, /vibetracker-launch-kit-[^\s]+\/index\.html/);
   assert.match(result.stdout, /show:/);
   assert.match(result.stdout, /operator-show\.html/);
   assert.match(result.stdout, /unite room:/);
