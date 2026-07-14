@@ -34,6 +34,8 @@ test("self-reported profile truths stay bounded, sanitized, and source-safe", ()
   assert.equal(forbiddenControlByte, -1, "edge source must not contain literal control bytes");
   assert.match(selfReportedMigration, /self_reported_agents integer[\s\S]*self_reported_agents <= 1000/);
   assert.match(selfReportedMigration, /self_reported_subs text[\s\S]*char_length\(self_reported_subs\) <= 200/);
+  assert.match(selfReportedMigration, /constraint vibetracker_submissions_self_reported_agents_check/);
+  assert.match(selfReportedMigration, /constraint vibetracker_submissions_self_reported_subs_check/);
   assert.match(edge, /selfAgentsRaw > 0 && selfAgentsRaw <= 1000/);
   assert.match(edge, /rawSelf\.subs\.replace\(\/\[\\x00-\\x1f\\x7f\]\+\/g, " "\)/);
 });
