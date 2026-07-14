@@ -87,6 +87,82 @@
 
 .vprofile-dim-note { margin: 6px 0 0; font: 500 12px/1.5 var(--vp-mono); color: rgba(217, 255, 242, 0.45); }
 
+/* ---- latest read ---- */
+
+.vprofile-readout {
+  --readout-accent: #2ee8d6;
+  position: relative; overflow: hidden;
+  padding: 22px 24px 20px;
+  background: #091116;
+  border-block: 1px solid rgba(46, 232, 214, 0.26);
+}
+
+.vprofile-readout[data-state="up"] { --readout-accent: #36e39b; }
+.vprofile-readout[data-state="down"] { --readout-accent: #ffc64d; }
+.vprofile-readout[data-state="new"] { --readout-accent: #9f7cff; }
+
+.vprofile-readout::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 3px;
+  background: var(--readout-accent);
+}
+
+.vprofile-readout__head {
+  display: flex; align-items: start; justify-content: space-between; gap: 24px;
+}
+
+.vprofile-readout__eyebrow,
+.vprofile-readout__head time,
+.vprofile-readout__facts dt,
+.vprofile-readout__facts small {
+  font-family: var(--vp-mono); text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+.vprofile-readout__eyebrow { display: block; margin-bottom: 7px; font-size: 10px; font-weight: 700; color: var(--readout-accent); }
+
+.vprofile-readout__head h2 {
+  max-width: 880px; margin: 0;
+  font: 600 clamp(1.25rem, 2vw, 1.8rem)/1.25 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  color: #effbf7; letter-spacing: 0;
+}
+
+.vprofile-readout__head time { flex: 0 0 auto; padding-top: 3px; font-size: 10px; color: rgba(217, 255, 242, 0.42); }
+
+.vprofile-readout__summary {
+  max-width: 1040px; margin: 12px 0 18px;
+  font: 500 13px/1.65 var(--vp-mono); color: rgba(217, 255, 242, 0.66);
+}
+
+.vprofile-readout__summary strong { color: #effbf7; font-size: 1.08em; }
+
+.vprofile-readout__facts {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0; border-block: 1px solid rgba(217, 255, 242, 0.1);
+}
+
+.vprofile-readout__facts > div { min-width: 0; padding: 14px 18px 13px 0; }
+.vprofile-readout__facts > div + div { padding-left: 18px; border-left: 1px solid rgba(217, 255, 242, 0.1); }
+.vprofile-readout__facts dt { margin-bottom: 7px; font-size: 9px; font-weight: 700; color: rgba(217, 255, 242, 0.42); }
+.vprofile-readout__facts dd { margin: 0 0 5px; font: 650 19px/1.1 var(--vp-mono); color: #effbf7; overflow-wrap: anywhere; }
+.vprofile-readout__facts > div:first-child dd { color: var(--readout-accent); }
+.vprofile-readout__facts small { display: block; font-size: 9px; line-height: 1.35; color: rgba(217, 255, 242, 0.38); }
+
+.vprofile-readout__plain {
+  margin: 14px 0 0; font: 500 12px/1.6 var(--vp-mono); color: rgba(217, 255, 242, 0.56);
+}
+
+.vprofile-readout__plain b { color: rgba(239, 251, 247, 0.9); }
+
+@media (max-width: 760px) {
+  .vprofile-readout { padding: 18px 18px 17px; }
+  .vprofile-readout__head { display: grid; gap: 7px; }
+  .vprofile-readout__head time { padding: 0; }
+  .vprofile-readout__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vprofile-readout__facts > div { padding: 12px 12px 12px 0; }
+  .vprofile-readout__facts > div + div { padding-left: 12px; }
+  .vprofile-readout__facts > div:nth-child(3) { padding-left: 0; border-left: 0; border-top: 1px solid rgba(217, 255, 242, 0.1); }
+  .vprofile-readout__facts > div:nth-child(4) { border-top: 1px solid rgba(217, 255, 242, 0.1); }
+}
+
 /* ---- header ---- */
 
 .vprofile-header { display: grid; gap: 14px; padding: 6px 2px 4px; }
@@ -198,7 +274,18 @@
 
 .vprofile-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 
-.vprofile-stat { display: grid; gap: 6px; align-content: start; }
+/* Each card carries its own accent (set inline via --stat-accent): a hairline top rule + tinted
+   icon give the row colour and life without shouting — money is no longer the star here. */
+.vprofile-stat {
+  --stat-accent: #2ee8d6;
+  position: relative; display: grid; gap: 6px; align-content: start;
+  overflow: hidden;
+}
+.vprofile-stat::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 2px;
+  background: linear-gradient(90deg, var(--stat-accent), color-mix(in srgb, var(--stat-accent) 15%, transparent));
+  opacity: 0.9;
+}
 
 .vprofile-stat-label {
   display: flex; align-items: center; gap: 6px;
@@ -206,7 +293,7 @@
   letter-spacing: 0.08em; color: rgba(217, 255, 242, 0.5);
 }
 
-.vprofile-stat-mark { flex: 0 0 16px; color: rgba(238, 247, 244, 0.5); }
+.vprofile-stat-mark { flex: 0 0 16px; color: var(--stat-accent); }
 
 .vprofile-stat-value {
   font: 600 clamp(1.5rem, 2.4vw, 2rem) / 1.1 var(--vp-mono);

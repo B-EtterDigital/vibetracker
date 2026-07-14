@@ -4,7 +4,7 @@
 // serializable value computed by the server page; nothing here re-derives
 // locale-dependent strings, so SSR and hydration always agree.
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { TrustBadge } from "../../../components/TrustBadge";
 import type { ComplexityRead, SignalTier } from "../../../lib/profile-complexity";
 import { GITHUB_LEVEL_COLORS } from "../../../lib/profile-trust";
@@ -50,13 +50,14 @@ export interface BrandChip {
   logo?: string;
 }
 
-export type StatMarkKind = "spent" | "credits" | "days" | "sources" | "tokens" | "rank";
+export type StatMarkKind = "spent" | "credits" | "days" | "sources" | "tokens" | "rank" | "ops" | "commits" | "disciplines";
 
 export interface StatCard {
   label: string;
   mark: StatMarkKind;
   value: string;
   sub: string;
+  accent?: string;
 }
 
 export interface MixBar {
@@ -117,6 +118,9 @@ function StatMark({ kind }: { kind: StatMarkKind }) {
       {kind === "sources" ? (<><path d="M5 5.5L11 5.5L8 11Z" strokeWidth="1" /><circle cx="5" cy="5.5" r="1.8" /><circle cx="11" cy="5.5" r="1.8" /><circle cx="8" cy="11" r="1.8" /></>) : null}
       {kind === "tokens" ? (<><path d="M3 5.5 8 3l5 2.5-5 2.5Z" /><path d="M3 8.5 8 11l5-2.5" /><path d="M3 11 8 13.5 13 11" /></>) : null}
       {kind === "rank" ? (<><path d="M5.5 3h5v3.5a2.5 2.5 0 0 1-5 0Z" /><path d="M8 8.5V11" /><path d="M5.5 13h5" /><path d="M4 4.2H3v1a1.6 1.6 0 0 0 1.5 1.5M12 4.2h1v1a1.6 1.6 0 0 1-1.5 1.5" strokeWidth="1" /></>) : null}
+      {kind === "ops" ? (<><path d="M2.5 8.5 5 8.5 6.5 4.5 9.5 12 11 8.5 13.5 8.5" /></>) : null}
+      {kind === "commits" ? (<><path d="M8 2.5V6M8 10v3.5" /><circle cx="8" cy="8" r="2.2" /></>) : null}
+      {kind === "disciplines" ? (<><circle cx="5" cy="5" r="1.5" /><circle cx="11" cy="5" r="1.5" /><circle cx="5" cy="11" r="1.5" /><circle cx="11" cy="11" r="1.5" /></>) : null}
     </svg>
   );
 }
@@ -125,7 +129,11 @@ export function StatCards({ cards }: { cards: StatCard[] }) {
   return (
     <div className="vprofile-stats">
       {cards.map((card) => (
-        <article className="vprofile-panel vprofile-stat" key={card.label}>
+        <article
+          className="vprofile-panel vprofile-stat"
+          style={card.accent ? ({ "--stat-accent": card.accent } as CSSProperties) : undefined}
+          key={card.label}
+        >
           <span className="vprofile-stat-label"><StatMark kind={card.mark} />{card.label}</span>
           <strong className="vprofile-stat-value">{card.value}</strong>
           <span className="vprofile-stat-sub">{card.sub}</span>

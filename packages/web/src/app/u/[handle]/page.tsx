@@ -27,6 +27,8 @@ import { TokenBreakdown, Delegation } from "./profile-tokens";
 import { SkillSignals } from "./profile-signals";
 import { computeProfileSignals } from "../../../lib/profile-signals";
 import { UsageTelemetry } from "./profile-telemetry";
+import { buildTelemetryModel } from "./profile-telemetry-model";
+import { ProfileReadout } from "./profile-readout";
 import "./profile.css";
 import "./profile-hero.css";
 import "./profile-heatmap.css";
@@ -161,51 +163,49 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       models: providerModelsById.get(p.provider) ?? [],
     }));
 
-  const creditsSum = profile.providers.reduce((sum, p) => sum + p.credits, 0);
-  const totalTokens = profile.totalTokens ?? 0;
-  const fmtTokens = (n: number) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${Math.round(n / 1e6)}M` : formatInt(n));
+  // The headline stat cards carry NON-money values — money is not the flex (it lives in the Signal
+  // read reference box and the token panels). These say what the viber has done and how broadly:
+  // output, consistency, toolchain breadth, creative range. Each card is tinted its own accent.
+  const commits = Number(
+    (profile.trustSignals.find((s) => s.kind === "github_activity") as { totalContributions?: number } | undefined)?.totalContributions ?? 0,
+  );
   const cards = [
-    {
-      // Reframed: the dollar is the API-equivalent reference cost (what this usage would run at
-      // published API prices, without a subscription), not a "spend" flex. The Signal read panel
-      // is the headline; this stays a quiet reference.
-      label: "API-equiv cost",
-      mark: "spent" as const,
-      value: formatUsd(facts.usd),
-      sub: "at API list prices, no sub",
-    },
-    ...(totalTokens > 0
-      ? [{
-          label: "total tokens",
-          mark: "tokens" as const,
-          value: fmtTokens(totalTokens),
-          sub: `${fmtTokens(totalTokens / Math.max(facts.days, 1))}/day`,
-        }]
-      : [{
-          label: "total credits",
-          mark: "credits" as const,
-          value: formatInt(profile.latest?.total_credits ?? creditsSum),
-          sub: `${formatInt(facts.ops)} operations`,
-        }]),
+    commits > 0
+      ? {
+          label: "commits shipped",
+          mark: "commits" as const,
+          value: formatInt(commits),
+          sub: "git, last year",
+          accent: "#36e39b",
+        }
+      : {
+          label: "operations",
+          mark: "ops" as const,
+          value: formatInt(facts.ops),
+          sub: `across ${facts.providers} sources`,
+          accent: "#2ee8d6",
+        },
     {
       label: "days active",
       mark: "days" as const,
       value: String(facts.days),
       sub: `since ${fmtDate(profile.usageDays[0]?.date ?? profile.created_at)}`,
+      accent: "#9f7cff",
     },
-    profile.rank
-      ? {
-          label: "global rank",
-          mark: "rank" as const,
-          value: `#${profile.rank}`,
-          sub: `${tierRaw.replace(/_/g, "-")} board`,
-        }
-      : {
-          label: "sources",
-          mark: "sources" as const,
-          value: String(facts.providers),
-          sub: `${facts.categories} categories`,
-        },
+    {
+      label: "sources",
+      mark: "sources" as const,
+      value: String(facts.providers),
+      sub: "AI tools tracked",
+      accent: "#ff9e64",
+    },
+    {
+      label: "disciplines",
+      mark: "disciplines" as const,
+      value: String(facts.categories),
+      sub: read.identity.label.toLowerCase(),
+      accent: vibeColor(read.identity.topCategory),
+    },
   ];
 
   const usdTotal = byUsd.reduce((sum, p) => sum + p.usd, 0);
@@ -317,8 +317,8 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     .map((m) => ({ model: prettyModel(m.model), spend: compactUsd(m.usd) }));
   const heroState = [
     { label: "signal", value: read.tier },
-    { label: "api-equiv cost", value: formatUsd(facts.usd) },
-    { label: "operations", value: formatInt(facts.ops) },
+    ...(profile.rank ? [{ label: "global rank", value: `#${profile.rank}` }] : [{ label: "operations", value: formatInt(facts.ops) }]),
+    { label: "disciplines", value: String(facts.categories) },
     { label: "top source", value: topSource },
   ];
 
@@ -338,6 +338,10 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     (s): s is Extract<typeof s, { kind: "github_activity" }> =>
       s.kind === "github_activity" && Array.isArray(s.days) && s.days.length > 0,
   );
+  const latestRead = buildTelemetryModel(profile.usageDays, chartSeries, 30, "usd");
+  const readoutCategory = categories[0]
+    ? { label: categories[0].label, share: categories[0].share }
+    : null;
   const locked: Array<{ name: string; unlock: string }> = [];
   if (!reveal.chart) locked.push({ name: "usage over time", unlock: "unlocks after a week of history" });
   if (!reveal.insights) locked.push({ name: "usage insights", unlock: "unlocks at spark" });
@@ -381,6 +385,15 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       migrateHref={C0VIBE_MIGRATE_HREF}
       key="hero"
     />);
+  add("hero", "full",
+    <ProfileReadout
+      model={latestRead}
+      category={readoutCategory}
+      trust={tierRaw}
+      hasGitHubEvidence={Boolean(githubSignal)}
+      through={fmtDate(latestRead?.current.at(-1)?.date ?? profile.latest?.created_at ?? profile.created_at)}
+      key="readout"
+    />);
   // The Signal read leads: archetype + measured skill signals + the reframed API-equivalent cost.
   // Money is the reference, not the headline — skill is what you see first.
   const signals = computeProfileSignals(profile);
@@ -400,7 +413,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // surface. Both are additive aggregates; shown only when the upload carried them.
   const tokenBreakdown = profile.tokenBreakdown ?? [];
   if (tokenBreakdown.some((t) => t.scope === "total")) {
-    add("usage", "half", <TokenBreakdown breakdown={tokenBreakdown} totalTokens={totalTokens} key="tokens" />);
+    add("usage", "half", <TokenBreakdown breakdown={tokenBreakdown} totalTokens={profile.totalTokens ?? 0} key="tokens" />);
   }
   const agents = profile.agents ?? [];
   if (agents.length > 0) {

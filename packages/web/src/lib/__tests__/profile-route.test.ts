@@ -14,6 +14,7 @@ const heatStyles = readFileSync("packages/web/src/app/u/[handle]/profile-heatmap
 const telemetry = readFileSync("packages/web/src/app/u/[handle]/profile-telemetry.tsx", "utf8");
 const telemetryModel = readFileSync("packages/web/src/app/u/[handle]/profile-telemetry-model.ts", "utf8");
 const telemetryStyles = readFileSync("packages/web/src/app/u/[handle]/profile-telemetry.css", "utf8");
+const readout = readFileSync("packages/web/src/app/u/[handle]/profile-readout.tsx", "utf8");
 
 test("public profile route reveals panels from deterministic signal depth", () => {
   assert.match(page, /import \{ PROVIDERS \} from "\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/adapters\/src\/index"/);
@@ -109,7 +110,8 @@ test("skill signals lead the profile and reframe money as API-equivalent referen
   // money is reframed, not the flex
   assert.match(signalsSrc, /API-equivalent cost/);
   assert.match(signalsSrc, /Burning budget isn/);
-  assert.match(page, /label: "API-equiv cost"/);
+  assert.match(page, /label: "commits shipped"/);
+  assert.match(page, /label: "disciplines"/);
   assert.doesNotMatch(page, /label: "total spent"/);
 });
 
@@ -126,10 +128,9 @@ test("token breakdown + cross-provider delegation render from the new aggregates
   assert.match(tokensSrc, /plans → executes/);
   assert.match(page, /<Delegation/);
   assert.match(page, /crossProviderDays=\{profile\.crossProviderDays/);
-  // stat cards gain total tokens + global rank
-  assert.match(page, /label: "total tokens"/);
-  assert.match(page, /label: "global rank"/);
-  assert.match(page, /profile\.rank/);
+  // total tokens is a stat headline in the breakdown panel; global rank rides the hero state rail
+  assert.match(tokensSrc, /tokens total/);
+  assert.match(page, /label: "global rank", value: `#\$\{profile\.rank\}`/);
 });
 
 test("C0VIBE band offers claim + migrate without overclaiming verification", () => {
@@ -228,6 +229,18 @@ test("delta scope compares adjacent real usage windows without mixing trust sign
   assert.match(telemetryStyles, /@media \(min-width: 2200px\)/);
   assert.match(telemetryStyles, /@media \(max-width: 640px\)/);
   assert.match(telemetryStyles, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
+test("profile leads with a plain-language latest read derived from the telemetry model", () => {
+  assert.match(page, /const latestRead = buildTelemetryModel\(profile\.usageDays, chartSeries, 30, "usd"\)/);
+  assert.match(page, /<ProfileReadout/);
+  assert.match(page, /hasGitHubEvidence=\{Boolean\(githubSignal\)\}/);
+  assert.match(readout, /Latest 30-day read/);
+  assert.match(readout, /What this tells you:/);
+  assert.match(readout, /API-equivalent usage/);
+  assert.match(readout, /GitHub activity is separate work evidence, not verification of usage totals/);
+  assert.doesNotMatch(readout, /verified usage|verifies usage/);
+  assert.doesNotMatch(readout, /changed \+|ai coding dominating/);
 });
 
 test("profile route-local styling stays responsive and motion-safe", () => {
