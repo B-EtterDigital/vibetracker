@@ -15,6 +15,8 @@ import {
   type DeviceApprovalRunway,
 } from "../../lib/device-auth";
 import { buildDeviceCommandBridge, type DeviceCommandBridge } from "../../lib/device-command-bridge";
+import { CliLoginEntry } from "./cli-login-entry";
+import "./cli-login-entry.css";
 
 function DeviceApprovalRunwayPanel({ runway }: { runway: DeviceApprovalRunway }) {
   return (
@@ -340,20 +342,14 @@ function DeviceAuthControlRoomPanel({ room }: { room: DeviceAuthControlRoom }) {
 // GitHub in the terminal and never opens this page; this path binds the token to WorkOS instead.
 export default function CliLogin() {
   const [code, setCode] = useState("");
+  const [ready, setReady] = useState(false);
   const [state, setState] = useState<"idle" | "working" | "done" | "error">("idle");
   const [msg, setMsg] = useState("");
-  const statusLabel = deviceAuthStatusLabel(state);
-  const codeParts = splitDeviceCode(code);
-  const authBridge = buildDeviceAuthBridge(state, code);
-  const controlRoom = buildDeviceAuthControlRoom(state, code);
-  const approvalChamber = buildDeviceApprovalChamber(state, code);
-  const launchTheatre = buildDeviceAuthLaunchTheatre(state, code);
-  const commandBridge = buildDeviceCommandBridge(state, code);
-  const approvalRunway = buildDeviceApprovalRunway(state, code);
 
   useEffect(() => {
     const u = new URL(window.location.href);
     setCode((u.searchParams.get("code") ?? "").toUpperCase());
+    setReady(true);
   }, []);
 
   async function approve() {
@@ -373,6 +369,17 @@ export default function CliLogin() {
     if (res.ok) { setState("done"); setMsg("Device approved — return to your terminal."); }
     else { setState("error"); setMsg(((await res.json()) as { error?: string }).error ?? "approval failed"); }
   }
+
+  if (!ready || !code) return <CliLoginEntry checking={!ready} />;
+
+  const statusLabel = deviceAuthStatusLabel(state);
+  const codeParts = splitDeviceCode(code);
+  const authBridge = buildDeviceAuthBridge(state, code);
+  const controlRoom = buildDeviceAuthControlRoom(state, code);
+  const approvalChamber = buildDeviceApprovalChamber(state, code);
+  const launchTheatre = buildDeviceAuthLaunchTheatre(state, code);
+  const commandBridge = buildDeviceCommandBridge(state, code);
+  const approvalRunway = buildDeviceApprovalRunway(state, code);
 
   return (
     <>

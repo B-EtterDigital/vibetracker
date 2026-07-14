@@ -4,6 +4,9 @@ import assert from "node:assert/strict";
 
 test("cli login route exposes the zero-movement auth control room", () => {
   const page = readFileSync("packages/web/src/app/cli-login/page.tsx", "utf8");
+  const entry = readFileSync("packages/web/src/app/cli-login/cli-login-entry.tsx", "utf8");
+  const entryStyles = readFileSync("packages/web/src/app/cli-login/cli-login-entry.css", "utf8");
+  const routeLayout = readFileSync("packages/web/src/app/cli-login/layout.tsx", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
@@ -38,7 +41,30 @@ test("cli login route exposes the zero-movement auth control room", () => {
   assert.match(page, /signal\.target/);
   assert.match(page, /Vibers Unite/);
   assert.match(page, /c0vibe\.app/);
+  assert.match(page, /import \{ CliLoginEntry \} from "\.\/cli-login-entry"/);
+  assert.match(page, /import "\.\/cli-login-entry\.css"/);
+  assert.match(page, /if \(!ready \|\| !code\) return <CliLoginEntry checking=\{!ready\} \/>/);
+  assert.ok(page.indexOf("if (!ready || !code)") < page.lastIndexOf("buildDeviceApprovalChamber(state, code)"));
   assert.doesNotMatch(page, /dangerouslySetInnerHTML/);
+
+  assert.match(entry, /Connect your terminal\./);
+  assert.match(entry, /npx vibetracker login/);
+  assert.match(entry, /href="\/account\?returnTo=%2Fcli-login"/);
+  assert.match(entry, /Sign in with GitHub/);
+  assert.match(entry, /GitHub proof is not usage proof\./);
+  assert.match(entry, /prompt reads<\/dt><dd>0/);
+  assert.match(entry, /provider calls<\/dt><dd>0/);
+  assert.match(entry, /hidden uploads<\/dt><dd>0/);
+  assert.match(entry, /ledger writes<\/dt><dd>0/);
+  assert.match(entry, /aria-live="polite"/);
+  assert.match(entry, /navigator\.clipboard\.writeText\(LOGIN_COMMAND\)/);
+  assert.doesNotMatch(entry, /dangerouslySetInnerHTML/);
+  assert.match(routeLayout, /title: "Connect the CLI · VibeUsage"/);
+
+  assert.match(entryStyles, /\.cli-entry__header/);
+  assert.match(entryStyles, /grid-template-columns: minmax\(0, 1\.08fr\) minmax\(360px, \.92fr\)/);
+  assert.match(entryStyles, /@media \(max-width: 620px\)/);
+  assert.match(entryStyles, /@media \(prefers-reduced-motion: reduce\)/);
 
   assert.match(styles, /\.device-auth-control-room/);
   assert.match(styles, /\.device-approval-chamber/);
