@@ -5,7 +5,7 @@
     "name": "Local Scan Demo",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["usage-scan", "provider-catalog", "local-first"]
@@ -15,7 +15,7 @@
     "group_id": "000-vibetracker:packages/web/src/app",
     "contains": ["route", "component", "style", "test"],
     "component_policy": "internal_by_default",
-    "notes": "A local-first scan explainer with a deterministic preview that makes no network calls."
+    "notes": "A local-first scan explainer with a deterministic preview and source-level normalization receipt that make no network calls."
   },
   "source": {
     "project": "000-vibetracker",
@@ -39,6 +39,9 @@
     "public_paths": [
       "packages/web/src/app/scan/page.tsx",
       "packages/web/src/app/scan/scan-demo.tsx",
+      "packages/web/src/app/scan/scan-receipt.ts",
+      "packages/web/src/app/scan/scan-receipt-panel.tsx",
+      "packages/web/src/app/scan/scan-receipt.css",
       "packages/web/src/app/scan/scan.css"
     ],
     "private_paths": [
@@ -64,8 +67,8 @@
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Route composition, deterministic client interaction, and styling are isolated and every owned file is below 190 lines.",
-      "evidence": ["packages/web/src/app/scan/page.tsx", "packages/web/src/app/scan/scan-demo.tsx", "packages/web/src/app/scan/scan.css"]
+      "notes": "Route composition, deterministic client interaction, pure receipt derivation, and styling are isolated into focused files.",
+      "evidence": ["packages/web/src/app/scan/page.tsx", "packages/web/src/app/scan/scan-demo.tsx", "packages/web/src/app/scan/scan-receipt.ts", "packages/web/src/app/scan/scan-receipt-panel.tsx", "packages/web/src/app/scan/scan.css", "packages/web/src/app/scan/scan-receipt.css"]
     },
     "ssi": {
       "status": "passing",
@@ -76,7 +79,7 @@
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "The focused contract and complete package suite pass on the current tree.",
+      "notes": "The focused contract verifies exact derived receipt totals, honest demo boundaries, responsive styling, and route composition.",
       "evidence": ["packages/web/src/lib/__tests__/scan-route.test.ts"]
     },
     "spe": {
@@ -88,14 +91,14 @@
     "srs": {
       "status": "passing",
       "score": 95,
-      "notes": "Clipboard failure is visible, the demo is labelled scripted, and the accessible name states that no network calls occur.",
-      "evidence": ["packages/web/src/app/scan/scan-demo.tsx"]
+      "notes": "Clipboard failure is visible, the demo is labelled scripted, confidence terms are explained, and the receipt states that it is not a real browser or machine scan.",
+      "evidence": ["packages/web/src/app/scan/scan-demo.tsx", "packages/web/src/app/scan/scan-receipt-panel.tsx"]
     },
     "ssra": {
       "status": "passing",
-      "score": 90,
-      "notes": "Release gate, production build, Netlify preview deploy, and desktop/mobile visual proof pass.",
-      "evidence": ["scripts/release-gate.mjs", "Netlify deploy 6a511bdf543222192e491be3"]
+      "score": 95,
+      "notes": "Release gate, production builds, immutable Netlify preview, replay, mobile, desktop, 4K, and Lighthouse proof pass.",
+      "evidence": ["scripts/release-gate.mjs", "https://6a560c4e27a58362b0b5e006--vibetracker-betterdigital.netlify.app/scan"]
     },
     "sas": {
       "status": "passing",
@@ -107,7 +110,7 @@
       "status": "passing",
       "score": 95,
       "notes": "No privileged client, secret, user record, or network request is present.",
-      "evidence": ["packages/web/src/app/scan/page.tsx", "packages/web/src/app/scan/scan-demo.tsx"]
+      "evidence": ["packages/web/src/app/scan/page.tsx", "packages/web/src/app/scan/scan-demo.tsx", "packages/web/src/app/scan/scan-receipt.ts"]
     },
     "srls": {
       "status": "not_applicable",
@@ -135,7 +138,7 @@
     }
   },
   "interfaces": {
-    "public_api": ["GET /scan", "<ScanDemo />", "<CopyChip command={command} />"],
+    "public_api": ["GET /scan", "<ScanDemo />", "<ScanReceiptPanel />", "buildScanReceipt(findings)", "<CopyChip command={command} />"],
     "adapters": ["packages/adapters/src/index.ts#PROVIDERS"],
     "required_dependencies": ["next", "react", "000-vibetracker.package.packages-adapters.3ab3a775"],
     "forbidden_dependencies": ["packages/adapters/src/registry.ts", "service-role client", "real network calls from the preview", "automatic upload"]
@@ -169,27 +172,27 @@
     "sbom_path": ""
   },
   "quality": {
-    "score": 87,
+    "score": 95,
     "line_count": {
       "max_file_lines": 191,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 563,
-      "file_count": 4,
+      "feature_lines": 862,
+      "file_count": 7,
       "dependency_count": 2,
-      "notes": "The former 1,211-line route is now a 95-line server surface plus a focused client component, stylesheet, and contract test."
+      "notes": "The route stays split across a 96-line server surface, focused preview, pure receipt model, receipt view, two route stylesheets, and one contract test."
     },
     "test_commands": [
       "node --test packages/web/src/lib/__tests__/scan-route.test.ts"
     ],
     "verification": [
       {
-        "command": "focused scan test + pnpm sma:release-gate + pnpm --dir packages/web build",
+        "command": "focused scan test + pnpm typecheck + pnpm sma:release-gate + pnpm audit --audit-level high + pnpm build + Netlify build and browser proof",
         "status": "pass",
-        "timestamp": "2026-07-10T16:25:57Z",
-        "notes": "2 focused route tests, 15 control-plane tests, 481 package tests, strict VTRS, TypeScript, dependency audit, Next build, and Netlify desktop/mobile proof passed with zero replay network calls."
+        "timestamp": "2026-07-14T10:18:14Z",
+        "notes": "2 focused route tests, 15 control-plane tests, 599 package tests, strict VTRS with 0 violations, TypeScript, dependency audit, CLI and Next builds, 390/1440/3840 browser proof, zero replay calls, and Lighthouse 100 accessibility/best-practices/agentic passed."
       }
     ]
   },

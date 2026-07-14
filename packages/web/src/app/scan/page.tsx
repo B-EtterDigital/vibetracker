@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { PROVIDERS } from "../../../../adapters/src/index";
 import { CopyChip, ScanDemo } from "./scan-demo";
 import "./scan.css";
+import "./scan-receipt.css";
 
 export const metadata = {
   title: "Make your scan — VibeUsage",

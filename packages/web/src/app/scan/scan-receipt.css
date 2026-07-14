@@ -1,0 +1,78 @@
+.vscan-receipt { display: grid; gap: 18px; }
+
+.vscan-receipt-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
+}
+
+.vscan-receipt-kicker {
+  margin: 0 0 7px; color: #2ee8d6; font: 600 11px/1.2 var(--vs-mono);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+.vscan-receipt-title {
+  margin: 0; max-width: 24ch; color: var(--fg);
+  font: 600 1.15rem/1.3 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+.vscan-receipt-boundary {
+  flex: none; padding: 6px 8px; border: 1px solid rgba(54, 227, 155, 0.35);
+  border-radius: 4px; color: #36e39b; background: rgba(54, 227, 155, 0.06);
+  font: 600 10px/1.2 var(--vs-mono); text-transform: uppercase;
+}
+
+.vscan-receipt-disclosure {
+  margin: 0; max-width: 74ch; color: rgba(217, 255, 242, 0.72);
+  font: 500 13px/1.6 var(--vs-mono);
+}
+
+.vscan-receipt-legend {
+  margin: -8px 0 0; max-width: 88ch; color: rgba(217, 255, 242, 0.55);
+  font: 500 11px/1.55 var(--vs-mono);
+}
+.vscan-receipt-legend strong { color: rgba(217, 255, 242, 0.7); font-weight: 600; }
+
+.vscan-receipt-metrics {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0;
+  border-block: 1px solid rgba(217, 255, 242, 0.1);
+}
+
+.vscan-receipt-metrics div { display: grid; gap: 6px; padding: 13px 14px; min-width: 0; }
+.vscan-receipt-metrics div + div { border-left: 1px solid rgba(217, 255, 242, 0.1); }
+.vscan-receipt-metrics dt { color: rgba(217, 255, 242, 0.55); font: 500 10px/1.2 var(--vs-mono); text-transform: uppercase; }
+.vscan-receipt-metrics dd { margin: 0; color: #d9fff2; font: 600 14px/1.25 var(--vs-mono); overflow-wrap: anywhere; }
+
+.vscan-receipt-table-wrap { min-width: 0; overflow-x: auto; }
+.vscan-receipt-table { width: 100%; border-collapse: collapse; color: rgba(217, 255, 242, 0.74); font: 500 12px/1.35 var(--vs-mono); }
+.vscan-receipt-table caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.vscan-receipt-table :is(th, td) { padding: 10px 12px; border-bottom: 1px solid rgba(217, 255, 242, 0.08); text-align: left; }
+.vscan-receipt-table thead th { color: rgba(217, 255, 242, 0.42); font-size: 10px; text-transform: uppercase; }
+.vscan-receipt-table tbody th { color: #d9fff2; font-weight: 600; }
+.vscan-receipt-table :is(th, td):nth-child(n + 3) { text-align: right; }
+.vscan-receipt-table [data-confidence] { display: inline-block; color: #2ee8d6; white-space: nowrap; }
+.vscan-receipt-table [data-confidence="detected"] { color: rgba(217, 255, 242, 0.54); }
+
+.vscan-receipt-readout {
+  margin: 0; padding-left: 12px; border-left: 2px solid #f0c75e;
+  color: rgba(217, 255, 242, 0.72); font: 500 13px/1.55 var(--vs-mono);
+}
+.vscan-receipt-readout strong { color: #f0c75e; }
+
+@media (max-width: 760px) {
+  .vscan-receipt-head { display: grid; }
+  .vscan-receipt-boundary { justify-self: start; }
+  .vscan-receipt-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vscan-receipt-metrics div:nth-child(3) { border-left: 0; border-top: 1px solid rgba(217, 255, 242, 0.1); }
+  .vscan-receipt-metrics div:nth-child(4) { border-top: 1px solid rgba(217, 255, 242, 0.1); }
+}
+
+@media (max-width: 560px) {
+  .vscan-receipt-table, .vscan-receipt-table tbody, .vscan-receipt-table tr, .vscan-receipt-table :is(th, td) { display: block; }
+  .vscan-receipt-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .vscan-receipt-table tr { padding: 10px 0; border-bottom: 1px solid rgba(217, 255, 242, 0.1); }
+  .vscan-receipt-table :is(th, td) { padding: 3px 0; border: 0; text-align: left !important; overflow-wrap: anywhere; }
+  .vscan-receipt-table td::before { content: attr(data-label) ": "; color: rgba(217, 255, 242, 0.38); }
+}
+
+@media (min-width: 2200px) {
+  .vscan { max-width: 1760px; }
+}

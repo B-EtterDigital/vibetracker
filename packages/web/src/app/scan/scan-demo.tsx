@@ -6,6 +6,7 @@
 // is a fixed-delay script over bundled sample numbers.
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { ScanReceiptPanel } from "./scan-receipt-panel";
 
 const STEP_MS = 450;
 
@@ -18,8 +19,8 @@ const STREAM_LINES: { verb: string; detail: string; at: number }[] = [
 ];
 
 const RESULT_CARDS: { label: string; value: string; at: number }[] = [
-  { label: "total spent", value: "$1,284.06", at: 4 },
-  { label: "credits", value: "48,210", at: 5 },
+  { label: "est. spend", value: "$1,284.06", at: 4 },
+  { label: "accepted", value: "12,847", at: 5 },
   { label: "days", value: "63", at: 6 },
   { label: "sources", value: "9", at: 7 },
 ];
@@ -69,7 +70,7 @@ export function CopyChip({
         className="vscan-chip"
         onClick={copy}
         data-state={copyState}
-        aria-label={`Copy ${command} to clipboard`}
+        title={`Copy ${command} to clipboard`}
       >
         <code>{command}</code>
         <span aria-live="polite">{stateWord}</span>
@@ -128,42 +129,50 @@ export function ScanDemo() {
   }
 
   return (
-    <section
-      className={`vscan-panel vscan-demo${armed ? " is-armed" : ""}`}
-      aria-label="Scan preview — scripted demo, makes no network calls"
-    >
-      <header className="vscan-panel-head">
-        <h2 className="vscan-panel-title">scan preview</h2>
-        <span className="vscan-panel-sub">scripted demo · makes no calls</span>
-      </header>
+    <>
+      <section
+        className={`vscan-panel vscan-demo${armed ? " is-armed" : ""}`}
+        aria-label="Scan preview — scripted demo, makes no network calls"
+      >
+        <header className="vscan-panel-head">
+          <h2 className="vscan-panel-title">scan preview</h2>
+          <span className="vscan-panel-sub">scripted demo · makes no calls</span>
+        </header>
 
-      <div className="vscan-demo-stream">
-        {STREAM_LINES.map((line) => (
-          <p className="vscan-demo-line" data-shown={shown(line.at)} key={line.verb}>
-            <span className="vscan-demo-verb">{line.verb}</span>
-            {line.detail ? <span className="vscan-demo-detail">{line.detail}</span> : null}
-          </p>
-        ))}
-      </div>
+        <div className="vscan-demo-stream">
+          {STREAM_LINES.map((line) => (
+            <p className="vscan-demo-line" data-shown={shown(line.at)} key={line.verb}>
+              <span className="vscan-demo-verb">{line.verb}</span>
+              {line.detail ? <span className="vscan-demo-detail">{line.detail}</span> : null}
+            </p>
+          ))}
+        </div>
 
-      <div className="vscan-demo-divider" data-shown={shown(DIVIDER_AT)} aria-hidden="true" />
+        <div className="vscan-demo-divider" data-shown={shown(DIVIDER_AT)} aria-hidden="true" />
 
-      <div className="vscan-demo-result">
-        {RESULT_CARDS.map((card) => (
-          <article className="vscan-demo-card" data-shown={shown(card.at)} key={card.label}>
-            <span className="vscan-demo-card-label">{card.label}</span>
-            <strong className="vscan-demo-card-value">{card.value}</strong>
-          </article>
-        ))}
-      </div>
+        <div className="vscan-demo-result">
+          {RESULT_CARDS.map((card) => (
+            <article className="vscan-demo-card" data-shown={shown(card.at)} key={card.label}>
+              <span className="vscan-demo-card-label">{card.label}</span>
+              <strong className="vscan-demo-card-value">{card.value}</strong>
+            </article>
+          ))}
+        </div>
 
-      <p className="vscan-demo-note" data-shown={shown(NOTE_AT)}>
-        sample numbers from the bundled demo dataset. your scan reveals your own.
-      </p>
+        <p className="vscan-demo-note" data-shown={shown(NOTE_AT)}>
+          sample numbers from the bundled demo dataset. your scan reveals your own.
+        </p>
 
-      <button type="button" className="vscan-demo-replay" onClick={replay} aria-label="Replay the scan preview">
-        replay
-      </button>
-    </section>
+        <button
+          type="button"
+          className="vscan-demo-replay"
+          onClick={replay}
+          aria-label="Replay the scan preview"
+        >
+          replay
+        </button>
+      </section>
+      <ScanReceiptPanel />
+    </>
   );
 }

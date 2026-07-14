@@ -1,10 +1,30 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import {
+  buildScanReceipt,
+  SAMPLE_SCAN_FINDINGS,
+} from "../../app/scan/scan-receipt.ts";
+
+test("bundled scan receipt derives exact totals without mixing native units", () => {
+  const receipt = buildScanReceipt(SAMPLE_SCAN_FINDINGS);
+
+  assert.deepEqual(receipt, {
+    records: 12847,
+    estimatedUsd: 1284.06,
+    directEvidence: 6,
+    localSources: 3,
+    sourceCount: 9,
+    topProvider: "Higgsfield",
+    topShare: 331.2 / 1284.06,
+  });
+});
 
 test("scan route is the calm Make-your-scan page with a scripted local demo", () => {
   const page = readFileSync("packages/web/src/app/scan/page.tsx", "utf8");
   const demo = readFileSync("packages/web/src/app/scan/scan-demo.tsx", "utf8");
+  const receiptPanel = readFileSync("packages/web/src/app/scan/scan-receipt-panel.tsx", "utf8");
+  const receiptStyles = readFileSync("packages/web/src/app/scan/scan-receipt.css", "utf8");
   const scan = readFileSync("packages/web/src/app/scan/scan.css", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
@@ -17,6 +37,7 @@ test("scan route is the calm Make-your-scan page with a scripted local demo", ()
   assert.match(page, /Scan your AI usage locally, watch the results reveal, upload only when you choose\./);
   assert.match(page, /import \{ CopyChip, ScanDemo \} from "\.\/scan-demo"/);
   assert.match(page, /import "\.\/scan\.css"/);
+  assert.match(page, /import "\.\/scan-receipt\.css"/);
   assert.match(scan, /\.wrap:has\(> \.vscan\)::before/);
   assert.match(scan, /white-space: normal/);
   assert.match(page, /import \{ PROVIDERS \} from "\.\.\/\.\.\/\.\.\/\.\.\/adapters\/src\/index"/);
@@ -59,6 +80,7 @@ test("scan route is the calm Make-your-scan page with a scripted local demo", ()
   assert.match(demo, /export function CopyChip/);
   assert.match(demo, /export function ScanDemo/);
   assert.match(demo, /navigator\.clipboard\.writeText/);
+  assert.match(demo, /title=\{`Copy \$\{command\} to clipboard`\}/);
   assert.match(demo, /scripted demo · makes no calls/);
   assert.match(demo, /reading local logs/);
   assert.match(demo, /· claude code · codex · gemini cli/);
@@ -68,7 +90,9 @@ test("scan route is the calm Make-your-scan page with a scripted local demo", ()
   assert.match(demo, /· higgsfield · replicate · elevenlabs/);
   assert.match(demo, /normalizing 12,847 records across 9 providers/);
   assert.match(demo, /\$1,284\.06/);
-  assert.match(demo, /48,210/);
+  assert.match(demo, /label: "accepted", value: "12,847"/);
+  assert.doesNotMatch(demo, /label: "credits"/);
+  assert.match(demo, /<ScanReceiptPanel \/>/);
   assert.match(demo, /sample numbers from the bundled demo dataset\. your scan reveals your own\./);
   assert.match(demo, /STEP_MS = 450/);
   assert.match(demo, /prefers-reduced-motion: reduce/);
@@ -77,6 +101,25 @@ test("scan route is the calm Make-your-scan page with a scripted local demo", ()
   assert.match(demo, /Replay the scan preview/);
   assert.doesNotMatch(demo, /Math\.random/);
   assert.doesNotMatch(demo, /dangerouslySetInnerHTML/);
+
+  // ---- inspectable bundled normalization receipt ----
+  assert.match(receiptPanel, /bundled demo receipt/);
+  assert.match(receiptPanel, /It is not a scan of this browser or/);
+  assert.match(receiptPanel, /zero network \/ no upload/);
+  assert.match(receiptPanel, /accepted records/);
+  assert.match(receiptPanel, /estimated spend/);
+  assert.match(receiptPanel, /direct evidence/);
+  assert.match(receiptPanel, /Observed<\/strong> means parsed from an event log/);
+  assert.match(receiptPanel, /Provider reported<\/strong>/);
+  assert.match(receiptPanel, /Detected<\/strong> confirms a local endpoint, not spend/);
+  assert.match(receiptPanel, /collection method/);
+  assert.match(receiptPanel, /data-confidence=/);
+  assert.match(receiptPanel, /Inspect its jobs first before changing providers/);
+  assert.doesNotMatch(receiptPanel, /dangerouslySetInnerHTML/);
+  assert.match(receiptStyles, /\.vscan-receipt-table/);
+  assert.match(receiptStyles, /@media \(max-width: 560px\)/);
+  assert.match(receiptStyles, /@media \(min-width: 2200px\)/);
+  assert.doesNotMatch(receiptStyles, /@import/);
 
   // ---- route-scoped calm CSS mirrors the profile system, not imported ----
   assert.match(scan, /\.vscan \{/);
