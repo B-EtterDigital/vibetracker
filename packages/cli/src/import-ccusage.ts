@@ -2,7 +2,7 @@
 // even after Claude Code prunes the raw session logs. This recovers history the live
 // `~/.claude/projects` no longer has. Pure conversion + a small locator.
 
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { NormalizedRecord } from "../../core/src/schema/record.ts";
@@ -59,13 +59,17 @@ export function ccusageToRecords(cc: CcJson): NormalizedRecord[] {
   return out;
 }
 
-// Look in the usual spots so `vibetracker import` can work with no argument.
-export function findCcJson(): string | undefined {
-  const candidates = [
+// Look in the usual spots and use the freshest snapshot rather than whichever path happens to
+// appear first. Users commonly have both a project export and a newer home-directory export.
+export function findCcJson(candidatePaths?: string[]): string | undefined {
+  const candidates = candidatePaths ?? [
     join(process.cwd(), "cc.json"),
     join(homedir(), "cc.json"),
     join(homedir(), ".vibetracker", "cc.json"),
     join(homedir(), ".config", "C0VIBE", "byocli", "cc.json"),
   ];
-  return candidates.find((p) => existsSync(p));
+  return [...new Set(candidates)]
+    .filter((path) => existsSync(path))
+    .map((path) => ({ path, mtimeMs: statSync(path).mtimeMs }))
+    .sort((a, b) => b.mtimeMs - a.mtimeMs || a.path.localeCompare(b.path))[0]?.path;
 }

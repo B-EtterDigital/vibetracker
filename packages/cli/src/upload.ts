@@ -20,6 +20,10 @@ export interface UploadRenderInput {
   audit: UsageAudit;
   findings: SecretFinding[];
   site: string;
+  coding?: {
+    totalTokens: number;
+    agents: { crossProviderDays: number; activeDays: number; agents: Array<{ agent: string }> };
+  } | null;
 }
 
 export const DIRECT_INGEST_URL = "https://tnsaqsqajpjbvlpasojt.supabase.co/functions/v1/vibetracker-ingest";
@@ -79,6 +83,12 @@ function trustSidecar(audit: UsageAudit): string {
   return count ? `trust sidecar ${count} evidence item(s) // NOT USAGE` : "trust sidecar none // usage only";
 }
 
+function codingSnapshot(input: UploadRenderInput): string {
+  if (!input.coding) return "coding snapshot none // no measured cc.json aggregate attached";
+  const agents = input.coding.agents.agents.length;
+  return `coding snapshot ${input.coding.totalTokens.toLocaleString("en-US")} tokens // ${agents} active CLI${agents === 1 ? "" : "s"}`;
+}
+
 function commandHandle(handle: string): string {
   const cleaned = handle.replace(/^@/, "");
   return /^[a-zA-Z0-9._-]+$/.test(cleaned) ? cleaned : encodeURIComponent(cleaned);
@@ -131,6 +141,7 @@ export function renderUploadPreview(input: UploadRenderInput): string {
     frameLine(`records ${input.accepted.toLocaleString("en-US")} // providers ${a.totals.providers} // est ${money(a.totals.usd)}`),
     frameLine(`trust signals ${a.trustSignals.length} // labelled NOT USAGE`),
     frameLine(trustSidecar(a)),
+    frameLine(codingSnapshot(input)),
     frameLine(`bundle ${shortHash(a.integrity.bundleFingerprint)}`),
     frameLine(integritySeal(a)),
     frameLine(sourceSignal(a)),
@@ -141,7 +152,7 @@ export function renderUploadPreview(input: UploadRenderInput): string {
     "",
     "Leaves machine on upload:",
     "  - accepted normalized usage records",
-    "  - aggregate metadata, provider rollups, trust signals, integrity hashes",
+    "  - aggregate metadata, provider rollups, measured coding totals, trust signals, integrity hashes",
     "  - no API keys, prompts, screenshots, raw provider payloads, or local files",
     "",
     renderSecretScan(input.findings),

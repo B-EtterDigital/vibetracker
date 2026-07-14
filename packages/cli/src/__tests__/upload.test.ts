@@ -59,13 +59,20 @@ const base = {
 };
 
 test("renderUploadPreview shows a local-first transmission cockpit", () => {
-  const text = renderUploadPreview(base);
+  const text = renderUploadPreview({
+    ...base,
+    coding: {
+      totalTokens: 12_345_678,
+      agents: { activeDays: 10, crossProviderDays: 2, agents: [{ agent: "codex" }, { agent: "claude" }] },
+    },
+  });
 
   assert.match(text, /VTK:\/\/UPLOAD-COCKPIT\/\/WHAT-LEAVES-MY-MACHINE/);
   assert.match(text, /VIBERS UNITE \/\/ c0vibe\.app/);
   assert.match(text, /records 4 \/\/ providers 3 \/\/ est \$42\.50/);
   assert.match(text, /trust signals 1 \/\/ labelled NOT USAGE/);
   assert.match(text, /trust sidecar 1 evidence item\(s\) \/\/ NOT USAGE/);
+  assert.match(text, /coding snapshot 12,345,678 tokens \/\/ 2 active CLIs/);
   assert.match(text, /seal chain aaaaaaaaaaaaaaaa\.\.\.aaaaaaaa \/\/ bundle bbbbbbb/);
   assert.match(text, /Provider ledger:###### 50%/);
   assert.match(text, /VTK:\/\/TRANSMISSION-SEQUENCER\/\/LOCAL-REVIEW\/\/NO-SECRETS/);
@@ -81,6 +88,7 @@ test("renderUploadPreview shows a local-first transmission cockpit", () => {
   assert.match(text, /badge npx vibetrack badge --out \.\/vibetracker-badge\.svg/);
   assert.match(text, /handle --handle cyrill --markdown/);
   assert.match(text, /badge is local SVG; trust rail remains NOT USAGE/);
+  assert.match(text, /aggregate metadata, provider rollups, measured coding totals/);
   assert.match(text, /no API keys, prompts, screenshots, raw provider payloads, or local files/);
   assert.match(text, /secret scan clean/);
   assert.match(text, /nothing uploaded/);

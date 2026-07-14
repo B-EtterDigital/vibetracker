@@ -114,6 +114,18 @@ test("peak agent load falls back to distinct CLIs without usable cost data", () 
   assert.equal(s.peakAgentLoad, 2);
 });
 
+test("measured agent presence counts without fabricated token or cost attribution", () => {
+  const s = computeProfileSignals(base({
+    ...tokens(1e9, 0, 1e9, 0),
+    agents: [
+      { agent: "codex", activeDays: 12, cost: 0, tokens: 0 },
+      { agent: "claude", activeDays: 4, cost: 0, tokens: 0 },
+    ],
+  }));
+  assert.equal(s.agentCount, 2);
+  assert.equal(s.peakAgentLoad, 2);
+});
+
 test("self-reported truths override estimates in the signals output", () => {
   const s = computeProfileSignals(base({
     ...tokens(1e9, 1e8, 90e9, 1e9), crossProviderDays: 20,

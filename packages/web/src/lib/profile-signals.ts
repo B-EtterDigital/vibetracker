@@ -76,7 +76,7 @@ export function computeProfileSignals(profile: ProfileView): ProfileSignals {
   const cacheReuse = total && total.input + total.cacheRead > 0 ? total.cacheRead / (total.input + total.cacheRead) : 0;
   const outputShare = hasTokens && total ? total.output / totalTokens : 0;
 
-  const agents = (profile.agents ?? []).filter((a) => a.tokens > 1e6 || a.cost >= 1);
+  const agents = (profile.agents ?? []).filter((a) => a.activeDays > 0 || a.tokens > 1e6 || a.cost >= 1);
   const agentCount = agents.length;
   const crossProviderDays = profile.crossProviderDays ?? 0;
 

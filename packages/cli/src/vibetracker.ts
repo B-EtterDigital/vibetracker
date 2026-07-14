@@ -1666,9 +1666,11 @@ async function main() {
     const url = flag(argv, "--url") || cfg.uploadUrl || process.env.VT_UPLOAD_URL || DEFAULT_UPLOAD_URL;
     const trustSignals = collectTrustSignals();
     const audit = buildUsageAudit({ records: accepted, providers: PROVIDERS, config: cfg, trustSignals });
-    // Measured-at-source: capture the ccusage token + per-agent breakdown now, before the CLIs
-    // prune their logs. Best-effort (null when ccusage isn't installed) so upload never blocks.
-    const coding = argv.includes("--no-ccusage") ? null : collectCodingTelemetry();
+    // Attach the newest local cc.json aggregate without launching ccusage or blocking upload.
+    // Model tokens and per-day agent presence are measured; per-agent spend is not inferred.
+    const coding = argv.includes("--no-ccusage")
+      ? null
+      : collectCodingTelemetry({ telemetry: createConsoleTelemetry() });
     const bundle = {
       schema: "vibetracker.upload/0.1",
       handle,
@@ -1691,6 +1693,7 @@ async function main() {
       audit,
       findings,
       site: SITE,
+      coding,
     };
     if (argv.includes("--dry-run") || argv.includes("--preview")) {
       console.log(renderUploadPreview(uploadRender));
