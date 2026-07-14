@@ -10,6 +10,8 @@ const brief = readFileSync("packages/web/src/app/home/leaderboard-brief.tsx", "u
 const briefCss = readFileSync("packages/web/src/app/home/leaderboard-brief.css", "utf8");
 const uplink = readFileSync("packages/web/src/app/home/signal-uplink.tsx", "utf8");
 const uplinkCss = readFileSync("packages/web/src/app/home/signal-uplink.css", "utf8");
+const identityClaim = readFileSync("packages/web/src/app/home/identity-claim-rail.tsx", "utf8");
+const identityClaimCss = readFileSync("packages/web/src/app/home/identity-claim-rail.css", "utf8");
 
 test("leaderboard tier changes reset transient search and expansion state", () => {
   assert.match(source, /function selectTier\(nextTier: HomeBoardTier\)/);
@@ -68,6 +70,13 @@ test("leaderboard distinguishes verified identity from handle-only CLI uploads",
   assert.match(source, /role="img" title=\{identityProofLabel\(row\)\} aria-label=\{identityProofLabel\(row\)\}/);
   assert.match(source, /CLI upload; identity not verified/);
   assert.match(source, /home-board__identity-proof--cli/);
+  assert.match(source, /<IdentityClaimRail \/>/);
+  assert.match(identityClaim, /Claim the blue check\. Keep the ledger\./);
+  assert.match(identityClaim, /identity proof never upgrades usage evidence/);
+  assert.match(identityClaim, /href="\/account\?next=%2F"/);
+  assert.match(identityClaim, /No C0VIBE account required/);
+  assert.match(identityClaimCss, /@media \(max-width: 620px\)/);
+  assert.match(identityClaimCss, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
 test("leaderboard explains concentration, unit cost, active depth, and identity coverage without changing rank", () => {

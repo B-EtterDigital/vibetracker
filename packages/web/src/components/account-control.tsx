@@ -53,19 +53,34 @@ export function AccountControl() {
     };
   }, []);
 
-  const label = state === "loading" || state === "signed-out" ? "sign in" : `@${handle}`;
+  const label = state === "loading"
+    ? "Checking GitHub"
+    : state === "signed-out"
+      ? "Verify GitHub"
+      : state === "session"
+        ? "Finish GitHub"
+        : `@${handle}`;
+  const shortLabel = state === "loading"
+    ? "GitHub"
+    : state === "signed-out"
+      ? "Verify"
+      : state === "session"
+        ? "Finish"
+        : `@${handle}`;
   const title = state === "linked"
     ? `GitHub identity verified as @${handle}`
     : state === "unavailable"
       ? `Signed in as @${handle}; identity status is unavailable`
     : state === "session"
       ? `Signed in as @${handle}; finish GitHub linking`
-      : "Sign in with GitHub";
+      : state === "loading"
+        ? "Checking GitHub identity status"
+        : "Verify with GitHub; no C0VIBE account required";
 
   return (
     <a className={styles.control} data-state={state} href="/account" title={title} aria-label={title} aria-busy={state === "loading"}>
       <span className={styles.mark} aria-hidden="true">{state === "linked" ? "✓" : state === "session" ? "·" : state === "unavailable" ? "!" : "GH"}</span>
-      <span className={styles.label}>{label}</span>
+      <span className={styles.label} data-short-label={shortLabel}>{label}</span>
     </a>
   );
 }

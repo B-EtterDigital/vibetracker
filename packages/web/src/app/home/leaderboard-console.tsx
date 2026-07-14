@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type CSSProperties } from "react";
 import { LeaderboardBrief } from "./leaderboard-brief";
+import { IdentityClaimRail } from "./identity-claim-rail";
 import { buildHomeBoardLens, HOME_BOARD_LENSES, type HomeBoardLensId } from "./leaderboard-lens";
 import { SignalUplink, type UplinkCopyState } from "./signal-uplink";
 
@@ -153,6 +154,8 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
         <p>{active.blurb}</p>
         <strong>TRUST +0 // MIXED RANKS 0</strong>
       </div>
+
+      <IdentityClaimRail />
 
       <dl className="home-board__metrics" aria-label={`${active.label} leaderboard totals`}>
         <div><dt>Ranked operators</dt><dd>{active.totals.operators}</dd></div>

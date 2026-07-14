@@ -7,6 +7,7 @@ import { c0vibeAuthorizationUrl, c0vibeBridgeMessage } from "../c0vibe-account-b
 const page = readFileSync("packages/web/src/app/account/page.tsx", "utf8");
 const consoleSource = readFileSync("packages/web/src/app/account/account-console.tsx", "utf8");
 const control = readFileSync("packages/web/src/components/account-control.tsx", "utf8");
+const controlCss = readFileSync("packages/web/src/components/account-control.module.css", "utf8");
 const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 const styles = readFileSync("packages/web/src/app/account/account.css", "utf8");
 const callback = readFileSync("packages/web/src/app/auth/callback/route.ts", "utf8");
@@ -59,25 +60,30 @@ test("C0VIBE migration uses a bounded one-time claim and fixed WorkOS entrypoint
   assert.doesNotMatch(bridgeRoute, /email.*claim|provider_token|localStorage|sessionStorage/);
 });
 
-test("global shell exposes an obvious sign-in control without claiming verification early", () => {
+test("global shell exposes an obvious GitHub verification control without requiring C0VIBE", () => {
   assert.match(layout, /<AccountControl \/>/);
   assert.match(layout, /href="\/account"/);
   assert.match(control, /api\/identity\/github\/status/);
-  assert.match(control, /\? "sign in" : `@\$\{handle\}`/);
-  assert.match(control, /Sign in with GitHub/);
+  assert.match(control, /\? "Verify GitHub"/);
+  assert.match(control, /\? "Finish GitHub"/);
+  assert.match(control, /no C0VIBE account required/);
+  assert.match(control, /data-short-label=\{shortLabel\}/);
   assert.match(control, /state === "linked" \? "✓"/);
+  assert.match(controlCss, /min-width: 122px/);
+  assert.match(controlCss, /content: attr\(data-short-label\)/);
   assert.doesNotMatch(control, /signInWithOAuth|provider_token|localStorage|sessionStorage/);
 });
 
 test("account console uses real GitHub OAuth when available and the verified CLI path otherwise", () => {
   assert.match(page, /Prove your GitHub\. Keep your usage history\./);
-  assert.match(page, /browser sign-in when configured or verify immediately through the GitHub CLI/);
+  assert.match(page, /This creates a VibeUsage identity, not a full C0VIBE account/);
   assert.match(page, /browser OAuth or existing gh CLI/);
   assert.match(page, /blue check.*identity only, NOT usage truth/i);
   assert.match(consoleSource, /signInWithOAuth\(\{/);
   assert.match(consoleSource, /provider: "github"/);
   assert.match(consoleSource, /scopes: "read:user user:email"/);
-  assert.match(consoleSource, /continue with GitHub/);
+  assert.match(consoleSource, /verify with GitHub/);
+  assert.match(consoleSource, /No C0VIBE or WorkOS account is created/);
   assert.match(consoleSource, /const CLI_COMMAND = "npx vibetracker login"/);
   assert.match(consoleSource, /navigator\.clipboard\.writeText\(CLI_COMMAND\)/);
   assert.match(consoleSource, /copy npx vibetracker login/);
@@ -85,7 +91,7 @@ test("account console uses real GitHub OAuth when available and the verified CLI
   assert.match(consoleSource, /browserReady \? signIn : copyCliCommand/);
   assert.match(consoleSource, /The raw GitHub token is used once for identity verification and is never persisted/);
   assert.match(consoleSource, /OAuth and GitHub CLI proof resolve to the same immutable subject/);
-  assert.match(consoleSource, /No copied token, terminal command, or separate password/);
+  assert.match(consoleSource, /No C0VIBE or WorkOS account is created/);
   assert.match(consoleSource, /signOut\(\{ scope: "local" \}\)/);
   assert.doesNotMatch(consoleSource, /localStorage|sessionStorage|provider_refresh_token/);
 });

@@ -34,9 +34,9 @@ const CLI_STEPS = [
 ] as const;
 
 function oauthMessage(value: string | null): string {
-  if (value === "success") return "GitHub sign-in complete. This browser now has a real account session.";
-  if (value === "denied") return "GitHub sign-in was cancelled before any account was linked.";
-  if (value === "error") return "GitHub sign-in could not be completed. Please try again.";
+  if (value === "success") return "GitHub verification complete. This browser now has a VibeUsage identity session.";
+  if (value === "denied") return "GitHub verification was cancelled before any identity was linked.";
+  if (value === "error") return "GitHub verification could not be completed. Please try again.";
   return "";
 }
 
@@ -197,14 +197,14 @@ export function AccountConsole() {
 
   const browserReady = provider === "available";
   const browserChecking = provider === "checking";
-  const providerCopy = browserReady ? "GitHub OAuth ready" : browserChecking ? "checking browser OAuth" : "GitHub CLI ready";
+  const providerCopy = browserReady ? "GitHub verification ready" : browserChecking ? "checking GitHub" : "GitHub CLI ready";
   const linkCopy = linkState === "linked" ? "identity linked" : linkState === "checking" ? "checking account link" : linkState === "unlinked" ? "session ready, link pending" : linkState === "error" ? "link needs attention" : "no browser session";
   const proofSteps = browserReady ? BROWSER_STEPS : CLI_STEPS;
 
   return (
     <section className="account-console" aria-labelledby="account-console-title">
       <div className="account-console__head">
-        <div><p className="eyebrow">Live identity state</p><h2 id="account-console-title">GitHub sign-in console</h2></div>
+        <div><p className="eyebrow">Live identity state</p><h2 id="account-console-title">GitHub verification console</h2></div>
         <div className="account-console__lights" aria-label="Authentication state">
           <span data-tone={provider === "available" ? "ready" : "waiting"}>{providerCopy}</span>
           <span data-tone={linkState === "linked" ? "verified" : "waiting"}>{linkCopy}</span>
@@ -234,7 +234,7 @@ export function AccountConsole() {
               <div className="account-console__pitch">
                 <span className="account-console__github" aria-hidden="true">GH</span>
                 {browserReady || browserChecking
-                  ? <div><h3>Sign in through GitHub itself.</h3><p>GitHub handles consent, Supabase exchanges the callback securely, and VibeUsage creates a browser session.</p></div>
+                  ? <div><h3>Verify through GitHub itself.</h3><p>GitHub proves the handle, Supabase exchanges the callback securely, and VibeUsage creates only an identity session.</p></div>
                   : <div><h3>Verify the GitHub identity already on this machine.</h3><p>Reuse your authenticated GitHub CLI session now. No C0VIBE account, new password, or usage upload is required.</p></div>}
               </div>
               <button
@@ -244,11 +244,11 @@ export function AccountConsole() {
                 onClick={browserReady ? signIn : copyCliCommand}
                 disabled={busy || browserChecking}
               >
-                {busy ? "opening GitHub" : browserChecking ? "checking GitHub sign-in" : browserReady ? "continue with GitHub" : "copy npx vibetracker login"}
+                {busy ? "opening GitHub" : browserChecking ? "checking GitHub" : browserReady ? "verify with GitHub" : "copy npx vibetracker login"}
               </button>
               <small className="account-console__path-note">
                 {browserReady
-                  ? "No copied token, terminal command, or separate password. GitHub redirects back to a secure VibeUsage session."
+                  ? "No C0VIBE or WorkOS account is created. GitHub redirects back to a secure VibeUsage identity session."
                   : "Run the copied command where gh auth status passes. The raw GitHub token is used once for identity verification and is never persisted by VibeTRACKER."}
               </small>
             </>
@@ -257,7 +257,7 @@ export function AccountConsole() {
         </div>
 
         <div className="account-console__oauth" data-channel={browserReady ? "browser" : "terminal"} aria-label={browserReady ? "GitHub OAuth flow" : "GitHub CLI identity flow"}>
-          <div className="console-top"><span>{browserReady ? "oauth@browser" : "proof@terminal"}</span><b>{browserReady ? "REAL SESSION" : "LIVE NOW"}</b></div>
+          <div className="console-top"><span>{browserReady ? "proof@github" : "proof@terminal"}</span><b>{browserReady ? "IDENTITY ONLY" : "LIVE NOW"}</b></div>
           <h3>{browserReady ? "One browser flow." : "One terminal command."} Four verifiable steps.</h3>
           <ol>
             {proofSteps.map(([title, detail], index) => <li key={title}><span>{String(index + 1).padStart(2, "0")}</span><div><b>{title}</b><small>{detail}</small></div></li>)}

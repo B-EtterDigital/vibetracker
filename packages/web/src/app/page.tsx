@@ -10,6 +10,7 @@ import {
   type HomeBoardSnapshot,
 } from "./home/leaderboard-console";
 import "./home/home.css";
+import "./home/identity-claim-rail.css";
 import "./home/leaderboard-brief.css";
 import "./home/signal-uplink.css";
 
