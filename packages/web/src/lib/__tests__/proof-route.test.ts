@@ -2,7 +2,73 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildEvidenceCockpit } from "../evidence-cockpit.ts";
+import { buildLiveProofSnapshot, sanitizeProofHandle } from "../../app/proof/live-proof-snapshot.ts";
 import { buildProofVerdict } from "../../app/proof/proof-verdict.ts";
+import type { ProfileView } from "../data.ts";
+
+const publicProfile: ProfileView = {
+  handle: "b-etterdigital",
+  created_at: "2026-07-01T00:00:00Z",
+  isPremium: true,
+  identityVerified: true,
+  identityProvider: "github",
+  accountLinked: false,
+  latest: {
+    total_usd: 19.4,
+    total_credits: 88,
+    record_count: 2048,
+    created_at: "2026-07-14T17:15:00Z",
+    tier: "cli_verified",
+  },
+  providers: [
+    { provider: "codex", ops: 1600, credits: 60, usd: 13.2 },
+    { provider: "claude-code", ops: 448, credits: 28, usd: 6.2 },
+  ],
+  usageDays: [{ date: "2026-07-14", ops: 2048, credits: 88, usd: 19.4 }],
+  categories: [],
+  providerDays: [],
+  providerModels: [],
+  trustSignals: [],
+  rank: 7,
+};
+
+test("proof handle input accepts GitHub handles and rejects ambiguous values", () => {
+  assert.equal(sanitizeProofHandle(" @B-EtterDigital "), "b-etterdigital");
+  assert.equal(sanitizeProofHandle(["Cyrill", "ignored"]), "cyrill");
+  assert.equal(sanitizeProofHandle("../admin"), "b-etterdigital");
+  assert.equal(sanitizeProofHandle("broken_handle"), "b-etterdigital");
+  assert.equal(sanitizeProofHandle(undefined), "b-etterdigital");
+});
+
+test("live proof snapshot exposes public aggregates without calling its fingerprint a signature", () => {
+  const snapshot = buildLiveProofSnapshot(publicProfile);
+
+  assert.equal(snapshot.status, "live");
+  assert.equal(snapshot.statusLabel, "LIVE PUBLIC AGGREGATE");
+  assert.equal(snapshot.identityLabel, "GITHUB VERIFIED");
+  assert.equal(snapshot.tierLabel, "CLI VERIFIED");
+  assert.equal(snapshot.rankLabel, "#7 PUBLIC RANK");
+  assert.equal(snapshot.updatedLabel, "2026-07-14");
+  assert.match(snapshot.fingerprint, /^[A-F0-9]{8}$/);
+  assert.equal(snapshot.metrics.find((metric) => metric.id === "records")?.value, "2,048");
+  assert.equal(snapshot.events.length, 7);
+  assert.match(snapshot.receipt, /trust_signals 0 \(NOT USAGE\)/);
+  assert.match(snapshot.receipt, /vibeusage\.c0vibe\.app\/u\/b-etterdigital/);
+  assert.equal(snapshot.metrics[0].label, "Snapshot fingerprint");
+  assert.doesNotMatch(snapshot.metrics[0].value, /signature/i);
+  assert.match(snapshot.metrics[0].detail, /not a cryptographic signature/i);
+});
+
+test("live proof snapshot stays explicitly empty before a first upload", () => {
+  const snapshot = buildLiveProofSnapshot({ ...publicProfile, latest: null, providers: [], usageDays: [], rank: null });
+
+  assert.equal(snapshot.status, "waiting");
+  assert.equal(snapshot.statusLabel, "WAITING FOR FIRST UPLOAD");
+  assert.equal(snapshot.tierLabel, "NOT SYNCED");
+  assert.equal(snapshot.updatedLabel, "NOT PUBLISHED");
+  assert.equal(snapshot.metrics.find((metric) => metric.id === "records")?.value, "0");
+  assert.match(snapshot.receipt, /state waiting/);
+});
 
 test("proof verdict separates bundled contract coverage from live user evidence", () => {
   const evidence = buildEvidenceCockpit();
@@ -22,6 +88,8 @@ test("proof verdict separates bundled contract coverage from live user evidence"
 
 test("proof center is exposed as a first-class local-first evidence route", () => {
   const page = readFileSync("packages/web/src/app/proof/page.tsx", "utf8");
+  const liveWorkbench = readFileSync("packages/web/src/app/proof/live-proof-workbench.tsx", "utf8");
+  const liveStyles = readFileSync("packages/web/src/app/proof/live-proof-workbench.css", "utf8");
   const verdictPanel = readFileSync("packages/web/src/app/proof/proof-verdict-panel.tsx", "utf8");
   const verdictStyles = readFileSync("packages/web/src/app/proof/proof-verdict.css", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
@@ -30,16 +98,22 @@ test("proof center is exposed as a first-class local-first evidence route", () =
 
   assert.match(layout, /href="\/proof"/);   // reachable from the header
   assert.match(page, /buildEvidenceCockpit/);
+  assert.match(page, /getProfile\(requestedHandle\)/);
+  assert.match(page, /buildLiveProofSnapshot/);
+  assert.match(page, /sanitizeProofHandle/);
+  assert.match(page, /async function ProofPage/);
+  assert.match(page, /await searchParams/);
+  assert.match(page, /<LiveProofWorkbench/);
+  assert.match(page, /<details className="proof-blueprint">/);
+  assert.match(page, /Open the bundled proof contract/);
+  assert.match(page, /Inspect a public usage receipt/);
+  assert.match(page, /real public aggregate/);
   assert.match(page, /buildProofVerdict/);
   assert.match(page, /<ProofVerdictPanel verdict=\{verdict\} \/>/);
   assert.match(page, /proof-route-intro/);
   assert.match(page, /proof-route-cockpit evidence-cockpit/);
   assert.match(page, /VTK:\/\/PROOF-CENTER\/\/LOCAL-FIRST\/\/NO-FAKE-PROOF\/\/NO-HIDDEN-UPLOADS/);
-  assert.match(page, /Fast collection is useless without visible proof/);
-  assert.match(page, /provider collection, ingest validation/);
-  assert.match(page, /local redaction preview/);
-  assert.match(page, /not-usage trust rails/);
-  assert.match(page, /explicit C0VIBE publish relay/);
+  assert.match(page, /complete scan-to-share specification/);
   assert.match(page, /NO FAKE PROOF/);
   assert.match(page, /dry-run first/);
   assert.match(page, /railLabelFor/);
@@ -116,6 +190,20 @@ test("proof center is exposed as a first-class local-first evidence route", () =
   assert.match(evidence, /0 usage writes/);
   assert.match(evidence, /0 hidden uploads/);
   assert.doesNotMatch(page, /dangerouslySetInnerHTML/);
+  assert.match(liveWorkbench, /role="tablist"/);
+  assert.match(liveWorkbench, /role="tabpanel"/);
+  assert.match(liveWorkbench, /aria-selected/);
+  assert.match(liveWorkbench, /ArrowLeft/);
+  assert.match(liveWorkbench, /navigator\.clipboard\.writeText\(snapshot\.receipt\)/);
+  assert.match(liveWorkbench, /No cached or fixture values were substituted/);
+  assert.match(liveWorkbench, /fabricated metrics 0/);
+  assert.match(liveWorkbench, /not a cryptographic signature or independent attestation/i);
+  assert.match(liveStyles, /\.live-proof__workspace/);
+  assert.match(liveStyles, /\.proof-blueprint/);
+  assert.match(liveStyles, /@media \(max-width: 760px\)/);
+  assert.match(liveStyles, /@media \(min-width: 2200px\)/);
+  assert.match(liveStyles, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.doesNotMatch(liveStyles, /gradient\(/);
   assert.match(styles, /\.proof-route-intro/);
   assert.match(styles, /\.proof-datastream-spine/);
   assert.match(styles, /\.proof-datastream-spine__terminal::after/);

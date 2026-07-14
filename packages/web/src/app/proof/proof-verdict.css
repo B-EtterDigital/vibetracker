@@ -94,5 +94,5 @@
 }
 
 @media (min-width: 2200px) {
-  .wrap:has(> .proof-route-intro) { max-width: 1760px; }
+  .wrap:has(> .proof-route-intro) { max-width: 2640px; }
 }

@@ -9,8 +9,12 @@ import {
   type EvidenceVerificationBridge,
   type EvidenceVerificationGate,
 } from "../../lib/evidence-cockpit";
+import { getProfile } from "../../lib/data";
+import { LiveProofWorkbench } from "./live-proof-workbench";
+import { buildLiveProofSnapshot, sanitizeProofHandle } from "./live-proof-snapshot";
 import { buildProofVerdict } from "./proof-verdict";
 import { ProofVerdictPanel } from "./proof-verdict-panel";
+import "./live-proof-workbench.css";
 import "./proof-verdict.css";
 
 export const metadata = {
@@ -342,20 +346,35 @@ function ProofReplayRecorderPanel({ replay }: { replay: EvidenceReplayDeck }) {
   );
 }
 
-export default function ProofPage() {
+interface ProofPageProps {
+  searchParams: Promise<{ handle?: string | string[] }>;
+}
+
+export default async function ProofPage({ searchParams }: ProofPageProps) {
   const evidence = buildEvidenceCockpit();
   const verdict = buildProofVerdict(evidence);
+  const params = await searchParams;
+  const requestedHandle = sanitizeProofHandle(params.handle);
+  let liveProfile: Awaited<ReturnType<typeof getProfile>> = null;
+  let loadFailed = false;
+  try {
+    liveProfile = await getProfile(requestedHandle);
+  } catch {
+    // getProfile records the failed public query through product telemetry.
+    loadFailed = true;
+  }
+  const snapshot = liveProfile ? buildLiveProofSnapshot(liveProfile) : null;
 
   return (
     <>
       <section className="proof-route-intro" aria-label="VibeTRACKER proof center introduction">
         <div>
           <p className="eyebrow">Proof center</p>
-          <h1>Fast collection is useless without visible proof</h1>
+          <h1>Inspect a public usage receipt.</h1>
           <p>
-            This cockpit shows the full scan-to-share chain: provider collection, ingest validation,
-            local redaction preview, not-usage trust rails, and explicit C0VIBE publish relay.
-            Every stage is labelled before anything claims to be usage.
+            Start with a real public aggregate: what was counted, which provider rollups exist, what
+            trust context cannot affect, and where the receipt was published. The bundled contract
+            remains below for operators who need the complete scan-to-share specification.
           </p>
         </div>
         <div className="motto-rail" aria-label="Proof center motto">
@@ -365,72 +384,79 @@ export default function ProofPage() {
         </div>
       </section>
 
-      <ProofVerdictPanel verdict={verdict} />
+      <LiveProofWorkbench loadFailed={loadFailed} requestedHandle={requestedHandle} snapshot={snapshot} />
 
-      <ProofDatastreamSpinePanel evidence={evidence} />
+      <details className="proof-blueprint">
+        <summary>Open the bundled proof contract</summary>
+        <div className="proof-blueprint__body">
+          <ProofVerdictPanel verdict={verdict} />
 
-      <section className="proof-route-cockpit evidence-cockpit" aria-label="VibeTRACKER proof center evidence cockpit">
-        <div className="evidence-cockpit__head">
-          <span>VTK://PROOF-CENTER//LOCAL-FIRST//NO-FAKE-PROOF//NO-HIDDEN-UPLOADS</span>
-          <b>{evidence.headline}</b>
-        </div>
-        <div className="evidence-cockpit__body">
-          <aside className="evidence-terminal" aria-label="Proof center terminal">
-            <div className="console-top"><span>proof@local</span><b>TRACEABLE</b></div>
-            <pre>{evidence.terminalLines.join("\n")}</pre>
-            <div className="evidence-relay" aria-label="Proof center relay">
-              <span>Vibers Unite</span>
-              <a href="https://c0vibe.app">c0vibe.app</a>
-              <code>dry-run first</code>
+          <ProofDatastreamSpinePanel evidence={evidence} />
+
+          <section className="proof-route-cockpit evidence-cockpit" aria-label="VibeTRACKER proof center evidence cockpit">
+            <div className="evidence-cockpit__head">
+              <span>VTK://PROOF-CENTER//LOCAL-FIRST//NO-FAKE-PROOF//NO-HIDDEN-UPLOADS</span>
+              <b>{evidence.headline}</b>
             </div>
-          </aside>
-          <div className="evidence-stages" aria-label="Proof center stages">
-            {evidence.stages.map((stage, index) => (
-              <article
-                className={`evidence-stage evidence-stage--${stage.impact}`}
-                data-rail={railLabelFor(stage)}
-                style={{ "--i": index, "--meter": `${stage.meter}%` } as CSSProperties}
-                key={stage.id}
-              >
-                <div className="evidence-stage__screen" aria-hidden="true">
-                  <pre>{stage.ascii.join("\n")}</pre>
-                  <span>{stage.status}</span>
+            <div className="evidence-cockpit__body">
+              <aside className="evidence-terminal" aria-label="Proof center terminal">
+                <div className="console-top"><span>proof@local</span><b>TRACEABLE</b></div>
+                <pre>{evidence.terminalLines.join("\n")}</pre>
+                <div className="evidence-relay" aria-label="Proof center relay">
+                  <span>Vibers Unite</span>
+                  <a href="https://c0vibe.app">c0vibe.app</a>
+                  <code>dry-run first</code>
                 </div>
-                <div className="evidence-stage__copy">
-                  <b>{stage.label}</b>
-                  <strong>{railLabelFor(stage)}</strong>
-                  <code>{stage.command}</code>
-                  <p>{stage.note}</p>
-                </div>
-                <div
-                  className="evidence-stage__meter"
-                  role="progressbar"
-                  aria-label={`${stage.label} fixture coverage`}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={stage.meter}
-                >
-                  <i />
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-        <div className="evidence-guards" aria-label="Proof center guard rails">
-          {evidence.guards.map((guard) => (
-            <div key={guard.id}>
-              <b>{guard.label}</b>
-              <span>{guard.note}</span>
+              </aside>
+              <div className="evidence-stages" aria-label="Proof center stages">
+                {evidence.stages.map((stage, index) => (
+                  <article
+                    className={`evidence-stage evidence-stage--${stage.impact}`}
+                    data-rail={railLabelFor(stage)}
+                    style={{ "--i": index, "--meter": `${stage.meter}%` } as CSSProperties}
+                    key={stage.id}
+                  >
+                    <div className="evidence-stage__screen" aria-hidden="true">
+                      <pre>{stage.ascii.join("\n")}</pre>
+                      <span>{stage.status}</span>
+                    </div>
+                    <div className="evidence-stage__copy">
+                      <b>{stage.label}</b>
+                      <strong>{railLabelFor(stage)}</strong>
+                      <code>{stage.command}</code>
+                      <p>{stage.note}</p>
+                    </div>
+                    <div
+                      className="evidence-stage__meter"
+                      role="progressbar"
+                      aria-label={`${stage.label} fixture coverage`}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={stage.meter}
+                    >
+                      <i />
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
-          ))}
+            <div className="evidence-guards" aria-label="Proof center guard rails">
+              {evidence.guards.map((guard) => (
+                <div key={guard.id}>
+                  <b>{guard.label}</b>
+                  <span>{guard.note}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <ProofVerificationBridgePanel bridge={evidence.bridge} />
+
+          <ProofBlackBoxPanel evidence={evidence} />
+
+          <ProofReplayRecorderPanel replay={evidence.replay} />
         </div>
-      </section>
-
-      <ProofVerificationBridgePanel bridge={evidence.bridge} />
-
-      <ProofBlackBoxPanel evidence={evidence} />
-
-      <ProofReplayRecorderPanel replay={evidence.replay} />
+      </details>
     </>
   );
 }
