@@ -5,7 +5,7 @@
     "name": "GitHub-first Account Console",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "language": ["tsx", "ts", "css"],
     "frameworks": ["next", "react", "supabase"],
     "domain": ["identity", "authentication", "github_verification", "cli_migration"]
@@ -15,12 +15,12 @@
     "group_id": "000-vibetracker:packages/web/src/app",
     "contains": ["module", "component", "utility", "api_route", "file"],
     "component_policy": "internal_by_default",
-    "notes": "A GitHub-first identity surface that preserves CLI history and keeps identity proof separate from usage truth."
+    "notes": "An adaptive GitHub-first identity surface: browser OAuth when configured, proven GitHub CLI verification otherwise, with one immutable subject and identity proof kept separate from usage truth."
   },
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "c1d2195",
+    "commit": "d896cf3",
     "paths": [
       "packages/web/src/app/account",
       "packages/web/src/app/api/identity/github/status",
@@ -74,19 +74,19 @@
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Session derivation, provider availability, global status, account interaction, and server status lookup are separated into focused files; the largest source file is 245 lines.",
+      "notes": "Session derivation, provider availability, adaptive account interaction, global status, and server status lookup are separated into focused files; the largest source file is 240 lines.",
       "evidence": ["packages/web/src/app/account", "packages/web/src/components/account-control.tsx"]
     },
     "ssi": {
       "status": "passing",
       "score": 95,
-      "notes": "The console reuses the existing GitHub link endpoint and Supabase browser client instead of duplicating migration logic.",
+      "notes": "The console selects between the existing OAuth and GitHub CLI proof channels while both resolve to the same immutable GitHub subject and existing link contracts.",
       "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/supabase-browser.ts"]
     },
     "sstf": {
       "status": "passing",
       "score": 96,
-      "notes": "Focused contracts cover sanitization, redirect safety, status authorization, one-time linking, local sign-out, CLI fallback, responsive layout, and motion safety.",
+      "notes": "Nineteen focused identity contracts and the full 611-test suite cover sanitization, redirect safety, status authorization, one-time linking, local sign-out, adaptive CLI fallback, responsive layout, and motion safety.",
       "evidence": ["packages/web/src/lib/__tests__/account-route.test.ts", "packages/web/src/lib/__tests__/github-identity-route.test.ts"]
     },
     "spe": {
@@ -98,14 +98,14 @@
     "srs": {
       "status": "passing",
       "score": 96,
-      "notes": "Signed-out, checking, unavailable, session-only, linking, linked, migration, and error states are all visible; no auth failure is silently converted to success.",
+      "notes": "Signed-out, checking, OAuth-ready, CLI-ready, unavailable, session-only, linked, migration, copy-success, and copy-failure states are visible; a missing provider never leaves the primary action disabled.",
       "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/components/account-control.tsx"]
     },
     "ssra": {
       "status": "partial",
-      "score": 94,
-      "notes": "Focused tests, release gate, production builds, stable-domain account interaction, mobile/desktop/4K layout proof, Lighthouse, and live CLI start/poll/rejection probes pass. Browser OAuth remains visibly unavailable because no dedicated GitHub OAuth app is configured; GitHub CLI sign-in is the live account-free path.",
-      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/__tests__/account-route.test.ts", "https://vibeusage.c0vibe.app/account", "Netlify production deploy 6a561ed964e7fc3860233003"]
+      "score": 97,
+      "notes": "Exact deploy 6a564ba0545612fcf12c76f5 from d896cf3 passed the provider-disabled CLI action, clipboard feedback, a second real GitHub CLI identity exchange, all network requests, zero console errors, 390x844 mobile and 3840x2160 fullscreen proof, and Lighthouse 100 in all four reported categories. Browser OAuth remains visibly unavailable until its dedicated GitHub app is configured.",
+      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/__tests__/account-route.test.ts", "https://vibeusage.c0vibe.app/account", "Netlify production deploy 6a564ba0545612fcf12c76f5"]
     },
     "sas": {
       "status": "passing",
@@ -116,7 +116,7 @@
     "sva": {
       "status": "passing",
       "score": 96,
-      "notes": "The server validates bearer sessions, returns only sanitized identity fields, and the client never persists raw provider credentials or infers a blue check from metadata.",
+      "notes": "The server validates bearer sessions, returns only sanitized identity fields, and neither adaptive channel persists raw GitHub credentials or infers a blue check from session metadata.",
       "evidence": ["packages/web/src/app/api/identity/github/status/route.ts", "packages/web/src/app/account/account-session.ts"]
     },
     "srls": {
@@ -140,7 +140,7 @@
     "sai": {
       "status": "passing",
       "score": 95,
-      "notes": "Intent, owned files, current-tree gates, provider blocker, and identity/usage boundary are captured in the Gen3 receipts and this manifest.",
+      "notes": "Intent, owned files, current-tree gates, exact deploy, real GitHub CLI exchange, provider blocker, and identity/usage boundary are captured in the Gen3 receipt and this manifest.",
       "evidence": [
         ".smarch/agent-context/000-vibetracker.web.github-first-account-console.ndjson",
         ".smarch/agent-context/000-vibetracker.auth.github-identity-status.ndjson"
@@ -200,12 +200,12 @@
   "quality": {
     "score": 96,
     "line_count": {
-      "max_file_lines": 245,
+      "max_file_lines": 240,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 788,
+      "feature_lines": 829,
       "file_count": 10,
       "dependency_count": 3,
       "notes": "The implementation is split across the route, pure session helper, global control, server status endpoint, styles, and focused contracts."
@@ -222,6 +222,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T11:38:52Z",
         "notes": "11 focused auth tests, 15 control-plane tests, 600 package tests, strict telemetry with zero violations, typecheck, root build, Next production build, and high-severity dependency audit pass. Production deploy 6a561ed964e7fc3860233003 is live at vibeusage.c0vibe.app; CLI start returns 200, poll remains pending without a token, invalid GitHub verification and browser sessions return 401 without credentials, mobile/desktop/4K interaction proofs pass without horizontal overflow, and Lighthouse scores 100/100/100/100."
+      },
+      {
+        "command": "19 focused identity tests + pnpm test + pnpm typecheck + pnpm telemetry:audit:strict + pnpm audit --audit-level high + pnpm sma:gen3:check + production build/deploy + real CLI/browser proof",
+        "status": "pass",
+        "timestamp": "2026-07-14T14:50:48Z",
+        "notes": "611 tests and every gate passed. Exact deploy 6a564ba0545612fcf12c76f5 exposes an enabled CLI primary action when OAuth is disabled, copy feedback succeeds, the post-deploy GitHub CLI identity exchange succeeds without browser approval or usage movement, mobile/4K have no overflow, and Lighthouse reports four 100 scores."
       }
     ]
   },
@@ -230,6 +236,7 @@
     "adaptation_points": [
       "Create a dedicated GitHub OAuth app for the target Supabase callback.",
       "Configure the GitHub provider and production redirect allowlist.",
+      "Keep the verified GitHub CLI channel active until browser OAuth is proven live.",
       "Retain the immutable GitHub subject as the account migration anchor."
     ],
     "install_steps": [
@@ -314,6 +321,37 @@
           "method": "agent_runner",
           "reference": "lease-1784027364589-3ef7794b"
         }
+      },
+      {
+        "actor_kind": "agent",
+        "actor_id": "bdd-main@019f4b2d",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "commit": "d896cf3",
+        "files_touched": [
+          "packages/web/src/app/account/account-console.tsx",
+          "packages/web/src/app/account/account.css",
+          "packages/web/src/app/account/page.tsx",
+          "packages/web/src/lib/__tests__/account-route.test.ts",
+          "packages/web/src/app/account/module.sweetspot.json"
+        ],
+        "verification": [
+          {
+            "command": "full gates + exact production deploy + real GitHub CLI exchange + Chrome DevTools proof",
+            "status": "pass",
+            "timestamp": "2026-07-14T14:50:48Z",
+            "notes": "Adaptive provider state, clipboard action, real CLI identity proof, 390x844, 3840x2160, network, console, and Lighthouse proof passed on deploy 6a564ba0545612fcf12c76f5."
+          }
+        ],
+        "timestamp": "2026-07-14T14:50:48Z",
+        "summary": "Made GitHub identity proof immediately actionable whether or not browser OAuth credentials are configured.",
+        "intent": "Never show a dead sign-in action while preserving the real future OAuth path and strict identity-versus-usage boundaries.",
+        "decision_rationale": "Provider availability now selects the proof channel; both channels resolve to the same immutable GitHub subject and neither moves usage.",
+        "lease_id": "lease-1784040068627-1f7e98cb",
+        "context_event_ids": ["ctx-1784040068681-027d91c5"],
+        "attestation": {"method": "git_commit", "reference": "d896cf3"}
       }
     ],
     "reviewed_by": [],
@@ -333,6 +371,14 @@
         "path": "packages/web/src/app/account",
         "event": "updated",
         "timestamp": "2026-07-14T11:38:52Z"
+      },
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.github-first-account-console",
+        "commit": "d896cf3",
+        "path": "packages/web/src/app/account",
+        "event": "updated",
+        "timestamp": "2026-07-14T14:50:48Z"
       }
     ]
   }
