@@ -20,7 +20,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "474469e",
+    "commit": "c410a57",
     "paths": [
       "packages/web/src/app/account",
       "packages/web/src/app/api/identity/github/status",
@@ -103,9 +103,9 @@
     },
     "ssra": {
       "status": "partial",
-      "score": 88,
-      "notes": "Release gate and production builds pass. Browser OAuth remains visibly disabled because no dedicated GitHub OAuth app is configured; the existing GitHub CLI verification path remains live.",
-      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/__tests__/account-route.test.ts"]
+      "score": 91,
+      "notes": "Release gate, production builds, deploy, API probe, interaction, and mobile/desktop/4K layout proof pass. Browser OAuth remains visibly disabled because no dedicated GitHub OAuth app is configured; the existing GitHub CLI verification path remains live.",
+      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/__tests__/account-route.test.ts", "Netlify deploy 6a55e42a25aa7657de3227db"]
     },
     "sas": {
       "status": "passing",
@@ -221,7 +221,7 @@
         "command": "focused auth tests + pnpm sma:release-gate + pnpm build + pnpm --dir packages/web build",
         "status": "pass",
         "timestamp": "2026-07-14T06:45:13Z",
-        "notes": "11 focused auth tests, 15 control-plane tests, 595 package tests, strict telemetry with zero violations, typecheck, root build, and Next production build pass. Live deployment and viewport proof remain to be appended."
+        "notes": "11 focused auth tests, 15 control-plane tests, 595 package tests, strict telemetry with zero violations, typecheck, root build, and Next production build pass. Netlify deploy 6a55e42a25aa7657de3227db is live; account interaction, 401 private no-store status, all-200 route assets, and 390/1440/3840 viewport proofs pass with zero horizontal scroll."
       }
     ]
   },
@@ -290,7 +290,7 @@
       {
         "project": "000-vibetracker",
         "brick_id": "000-vibetracker.web.github-first-account-console",
-        "commit": "474469e",
+        "commit": "c410a57",
         "path": "packages/web/src/app/account",
         "event": "created",
         "timestamp": "2026-07-14T06:45:13Z"
