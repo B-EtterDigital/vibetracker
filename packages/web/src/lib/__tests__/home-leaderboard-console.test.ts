@@ -65,6 +65,7 @@ test("leaderboard distinguishes verified identity from handle-only CLI uploads",
   assert.match(source, /function IdentityProof/);
   assert.match(source, /GitHub identity verified/);
   assert.match(source, /identity-attested CLI usage/);
+  assert.match(source, /role="img" title=\{identityProofLabel\(row\)\} aria-label=\{identityProofLabel\(row\)\}/);
   assert.match(source, /CLI upload; identity not verified/);
   assert.match(source, /home-board__identity-proof--cli/);
 });

@@ -49,11 +49,11 @@ function identityProofLabel(row: HomeBoardRow): string {
 
 function IdentityProof({ row }: { row: HomeBoardRow }) {
   return row.identityVerified ? (
-    <span className="home-board__identity-proof" data-provider={row.identityProvider ?? "c0vibe"} title={identityProofLabel(row)} aria-label={identityProofLabel(row)}>
+    <span className="home-board__identity-proof" data-provider={row.identityProvider ?? "c0vibe"} role="img" title={identityProofLabel(row)} aria-label={identityProofLabel(row)}>
       <span aria-hidden="true">✓</span>
     </span>
   ) : (
-    <span className="home-board__identity-proof home-board__identity-proof--cli" title={identityProofLabel(row)} aria-label={identityProofLabel(row)}>
+    <span className="home-board__identity-proof home-board__identity-proof--cli" role="img" title={identityProofLabel(row)} aria-label={identityProofLabel(row)}>
       CLI
     </span>
   );
