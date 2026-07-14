@@ -129,7 +129,7 @@ export function RunwayDecisionConsole({
                 id="insights-handle"
                 maxLength={64}
                 name="handle"
-                pattern="[a-zA-Z0-9_.\\-]{1,64}"
+                pattern="[a-zA-Z0-9_.\-]{1,64}"
                 placeholder="cyrill-etter"
               />
               <button type="submit">Analyze profile</button>

@@ -34,7 +34,7 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(consoleSource, /buildPlanScale/);
   assert.match(consoleSource, /action="\/insights"/);
   assert.match(consoleSource, /name="handle"/);
-  assert.match(consoleSource, /pattern="\[a-zA-Z0-9_\.\\\\-\]\{1,64\}"/);
+  assert.ok(consoleSource.includes('pattern="[a-zA-Z0-9_.\\-]{1,64}"'));
   assert.match(consoleSource, /defaultValue=\{isPublic \? handle : requestedHandle\}/);
   assert.match(consoleSource, /Analyze profile/);
   assert.match(consoleSource, /Live public profile/);
