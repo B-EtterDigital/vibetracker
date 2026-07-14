@@ -149,7 +149,7 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
             <p><em className="vsignals-self">you</em> self-reported by the viber — a truth the usage data can&apos;t reveal (real parallel-agent count, real subscription stack).</p>
           ) : null}
           {hasEst ? (
-            <p><em className="vsignals-est">est</em> reconstructed from partial data — Claude Code &amp; Codex prune their logs, so per-agent and op-level detail is derived from token volume.</p>
+            <p><em className="vsignals-est">est</em> parallel load is estimated from token throughput · CLI presence and active days come from the measured cc.json snapshot.</p>
           ) : null}
           <p className="vsignals-legend-measured">Everything unmarked (spend, tokens, commits, generations, cache mix) is measured directly.</p>
         </div>

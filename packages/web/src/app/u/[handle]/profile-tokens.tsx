@@ -1,14 +1,13 @@
-// Token breakdown + cross-provider delegation panels.
+// Token breakdown + measured multi-CLI activity panels.
 //
 // Token breakdown — the real input / output / cache-read / cache-creation split of every token
 // the viber's coding models processed (proportions from ccusage, scaled to the full-history token
 // total), plus the per-provider split. Cache-read dominating is the honest signature of heavy
 // agentic coding (each turn re-reads its context).
 //
-// Delegation — the coding-agent CLIs that produced the work (Codex, Claude, Hermes, OpenClaw,
-// Gemini, OpenCode) by active days and cost. This is the cross-provider orchestration surface: for
-// an SMOA-style workflow it shows the planner/workforce split (Claude plans, Codex executes) and
-// how many days ran two or more agents together.
+// Multi-CLI activity — agent names and active days come from cc.json metadata. Same-day provider
+// overlap comes from model breakdowns. Neither source proves concurrency, delegation direction,
+// or per-agent cost/token attribution, so this panel does not infer those claims.
 
 const TOKEN_ROWS = [
   { key: "input", label: "Input", color: "#f5a623" },
@@ -107,29 +106,19 @@ export function Delegation({ agents, crossProviderDays }: { agents: AgentRow[]; 
   if (!agents.length) return null;
   const ranked = agents.slice().sort((a, b) => b.activeDays - a.activeDays || b.cost - a.cost);
   const maxDays = Math.max(...ranked.map((a) => a.activeDays), 1);
-  const orchestrator = ranked.slice().sort((a, b) => b.cost - a.cost).find((a) => /claude/.test(a.agent));
-  const workforce = ranked.slice().sort((a, b) => b.cost - a.cost).find((a) => !/claude/.test(a.agent));
 
   return (
     <section className="vprofile-panel vdeleg">
       <header className="vprofile-panel-head">
-        <h2 className="vprofile-panel-title">Cross-provider orchestration</h2>
-        <span className="vprofile-panel-sub">{ranked.length} agents · delegation surface</span>
+        <h2 className="vprofile-panel-title">Multi-CLI activity</h2>
+        <span className="vprofile-panel-sub">{ranked.length} CLIs · measured presence</span>
       </header>
 
       <div className="vdeleg-headline">
         <div className="vdeleg-stat">
           <strong>{crossProviderDays}</strong>
-          <span>days ran 2+ agents together</span>
+          <span>days used 2+ model providers</span>
         </div>
-        {orchestrator && workforce ? (
-          <p className="vdeleg-flow">
-            <span style={{ color: AGENT_COLOR[orchestrator.agent] }}>{AGENT_LABEL[orchestrator.agent] ?? orchestrator.agent}</span>
-            <i aria-hidden="true">→</i>
-            <span style={{ color: AGENT_COLOR[workforce.agent] }}>{AGENT_LABEL[workforce.agent] ?? workforce.agent}</span>
-            <em>plans → executes</em>
-          </p>
-        ) : null}
       </div>
 
       <div className="vdeleg-rows">
@@ -146,7 +135,7 @@ export function Delegation({ agents, crossProviderDays }: { agents: AgentRow[]; 
           </div>
         ))}
       </div>
-      <p className="vdeleg-note">active days per agent CLI · usage evidence of how work is split across providers</p>
+      <p className="vdeleg-note">active days from cc.json agent metadata · no concurrency or per-CLI spend attribution inferred</p>
     </section>
   );
 }

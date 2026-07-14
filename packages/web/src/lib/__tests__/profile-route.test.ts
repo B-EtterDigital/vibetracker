@@ -121,17 +121,20 @@ test("skill signals lead the profile and reframe money as API-equivalent referen
   assert.doesNotMatch(page, /label: "total spent"/);
 });
 
-test("token breakdown + cross-provider delegation render from the new aggregates", () => {
+test("token breakdown + measured multi-CLI activity render without inferred delegation", () => {
   // token breakdown: input/output/cache split, total + per provider
   assert.match(tokensSrc, /export function TokenBreakdown/);
   assert.match(tokensSrc, /Cache read/);
   assert.match(tokensSrc, /Cache creation/);
   assert.match(tokensSrc, /by provider/);
   assert.match(page, /<TokenBreakdown/);
-  // delegation: the SMOA cross-provider orchestration surface (agents by active days)
+  // CLI presence and provider overlap are measured, while concurrency/direction stay unclaimed.
   assert.match(tokensSrc, /export function Delegation/);
-  assert.match(tokensSrc, /Cross-provider orchestration/);
-  assert.match(tokensSrc, /plans → executes/);
+  assert.match(tokensSrc, /Multi-CLI activity/);
+  assert.match(tokensSrc, /days used 2\+ model providers/);
+  assert.match(tokensSrc, /no concurrency or per-CLI spend attribution inferred/);
+  assert.doesNotMatch(tokensSrc, /plans → executes/);
+  assert.doesNotMatch(tokensSrc, /days ran 2\+ agents together/);
   assert.match(page, /<Delegation/);
   assert.match(page, /crossProviderDays=\{profile\.crossProviderDays/);
   // total tokens is a stat headline in the breakdown panel; global rank rides the hero state rail
