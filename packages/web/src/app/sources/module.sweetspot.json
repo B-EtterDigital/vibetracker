@@ -1,0 +1,316 @@
+{
+  "schema_version": "1.0.0",
+  "brick": {
+    "id": "000-vibetracker.web.source-stack-composer",
+    "name": "Source Stack Composer",
+    "kind": "module",
+    "status": "project_bound",
+    "version": "0.1.0",
+    "language": [
+      "tsx",
+      "ts",
+      "css"
+    ],
+    "frameworks": [
+      "next",
+      "react"
+    ],
+    "domain": [
+      "source_stack",
+      "local_setup",
+      "runbook"
+    ]
+  },
+  "hierarchy": {
+    "level": "brick",
+    "group_id": "000-vibetracker:packages/web/src/app",
+    "contains": [
+      "module",
+      "component",
+      "utility",
+      "file"
+    ],
+    "component_policy": "internal_by_default",
+    "notes": "Route-local stack composition with a pure tested runbook model and explicit local-first trust boundary."
+  },
+  "source": {
+    "project": "000-vibetracker",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "c5fad90d4d6e2534fc2596ba07a6b42ce50f29cb",
+    "paths": [
+      "packages/web/src/app/sources"
+    ]
+  },
+  "owner": {
+    "primary": "Cyrill",
+    "team": "Better Digital",
+    "reviewers": []
+  },
+  "boundaries": {
+    "owned_paths": [
+      "packages/web/src/app/sources"
+    ],
+    "public_paths": [
+      "packages/web/src/app/sources"
+    ],
+    "private_paths": [],
+    "forbidden_imports": [
+      "client-side service-role keys",
+      "provider network clients",
+      "persistent browser storage",
+      "hidden usage or upload writes",
+      "unverified built-status claims"
+    ],
+    "allowed_side_effects": [
+      "user-initiated clipboard write"
+    ]
+  },
+  "classification": {
+    "data_classes": [
+      "public"
+    ],
+    "risk": "low",
+    "notes": "The route reads compile-time public provider metadata and builds reviewable command text locally. It makes no provider, database, auth, usage, or upload request."
+  },
+  "sweetspot": {
+    "ssa_v2": {
+      "status": "passing",
+      "score": 96,
+      "notes": "Server composition, pure candidate/runbook logic, client interaction, and responsive styling are isolated; every owned source file stays below 300 lines.",
+      "evidence": [
+        "packages/web/src/app/sources/page.tsx",
+        "packages/web/src/app/sources/stack-composer-data.ts",
+        "packages/web/src/app/sources/stack-composer.tsx",
+        "packages/web/src/app/sources/sources.css",
+        "packages/web/src/app/sources/stack-composer.css"
+      ]
+    },
+    "ssi": {
+      "status": "passing",
+      "score": 95,
+      "notes": "The server route maps the registry once, the pure module owns honest collection-path precedence and runbook generation, and one client component owns selection and clipboard state.",
+      "evidence": [
+        "packages/web/src/app/sources/page.tsx",
+        "packages/web/src/app/sources/stack-composer-data.ts",
+        "packages/web/src/app/sources/stack-composer.tsx"
+      ]
+    },
+    "sstf": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Pure composer tests and the source route contract cover collection-path truth, multi-field search, registry-backed presets, dry-run defaults, deduplicated detection, planned comments, and forbidden client behavior.",
+      "evidence": [
+        "packages/web/src/app/sources/__tests__/stack-composer-data.test.ts",
+        "packages/web/src/lib/__tests__/source-atlas.test.ts"
+      ]
+    },
+    "spe": {
+      "status": "passing",
+      "score": 96,
+      "notes": "Search renders at most 12 source candidates while selected tools remain visible independently. The mobile route is substantially shorter than the former 155-source static atlas and has zero horizontal overflow.",
+      "evidence": [
+        "packages/web/src/app/sources/stack-composer-data.ts",
+        "packages/web/src/app/sources/stack-composer.tsx"
+      ]
+    },
+    "srs": {
+      "status": "passing",
+      "score": 94,
+      "notes": "Selection limits, no-result recovery, clipboard success or failure, path counts, placeholders, dry-run behavior, and opt-in publication are visible; no operation fails silently.",
+      "evidence": [
+        "packages/web/src/app/sources/stack-composer.tsx",
+        "packages/web/src/app/sources/__tests__/stack-composer-data.test.ts"
+      ]
+    },
+    "ssra": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Release gate, root and Next builds, production deployment, and browser interaction proofs pass at mobile, desktop, and 3840x2160 viewports.",
+      "evidence": [
+        "scripts/release-gate.mjs",
+        "Netlify deploy 6a55d09b89f2d908f5b5facb"
+      ]
+    },
+    "sas": {
+      "status": "passing",
+      "score": 95,
+      "notes": "The route has an explicit owned-path manifest, SMA lease evidence, module-local files, and no shared-contract edit.",
+      "evidence": [
+        "packages/web/src/app/sources/module.sweetspot.json"
+      ]
+    },
+    "sva": {
+      "status": "passing",
+      "score": 96,
+      "notes": "The client performs no fetch, provider call, secret access, persistent storage, usage mutation, command execution, or upload. Clipboard access requires an explicit user action.",
+      "evidence": [
+        "packages/web/src/app/sources/stack-composer.tsx",
+        "packages/web/src/lib/__tests__/source-atlas.test.ts"
+      ]
+    },
+    "srls": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick does not access a database.",
+      "evidence": []
+    },
+    "sev": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick requires no environment variables.",
+      "evidence": []
+    },
+    "ssc": {
+      "status": "passing",
+      "score": 92,
+      "notes": "Next and React are inherited from the web package; this slice adds no runtime dependency.",
+      "evidence": [
+        "packages/web/package.json"
+      ]
+    },
+    "sai": {
+      "status": "passing",
+      "score": 94,
+      "notes": "The source and route-contract leases, intent, owned paths, gates, deployment, and browser proof are recorded.",
+      "evidence": [
+        ".smarch/agent-context/000-vibetracker.web.source-stack-composer.ndjson",
+        ".smarch/agent-context/000-vibetracker.library-module.packages-web-src-lib-__tests__.7fd032bc.ndjson"
+      ]
+    }
+  },
+  "interfaces": {
+    "public_api": [
+      "GET /sources",
+      "<SourceStackComposer candidates={candidates} />"
+    ],
+    "adapters": [
+      "public compile-time PROVIDERS registry"
+    ],
+    "required_dependencies": [
+      "next",
+      "react"
+    ],
+    "forbidden_dependencies": [
+      "direct-service-role-client",
+      "provider network clients",
+      "persistent browser storage",
+      "hidden usage or ledger writes",
+      "unverified executable setup commands"
+    ]
+  },
+  "security": {
+    "rls": {
+      "required": false,
+      "status": "not_applicable",
+      "negative_tests": []
+    },
+    "env": {
+      "required": false,
+      "status": "not_applicable",
+      "variables": []
+    },
+    "vulnerability_findings": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "report_paths": []
+    }
+  },
+  "supply_chain": {
+    "dependencies": [],
+    "licenses": [],
+    "checksums": [],
+    "sbom_path": ""
+  },
+  "quality": {
+    "score": 95,
+    "line_count": {
+      "max_file_lines": 206,
+      "over_600_count": 0
+    },
+    "code_budget": {
+      "status": "acceptable",
+      "feature_lines": 752,
+      "file_count": 6,
+      "dependency_count": 2,
+      "notes": "The route is split into server composition, a pure tested data model, one client workbench, two focused stylesheets, and tests with no new dependency."
+    },
+    "test_commands": [
+      "node --test packages/web/src/app/sources/__tests__/stack-composer-data.test.ts packages/web/src/lib/__tests__/source-atlas.test.ts"
+    ],
+    "verification": [
+      {
+        "command": "focused source tests + pnpm sma:release-gate + pnpm build + pnpm --dir packages/web build",
+        "status": "pass",
+        "timestamp": "2026-07-14T06:04:00Z",
+        "notes": "10 focused source tests, 15 control-plane tests, 582 package tests, strict VTRS with zero violations, TypeScript, root and Next builds, and production deploy 6a55d09b89f2d908f5b5facb pass. Live composer interaction and viewport evidence is recorded in the SMA receipt."
+      }
+    ]
+  },
+  "clone": {
+    "readiness": "manual_only",
+    "adaptation_points": [
+      "Confirm the provider registry contract and status semantics.",
+      "Confirm CLI command names and dry-run behavior.",
+      "Confirm clipboard support in the target browser."
+    ],
+    "install_steps": [
+      "Copy packages/web/src/app/sources.",
+      "Connect the compile-time provider registry.",
+      "Run the verification commands and update this manifest."
+    ],
+    "known_traps": [
+      "Do not turn planned sources into executable commands.",
+      "Do not add provider calls or hidden upload behavior to this local composer.",
+      "Keep publication explicit and opt-in after dry-run review."
+    ]
+  },
+  "provenance": {
+    "created_by": {
+      "actor_kind": "ai_model",
+      "actor_id": "codex",
+      "role": "implementation",
+      "timestamp": "2026-07-14T05:58:00Z",
+      "summary": "Created the route-local source stack composer manifest from verified implementation boundaries."
+    },
+    "touched_by": [
+      {
+        "actor_kind": "ai_model",
+        "actor_id": "codex",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementation",
+        "session_id": "019f4b2d",
+        "files_touched": [
+          "packages/web/src/app/sources/module.sweetspot.json"
+        ],
+        "verification": [
+          {
+            "command": "pnpm sma:release-gate",
+            "status": "pass",
+            "timestamp": "2026-07-14T05:58:00Z",
+            "notes": "Current-tree release evidence is recorded in quality.verification."
+          }
+        ],
+        "timestamp": "2026-07-14T05:58:00Z",
+        "summary": "Declared ownership, trust boundaries, interfaces, and verification evidence for the source stack composer.",
+        "attestation": {
+          "method": "sma-gen3",
+          "reference": "lease-1784007596576-136462ba"
+        }
+      }
+    ],
+    "reviewed_by": [],
+    "source_chain": [
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.source-stack-composer",
+        "commit": "c5fad90d4d6e2534fc2596ba07a6b42ce50f29cb",
+        "path": "packages/web/src/app/sources",
+        "event": "created",
+        "timestamp": "2026-07-14T05:58:00Z"
+      }
+    ]
+  }
+}
