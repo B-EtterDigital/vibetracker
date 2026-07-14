@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 
 const verifyRoute = readFileSync("packages/web/src/app/api/cli/github-verify/route.ts", "utf8");
 const linkRoute = readFileSync("packages/web/src/app/api/identity/github/link/route.ts", "utf8");
+const statusRoute = readFileSync("packages/web/src/app/api/identity/github/status/route.ts", "utf8");
 const migration = readFileSync("supabase/migrations/009_vibetracker_github_identity.sql", "utf8");
 
 test("GitHub device verification exchanges an existing gh credential without persisting it", () => {
@@ -29,4 +30,14 @@ test("identity migration keeps proof and usage truth separate", () => {
   assert.match(migration, /identity_verified/);
   assert.match(migration, /service_role/);
   assert.match(migration, /No table policies/);
+});
+
+test("account identity status requires a real session and returns sanitized link state", () => {
+  assert.match(statusRoute, /admin\.auth\.getUser\(authorization\.slice\(7\)\)/);
+  assert.match(statusRoute, /\.from\("vibetracker_identities"\)/);
+  assert.match(statusRoute, /provider_login, canonical_handle, display_name, avatar_url, verified_at, linked_at/);
+  assert.match(statusRoute, /linked: false/);
+  assert.match(statusRoute, /cache-control.*private, no-store/);
+  assert.match(statusRoute, /web\.auth\.github-status\.read/);
+  assert.doesNotMatch(statusRoute, /token_hash|issued_token|service_role|github_token/);
 });

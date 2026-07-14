@@ -1,0 +1,60 @@
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 86px;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid rgba(91, 169, 255, .34);
+  border-radius: 6px;
+  color: #ddecff;
+  background: rgba(91, 169, 255, .07);
+  font: 600 10px/1 var(--font-data), ui-monospace, monospace;
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.control:hover,
+.control:focus-visible {
+  border-color: #5ba9ff;
+  background: rgba(91, 169, 255, .13);
+  transform: translateY(-1px);
+}
+
+.control:active { transform: translateY(1px); }
+.control[data-state="linked"] { border-color: rgba(91, 169, 255, .65); color: #f2f8ff; }
+.control[data-state="session"] { border-color: rgba(255, 195, 83, .42); color: #ffe4a7; }
+.control[data-state="unavailable"] { border-color: rgba(255, 116, 116, .42); color: #ffbaba; }
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  flex: 0 0 19px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 8px;
+}
+
+.control[data-state="linked"] .mark {
+  color: #071019;
+  border-color: #5ba9ff;
+  background: #5ba9ff;
+  box-shadow: 0 0 14px rgba(91, 169, 255, .36);
+}
+
+.label {
+  max-width: 92px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .control { min-width: 38px; width: 38px; padding: 0; justify-content: center; }
+  .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control { transition: none; }
+}

@@ -1,6 +1,7 @@
 import "./globals.css";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
+import { AccountControl } from "../components/account-control";
 
 const displayFont = Space_Grotesk({
   subsets: ["latin"],
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <a href="/insights" title="What the tracked data says across all AI work, not just coding">Insights</a>
           </nav>
           <div className="hdr-actions">
+            <AccountControl />
             <a className="hdr-cli" href="/how-to">Get the CLI</a>
             <details className="hdr-menu">
               <summary aria-label="Open product menu" title="Product menu">
@@ -57,6 +59,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <a href="/contributors"><span>08</span><b>Contributors<small>open-source credit</small></b></a>
                 <a href="/passkeys"><span>09</span><b>Passkeys<small>account keys</small></b></a>
                 <a href="/roadmap"><span>10</span><b>Roadmap<small>what ships next</small></b></a>
+                <a href="/account"><span>11</span><b>Identity<small>GitHub proof and account link</small></b></a>
               </nav>
             </details>
           </div>

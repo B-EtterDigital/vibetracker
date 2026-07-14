@@ -1,0 +1,300 @@
+{
+  "schema_version": "1.0.0",
+  "brick": {
+    "id": "000-vibetracker.web.github-first-account-console",
+    "name": "GitHub-first Account Console",
+    "kind": "module",
+    "status": "project_bound",
+    "version": "0.1.0",
+    "language": ["tsx", "ts", "css"],
+    "frameworks": ["next", "react", "supabase"],
+    "domain": ["identity", "authentication", "github_verification", "cli_migration"]
+  },
+  "hierarchy": {
+    "level": "brick",
+    "group_id": "000-vibetracker:packages/web/src/app",
+    "contains": ["module", "component", "utility", "api_route", "file"],
+    "component_policy": "internal_by_default",
+    "notes": "A GitHub-first identity surface that preserves CLI history and keeps identity proof separate from usage truth."
+  },
+  "source": {
+    "project": "000-vibetracker",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "474469e",
+    "paths": [
+      "packages/web/src/app/account",
+      "packages/web/src/app/api/identity/github/status",
+      "packages/web/src/components/account-control.tsx",
+      "packages/web/src/components/account-control.module.css",
+      "packages/web/src/lib/supabase-browser.ts"
+    ]
+  },
+  "owner": {
+    "primary": "Cyrill",
+    "team": "Better Digital",
+    "reviewers": []
+  },
+  "boundaries": {
+    "owned_paths": [
+      "packages/web/src/app/account",
+      "packages/web/src/app/api/identity/github/status",
+      "packages/web/src/components/account-control.tsx",
+      "packages/web/src/components/account-control.module.css",
+      "packages/web/src/lib/supabase-browser.ts"
+    ],
+    "public_paths": [
+      "packages/web/src/app/account",
+      "packages/web/src/components/account-control.tsx"
+    ],
+    "private_paths": [
+      "packages/web/src/app/api/identity/github/status",
+      "packages/web/src/app/account/account-session.ts"
+    ],
+    "forbidden_imports": [
+      "client-side service-role keys",
+      "raw GitHub token persistence",
+      "provider refresh-token persistence",
+      "usage or leaderboard mutation",
+      "blue-check state derived from session metadata alone"
+    ],
+    "allowed_side_effects": [
+      "same-origin authenticated identity-status request",
+      "user-initiated GitHub OAuth redirect",
+      "one-time same-origin GitHub identity-link request",
+      "user-initiated local session sign-out",
+      "user-initiated clipboard write"
+    ]
+  },
+  "classification": {
+    "data_classes": ["public", "user_private", "pii", "credential"],
+    "risk": "high",
+    "notes": "The browser briefly receives a Supabase access token and OAuth provider token. The provider token is sent once to the trusted link endpoint and is never persisted by this module."
+  },
+  "sweetspot": {
+    "ssa_v2": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Session derivation, provider availability, global status, account interaction, and server status lookup are separated into focused files; every source file stays below 300 lines.",
+      "evidence": ["packages/web/src/app/account", "packages/web/src/components/account-control.tsx"]
+    },
+    "ssi": {
+      "status": "passing",
+      "score": 95,
+      "notes": "The console reuses the existing GitHub link endpoint and Supabase browser client instead of duplicating migration logic.",
+      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/supabase-browser.ts"]
+    },
+    "sstf": {
+      "status": "passing",
+      "score": 96,
+      "notes": "Focused contracts cover sanitization, redirect safety, status authorization, one-time linking, local sign-out, CLI fallback, responsive layout, and motion safety.",
+      "evidence": ["packages/web/src/lib/__tests__/account-route.test.ts", "packages/web/src/lib/__tests__/github-identity-route.test.ts"]
+    },
+    "spe": {
+      "status": "passing",
+      "score": 94,
+      "notes": "Provider settings are fetched once, auth state is subscription-driven, and link status is a bounded same-origin request.",
+      "evidence": ["packages/web/src/lib/supabase-browser.ts", "packages/web/src/app/account/account-console.tsx"]
+    },
+    "srs": {
+      "status": "passing",
+      "score": 96,
+      "notes": "Signed-out, checking, unavailable, session-only, linking, linked, migration, and error states are all visible; no auth failure is silently converted to success.",
+      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/components/account-control.tsx"]
+    },
+    "ssra": {
+      "status": "partial",
+      "score": 88,
+      "notes": "Release gate and production builds pass. Browser OAuth remains visibly disabled because no dedicated GitHub OAuth app is configured; the existing GitHub CLI verification path remains live.",
+      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/__tests__/account-route.test.ts"]
+    },
+    "sas": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Account, status, and contract surfaces have explicit leases and an owned-path manifest; unrelated logo work remains outside this brick.",
+      "evidence": ["packages/web/src/app/account/module.sweetspot.json"]
+    },
+    "sva": {
+      "status": "passing",
+      "score": 96,
+      "notes": "The server validates bearer sessions, returns only sanitized identity fields, and the client never persists raw provider credentials or infers a blue check from metadata.",
+      "evidence": ["packages/web/src/app/api/identity/github/status/route.ts", "packages/web/src/app/account/account-session.ts"]
+    },
+    "srls": {
+      "status": "passing",
+      "score": 94,
+      "notes": "The status endpoint validates the user with Supabase Auth before a service-role identity lookup; anonymous status reads fail closed.",
+      "evidence": ["packages/web/src/app/api/identity/github/status/route.ts", "supabase/migrations/009_vibetracker_github_identity.sql"]
+    },
+    "sev": {
+      "status": "passing",
+      "score": 94,
+      "notes": "Public Supabase configuration is guarded client-side and the service-role key remains server-only.",
+      "evidence": ["packages/web/src/lib/supabase-browser.ts", "packages/web/src/lib/supabase-server.ts"]
+    },
+    "ssc": {
+      "status": "passing",
+      "score": 94,
+      "notes": "The slice adds no dependency and reuses the existing Next, React, Supabase, and telemetry stack.",
+      "evidence": ["packages/web/package.json"]
+    },
+    "sai": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Intent, owned files, current-tree gates, provider blocker, and identity/usage boundary are captured in the Gen3 receipts and this manifest.",
+      "evidence": [
+        ".smarch/agent-context/000-vibetracker.web.github-first-account-console.ndjson",
+        ".smarch/agent-context/000-vibetracker.auth.github-identity-status.ndjson"
+      ]
+    }
+  },
+  "interfaces": {
+    "public_api": ["GET /account", "<AccountControl />", "GET /api/identity/github/status"],
+    "adapters": ["Supabase browser auth", "Supabase admin auth validation", "existing GitHub identity-link endpoint"],
+    "required_dependencies": ["next", "react", "@supabase/supabase-js"],
+    "forbidden_dependencies": ["direct client service-role access", "persistent browser credential storage", "hidden usage writes"]
+  },
+  "security": {
+    "rls": {
+      "required": true,
+      "status": "complete",
+      "negative_tests": ["anonymous identity-status request returns 401", "unlinked session returns no identity row"]
+    },
+    "env": {
+      "required": true,
+      "status": "complete",
+      "variables": [
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_URL",
+          "scope": "public_client",
+          "required_in": ["local", "preview", "production"],
+          "forbidden_in": []
+        },
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          "scope": "public_client",
+          "required_in": ["local", "preview", "production"],
+          "forbidden_in": []
+        },
+        {
+          "name": "SUPABASE_SERVICE_ROLE_KEY",
+          "scope": "server_only",
+          "required_in": ["local", "preview", "production"],
+          "forbidden_in": ["client_bundle", "logs", "docs", "tests"]
+        }
+      ]
+    },
+    "vulnerability_findings": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "report_paths": []
+    }
+  },
+  "supply_chain": {
+    "dependencies": [],
+    "licenses": [],
+    "checksums": [],
+    "sbom_path": ""
+  },
+  "quality": {
+    "score": 94,
+    "line_count": {
+      "max_file_lines": 223,
+      "over_600_count": 0
+    },
+    "code_budget": {
+      "status": "acceptable",
+      "feature_lines": 782,
+      "file_count": 10,
+      "dependency_count": 3,
+      "notes": "The implementation is split across the route, pure session helper, global control, server status endpoint, styles, and focused contracts."
+    },
+    "test_commands": [
+      "node --test packages/web/src/lib/__tests__/account-route.test.ts packages/web/src/lib/__tests__/cli-login-route.test.ts packages/web/src/lib/__tests__/github-identity-route.test.ts",
+      "pnpm sma:release-gate",
+      "pnpm build",
+      "pnpm --dir packages/web build"
+    ],
+    "verification": [
+      {
+        "command": "focused auth tests + pnpm sma:release-gate + pnpm build + pnpm --dir packages/web build",
+        "status": "pass",
+        "timestamp": "2026-07-14T06:45:13Z",
+        "notes": "11 focused auth tests, 15 control-plane tests, 595 package tests, strict telemetry with zero violations, typecheck, root build, and Next production build pass. Live deployment and viewport proof remain to be appended."
+      }
+    ]
+  },
+  "clone": {
+    "readiness": "manual_only",
+    "adaptation_points": [
+      "Create a dedicated GitHub OAuth app for the target Supabase callback.",
+      "Configure the GitHub provider and production redirect allowlist.",
+      "Retain the immutable GitHub subject as the account migration anchor."
+    ],
+    "install_steps": [
+      "Copy the account, global control, browser auth, and status surfaces.",
+      "Connect the existing identity-link endpoint and Supabase environment.",
+      "Configure a dedicated OAuth provider, then rerun live auth proof."
+    ],
+    "known_traps": [
+      "Do not reuse another product's OAuth credentials or callback.",
+      "Do not store provider tokens or service-role credentials in the browser.",
+      "Do not use identity verification as proof of usage volume or leaderboard tier."
+    ]
+  },
+  "provenance": {
+    "created_by": {
+      "actor_kind": "ai_model",
+      "actor_id": "codex",
+      "role": "implementer",
+      "files_touched": ["packages/web/src/app/account/module.sweetspot.json"],
+      "verification": [
+        {
+          "command": "pnpm sma:release-gate",
+          "status": "pass",
+          "timestamp": "2026-07-14T06:45:13Z",
+          "notes": "Current-tree release gate passed before manifest registration."
+        }
+      ],
+      "timestamp": "2026-07-14T06:45:13Z",
+      "summary": "Declared the GitHub-first account console, identity-status endpoint, security boundary, and current provider blocker."
+    },
+    "touched_by": [
+      {
+        "actor_kind": "ai_model",
+        "actor_id": "codex",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer",
+        "session_id": "019f4b2d",
+        "files_touched": ["packages/web/src/app/account/module.sweetspot.json"],
+        "verification": [
+          {
+            "command": "pnpm sma:release-gate",
+            "status": "pass",
+            "timestamp": "2026-07-14T06:45:13Z",
+            "notes": "Current-tree release gate passed before manifest registration."
+          }
+        ],
+        "timestamp": "2026-07-14T06:45:13Z",
+        "summary": "Recorded ownership, auth side effects, proof boundaries, and verified gates for the account brick.",
+        "attestation": {
+          "method": "agent_runner",
+          "reference": "lease-1784010410298-5a56945d"
+        }
+      }
+    ],
+    "reviewed_by": [],
+    "source_chain": [
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.github-first-account-console",
+        "commit": "474469e",
+        "path": "packages/web/src/app/account",
+        "event": "created",
+        "timestamp": "2026-07-14T06:45:13Z"
+      }
+    ]
+  }
+}
