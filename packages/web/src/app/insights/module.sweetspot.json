@@ -120,11 +120,11 @@
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Preview 6a55fae0b57be3407b61670f passed all three planning states, disclosure/copy behavior, network, console, overflow, and visual checks at 390px mobile, 1440px desktop, and 3840px 4K fullscreen viewports.",
+      "notes": "Production deploy 6a55fc4ac63cb54bc5076ab5 passed all three planning states, disclosure/copy behavior, network, console, overflow, and visual checks at 390px mobile, 1440px desktop, and 3840px 4K fullscreen viewports.",
       "evidence": [
-        "/tmp/vibeusage-insights-brief-390.png",
-        "/tmp/vibeusage-insights-brief-1440.png",
-        "/tmp/vibeusage-insights-brief-4k.png"
+        "https://6a55fc4ac63cb54bc5076ab5--vibetracker-betterdigital.netlify.app/insights",
+        "packages/web/src/app/insights/insights-brief.css",
+        "packages/web/src/lib/__tests__/insights-route.test.ts"
       ]
     },
     "sas": {
