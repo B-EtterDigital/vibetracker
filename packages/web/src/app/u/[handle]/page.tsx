@@ -426,7 +426,9 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     add("activity", "full",
       <GitHubContributions handle={githubSignal.handle} total={githubSignal.totalContributions} days={githubSignal.days ?? []} key="github" />);
   }
-  if (reveal.categoryMix) add("who", "half", <CategoryMix rows={categories} sub={read.identity.label} key="categories" />);
+  // Specialization ranks by operations, which are reconstructed from token volume (logs are pruned)
+  // — flag it so the ops numbers read as estimates, not exact counts.
+  if (reveal.categoryMix) add("who", "half", <CategoryMix rows={categories} sub={`${read.identity.label} · ops est.`} key="categories" />);
   if (reveal.trust) add("who", "half", <TrustRow tier={tier} signals={trustChips} key="trust" />);
   add("join", "full",
     <C0vibeBand

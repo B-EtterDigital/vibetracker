@@ -16,8 +16,9 @@ function fmtUsd(n: number): string {
 export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; apiCost: string }) {
   const { humanRatio, cacheReuse, agentCount, crossProviderDays, shipRate, mediaGenerations, footprint } = signals;
 
-  // Ordered skill reads — only the ones we can actually measure for this viber.
-  const reads: Array<{ label: string; value: string; note: string }> = [];
+  // Ordered skill reads. `est` marks a value RECONSTRUCTED from partial data (logs get pruned) vs
+  // one measured directly from viberank / ccusage / GitHub — the profile is honest about which.
+  const reads: Array<{ label: string; value: string; note: string; est?: boolean }> = [];
   if (signals.hasTokens) {
     reads.push({
       label: "Work style",
@@ -33,8 +34,9 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
   if (agentCount >= 2) {
     reads.push({
       label: "Orchestration",
-      value: `~${signals.peakAgentLoad}x peak load`,
-      note: `busiest day in heavy-agent workload equivalents, not observed concurrency · ${agentCount} distinct CLIs · ${crossProviderDays} cross-provider days`,
+      value: `~${signals.peakAgentLoad} agents`,
+      note: `peak parallel from the busiest day's throughput — not observed concurrency · ${agentCount} distinct CLIs · ${crossProviderDays} cross-provider days`,
+      est: true,
     });
   }
   if (shipRate != null) {
@@ -51,6 +53,7 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
       note: "images, video and music generated — creative output, not just code",
     });
   }
+  const hasEstimate = reads.some((r) => r.est) || footprint.length > 0;
 
   return (
     <section className="vprofile-panel vsignals">
@@ -82,7 +85,10 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
         <div className="vsignals-grid">
           {reads.map((r) => (
             <div className="vsignals-read" key={r.label}>
-              <span className="vsignals-read-label">{r.label}</span>
+              <span className="vsignals-read-label">
+                {r.label}
+                {r.est ? <em className="vsignals-est" title="Estimated — reconstructed from partial data">est</em> : null}
+              </span>
               <strong className="vsignals-read-value">{r.value}</strong>
               <span className="vsignals-read-note">{r.note}</span>
             </div>
@@ -92,7 +98,10 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
 
       {footprint.length ? (
         <div className="vsignals-footprint">
-          <span className="vsignals-footprint-head">last 30 days ≈ maxed $200 subscriptions</span>
+          <span className="vsignals-footprint-head">
+            last 30 days ≈ maxed $200 subscriptions
+            <em className="vsignals-est" title="Estimated — reconstructed from partial data">est</em>
+          </span>
           <div className="vsignals-footprint-row">
             {footprint.map((f, i) => (
               <span className="vsignals-footprint-item" key={f.label}>
@@ -105,6 +114,15 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
             generous weekly resets mean one $200 account delivers far more than its price · this estimates throughput, not literal accounts
           </span>
         </div>
+      ) : null}
+
+      {hasEstimate ? (
+        <p className="vsignals-legend">
+          <em className="vsignals-est">est</em>
+          reconstructed from partial data — Claude Code &amp; Codex prune their logs, so per-agent and
+          op-level detail is derived from token volume. Everything unmarked (spend, tokens, commits,
+          generations, cache mix) is measured directly.
+        </p>
       ) : null}
     </section>
   );
