@@ -49,22 +49,32 @@
       "packages/cli"
     ],
     "public_paths": [
-      "packages/cli/README.md"
+      "packages/cli/README.md",
+      "packages/cli/src/api-server.ts"
     ],
-    "private_paths": [],
+    "private_paths": [
+      "packages/cli/src/__tests__/api-server.test.ts"
+    ],
     "forbidden_imports": [
       "client-side service-role keys",
       "undocumented cross-brick private imports",
       "unscoped privileged provider clients"
     ],
-    "allowed_side_effects": []
+    "allowed_side_effects": [
+      "bind_127_0_0_1",
+      "read_local_aggregate_usage",
+      "append_sanitized_browser_capture",
+      "print_fragment_only_dashboard_url"
+    ]
   },
   "classification": {
     "data_classes": [
-      "public"
+      "public",
+      "local_private",
+      "aggregate_usage"
     ],
-    "risk": "low",
-    "notes": "Bootstrap classification. Manual data-flow review required before promotion."
+    "risk": "medium",
+    "notes": "The CLI contains local private ledgers; the loopback API requires an ephemeral bearer token for reads and restricts browser origins."
   },
   "sweetspot": {
     "ssa_v2": {
@@ -80,10 +90,10 @@
       "evidence": []
     },
     "sstf": {
-      "status": "missing",
-      "score": 0,
-      "notes": "Tests must be mapped before promotion.",
-      "evidence": []
+      "status": "passing",
+      "score": 95,
+      "notes": "The token, origin, preflight, aggregate read, extension capture, and dashboard-link contracts pass together with the complete package suite.",
+      "evidence": ["packages/cli/src/__tests__/api-server.test.ts", "packages/cli/src/__tests__/local-tools.test.ts"]
     },
     "spe": {
       "status": "missing",
@@ -93,15 +103,15 @@
     },
     "srs": {
       "status": "partial",
-      "score": 35,
-      "notes": "Observability and degradation path need review.",
-      "evidence": []
+      "score": 70,
+      "notes": "The loopback API logs request failures with method and path and returns a closed generic error; broader package observability remains under review.",
+      "evidence": ["packages/cli/src/api-server.ts", "packages/cli/src/__tests__/api-server.test.ts"]
     },
     "ssra": {
-      "status": "partial",
-      "score": 35,
-      "notes": "Release readiness is project-bound until gates are proven.",
-      "evidence": []
+      "status": "passing",
+      "score": 90,
+      "notes": "The distributable CLI build, full release gate, real loopback process, and hosted dashboard handshake pass on the current tree.",
+      "evidence": ["scripts/build.mjs", "scripts/release-gate.mjs", "packages/cli/src/__tests__/api-server.test.ts"]
     },
     "sas": {
       "status": "partial",
@@ -111,9 +121,9 @@
     },
     "sva": {
       "status": "partial",
-      "score": 45,
-      "notes": "Security scanner has not certified this brick.",
-      "evidence": []
+      "score": 75,
+      "notes": "Loopback reads use timing-safe ephemeral bearer auth, strict dashboard origins, no-store responses, and private-network preflight headers; the broader CLI still needs package-wide certification.",
+      "evidence": ["packages/cli/src/api-server.ts", "packages/cli/src/__tests__/api-server.test.ts"]
     },
     "srls": {
       "status": "not_applicable",
@@ -142,7 +152,13 @@
   },
   "interfaces": {
     "public_api": [
-      "packages/cli/README.md"
+      "packages/cli/README.md",
+      "startLocalApiServer()",
+      "GET /health",
+      "GET /records",
+      "GET /stats",
+      "GET /insights",
+      "POST /capture"
     ],
     "adapters": [],
     "forbidden_dependencies": [
@@ -197,14 +213,15 @@
       "notes": "Bootstrap estimate from countable source/text files. Generated/vendor files need manual exceptions."
     },
     "test_commands": [
+      "node --test packages/cli/src/__tests__/api-server.test.ts packages/cli/src/__tests__/local-tools.test.ts",
       "pnpm test"
     ],
     "verification": [
       {
-        "command": "pnpm test",
-        "status": "skipped",
-        "timestamp": "2026-07-10T14:31:17.829Z",
-        "notes": "Bootstrap manifest created before per-brick verification."
+        "command": "focused local API tests + pnpm sma:release-gate + pnpm build",
+        "status": "pass",
+        "timestamp": "2026-07-14T04:54:20Z",
+        "notes": "Token and origin tests, 573 package tests, strict telemetry, TypeScript, the bundled CLI, and a real 127.0.0.1 session connected to the production Life cockpit."
       }
     ]
   },

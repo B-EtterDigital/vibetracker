@@ -1233,7 +1233,7 @@ async function main() {
 
   if (cmd === "api" && argv[1] === "serve") {
     const port = Number(flag(argv, "--port") || 8765);
-    startLocalApiServer({
+    await startLocalApiServer({
       port,
       deps: {
         readRecords: () => readRecords(STORE),

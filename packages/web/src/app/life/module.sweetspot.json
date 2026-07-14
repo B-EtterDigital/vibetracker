@@ -15,7 +15,7 @@
     "group_id": "000-vibetracker:packages/web/src/app",
     "contains": ["route", "component", "style", "test"],
     "component_policy": "internal_by_default",
-    "notes": "A compact route that keeps usage, trust, local-only activity, and publishing visibly separate."
+    "notes": "A consent-driven local cockpit that reads aggregate usage intelligence from a tokenized loopback API without uploading the ledger."
   },
   "source": {
     "project": "000-vibetracker",
@@ -38,10 +38,12 @@
     ],
     "public_paths": [
       "packages/web/src/app/life/page.tsx",
-      "packages/web/src/app/life/life-chips.tsx",
+      "packages/web/src/app/life/local-cockpit.tsx",
       "packages/web/src/app/life/life.css"
     ],
     "private_paths": [
+      "packages/web/src/app/life/local-cockpit-data.ts",
+      "packages/web/src/app/life/__tests__/local-cockpit-data.test.ts",
       "packages/web/src/lib/__tests__/life-route.test.ts"
     ],
     "forbidden_imports": [
@@ -50,50 +52,52 @@
       "undocumented cross-brick private imports"
     ],
     "allowed_side_effects": [
-      "copy_local_cli_command"
+      "copy_local_cli_command",
+      "read_tokenized_loopback_aggregate_stats",
+      "strip_session_token_fragment"
     ]
   },
   "classification": {
-    "data_classes": ["public"],
-    "risk": "low",
-    "notes": "The route renders static public guidance and copies local CLI commands; it does not load or publish user data."
+    "data_classes": ["public", "local_private", "aggregate_usage"],
+    "risk": "medium",
+    "notes": "The browser reads aggregate stats and insights from 127.0.0.1 only after an explicit ephemeral-token handshake; it never requests raw records."
   },
   "sweetspot": {
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Route composition, clipboard interaction, and styling are isolated and every owned file is below 120 lines.",
-      "evidence": ["packages/web/src/app/life/page.tsx", "packages/web/src/app/life/life-chips.tsx", "packages/web/src/app/life/life.css"]
+      "notes": "Route composition, local transport, payload normalization, cockpit rendering, and styling are isolated and every owned file remains below 400 lines.",
+      "evidence": ["packages/web/src/app/life/page.tsx", "packages/web/src/app/life/local-cockpit.tsx", "packages/web/src/app/life/local-cockpit-data.ts", "packages/web/src/app/life/life.css"]
     },
     "ssi": {
       "status": "passing",
       "score": 95,
-      "notes": "The server route passes command strings into one route-local client component.",
-      "evidence": ["packages/web/src/app/life/life-chips.tsx"]
+      "notes": "The server route mounts one client cockpit; a pure parser validates the loopback JSON boundary before rendering.",
+      "evidence": ["packages/web/src/app/life/local-cockpit.tsx", "packages/web/src/app/life/local-cockpit-data.ts"]
     },
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "The focused contract and complete package suite pass on the current tree.",
-      "evidence": ["packages/web/src/lib/__tests__/life-route.test.ts"]
+      "notes": "Focused route, payload, token, origin, and adjacent local-tool contracts plus the complete 573-test package suite pass on the current tree.",
+      "evidence": ["packages/web/src/app/life/__tests__/local-cockpit-data.test.ts", "packages/web/src/lib/__tests__/life-route.test.ts", "packages/cli/src/__tests__/api-server.test.ts"]
     },
     "spe": {
       "status": "passing",
       "score": 95,
-      "notes": "The route renders six bounded static rails and no unbounded data collection.",
-      "evidence": ["packages/web/src/app/life/page.tsx"]
+      "notes": "The route fetches two bounded aggregate payloads, caps provider/day/action rendering, and never requests the raw records endpoint.",
+      "evidence": ["packages/web/src/app/life/local-cockpit.tsx", "packages/web/src/app/life/local-cockpit-data.ts"]
     },
     "srs": {
       "status": "passing",
       "score": 90,
-      "notes": "Clipboard failures become a visible copy-blocked state instead of being swallowed.",
-      "evidence": ["packages/web/src/app/life/life-chips.tsx"]
+      "notes": "Clipboard, authorization, network, malformed payload, empty-ledger, and connected states are visible and fail closed.",
+      "evidence": ["packages/web/src/app/life/local-cockpit.tsx", "packages/web/src/app/life/local-cockpit-data.ts"]
     },
     "ssra": {
       "status": "passing",
-      "score": 90,
-      "notes": "Release gate, production build, Netlify preview deploy, and desktop/mobile visual proof pass.",
-      "evidence": ["scripts/release-gate.mjs", "Netlify deploy 6a511bdf543222192e491be3"]
+      "score": 95,
+      "notes": "Release gate, production build, production deploy, and a real tokenized local-ledger connection pass at desktop and mobile widths.",
+      "evidence": ["scripts/release-gate.mjs", "Netlify deploy 6a55c088bc2a11226db4088f"]
     },
     "sas": {
       "status": "passing",
@@ -104,8 +108,8 @@
     "sva": {
       "status": "passing",
       "score": 95,
-      "notes": "No privileged client, secret, user record, or network request is present.",
-      "evidence": ["packages/web/src/app/life/page.tsx", "packages/web/src/app/life/life-chips.tsx"]
+      "notes": "The ephemeral token is read from the fragment, removed from browser history, kept only in React state, and sent solely to 127.0.0.1.",
+      "evidence": ["packages/web/src/app/life/local-cockpit.tsx", "packages/cli/src/__tests__/api-server.test.ts"]
     },
     "srls": {
       "status": "not_applicable",
@@ -133,10 +137,10 @@
     }
   },
   "interfaces": {
-    "public_api": ["GET /life", "<CopyChip command={command} />"],
-    "adapters": [],
+    "public_api": ["GET /life", "<LocalCockpit />"],
+    "adapters": ["tokenized http://127.0.0.1:<port>/stats", "tokenized http://127.0.0.1:<port>/insights"],
     "required_dependencies": ["next", "react"],
-    "forbidden_dependencies": ["service-role client", "raw prompt or output storage", "automatic upload"]
+    "forbidden_dependencies": ["service-role client", "raw records endpoint", "raw prompt or output storage", "session token persistence", "automatic upload"]
   },
   "security": {
     "rls": {
@@ -167,27 +171,27 @@
     "sbom_path": ""
   },
   "quality": {
-    "score": 87,
+    "score": 92,
     "line_count": {
-      "max_file_lines": 122,
+      "max_file_lines": 394,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 312,
-      "file_count": 4,
+      "feature_lines": 940,
+      "file_count": 6,
       "dependency_count": 2,
-      "notes": "The former 479-line route is now a 91-line server surface plus a focused client component, stylesheet, and contract test."
+      "notes": "The route is an 11-line server surface plus isolated transport/view-model, client cockpit, responsive stylesheet, and focused tests with no new dependency."
     },
     "test_commands": [
-      "node --test packages/web/src/lib/__tests__/life-route.test.ts"
+      "node --test packages/web/src/app/life/__tests__/local-cockpit-data.test.ts packages/web/src/lib/__tests__/life-route.test.ts packages/cli/src/__tests__/api-server.test.ts"
     ],
     "verification": [
       {
         "command": "focused life test + pnpm sma:release-gate + pnpm --dir packages/web build",
         "status": "pass",
-        "timestamp": "2026-07-10T16:25:57Z",
-        "notes": "2 focused route tests, 15 control-plane tests, 481 package tests, strict VTRS, TypeScript, dependency audit, Next build, and Netlify desktop/mobile proof passed."
+        "timestamp": "2026-07-14T04:54:20Z",
+        "notes": "13 focused and adjacent tests, 15 control-plane tests, 573 package tests, strict VTRS, TypeScript, CLI and Next builds, deploy 6a55c088bc2a11226db4088f, and a real 48,023-row loopback ledger passed at 1440px and 390px with zero overflow or console errors."
       }
     ]
   },
@@ -196,9 +200,9 @@
     "adaptation_points": ["practice rail labels", "CLI commands", "route shell"],
     "install_steps": ["Copy owned paths.", "Confirm every displayed command against CLI help.", "Run the focused test and release gate."],
     "known_traps": [
-      "Never mix usage, trust, local-only, and publish into one total.",
-      "Displayed commands must exist in the current CLI.",
-      "Clipboard failure must remain visible to the user."
+      "Never request /records from the hosted dashboard.",
+      "Never persist the ephemeral loopback session token.",
+      "Connection and payload failures must remain visible to the user."
     ]
   },
   "provenance": {

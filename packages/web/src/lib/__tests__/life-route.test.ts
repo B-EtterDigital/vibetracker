@@ -1,59 +1,57 @@
+import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import assert from "node:assert/strict";
 
-test("AI life dashboard is exposed as a first-class labelled route", () => {
-  const page = readFileSync("packages/web/src/app/life/page.tsx", "utf8");
-  const lifeStyles = readFileSync("packages/web/src/app/life/life.css", "utf8");
-  const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
-  const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
+const page = readFileSync("packages/web/src/app/life/page.tsx", "utf8");
+const cockpit = readFileSync("packages/web/src/app/life/local-cockpit.tsx", "utf8");
+const data = readFileSync("packages/web/src/app/life/local-cockpit-data.ts", "utf8");
+const css = readFileSync("packages/web/src/app/life/life.css", "utf8");
+const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 
-  assert.match(layout, /href="\/life"/);   // reachable from the header
-  // ---- new calm whole-practice composition (old broadcast-theatre pins replaced) ----
-  assert.match(page, /import \{ CopyChip \} from "\.\/life-chips"/);
-  assert.match(page, /import "\.\/life\.css"/);
-  assert.match(lifeStyles, /\.wrap:has\(> \.vlife\)::before/);
-  assert.match(lifeStyles, /white-space: normal/);
-  assert.match(page, /title: "VibeUsage AI Life"/);
-  assert.match(page, /One picture of your whole AI practice: creation, coding, local labs/);
-  assert.match(page, /Your whole AI practice, not just coding spend/);
-  assert.match(page, /Six rails, one tracker\./);
-  assert.match(page, /Usage, trust, local-only, and publish stay separate and labeled\./);
-  assert.match(page, /vlife-hero/);
-  assert.match(page, /vlife-rails/);
-  assert.match(page, /vlife-card/);
-  assert.match(page, /Creator studio/);
-  assert.match(page, /command: "vibetracker sync",/);
-  assert.match(page, /Builder desk/);
-  assert.match(page, /command: "vibetracker trust list",/);
-  assert.match(page, /Local AI lab/);
-  assert.match(page, /command: "vibetracker detect",/);
-  assert.match(page, /Research desk/);
-  assert.match(page, /command: "vibetracker export --format md",/);
-  assert.match(page, /Regional frontier/);
-  assert.match(page, /command: "vibetracker providers --all",/);
-  assert.match(page, /Public relay/);
-  assert.match(page, /vibetracker upload --dry-run/);
-  assert.match(page, /vlife-strip/);
-  assert.match(page, /usage · trust · local-only · publish — four rails, never mixed\./);
-  assert.match(page, /vlife-cta/);
-  assert.match(page, /See it live/);
-  assert.match(page, /href="\/u\/anonymous"/);
-  assert.match(page, /a live profile →/);
-  assert.match(page, /href="\/providers"/);
-  assert.match(page, /the provider directory →/);
-  assert.match(page, /CopyChip command="npx vibetrack init"/);
-  assert.match(page, /"--panel-i"/);
-  // old broadcast theatre and its lib-builder wiring must be gone from the page
-  assert.doesNotMatch(page, /buildAiLifeCockpit/);
-  assert.doesNotMatch(page, /AiLifeBroadcastWallPanel/);
-  assert.doesNotMatch(page, /AiLifePersonaAtlasPanel/);
-  assert.doesNotMatch(page, /life-broadcast-wall/);
-  assert.doesNotMatch(page, /life-constellation/);
-  assert.doesNotMatch(page, /life-practice-passport/);
-  assert.doesNotMatch(page, /VTK:\/\//);
-  assert.doesNotMatch(page, /Vibers Unite/);
-  assert.doesNotMatch(page, /dangerouslySetInnerHTML/);
-  assert.match(styles, /prefers-reduced-motion: reduce/);
-  assert.match(styles, /@media \(max-width: 760px\)/);
+test("AI Life is a real consent-driven local usage cockpit", () => {
+  assert.match(layout, /href="\/life"/);
+  assert.match(page, /import \{ LocalCockpit \} from "\.\/local-cockpit"/);
+  assert.match(page, /return <LocalCockpit \/>/);
+  assert.match(cockpit, /^"use client"/);
+  assert.match(cockpit, /Your AI spend\. Live from this machine\./);
+  assert.match(cockpit, /npx vibetrack api serve --port 8765/);
+  assert.match(cockpit, /SESSION TOKEN/);
+  assert.match(cockpit, /CONNECT LOCAL/);
+  assert.match(cockpit, /disabled=\{connection === "connecting" \|\| !token\.trim\(\)/);
+  assert.match(cockpit, /LOCAL NETWORK PERMISSION REQUIRED/);
+  assert.match(cockpit, /Allow Local Network Access for this site/);
+  assert.match(cockpit, /TRACKED SPEND/);
+  assert.match(cockpit, /30D FORECAST/);
+  assert.match(cockpit, /LEDGER RHYTHM/);
+  assert.match(cockpit, /SOURCE PRESSURE/);
+  assert.match(cockpit, /DECISION TAPE/);
+  assert.doesNotMatch(page, /href="\/u\/anonymous"/);
+  assert.doesNotMatch(page, /Six rails, one tracker/);
+});
+
+test("local cockpit keeps the token and aggregate ledger on loopback", () => {
+  assert.match(cockpit, /new URLSearchParams\(window\.location\.hash\.slice\(1\)\)/);
+  assert.match(cockpit, /window\.history\.replaceState/);
+  assert.match(cockpit, /http:\/\/127\.0\.0\.1:\$\{port\}\/stats/);
+  assert.match(cockpit, /http:\/\/127\.0\.0\.1:\$\{port\}\/insights/);
+  assert.match(cockpit, /authorization: `Bearer \$\{token\}`/);
+  assert.match(cockpit, /name: "local-network-access" as PermissionName/);
+  assert.match(cockpit, /cache: "no-store"/);
+  assert.match(cockpit, /does not request \/records, store the session token, or upload your ledger/);
+  assert.doesNotMatch(cockpit, /\/records[`"']/);
+  assert.doesNotMatch(cockpit, /localStorage|sessionStorage/);
+  assert.match(data, /parseLocalStats/);
+  assert.match(data, /parseLocalInsights/);
+  assert.match(data, /buildCockpitSnapshot/);
+});
+
+test("local cockpit layout is stable on desktop mobile and reduced motion", () => {
+  assert.match(css, /width: min\(1320px, calc\(100% - 32px\)\)/);
+  assert.match(css, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
+  assert.match(css, /grid-template-columns: repeat\(21, minmax\(3px, 1fr\)\)/);
+  assert.match(css, /@media \(max-width: 680px\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(css, /overflow-wrap: anywhere/);
+  assert.match(cockpit, /notation: "compact"/);
+  assert.doesNotMatch(css, /font-size:\s*clamp\(/);
 });

@@ -1,122 +1,394 @@
-/* AI Life — calm whole-practice overview. Everything namespaced .vlife*.
-   Mirrors the committed profile instrument system: identical panel tokens,
-   the --panel-i staggered transform/opacity reveal, and the copy-chip pattern.
-   Motion is transform/opacity only, disabled for prefers-reduced-motion. */
-
 .vlife {
+  --vl-bg: #070b0e;
+  --vl-panel: #0a1116;
+  --vl-line: rgba(143, 201, 185, 0.18);
+  --vl-muted: rgba(217, 255, 242, 0.56);
+  --vl-text: #e8fff7;
+  --vl-green: #36e39b;
+  --vl-cyan: #31ead4;
+  --vl-blue: #79c0ff;
+  --vl-amber: #ffc64d;
+  --vl-pink: #f778ba;
+  --vl-red: #ff7768;
   --vl-mono: var(--font-data), ui-monospace, SFMono-Regular, Menlo, monospace;
-  display: grid; gap: 14px; max-width: 1160px; margin: 0 auto; padding: 24px 20px 80px;
+  width: min(1320px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 80px;
+  color: var(--vl-text);
 }
 
-.vlife > * {
+.wrap:has(> .vlife)::before {
+  content: "VTK://LOCAL-USAGE/LIFE/AGGREGATES-ONLY/SESSION-TOKEN/READ-ONLY";
+}
+
+.vlife button,
+.vlife input { font: inherit; }
+
+.vlife button { cursor: pointer; }
+
+.vlife :is(button, input):focus-visible {
+  outline: 2px solid var(--vl-cyan);
+  outline-offset: 2px;
+}
+
+.vlife-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 24px 4px 22px;
+  border-bottom: 1px solid var(--vl-line);
+}
+
+.vlife-head > div:first-child { min-width: 0; }
+
+.vlife-head p,
+.vlife-linker-copy p,
+.vlife-section-head p,
+.vlife-empty p {
+  margin: 0 0 8px;
+  color: var(--vl-cyan);
+  font: 700 10px/1.2 var(--vl-mono);
+}
+
+.vlife-head h1 {
+  max-width: 760px;
+  margin: 0;
+  color: var(--vl-text);
+  font: 650 2.4rem/1.02 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+.vlife-head > div:first-child > span {
+  display: block;
+  max-width: 760px;
+  margin-top: 12px;
+  color: var(--vl-muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.vlife-status {
+  display: grid;
+  grid-template-columns: 8px auto;
+  align-items: center;
+  gap: 6px 10px;
+  min-width: 230px;
+  padding: 12px 14px;
+  border: 1px solid var(--vl-line);
+  color: var(--vl-amber);
+  font: 700 9px/1 var(--vl-mono);
+}
+
+.vlife-status i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 14px currentColor;
+}
+
+.vlife-status code {
+  grid-column: 2;
+  color: var(--vl-muted);
+  font: 500 9px/1 var(--vl-mono);
+}
+
+.vlife-status[data-state="connected"] { color: var(--vl-green); }
+.vlife-status[data-state="connecting"] { color: var(--vl-blue); }
+.vlife-status[data-state="offline"],
+.vlife-status[data-state="permission"],
+.vlife-status[data-state="unauthorized"],
+.vlife-status[data-state="invalid"] { color: var(--vl-red); }
+
+.vlife-linker {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+  margin-top: 28px;
+  border: 1px solid var(--vl-line);
+  background: var(--vl-bg);
+}
+
+.vlife-linker-copy {
+  min-height: 230px;
+  padding: 30px;
+  border-right: 1px solid var(--vl-line);
+  background:
+    linear-gradient(90deg, transparent 49px, rgba(49, 234, 212, 0.05) 50px, transparent 51px),
+    linear-gradient(rgba(49, 234, 212, 0.04) 1px, transparent 1px);
+  background-size: 50px 100%, 100% 28px;
+}
+
+.vlife-linker-copy h2,
+.vlife-empty h2 {
+  margin: 0;
+  color: var(--vl-text);
+  font: 650 1.65rem/1.1 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+.vlife-linker-copy > span {
+  display: block;
+  max-width: 600px;
+  margin-top: 14px;
+  color: var(--vl-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.vlife-command {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-content: center;
+  gap: 10px 18px;
+  padding: 24px;
+}
+
+.vlife-command > span {
+  grid-column: 1 / -1;
+  color: var(--vl-muted);
+  font: 700 9px/1 var(--vl-mono);
+}
+
+.vlife-command code {
   min-width: 0;
-  animation: vlife-in 0.5s ease-out both;
-  animation-delay: calc(var(--panel-i, 0) * 90ms);
+  overflow: hidden;
+  color: var(--vl-text);
+  font: 600 12px/36px var(--vl-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-@keyframes vlife-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+.vlife-command button,
+.vlife-session-form > button,
+.vlife-toolbar button {
+  border: 1px solid var(--vl-line);
+  background: transparent;
+  color: var(--vl-cyan);
+  font: 700 9px/1 var(--vl-mono);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .vlife > * { animation: none; }
+.vlife-command button { min-width: 90px; min-height: 36px; padding: 0 12px; }
+.vlife-command button[data-state="copied"] { color: var(--vl-green); }
+.vlife-command button[data-state="blocked"] { color: var(--vl-red); }
+
+.vlife-session-form {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px 150px;
+  border-top: 1px solid var(--vl-line);
 }
 
-.vlife :is(a, button, [tabindex]):focus-visible { outline: 2px solid #2ee8d6; outline-offset: 2px; }
-
-/* ---- panel base ---- */
-
-.vlife-panel {
-  background: #0d1419; border: 1px solid rgba(46, 232, 214, 0.14);
-  border-radius: 10px; padding: 18px 20px; min-width: 0;
+.vlife-session-form label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px 16px;
+  border-right: 1px solid var(--vl-line);
 }
 
-/* ---- hero ---- */
-
-.vlife-hero { display: grid; gap: 10px; padding: 22px 24px; }
-
-.vlife-hero h1 {
-  margin: 0; color: var(--fg); overflow-wrap: anywhere;
-  font: 600 clamp(1.6rem, 3.4vw, 2.3rem) / 1.12 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+.vlife-session-form label > span {
+  color: var(--vl-muted);
+  font: 700 8px/1 var(--vl-mono);
 }
 
-.vlife-hero p {
-  margin: 0; max-width: 62ch;
-  font: 500 15px/1.55 var(--font-display), ui-sans-serif, system-ui, sans-serif;
-  color: rgba(217, 255, 242, 0.7);
+.vlife-session-form input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--vl-text);
+  font: 600 11px/1.2 var(--vl-mono);
 }
 
-/* ---- rails grid ---- */
+.vlife-session-form input::placeholder { color: rgba(217, 255, 242, 0.28); }
+.vlife-session-form > button { border: 0; }
+.vlife-session-form > button:disabled { color: var(--vl-muted); cursor: progress; }
 
-.vlife-rails { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-
-.vlife-card { display: grid; gap: 10px; align-content: start; }
-
-.vlife-card-label {
-  font: 600 11px/1.2 var(--vl-mono); text-transform: uppercase;
-  letter-spacing: 0.08em; color: rgba(217, 255, 242, 0.5);
+.vlife-connection-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px 16px;
+  border-top: 1px solid var(--vl-line);
+  color: var(--vl-red);
+  font: 600 9px/1.45 var(--vl-mono);
 }
 
-.vlife-card-line {
-  margin: 0; overflow-wrap: anywhere;
-  font: 500 13.5px/1.55 var(--font-display), ui-sans-serif, system-ui, sans-serif;
-  color: rgba(217, 255, 242, 0.72);
+.vlife-connection-note[data-tone="permission"] { color: var(--vl-amber); }
+
+.vlife-custody {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--vl-line);
 }
 
-/* ---- copy chip (mirrors the committed profile command chip) ---- */
-
-.vlife-chip {
-  appearance: none; cursor: pointer; justify-self: start;
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(46, 232, 214, 0.3);
-  background: #040607; font: 500 12px/1 var(--vl-mono); color: #d9fff2;
+.vlife-custody span {
+  padding: 12px 16px;
+  border-right: 1px solid var(--vl-line);
+  color: var(--vl-muted);
+  font: 500 9px/1.35 var(--vl-mono);
 }
 
-.vlife-chip code { background: transparent; border: 0; padding: 0; font: inherit; color: #2ee8d6; }
-.vlife-chip span { color: rgba(217, 255, 242, 0.5); }
-.vlife-chip[data-state="copied"] span { color: #36e39b; }
-.vlife-chip[data-state="blocked"] span { color: #ff7768; }
+.vlife-custody span:last-child { border-right: 0; }
+.vlife-custody b { color: var(--vl-green); }
 
-/* ---- rails strip ---- */
-
-.vlife-strip { padding: 12px 20px; }
-
-.vlife-strip p {
-  margin: 0; text-align: center;
-  font: 500 12px/1.4 var(--vl-mono); color: rgba(217, 255, 242, 0.5);
+.vlife-connected {
+  margin-top: 28px;
+  border: 1px solid var(--vl-line);
+  background: var(--vl-bg);
 }
 
-/* ---- CTA ---- */
-
-.vlife-cta { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
-
-.vlife-cta-title {
-  margin: 0; color: var(--fg);
-  font: 600 15px/1.2 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+.vlife-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 44px;
+  padding-left: 16px;
+  border-bottom: 1px solid var(--vl-line);
+  color: var(--vl-muted);
+  font: 600 8px/1 var(--vl-mono);
 }
 
-.vlife-cta-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.vlife-toolbar > div { display: flex; height: 100%; }
+.vlife-toolbar button { min-width: 104px; border-block: 0; border-right: 0; }
+.vlife-toolbar button:last-child { color: var(--vl-red); }
 
-.vlife-link {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(46, 232, 214, 0.3);
-  font: 500 12px/1 var(--vl-mono); color: #d9fff2;
+.vlife-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  border-bottom: 1px solid var(--vl-line);
 }
 
-/* ---- responsive ---- */
+.vlife-metrics > div {
+  min-width: 0;
+  padding: 20px;
+  border-right: 1px solid var(--vl-line);
+}
 
-@media (max-width: 1020px) {
-  .vlife-rails { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.vlife-metrics > div:last-child { border-right: 0; }
+.vlife-metrics dt { color: var(--vl-muted); font: 700 8px/1 var(--vl-mono); }
+.vlife-metrics dd { margin: 11px 0 8px; color: var(--vl-text); font: 650 1.75rem/1 var(--font-display), ui-sans-serif, system-ui, sans-serif; }
+.vlife-metrics span { color: var(--vl-muted); font: 500 9px/1.3 var(--vl-mono); }
+.vlife-metrics [data-tone="forecast"] dd { color: var(--vl-amber); }
+.vlife-metrics [data-tone="ops"] dd { color: var(--vl-blue); }
+.vlife-metrics [data-tone="local"] dd { color: var(--vl-green); }
+
+.vlife-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
+  border-bottom: 1px solid var(--vl-line);
+}
+
+.vlife-rhythm,
+.vlife-providers,
+.vlife-intel { min-width: 0; padding: 22px; }
+.vlife-rhythm { border-right: 1px solid var(--vl-line); }
+
+.vlife-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.vlife-section-head h2 {
+  margin: 0;
+  color: var(--vl-text);
+  font: 650 1.05rem/1.15 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+.vlife-section-head > span { color: var(--vl-muted); font: 600 8px/1 var(--vl-mono); }
+
+.vlife-bars {
+  display: grid;
+  grid-template-columns: repeat(21, minmax(3px, 1fr));
+  align-items: end;
+  gap: 5px;
+  height: 176px;
+  margin-top: 22px;
+  padding-top: 12px;
+  border-block: 1px solid var(--vl-line);
+  background: repeating-linear-gradient(to bottom, transparent 0 40px, rgba(143, 201, 185, 0.08) 40px 41px);
+}
+
+.vlife-bars i {
+  height: var(--level);
+  min-height: 3px;
+  background: var(--vl-cyan);
+  box-shadow: 0 0 9px rgba(49, 234, 212, 0.18);
+}
+
+.vlife-bars i:nth-last-child(-n+3) { background: var(--vl-blue); }
+.vlife-rhythm-axis { display: flex; justify-content: space-between; margin-top: 8px; color: var(--vl-muted); font: 500 8px/1 var(--vl-mono); }
+
+.vlife-providers ol { display: grid; gap: 0; margin: 18px 0 0; padding: 0; list-style: none; }
+.vlife-providers li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 40px; border-top: 1px solid var(--vl-line); }
+.vlife-providers li > code { color: var(--vl-muted); font: 500 8px/1 var(--vl-mono); }
+.vlife-providers li > div { min-width: 0; }
+.vlife-providers li b { display: block; overflow: hidden; color: var(--vl-text); font: 600 9px/1.2 var(--vl-mono); text-overflow: ellipsis; white-space: nowrap; }
+.vlife-providers li > span { color: var(--vl-muted); font: 500 8px/1 var(--vl-mono); }
+.vlife-providers li i { display: block; height: 2px; margin-top: 6px; background: rgba(143, 201, 185, 0.12); }
+.vlife-providers li i span { display: block; height: 100%; background: var(--vl-pink); }
+
+.vlife-intel { border-bottom: 1px solid var(--vl-line); }
+.vlife-intel-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; border: 1px solid var(--vl-line); }
+.vlife-intel article { display: grid; align-content: start; gap: 10px; min-height: 132px; padding: 16px; border-right: 1px solid var(--vl-line); }
+.vlife-intel article:last-child { border-right: 0; }
+.vlife-intel article > span { color: var(--vl-blue); font: 700 8px/1 var(--vl-mono); }
+.vlife-intel article > b { color: var(--vl-text); font: 600 12px/1.4 var(--font-display), ui-sans-serif, system-ui, sans-serif; }
+.vlife-intel article > small { color: var(--vl-muted); font: 500 9px/1.5 var(--vl-mono); overflow-wrap: anywhere; }
+.vlife-intel article[data-tone="alert"] > span { color: var(--vl-red); }
+.vlife-intel article[data-tone="clear"] > span { color: var(--vl-green); }
+
+.vlife-empty { padding: 48px 22px; border-bottom: 1px solid var(--vl-line); text-align: center; }
+.vlife-empty code { display: inline-block; margin-top: 18px; color: var(--vl-cyan); font: 600 11px/1 var(--vl-mono); }
+
+.vlife-foot { margin: 0; padding: 12px 16px; color: var(--vl-muted); font: 500 8px/1.45 var(--vl-mono); }
+
+.vlife button:hover { background: rgba(49, 234, 212, 0.05); color: var(--vl-text); }
+
+@media (max-width: 980px) {
+  .vlife-head { flex-direction: column; }
+  .vlife-status { min-width: 0; }
+  .vlife-linker { grid-template-columns: 1fr; }
+  .vlife-linker-copy { min-height: 0; border-right: 0; border-bottom: 1px solid var(--vl-line); }
+  .vlife-workbench { grid-template-columns: 1fr; }
+  .vlife-rhythm { border-right: 0; border-bottom: 1px solid var(--vl-line); }
+  .vlife-intel-grid { grid-template-columns: 1fr; }
+  .vlife-intel article { min-height: 0; border-right: 0; border-bottom: 1px solid var(--vl-line); }
+  .vlife-intel article:last-child { border-bottom: 0; }
 }
 
 @media (max-width: 680px) {
-  .wrap:has(> .vlife)::before {
-    overflow-wrap: anywhere;
-    white-space: normal;
-    line-height: 1.35;
-    letter-spacing: 0;
-  }
-  .vlife-rails { grid-template-columns: 1fr; }
-  .vlife-cta { flex-direction: column; align-items: flex-start; }
+  .vlife { width: min(100% - 20px, 1320px); padding-top: 14px; }
+  .wrap:has(> .vlife)::before { overflow-wrap: anywhere; white-space: normal; line-height: 1.35; }
+  .vlife-head { gap: 18px; padding-top: 16px; }
+  .vlife-head h1 { font-size: 2rem; }
+  .vlife-status { width: 100%; }
+  .vlife-linker-copy { padding: 22px 18px; }
+  .vlife-command { grid-template-columns: minmax(0, 1fr); padding: 18px; }
+  .vlife-command code { line-height: 1.45; white-space: normal; overflow-wrap: anywhere; }
+  .vlife-command button { width: 100%; }
+  .vlife-session-form { grid-template-columns: minmax(0, 1fr) 92px; }
+  .vlife-session-form > button { grid-column: 1 / -1; min-height: 46px; border-top: 1px solid var(--vl-line); }
+  .vlife-custody { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vlife-custody span:nth-child(2) { border-right: 0; }
+  .vlife-custody span:nth-child(-n+2) { border-bottom: 1px solid var(--vl-line); }
+  .vlife-toolbar { grid-template-columns: 1fr; gap: 10px; padding: 12px; }
+  .vlife-toolbar > div { min-height: 40px; }
+  .vlife-toolbar button { flex: 1; border: 1px solid var(--vl-line); }
+  .vlife-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vlife-metrics > div:nth-child(2) { border-right: 0; }
+  .vlife-metrics > div:nth-child(-n+2) { border-bottom: 1px solid var(--vl-line); }
+  .vlife-metrics dd { font-size: 1.45rem; }
+  .vlife-rhythm, .vlife-providers, .vlife-intel { padding: 18px; }
+  .vlife-section-head { flex-direction: column; gap: 8px; }
+  .vlife-bars { grid-template-columns: repeat(21, minmax(2px, 1fr)); gap: 3px; height: 144px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vlife * { scroll-behavior: auto; }
 }
