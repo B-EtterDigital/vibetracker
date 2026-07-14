@@ -642,5 +642,12 @@
     letter-spacing: 0;
   }
   .vprofile-stats { grid-template-columns: 1fr; }
+  .vprofile-bar-label { min-width: 0; }
+  .vprofile-bar-amount {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .vprofile-cta { flex-direction: column; align-items: flex-start; }
 }

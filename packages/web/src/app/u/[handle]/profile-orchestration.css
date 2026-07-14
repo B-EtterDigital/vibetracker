@@ -1,5 +1,8 @@
 /* Local orchestration trace reconstructed from bounded session-event gaps. */
 
+.vorch .vprofile-panel-head { flex-wrap: wrap; }
+.vorch .vprofile-panel-sub { white-space: normal; text-align: right; }
+
 .vorch-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -46,5 +49,7 @@
 }
 
 @media (max-width: 600px) {
+  .vorch .vprofile-panel-head { display: grid; gap: 6px; }
+  .vorch .vprofile-panel-sub { text-align: left; }
   .vorch-lead-value { font-size: 2.8rem; }
 }

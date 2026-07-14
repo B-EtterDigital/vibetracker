@@ -16,6 +16,7 @@ const telemetryModel = readFileSync("packages/web/src/app/u/[handle]/profile-tel
 const telemetryStyles = readFileSync("packages/web/src/app/u/[handle]/profile-telemetry.css", "utf8");
 const readout = readFileSync("packages/web/src/app/u/[handle]/profile-readout.tsx", "utf8");
 const orchestration = readFileSync("packages/web/src/app/u/[handle]/profile-orchestration.tsx", "utf8");
+const orchestrationStyles = readFileSync("packages/web/src/app/u/[handle]/profile-orchestration.css", "utf8");
 const accessibilityStyles = readFileSync("packages/web/src/app/u/[handle]/profile-accessibility.css", "utf8");
 const layout = readFileSync("packages/web/src/app/u/[handle]/layout.tsx", "utf8");
 const nextConfig = readFileSync("packages/web/next.config.ts", "utf8");
@@ -150,6 +151,8 @@ test("orchestration trace explains its bounded local evidence without runtime or
   assert.match(orchestration, /not exact runtime, billing time, human effort, or server-verified concurrency/);
   assert.match(orchestration, /coverage \{orch\.filesScanned\.toLocaleString/);
   assert.doesNotMatch(orchestration, /your agents worked|hours reclaimed|while you slept|you did not sit through|measured, not estimated|actually running/i);
+  assert.match(orchestrationStyles, /\.vorch \.vprofile-panel-head \{ flex-wrap: wrap; \}/);
+  assert.match(orchestrationStyles, /\.vorch \.vprofile-panel-sub \{ white-space: normal; text-align: right; \}/);
 });
 
 test("C0VIBE band offers claim + migrate without overclaiming verification", () => {
@@ -290,6 +293,7 @@ test("profile route-local styling stays responsive and motion-safe", () => {
   assert.match(styles, /@media \(max-width: 1020px\)/);
   assert.match(styles, /@media \(max-width: 900px\)/);
   assert.match(styles, /@media \(max-width: 640px\)/);
+  assert.match(styles, /\.vprofile-bar-amount \{[\s\S]*flex: 1 1 0;[\s\S]*text-overflow: ellipsis;/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(accessibilityStyles, /Profile-only AA contrast corrections/);
 });
