@@ -8,7 +8,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { TrustBadge } from "../../../components/TrustBadge";
 import type { ComplexityRead, SignalTier } from "../../../lib/profile-complexity";
 import { GITHUB_LEVEL_COLORS } from "../../../lib/profile-trust";
-import type { Tier } from "../../../lib/leaderboard";
+import type { UsageTier } from "../../../components/TrustBadge";
 import { ProfileUsageChart, type ChartDay, type ProviderSeries } from "./profile-chart";
 import { vibeColor } from "../../../../../core/src/vibe-categories";
 
@@ -295,7 +295,7 @@ function isoDate(t: number): string {
 
 // Sync rhythm moved to profile-heatmap.tsx (SyncRhythm): a real GitHub-geometry contribution
 // calendar keyed on daily spend — the one signal we hold for every day of the history.
-export function TrustRow({ tier, signals }: { tier: Tier; signals: TrustChip[] }) {
+export function TrustRow({ tier, signals }: { tier: UsageTier; signals: TrustChip[] }) {
   return (
     <section className="vprofile-panel">
       <PanelHead title="Trust signals" sub="(labelled evidence, never usage)" />

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { cache, type CSSProperties, type ReactNode } from "react";
 import { getProfile } from "../../../lib/data";
 import { buildDemoProfile, DEMO_HANDLE } from "../../../lib/demo-profile";
-import { formatInt, formatUsd, type Tier } from "../../../lib/leaderboard";
+import { formatInt, formatUsd } from "../../../lib/leaderboard";
 import { providerBrand } from "../../../lib/provider-brand";
 import { readComplexity } from "../../../lib/profile-complexity";
 import { trustSignalMark, trustSignalMetric, trustSignalTitle, trustSignalWindow } from "../../../lib/profile-trust";
@@ -115,7 +115,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const read = readComplexity(profile, PROVIDERS);
   const { facts, reveal } = read;
   const tierRaw = profile.latest?.tier ?? "self_reported";
-  const tier = (tierRaw === "verified" ? "verified" : "self_reported") as Tier;
+  const usageTier = tierRaw === "verified" || tierRaw === "attested" ? tierRaw : "self_reported";
   const byUsd = profile.providers.slice().sort((a, b) => b.usd - a.usd);
 
   // Every source with real activity, ranked by spend — shown as the hero's labelled "Sources" row
@@ -327,7 +327,6 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // most profiles today, which surfaces the "add a bio" affordance instead.
   const userBio = (profile.bio ?? "").trim();
 
-  const claimed = tierRaw !== "self_reported";
 
   const showProviderMix = reveal.providerMix && mix.rows.length > 0;
   // The real GitHub contribution graph, whenever the viber's CLI captured it. Always shown when
@@ -429,11 +428,13 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // Specialization ranks by operations, which are reconstructed from token volume (logs are pruned)
   // — flag it so the ops numbers read as estimates, not exact counts.
   if (reveal.categoryMix) add("who", "half", <CategoryMix rows={categories} sub={`${read.identity.label} · ops est.`} key="categories" />);
-  if (reveal.trust) add("who", "half", <TrustRow tier={tier} signals={trustChips} key="trust" />);
+  if (reveal.trust) add("who", "half", <TrustRow tier={usageTier} signals={trustChips} key="trust" />);
   add("join", "full",
     <C0vibeBand
       handle={profile.handle}
-      claimed={claimed}
+      accountLinked={Boolean(profile.accountLinked)}
+      identityVerified={Boolean(profile.identityVerified)}
+      identityProvider={profile.identityProvider}
       joinHref={C0VIBE_JOIN_HREF}
       migrateHref={C0VIBE_MIGRATE_HREF}
       providerCount={PROVIDERS.length}

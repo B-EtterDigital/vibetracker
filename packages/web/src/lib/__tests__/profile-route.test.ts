@@ -142,6 +142,12 @@ test("token breakdown + cross-provider delegation render from the new aggregates
 test("C0VIBE band offers claim + migrate without overclaiming verification", () => {
   assert.match(cta, /export function C0vibeBand/);
   assert.match(cta, /Claim @\{handle\} on C0VIBE/);
+  assert.match(cta, /@\{handle\} is verified through GitHub/);
+  assert.match(cta, /same GitHub identity and usage history carry over/);
+  assert.match(cta, /no GitHub credential stored/);
+  assert.match(page, /accountLinked=\{Boolean\(profile\.accountLinked\)\}/);
+  assert.match(page, /identityProvider=\{profile\.identityProvider\}/);
+  assert.match(page, /tier=\{usageTier\}/);
   assert.match(cta, /self-reported → attested/);
   assert.match(cta, /free forever, no card/);
   // Attested = a real identity owns the handle. The user-facing lede must never promise

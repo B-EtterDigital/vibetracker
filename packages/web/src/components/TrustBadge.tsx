@@ -1,9 +1,26 @@
-import { TIER_LABEL, TIER_BLURB, type Tier } from "../lib/leaderboard";
+export type UsageTier = "verified" | "attested" | "self_reported";
 
-export function TrustBadge({ tier }: { tier: Tier }) {
+const USAGE_TIER: Record<UsageTier, { label: string; blurb: string }> = {
+  verified: {
+    label: "Verified usage",
+    blurb: "A backend connector fetched this usage directly from the provider.",
+  },
+  attested: {
+    label: "Identity attested",
+    blurb: "GitHub or C0VIBE proves the operator. The reviewed CLI upload is attested, not provider-verified.",
+  },
+  self_reported: {
+    label: "Self-reported",
+    blurb: "This CLI upload has no verified operator identity attached.",
+  },
+};
+
+export function TrustBadge({ tier }: { tier: UsageTier }) {
+  const copy = USAGE_TIER[tier];
+  const identityProven = tier !== "self_reported";
   return (
-    <span className={`badge badge-${tier}`} title={TIER_BLURB[tier]}>
-      {tier === "verified" ? "✓ " : ""}{TIER_LABEL[tier]}
+    <span className={`badge badge-${identityProven ? "verified" : "self_reported"}`} title={copy.blurb}>
+      {identityProven ? "✓ " : ""}{copy.label}
     </span>
   );
 }

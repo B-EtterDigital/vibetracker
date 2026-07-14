@@ -11,20 +11,39 @@ import { CopyInitChip } from "./panels";
 
 export interface C0vibeBandProps {
   handle: string;
-  claimed: boolean;
+  accountLinked: boolean;
+  identityVerified: boolean;
+  identityProvider?: string;
   joinHref: string;
   migrateHref: string;
   providerCount: number;
 }
 
-const CLAIM_POINTS = [
+const ACCOUNT_POINTS = [
   "free forever, no card",
   "keeps every tracked day",
   "self-reported → attested",
   "one identity across C0VIBE",
 ];
 
-export function C0vibeBand({ handle, claimed, joinHref, migrateHref, providerCount }: C0vibeBandProps) {
+const GITHUB_POINTS = [
+  "GitHub ownership verified",
+  "usage stays identity-attested",
+  "history carries into C0VIBE",
+  "no GitHub credential stored",
+];
+
+export function C0vibeBand({
+  handle,
+  accountLinked,
+  identityVerified,
+  identityProvider,
+  joinHref,
+  migrateHref,
+  providerCount,
+}: C0vibeBandProps) {
+  const githubVerified = identityVerified && identityProvider === "github";
+  const points = githubVerified && !accountLinked ? GITHUB_POINTS : ACCOUNT_POINTS;
   return (
     <section className="vprofile-panel vjoin" aria-label="Join C0VIBE">
       <div className="vjoin-lane vjoin-lane--claim">
@@ -45,15 +64,21 @@ export function C0vibeBand({ handle, claimed, joinHref, migrateHref, providerCou
         </div>
 
         <h2 className="vjoin-title">
-          {claimed ? <>@{handle} is linked to C0VIBE</> : <>Claim @{handle} on C0VIBE</>}
+          {accountLinked
+            ? <>@{handle} is linked to C0VIBE</>
+            : githubVerified
+              ? <>@{handle} is verified through GitHub</>
+              : <>Claim @{handle} on C0VIBE</>}
         </h2>
         <p className="vjoin-lede">
-          {claimed
+          {accountLinked
             ? "This board uploads as attested: a real C0VIBE identity owns the handle. Keep syncing from the CLI and every day lands here."
-            : "This board is self-reported — uploaded from the CLI with no account behind it. Link it to a free C0VIBE account and every future sync uploads as attested, with your full history carried over."}
+            : githubVerified
+              ? "GitHub proves ownership of this handle, so CLI uploads are identity-attested. Link a free C0VIBE account later and the same GitHub identity and usage history carry over."
+              : "This board is self-reported — uploaded from the CLI with no account behind it. Link it to a free C0VIBE account and every future sync uploads as attested, with your full history carried over."}
         </p>
         <ul className="vjoin-points">
-          {CLAIM_POINTS.map((point) => (
+          {points.map((point) => (
             <li key={point}>
               <i aria-hidden="true" />
               {point}
@@ -65,7 +90,11 @@ export function C0vibeBand({ handle, claimed, joinHref, migrateHref, providerCou
             Join C0VIBE — free
             <i aria-hidden="true">&#8599;</i>
           </a>
-          {claimed ? null : <a className="vjoin-btn" href={migrateHref}>Migrate this profile</a>}
+          {accountLinked ? null : (
+            <a className="vjoin-btn" href={migrateHref}>
+              {githubVerified ? "Link C0VIBE account" : "Migrate this profile"}
+            </a>
+          )}
         </div>
       </div>
 
