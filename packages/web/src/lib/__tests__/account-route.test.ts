@@ -67,5 +67,6 @@ test("account layout remains bounded, responsive, and motion-safe", () => {
   assert.match(styles, /@media \(max-width: 920px\)/);
   assert.match(styles, /@media \(max-width: 620px\)/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(styles, /width: min\(1320px, calc\(100vw - 32px\)\)/);
+  assert.match(styles, /width: min\(1320px, calc\(100% - 32px\)\)/);
+  assert.match(styles, /width: calc\(100% - 16px\)/);
 });

@@ -1,5 +1,5 @@
 .account-page {
-  width: min(1320px, calc(100vw - 32px));
+  width: min(1320px, calc(100% - 32px));
   margin: 0 auto;
   padding: 30px 0 56px;
 }
@@ -89,7 +89,7 @@
 }
 
 @media (max-width: 620px) {
-  .account-page { width: calc(100vw - 16px); padding-top: 12px; }
+  .account-page { width: calc(100% - 16px); padding-top: 12px; }
   .account-hero__copy { padding: 28px 22px; }
   .account-hero h1 { font-size: 38px; }
   .account-hero__terminal pre { min-height: 230px; padding: 30px 18px; font-size: 8px; }
