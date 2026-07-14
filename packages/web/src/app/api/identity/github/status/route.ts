@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await admin
     .from("vibetracker_identities")
-    .select("provider_login, canonical_handle, display_name, avatar_url, verified_at, linked_at")
+    .select("id, provider_login, canonical_handle, display_name, avatar_url, verified_at, linked_at")
     .eq("user_id", account.user.id)
     .eq("provider", "github")
     .maybeSingle();
@@ -36,8 +36,24 @@ export async function GET(req: Request) {
   }
   if (!data) return NextResponse.json({ linked: false }, { headers: noStore });
 
+  const { data: c0vibeLink, error: c0vibeError } = await admin
+    .from("vibetracker_account_links")
+    .select("identity_id")
+    .eq("identity_id", data.id)
+    .maybeSingle();
+  if (c0vibeError) {
+    telemetry.captureError(new Error(c0vibeError.message), {
+      area: "web.auth.c0vibe-status.read",
+      severity: "error",
+      code: c0vibeError.code,
+      userId: account.user.id,
+    });
+    return NextResponse.json({ error: "C0VIBE link status failed" }, { status: 500, headers: noStore });
+  }
+
   return NextResponse.json({
     linked: true,
+    c0vibeLinked: Boolean(c0vibeLink),
     identity: {
       provider: "github",
       handle: data.canonical_handle,

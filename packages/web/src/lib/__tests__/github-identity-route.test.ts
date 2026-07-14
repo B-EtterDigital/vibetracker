@@ -44,6 +44,8 @@ test("account identity status requires a real session and returns sanitized link
   assert.match(statusRoute, /\.from\("vibetracker_identities"\)/);
   assert.match(statusRoute, /provider_login, canonical_handle, display_name, avatar_url, verified_at, linked_at/);
   assert.match(statusRoute, /linked: false/);
+  assert.match(statusRoute, /\.from\("vibetracker_account_links"\)/);
+  assert.match(statusRoute, /c0vibeLinked: Boolean\(c0vibeLink\)/);
   assert.match(statusRoute, /cache-control.*private, no-store/);
   assert.match(statusRoute, /web\.auth\.github-status\.read/);
   assert.doesNotMatch(statusRoute, /token_hash|issued_token|service_role|github_token/);

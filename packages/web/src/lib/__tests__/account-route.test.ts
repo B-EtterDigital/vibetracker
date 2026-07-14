@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { accountIdentityFromSession, accountRedirectUrl, safeNextPath } from "../../app/account/account-session.ts";
+import { c0vibeAuthorizationUrl, c0vibeBridgeMessage } from "../c0vibe-account-bridge.ts";
 
 const page = readFileSync("packages/web/src/app/account/page.tsx", "utf8");
 const consoleSource = readFileSync("packages/web/src/app/account/account-console.tsx", "utf8");
@@ -11,6 +12,7 @@ const styles = readFileSync("packages/web/src/app/account/account.css", "utf8");
 const callback = readFileSync("packages/web/src/app/auth/callback/route.ts", "utf8");
 const browserClient = readFileSync("packages/web/src/lib/supabase-browser.ts", "utf8");
 const serverClient = readFileSync("packages/web/src/lib/supabase-server.ts", "utf8");
+const bridgeRoute = readFileSync("packages/web/src/app/api/account-bridge/route.ts", "utf8");
 
 test("account identity derives only bounded GitHub display fields", () => {
   const identity = accountIdentityFromSession({ user: {
@@ -41,6 +43,20 @@ test("account return paths stay same-origin and avoid account loops", () => {
   assert.equal(safeNextPath("//evil.example/path"), null);
   assert.equal(safeNextPath("/account"), null);
   assert.equal(accountRedirectUrl("https://vibeusage.c0vibe.app", "/proof"), "https://vibeusage.c0vibe.app/auth/callback?next=%2Fproof");
+});
+
+test("C0VIBE migration uses a bounded one-time claim and fixed WorkOS entrypoint", () => {
+  const token = "ab".repeat(32);
+  assert.equal(c0vibeAuthorizationUrl(token), `https://c0vibe.app/auth/workos/authkit?via=vibeusage&bridge=${token}`);
+  assert.throws(() => c0vibeAuthorizationUrl(token, "https://evil.example"), /invalid C0VIBE auth origin/);
+  assert.match(c0vibeBridgeMessage("conflict"), /already linked to another account/);
+  assert.match(bridgeRoute, /admin\.auth\.getUser\(authorization\.slice\(7\)\)/);
+  assert.match(bridgeRoute, /vibetracker_create_workos_link_claim/);
+  assert.match(bridgeRoute, /p_ttl_seconds: 600/);
+  assert.match(bridgeRoute, /c0vibeAuthorizationUrl/);
+  assert.match(consoleSource, /link to C0VIBE/);
+  assert.match(consoleSource, /window\.location\.assign\(payload\.authorizationUrl\)/);
+  assert.doesNotMatch(bridgeRoute, /email.*claim|provider_token|localStorage|sessionStorage/);
 });
 
 test("global shell exposes an obvious sign-in control without claiming verification early", () => {

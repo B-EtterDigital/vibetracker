@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { authProviderAvailability, supabaseBrowser, supabaseBrowserConfigured } from "../../lib/supabase-browser";
+import { c0vibeBridgeMessage } from "../../lib/c0vibe-account-bridge";
 import { accountIdentityFromSession, accountRedirectUrl, safeNextPath } from "./account-session";
 
 type ProviderState = "checking" | "available" | "disabled" | "unavailable";
 type LinkState = "signed-out" | "checking" | "linked" | "unlinked" | "error";
+type BridgeState = "idle" | "starting" | "linked";
 
 interface LinkedIdentity {
   handle: string;
@@ -43,6 +45,7 @@ export function AccountConsole() {
   const [session, setSession] = useState<Session | null>(null);
   const [linkState, setLinkState] = useState<LinkState>("signed-out");
   const [linked, setLinked] = useState<LinkedIdentity | null>(null);
+  const [bridgeState, setBridgeState] = useState<BridgeState>("idle");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [returnPath, setReturnPath] = useState<string | null>(null);
@@ -51,7 +54,8 @@ export function AccountConsole() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setReturnPath(safeNextPath(params.get("next")));
-    setMessage(oauthMessage(params.get("oauth")));
+    setMessage(c0vibeBridgeMessage(params.get("c0vibe")) || oauthMessage(params.get("oauth")));
+    if (params.get("c0vibe") === "linked") setBridgeState("linked");
     if (!supabaseBrowserConfigured()) {
       setMessage("GitHub browser sign-in is not configured in this environment.");
       return;
@@ -77,10 +81,11 @@ export function AccountConsole() {
           headers: { authorization: `Bearer ${next.access_token}` },
           signal: controller.signal,
         });
-        const payload = await response.json() as { linked?: boolean; identity?: LinkedIdentity; error?: string };
+        const payload = await response.json() as { linked?: boolean; c0vibeLinked?: boolean; identity?: LinkedIdentity; error?: string };
         if (!active) return;
         if (!response.ok) throw new Error(payload.error || `Identity status failed (${response.status})`);
         setLinked(payload.linked ? payload.identity ?? null : null);
+        setBridgeState(payload.c0vibeLinked ? "linked" : "idle");
         setLinkState(payload.linked ? "linked" : "unlinked");
       } catch (error) {
         if (!active || controller.signal.aborted) return;
@@ -148,7 +153,36 @@ export function AccountConsole() {
       setSession(null);
       setLinked(null);
       setLinkState("signed-out");
+      setBridgeState("idle");
       setMessage("This browser session is signed out. Your public usage history remains intact.");
+    }
+  }
+
+  async function linkToC0VIBE() {
+    if (!session || linkState !== "linked") return;
+    setBusy(true);
+    setBridgeState("starting");
+    setMessage("Opening C0VIBE WorkOS sign-in. The one-time link expires in 10 minutes.");
+    try {
+      const response = await fetch("/api/account-bridge", {
+        method: "POST",
+        cache: "no-store",
+        headers: { authorization: `Bearer ${session.access_token}` },
+      });
+      const payload = await response.json() as { linked?: boolean; authorizationUrl?: string; error?: string };
+      if (!response.ok) throw new Error(payload.error || `C0VIBE link failed (${response.status})`);
+      if (payload.linked) {
+        setBridgeState("linked");
+        setBusy(false);
+        setMessage("C0VIBE is already linked to this GitHub identity.");
+        return;
+      }
+      if (!payload.authorizationUrl) throw new Error("C0VIBE authorization URL is missing");
+      window.location.assign(payload.authorizationUrl);
+    } catch (error) {
+      setBridgeState("idle");
+      setBusy(false);
+      setMessage(error instanceof Error ? error.message : "C0VIBE link failed");
     }
   }
 
@@ -190,6 +224,7 @@ export function AccountConsole() {
               </div>
               <div className="account-identity__actions">
                 {linkState === "unlinked" || linkState === "error" ? <button type="button" onClick={signIn} disabled={busy || provider !== "available"}>reconnect GitHub</button> : null}
+                {linkState === "linked" ? <button type="button" onClick={linkToC0VIBE} disabled={busy || bridgeState === "linked"}>{bridgeState === "linked" ? "✓ C0VIBE linked" : bridgeState === "starting" ? "opening C0VIBE" : "link to C0VIBE"}</button> : null}
                 {returnPath ? <a href={returnPath}>continue</a> : null}
                 <button type="button" onClick={signOut} disabled={busy}>sign out</button>
               </div>
