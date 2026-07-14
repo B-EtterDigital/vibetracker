@@ -51,8 +51,13 @@ export interface CockpitSnapshot {
     projected30dUsd: number;
     localSavingsUsd: number;
   };
-  providers: Array<AggregateRow & { share: number }>;
-  daily: Array<AggregateRow & { level: number }>;
+  providers: Array<AggregateRow & {
+    share: number;
+    spendShare: number;
+    recordsShare: number;
+    costPerRecord: number | null;
+  }>;
+  daily: Array<AggregateRow & { level: number; spendLevel: number; recordsLevel: number }>;
   alerts: string[];
   workflows: WorkflowRow[];
   overlaps: OverlapRow[];
@@ -132,13 +137,25 @@ export function parseLocalInsights(value: unknown): LocalInsightsPayload {
 
 export function buildCockpitSnapshot(stats: LocalStatsPayload, insights: LocalInsightsPayload): CockpitSnapshot {
   const operations = stats.byProvider.reduce((sum, row) => sum + row.ops, 0);
-  const denominator = stats.totals.usd > 0 ? stats.totals.usd : Math.max(operations, 1);
-  const providers = [...stats.byProvider]
-    .sort((a, b) => (b.usd || b.ops) - (a.usd || a.ops))
-    .slice(0, 7)
-    .map((row) => ({ ...row, share: Math.min(100, ((stats.totals.usd > 0 ? row.usd : row.ops) / denominator) * 100) }));
+  const spendDenominator = Math.max(stats.totals.usd, 1);
+  const recordsDenominator = Math.max(stats.totals.count, 1);
+  const providers = stats.byProvider
+    .map((row) => {
+      const spendShare = Math.min(100, (row.usd / spendDenominator) * 100);
+      const recordsShare = Math.min(100, (row.count / recordsDenominator) * 100);
+      return {
+        ...row,
+        share: stats.totals.usd > 0 ? spendShare : recordsShare,
+        spendShare,
+        recordsShare,
+        costPerRecord: row.count > 0 && row.usd > 0 ? row.usd / row.count : null,
+      };
+    })
+    .sort((a, b) => Math.max(b.spendShare, b.recordsShare) - Math.max(a.spendShare, a.recordsShare))
+    .slice(0, 12);
   const recentDays = [...stats.byDay].sort((a, b) => a.key.localeCompare(b.key)).slice(-21);
-  const maxDay = Math.max(...recentDays.map((row) => row.usd || row.ops), 1);
+  const maxSpendDay = Math.max(...recentDays.map((row) => row.usd), 1);
+  const maxRecordsDay = Math.max(...recentDays.map((row) => row.count), 1);
   return {
     generatedAt: insights.generatedAt,
     range: stats.range,
@@ -152,7 +169,16 @@ export function buildCockpitSnapshot(stats: LocalStatsPayload, insights: LocalIn
       localSavingsUsd: Math.max(stats.localSavingsUsd, insights.localSavingsUsd),
     },
     providers,
-    daily: recentDays.map((row) => ({ ...row, level: Math.max(2, ((row.usd || row.ops) / maxDay) * 100) })),
+    daily: recentDays.map((row) => {
+      const spendLevel = Math.max(2, (row.usd / maxSpendDay) * 100);
+      const recordsLevel = Math.max(2, (row.count / maxRecordsDay) * 100);
+      return {
+        ...row,
+        level: stats.totals.usd > 0 ? spendLevel : recordsLevel,
+        spendLevel,
+        recordsLevel,
+      };
+    }),
     alerts: insights.alerts.slice(0, 4),
     workflows: insights.expensiveWorkflows.slice(0, 4),
     overlaps: insights.overlaps.slice(0, 4),
