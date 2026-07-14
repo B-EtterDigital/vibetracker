@@ -92,6 +92,27 @@ test("sources are a labelled big-logo row with the brand on hover, and a bio can
   assert.match(hero, /vibetracker profile --bio/);
 });
 
+const tokensSrc = readFileSync("packages/web/src/app/u/[handle]/profile-tokens.tsx", "utf8");
+
+test("token breakdown + cross-provider delegation render from the new aggregates", () => {
+  // token breakdown: input/output/cache split, total + per provider
+  assert.match(tokensSrc, /export function TokenBreakdown/);
+  assert.match(tokensSrc, /Cache read/);
+  assert.match(tokensSrc, /Cache creation/);
+  assert.match(tokensSrc, /by provider/);
+  assert.match(page, /<TokenBreakdown/);
+  // delegation: the SMOA cross-provider orchestration surface (agents by active days)
+  assert.match(tokensSrc, /export function Delegation/);
+  assert.match(tokensSrc, /Cross-provider orchestration/);
+  assert.match(tokensSrc, /plans → executes/);
+  assert.match(page, /<Delegation/);
+  assert.match(page, /crossProviderDays=\{profile\.crossProviderDays/);
+  // stat cards gain total tokens + global rank
+  assert.match(page, /label: "total tokens"/);
+  assert.match(page, /label: "global rank"/);
+  assert.match(page, /profile\.rank/);
+});
+
 test("C0VIBE band offers claim + migrate without overclaiming verification", () => {
   assert.match(cta, /export function C0vibeBand/);
   assert.match(cta, /Claim @\{handle\} on C0VIBE/);

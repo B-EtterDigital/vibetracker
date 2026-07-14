@@ -176,5 +176,20 @@ export function buildDemoProfile(): ProfileView {
     categories: CATEGORY_ROWS.map((row) => ({ ...row })),
     providerDays: demoProviderDays(),
     providerModels: [], trustSignals: structuredClone(TRUST_SIGNALS),
+    // Sample token-breakdown + cross-provider delegation so /u/demo showcases those panels. Whole
+    // numbers, cache-read dominant (the honest agentic-coding signature), a two-agent orchestration.
+    totalTokens: 61_400_000_000,
+    crossProviderDays: 22,
+    tokenBreakdown: [
+      { scope: "total", input: 2_100_000_000, output: 190_000_000, cacheRead: 58_600_000_000, cacheCreation: 510_000_000 },
+      { scope: "codex", input: 1_300_000_000, output: 110_000_000, cacheRead: 39_000_000_000, cacheCreation: 300_000_000 },
+      { scope: "claude-code", input: 800_000_000, output: 80_000_000, cacheRead: 19_600_000_000, cacheCreation: 210_000_000 },
+    ],
+    agents: [
+      { agent: "codex", activeDays: 74, cost: 16_400, tokens: 40_000_000_000 },
+      { agent: "claude", activeDays: 38, cost: 24_480, tokens: 20_800_000_000 },
+      { agent: "gemini", activeDays: 9, cost: 120, tokens: 600_000_000 },
+    ],
+    rank: 3,
   };
 }

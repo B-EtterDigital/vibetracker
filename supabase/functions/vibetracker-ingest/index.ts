@@ -102,6 +102,14 @@ async function sha256Hex(input: string): Promise<string> {
     ? rawBio.replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 280) || null
     : null;
 
+  // Token-breakdown + agent (delegation) aggregates ride alongside the bundle as side-channels,
+  // like trust signals — no per-record schema change. Validated to finite non-negative numbers.
+  const nn = (v: unknown) => (Number.isFinite(Number(v)) && Number(v) >= 0 ? Math.floor(Number(v)) : 0);
+  const rawTokens = (payload as { tokenBreakdown?: { total?: Record<string, unknown>; byProvider?: unknown[] } } | null)?.tokenBreakdown;
+  const rawAgents = (payload as { agents?: { crossProviderDays?: unknown; agents?: unknown[] } } | null)?.agents;
+  const totalTokens = rawTokens?.total ? Object.values(rawTokens.total).reduce((s: number, v) => s + nn(v), 0) : 0;
+  const crossProviderDays = nn(rawAgents?.crossProviderDays);
+
   const { data: sub, error: sErr } = await admin.from("vibetracker_submissions").insert({
     user_id: userId ?? null,
     identity_id: identityId ?? null,
@@ -110,6 +118,8 @@ async function sha256Hex(input: string): Promise<string> {
     record_count: result.accepted,
     total_credits: result.totals.credits,
     total_usd: result.totals.usd ?? 0,
+    total_tokens: totalTokens,
+    cross_provider_days: crossProviderDays,
     bio,
   }).select("id").single();
   if (sErr) return json({ ok: false, error: `submission: ${sErr.message}` }, 500);
@@ -208,6 +218,42 @@ async function sha256Hex(input: string): Promise<string> {
     }
   }
 
+  // Token breakdown (total + per provider) — soft-fail so an older DB without the table still ingests.
+  let tokensPersisted = 0;
+  if (rawTokens && (rawTokens.total || Array.isArray(rawTokens.byProvider))) {
+    const tokenRow = (scope: string, t: Record<string, unknown> | undefined) => ({
+      submission_id: sub.id, scope,
+      input: nn(t?.input), output: nn(t?.output), cache_read: nn(t?.cacheRead), cache_creation: nn(t?.cacheCreation),
+    });
+    const rows = [] as ReturnType<typeof tokenRow>[];
+    if (rawTokens.total) rows.push(tokenRow("total", rawTokens.total));
+    for (const p of Array.isArray(rawTokens.byProvider) ? rawTokens.byProvider : []) {
+      const provider = typeof (p as { provider?: unknown }).provider === "string" ? String((p as { provider: string }).provider).slice(0, 64) : "";
+      if (provider) rows.push(tokenRow(provider, p as Record<string, unknown>));
+    }
+    if (rows.length) {
+      const { error } = await admin.from("vibetracker_submission_tokens").insert(rows);
+      if (!error) tokensPersisted = rows.length;
+    }
+  }
+
+  // Agents (cross-provider delegation surface) — soft-fail.
+  let agentsPersisted = 0;
+  if (rawAgents && Array.isArray(rawAgents.agents)) {
+    const rows = rawAgents.agents
+      .map((a) => a as Record<string, unknown>)
+      .filter((a) => typeof a.agent === "string" && (a.agent as string).length > 0)
+      .slice(0, 32)
+      .map((a) => ({
+        submission_id: sub.id, agent: String(a.agent).slice(0, 64),
+        active_days: nn(a.activeDays), cost: Number.isFinite(Number(a.cost)) && Number(a.cost) >= 0 ? Number(a.cost) : 0, tokens: nn(a.tokens),
+      }));
+    if (rows.length) {
+      const { error } = await admin.from("vibetracker_submission_agents").insert(rows);
+      if (!error) agentsPersisted = rows.length;
+    }
+  }
+
   return json({
     ok: result.ok, handle: publicHandle, tier: result.tier,
     identityVerified: Boolean(userId || identityId),
@@ -227,6 +273,10 @@ async function sha256Hex(input: string): Promise<string> {
     trustSignals: result.trustSignals.length,
     trustSignalsPersisted,
     ...(trustSignalWarning ? { trustSignalWarning } : {}),
+    totalTokens,
+    tokensPersisted,
+    agentsPersisted,
+    crossProviderDays,
     profileUrl: `/u/${publicHandle}`,
   });
 });

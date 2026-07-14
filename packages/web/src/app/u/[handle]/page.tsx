@@ -23,10 +23,12 @@ import {
 import { ProfileHero, type HeroDiscipline } from "./profile-hero";
 import { C0vibeBand } from "./profile-cta";
 import { SyncRhythm, GitHubContributions } from "./profile-heatmap";
+import { TokenBreakdown, Delegation } from "./profile-tokens";
 import { UsageTelemetry } from "./profile-telemetry";
 import "./profile.css";
 import "./profile-hero.css";
 import "./profile-heatmap.css";
+import "./profile-tokens.css";
 import "./profile-telemetry.css";
 
 // The two C0VIBE doors on every profile: a free account, and the device-auth flow that
@@ -157,6 +159,8 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     }));
 
   const creditsSum = profile.providers.reduce((sum, p) => sum + p.credits, 0);
+  const totalTokens = profile.totalTokens ?? 0;
+  const fmtTokens = (n: number) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${Math.round(n / 1e6)}M` : formatInt(n));
   const cards = [
     {
       label: "total spent",
@@ -164,24 +168,38 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       value: formatUsd(facts.usd),
       sub: `avg ${formatUsd(facts.usd / Math.max(facts.days, 1))}/day`,
     },
-    {
-      label: "total credits",
-      mark: "credits" as const,
-      value: formatInt(profile.latest?.total_credits ?? creditsSum),
-      sub: `${formatInt(facts.ops)} operations`,
-    },
+    ...(totalTokens > 0
+      ? [{
+          label: "total tokens",
+          mark: "tokens" as const,
+          value: fmtTokens(totalTokens),
+          sub: `${fmtTokens(totalTokens / Math.max(facts.days, 1))}/day`,
+        }]
+      : [{
+          label: "total credits",
+          mark: "credits" as const,
+          value: formatInt(profile.latest?.total_credits ?? creditsSum),
+          sub: `${formatInt(facts.ops)} operations`,
+        }]),
     {
       label: "days active",
       mark: "days" as const,
       value: String(facts.days),
       sub: `since ${fmtDate(profile.usageDays[0]?.date ?? profile.created_at)}`,
     },
-    {
-      label: "sources",
-      mark: "sources" as const,
-      value: String(facts.providers),
-      sub: `${facts.categories} categories`,
-    },
+    profile.rank
+      ? {
+          label: "global rank",
+          mark: "rank" as const,
+          value: `#${profile.rank}`,
+          sub: `${tierRaw.replace(/_/g, "-")} board`,
+        }
+      : {
+          label: "sources",
+          mark: "sources" as const,
+          value: String(facts.providers),
+          sub: `${facts.categories} categories`,
+        },
   ];
 
   const usdTotal = byUsd.reduce((sum, p) => sum + p.usd, 0);
@@ -367,6 +385,16 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     add("usage", "full", <UsageTelemetry days={profile.usageDays} providers={chartSeries} key="telemetry" />);
   } else if (showProviderMix || reveal.insights) {
     add("usage", "full", <MixRow mix={showProviderMix ? mix : null} insights={reveal.insights ? insights : null} key="mix" />);
+  }
+  // Token breakdown (input/output/cache) + cross-provider delegation — the SMOA orchestration
+  // surface. Both are additive aggregates; shown only when the upload carried them.
+  const tokenBreakdown = profile.tokenBreakdown ?? [];
+  if (tokenBreakdown.some((t) => t.scope === "total")) {
+    add("usage", "half", <TokenBreakdown breakdown={tokenBreakdown} totalTokens={totalTokens} key="tokens" />);
+  }
+  const agents = profile.agents ?? [];
+  if (agents.length > 0) {
+    add("usage", "half", <Delegation agents={agents} crossProviderDays={profile.crossProviderDays ?? 0} activeDays={facts.days} key="delegation" />);
   }
   if (reveal.rhythm) {
     add("activity", "full", <SyncRhythm days={profile.usageDays.map((d) => ({ date: d.date, ops: d.ops, usd: d.usd }))} key="rhythm" />);

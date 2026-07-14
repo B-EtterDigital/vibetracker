@@ -57,6 +57,12 @@ export interface ProfileView {
   providerDays: Array<{ provider: string; date: string; ops: number; credits: number; usd: number }>;
   providerModels: Array<{ provider: string; model: string; ops: number; credits: number; usd: number }>;
   trustSignals: ProfileTrustSignal[];
+  // Additive aggregates — optional so demo/fixture ProfileView constructors need not supply them.
+  totalTokens?: number;
+  crossProviderDays?: number;
+  tokenBreakdown?: Array<{ scope: string; input: number; output: number; cacheRead: number; cacheCreation: number }>;
+  agents?: Array<{ agent: string; activeDays: number; cost: number; tokens: number }>;
+  rank?: number | null;
 }
 
 async function latestFor(filter: { user_id: string } | { identity_id: string } | { handle: string }): Promise<ProfileView["latest"] & { id: string } | null> {
@@ -160,6 +166,64 @@ async function providerDaysFor(submissionId: string): Promise<ProfileView["provi
   }).filter((row) => row.provider.length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(row.date));
 }
 
+async function tokenBreakdownFor(submissionId: string): Promise<ProfileView["tokenBreakdown"]> {
+  const { data, error } = await supabaseServer()
+    .from("vibetracker_submission_tokens")
+    .select("scope,input,output,cache_read,cache_creation")
+    .eq("submission_id", submissionId)
+    .limit(40);
+  if (error) {
+    reportOptionalFallback("profile.tokens.fallback", error);
+    return [];
+  }
+  return (data ?? []).map((row) => {
+    const r = row as { scope?: string; input?: number; output?: number; cache_read?: number; cache_creation?: number };
+    return {
+      scope: String(r.scope ?? ""),
+      input: Number(r.input ?? 0),
+      output: Number(r.output ?? 0),
+      cacheRead: Number(r.cache_read ?? 0),
+      cacheCreation: Number(r.cache_creation ?? 0),
+    };
+  }).filter((row) => row.scope.length > 0);
+}
+
+async function agentsFor(submissionId: string): Promise<ProfileView["agents"]> {
+  const { data, error } = await supabaseServer()
+    .from("vibetracker_submission_agents")
+    .select("agent,active_days,cost,tokens")
+    .eq("submission_id", submissionId)
+    .order("cost", { ascending: false })
+    .limit(32);
+  if (error) {
+    reportOptionalFallback("profile.agents.fallback", error);
+    return [];
+  }
+  return (data ?? []).map((row) => {
+    const r = row as { agent?: string; active_days?: number; cost?: number; tokens?: number };
+    return {
+      agent: String(r.agent ?? ""),
+      activeDays: Number(r.active_days ?? 0),
+      cost: Number(r.cost ?? 0),
+      tokens: Number(r.tokens ?? 0),
+    };
+  }).filter((row) => row.agent.length > 0);
+}
+
+// The viber's position on the public board for their tier — a "#N global rank" like the C0VIBE
+// profile. Ranked by total_usd within the same trust tier; null when the handle isn't on a board.
+async function rankFor(handle: string, tier: string): Promise<number | null> {
+  const view = tier === "verified" ? "vibetracker_leaderboard_attested" : "vibetracker_leaderboard_self_reported";
+  const { data, error } = await supabaseServer()
+    .from(view).select("handle,total_usd").order("total_usd", { ascending: false }).limit(500);
+  if (error) {
+    reportOptionalFallback("profile.rank.fallback", error);
+    return null;
+  }
+  const idx = (data ?? []).findIndex((row) => (row as { handle?: string }).handle === handle);
+  return idx >= 0 ? idx + 1 : null;
+}
+
 async function providerModelsFor(submissionId: string): Promise<ProfileView["providerModels"]> {
   const { data, error } = await supabaseServer()
     .from("vibetracker_submission_provider_models")
@@ -218,6 +282,9 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
     const providerDays = latest ? await providerDaysFor(latest.id) : [];
     const providerModels = latest ? await providerModelsFor(latest.id) : [];
     const trustSignals = latest ? await trustSignalsFor(latest.id) : [];
+    const tokenBreakdown = latest ? await tokenBreakdownFor(latest.id) : [];
+    const agents = latest ? await agentsFor(latest.id) : [];
+    const rank = latest ? await rankFor(identity?.canonical_handle ?? h?.handle ?? handle, latest.tier) : null;
 
     return {
       handle: identity?.canonical_handle ?? h?.handle ?? handle,
@@ -236,6 +303,11 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
       providerDays,
       providerModels,
       trustSignals,
+      totalTokens: Number((latest as { total_tokens?: number } | null)?.total_tokens ?? 0),
+      crossProviderDays: Number((latest as { cross_provider_days?: number } | null)?.cross_provider_days ?? 0),
+      tokenBreakdown,
+      agents,
+      rank,
     };
   } catch (error) {
     telemetry.captureError(error, {

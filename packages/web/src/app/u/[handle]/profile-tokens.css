@@ -1,0 +1,59 @@
+/* Token breakdown + cross-provider delegation panels. Locked palette, monospace, meter fills. */
+
+.vtok-rows { display: grid; gap: 13px; }
+.vtok-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 6px; }
+.vtok-label { font: 500 12.5px/1 var(--vp-mono); color: rgba(217, 255, 242, 0.8); }
+.vtok-value { font: 600 12px/1 var(--vp-mono); color: rgba(217, 255, 242, 0.6); font-variant-numeric: tabular-nums; }
+.vtok-track { height: 6px; border-radius: 999px; background: rgba(217, 255, 242, 0.06); overflow: hidden; }
+.vtok-fill {
+  display: block; height: 100%; border-radius: 999px;
+  animation: vtok-grow 0.7s cubic-bezier(0.32, 0.72, 0, 1) both;
+  transform-origin: left;
+}
+@keyframes vtok-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.vtok-providers {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin: 16px 0 0; padding: 13px 0 0; border-top: 1px solid rgba(217, 255, 242, 0.08);
+}
+.vtok-providers-head { font: 700 9px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.14em; color: rgba(217, 255, 242, 0.4); margin-right: 4px; }
+.vtok-provider {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 10px; border-radius: 999px;
+  border: 1px solid rgba(217, 255, 242, 0.1); background: rgba(217, 255, 242, 0.03);
+  font: 500 11.5px/1 var(--vp-mono); color: rgba(217, 255, 242, 0.72);
+}
+.vtok-provider b { color: #d9fff2; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---- delegation ---- */
+.vdeleg-headline {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px;
+  margin: 0 0 16px; padding: 13px 14px;
+  border: 1px solid rgba(46, 232, 214, 0.16); border-radius: 10px;
+  background: radial-gradient(80% 130% at 0% 0%, rgba(46, 232, 214, 0.07), transparent 62%);
+}
+.vdeleg-stat { display: flex; align-items: baseline; gap: 9px; }
+.vdeleg-stat strong { font: 800 26px/1 var(--vp-mono); color: #2ee8d6; font-variant-numeric: tabular-nums; }
+.vdeleg-stat span { font: 500 11.5px/1.3 var(--vp-mono); color: rgba(217, 255, 242, 0.6); max-width: 15ch; }
+.vdeleg-flow {
+  display: inline-flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  margin: 0; font: 700 13px/1 var(--vp-mono);
+}
+.vdeleg-flow i { font-style: normal; color: rgba(217, 255, 242, 0.4); font-weight: 400; }
+.vdeleg-flow em { font-style: normal; font: 500 10px/1 var(--vp-mono); color: rgba(217, 255, 242, 0.42); letter-spacing: 0.04em; }
+
+.vdeleg-rows { display: grid; gap: 11px; }
+.vdeleg-line { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; }
+.vdeleg-dot { width: 8px; height: 8px; border-radius: 999px; flex: none; box-shadow: 0 0 8px currentColor; }
+.vdeleg-name { font: 600 12.5px/1 var(--vp-mono); color: #d9fff2; }
+.vdeleg-meta { margin-left: auto; font: 500 11px/1 var(--vp-mono); color: rgba(217, 255, 242, 0.5); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vdeleg-track { height: 6px; border-radius: 999px; background: rgba(217, 255, 242, 0.06); overflow: hidden; }
+.vdeleg-fill {
+  display: block; height: 100%; border-radius: 999px; opacity: 0.9;
+  animation: vtok-grow 0.7s cubic-bezier(0.32, 0.72, 0, 1) both; transform-origin: left;
+}
+.vdeleg-note { margin: 14px 0 0; font: 500 10.5px/1.5 var(--vp-mono); color: rgba(217, 255, 242, 0.4); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vtok-fill, .vdeleg-fill { animation: none; }
+}
