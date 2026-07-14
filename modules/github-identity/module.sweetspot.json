@@ -5,7 +5,7 @@
     "name": "GitHub First Identity",
     "kind": "service",
     "status": "canonical",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "language": [
       "sql",
       "tsx",
@@ -39,7 +39,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "f34922b",
+    "commit": "e949179",
     "paths": [
       "packages/cli/src/login.ts",
       "packages/cli/src/github-identity.ts",
@@ -52,7 +52,9 @@
       "packages/web/src/app/api/identity/github/link",
       "packages/web/src/app/home/leaderboard-console.tsx",
       "supabase/functions/vibetracker-ingest/index.ts",
-      "supabase/migrations/009_vibetracker_github_identity.sql"
+      "supabase/migrations/009_vibetracker_github_identity.sql",
+      "supabase/migrations/010_vibetracker_usage_counts_bigint.sql",
+      "supabase/migrations/011_vibetracker_usage_counts_numeric.sql"
     ]
   },
   "owner": {
@@ -73,7 +75,9 @@
       "packages/web/src/app/api/identity/github/link",
       "packages/web/src/app/home/leaderboard-console.tsx",
       "supabase/functions/vibetracker-ingest/index.ts",
-      "supabase/migrations/009_vibetracker_github_identity.sql"
+      "supabase/migrations/009_vibetracker_github_identity.sql",
+      "supabase/migrations/010_vibetracker_usage_counts_bigint.sql",
+      "supabase/migrations/011_vibetracker_usage_counts_numeric.sql"
     ],
     "public_paths": [
       "packages/cli/src/login.ts",
@@ -125,7 +129,7 @@
     "sstf": {
       "status": "complete",
       "score": 100,
-      "notes": "Focused identity coverage and all 567 project tests pass together with the release gate.",
+      "notes": "Focused identity, large-upload, fractional-quantity, and presentation coverage pass with 615 package tests, 15 control-plane tests, and the full release gate.",
       "evidence": [
         "packages/cli/src/__tests__/github-identity.test.ts",
         "packages/cli/src/__tests__/login.test.ts",
@@ -152,10 +156,13 @@
     "ssra": {
       "status": "complete",
       "score": 100,
-      "notes": "Release gate, production builds, migration, edge function, Netlify deploy, and live CLI fast path are proven.",
+      "notes": "Release gate, production builds, numeric usage migrations, edge function, Netlify deploy 6a565a003e99d225b51cd153, and the live GitHub CLI fast path are proven with a real 48,023-record attested upload.",
       "evidence": [
         "supabase/migrations/009_vibetracker_github_identity.sql",
-        "supabase/functions/vibetracker-ingest/index.ts"
+        "supabase/migrations/010_vibetracker_usage_counts_bigint.sql",
+        "supabase/migrations/011_vibetracker_usage_counts_numeric.sql",
+        "supabase/functions/vibetracker-ingest/index.ts",
+        "Netlify production deploy 6a565a003e99d225b51cd153"
       ]
     },
     "sas": {
@@ -325,6 +332,12 @@
         "status": "pass",
         "timestamp": "2026-07-13T21:39:00Z",
         "notes": "Existing gh keyring identity verified; browser skipped; VibeTRACKER token stored in the OS keyring."
+      },
+      {
+        "command": "real GitHub login + reviewed production upload + database proof + responsive browser and Lighthouse proof",
+        "status": "pass",
+        "timestamp": "2026-07-14T15:56:00Z",
+        "notes": "@b-etterdigital verified through GitHub, 48,023 normalized records and 10 provider aggregates persisted as identity-attested usage, raw GitHub credentials remained transient, mobile and 3840x2160 renders had no overflow or console errors, and Lighthouse scored 100/100/100/100."
       }
     ]
   },

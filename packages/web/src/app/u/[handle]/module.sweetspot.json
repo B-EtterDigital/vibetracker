@@ -5,7 +5,7 @@
     "name": "Adaptive Public Profile",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "language": [
       "typescript",
       "tsx",
@@ -38,7 +38,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "912a161",
+    "commit": "e949179",
     "paths": [
       "packages/web/src/app/u/[handle]",
       "packages/web/src/lib/profile-complexity.ts",
@@ -123,7 +123,7 @@
     "sstf": {
       "status": "passing",
       "score": 90,
-      "notes": "Focused profile contracts and the full 611-test suite pass, including peak-load estimate boundaries, initial-head metadata, and the live Insights handoff.",
+      "notes": "Focused profile contracts and the full 615-test package suite pass, including GitHub-only identity semantics, account-link separation, and accessible attestation labels.",
       "evidence": [
         "packages/web/src/lib/__tests__/profile-route.test.ts",
         "packages/web/src/lib/__tests__/profile-signals.test.ts",
@@ -149,10 +149,11 @@
     "ssra": {
       "status": "passing",
       "score": 90,
-      "notes": "Clean production build, exact isolated release 98d47a8 on deploy 6a5645a4545612df242c771e, a verified profile-to-live-Insights link, and overflow-free mobile/4K runtime proof pass.",
+      "notes": "Production deploy 6a565a003e99d225b51cd153 passes mobile and 3840x2160 profile proof with no overflow or console errors; Lighthouse scores 100 for Accessibility, Best Practices, SEO, and Agentic Browsing.",
       "evidence": [
         "scripts/release-gate.mjs",
-        "Netlify deploy 6a5645a4545612df242c771e"
+        "Netlify production deploy 6a565a003e99d225b51cd153",
+        "https://vibeusage.c0vibe.app/u/b-etterdigital"
       ]
     },
     "sas": {
@@ -349,6 +350,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T14:28:21Z",
         "notes": "The live @cyrill-etter profile exposes /insights?handle=cyrill-etter, the destination loads the same public aggregates with a reversible profile link, all requests succeeded, and neither route produced console errors."
+      },
+      {
+        "command": "pnpm test + full release gates + production mobile/4K profile proof + Lighthouse",
+        "status": "pass",
+        "timestamp": "2026-07-14T15:56:00Z",
+        "notes": "615 package tests and 15 control-plane tests passed. The live @b-etterdigital profile says GitHub verified but not C0VIBE-linked, uses Identity attested, has no horizontal overflow or console errors at 390x844 and 3840x2160, and Lighthouse scored 100/100/100/100."
       }
     ]
   },
