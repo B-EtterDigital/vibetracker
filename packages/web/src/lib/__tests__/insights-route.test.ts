@@ -48,6 +48,8 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(styles, /\.intel-console/);
   assert.match(styles, /LIVE PUBLIC PROFILE \/ LATEST 30-DAY PACE/);
   assert.match(styles, /\.intel-decision/);
+  assert.match(styles, /\.intel-readout strong \{[^}]*3\.3rem/);
+  assert.doesNotMatch(styles, /\.intel-readout strong \{[^}]*clamp/);
   assert.match(briefSource, /What this scenario is actually saying/);
   assert.match(briefSource, /Thin evidence window/);
   assert.match(briefSource, /Treat the projection as directional until more days arrive/);

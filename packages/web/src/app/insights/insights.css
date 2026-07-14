@@ -157,7 +157,7 @@
 }
 
 .intel-readout > span { color: var(--intel-muted); font: 700 10px/1 var(--font-data), ui-monospace, monospace; letter-spacing: 0.08em; }
-.intel-readout strong { margin: 12px 0 8px; font: 650 clamp(3rem, 5vw, 5rem)/0.9 var(--font-display), ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.intel-readout strong { margin: 12px 0 8px; font: 650 3.3rem/0.9 var(--font-display), ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
 .intel-readout small { color: var(--intel-muted); font-size: 13px; }
 .intel-readout b { margin-top: 24px; color: var(--intel-mint); font: 700 14px/1.2 var(--font-data), ui-monospace, monospace; }
 .intel-console[data-state="near"] .intel-readout b { color: var(--intel-amber); }
