@@ -9,6 +9,7 @@ import { accountIdentityFromSession, accountRedirectUrl, safeNextPath } from "./
 type ProviderState = "checking" | "available" | "disabled" | "unavailable";
 type LinkState = "signed-out" | "checking" | "linked" | "unlinked" | "error";
 type BridgeState = "idle" | "starting" | "linked";
+type ProofChannel = "browser" | "terminal";
 
 interface LinkedIdentity {
   handle: string;
@@ -46,6 +47,7 @@ export function AccountConsole() {
   const [linkState, setLinkState] = useState<LinkState>("signed-out");
   const [linked, setLinked] = useState<LinkedIdentity | null>(null);
   const [bridgeState, setBridgeState] = useState<BridgeState>("idle");
+  const [proofChannel, setProofChannel] = useState<ProofChannel>("browser");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [returnPath, setReturnPath] = useState<string | null>(null);
@@ -98,11 +100,15 @@ export function AccountConsole() {
       .then((availability) => {
         if (!active) return;
         setProvider(availability.github ? "available" : "disabled");
-        if (!availability.github) setMessage("Browser GitHub sign-in is not enabled yet. GitHub CLI verification is live now and does not require a C0VIBE account.");
+        if (!availability.github) {
+          setProofChannel("terminal");
+          setMessage("Browser GitHub sign-in is not enabled yet. GitHub CLI verification is live now and does not require a C0VIBE account.");
+        }
       })
       .catch(() => {
         if (!active) return;
         setProvider("unavailable");
+        setProofChannel("terminal");
         setMessage("Browser provider status is unavailable. GitHub CLI verification is still live.");
       });
     void client.auth.getSession().then(({ data, error }) => {
@@ -124,6 +130,7 @@ export function AccountConsole() {
   }, []);
 
   async function signIn() {
+    setProofChannel("browser");
     if (provider !== "available") {
       setMessage("GitHub browser sign-in is currently unavailable.");
       return;
@@ -187,6 +194,7 @@ export function AccountConsole() {
   }
 
   async function copyCliCommand() {
+    setProofChannel("terminal");
     try {
       await navigator.clipboard.writeText(CLI_COMMAND);
       setMessage(`Copied ${CLI_COMMAND}. Run it in a terminal where gh auth status passes.`);
@@ -197,14 +205,14 @@ export function AccountConsole() {
 
   const browserReady = provider === "available";
   const browserChecking = provider === "checking";
-  const providerCopy = browserReady ? "GitHub verification ready" : browserChecking ? "checking GitHub" : "GitHub CLI ready";
+  const providerCopy = browserReady ? "GitHub sign-in ready" : browserChecking ? "checking GitHub" : "GitHub CLI ready";
   const linkCopy = linkState === "linked" ? "identity linked" : linkState === "checking" ? "checking account link" : linkState === "unlinked" ? "session ready, link pending" : linkState === "error" ? "link needs attention" : "no browser session";
-  const proofSteps = browserReady ? BROWSER_STEPS : CLI_STEPS;
+  const proofSteps = proofChannel === "browser" ? BROWSER_STEPS : CLI_STEPS;
 
   return (
     <section className="account-console" aria-labelledby="account-console-title">
       <div className="account-console__head">
-        <div><p className="eyebrow">Live identity state</p><h2 id="account-console-title">GitHub verification console</h2></div>
+        <div><p className="eyebrow">Live identity state</p><h2 id="account-console-title">GitHub sign-in console</h2></div>
         <div className="account-console__lights" aria-label="Authentication state">
           <span data-tone={provider === "available" ? "ready" : "waiting"}>{providerCopy}</span>
           <span data-tone={linkState === "linked" ? "verified" : "waiting"}>{linkCopy}</span>
@@ -233,32 +241,36 @@ export function AccountConsole() {
             <>
               <div className="account-console__pitch">
                 <span className="account-console__github" aria-hidden="true">GH</span>
-                {browserReady || browserChecking
-                  ? <div><h3>Verify through GitHub itself.</h3><p>GitHub proves the handle, Supabase exchanges the callback securely, and VibeUsage creates only an identity session.</p></div>
-                  : <div><h3>Verify the GitHub identity already on this machine.</h3><p>Reuse your authenticated GitHub CLI session now. No C0VIBE account, new password, or usage upload is required.</p></div>}
+                <div><h3>Choose where GitHub should sign you in.</h3><p>The browser creates a site session. The CLI verifies this machine. Both attach to the same immutable GitHub identity.</p></div>
               </div>
-              <button
-                className="account-console__primary"
-                type="button"
-                data-channel={browserReady ? "browser" : "terminal"}
-                onClick={browserReady ? signIn : copyCliCommand}
-                disabled={busy || browserChecking}
-              >
-                {busy ? "opening GitHub" : browserChecking ? "checking GitHub" : browserReady ? "verify with GitHub" : "copy npx vibetracker login"}
-              </button>
+              <div className="account-console__entry-actions">
+                <button className="account-console__primary" type="button" onClick={signIn} disabled={busy || !browserReady}>
+                  {busy && proofChannel === "browser" ? "opening GitHub" : browserChecking ? "checking GitHub" : browserReady ? "sign in with GitHub" : "browser sign-in unavailable"}
+                </button>
+                <button className="account-console__secondary" type="button" onClick={copyCliCommand} disabled={busy}>
+                  <span>verify this machine</span><code>{CLI_COMMAND}</code>
+                </button>
+              </div>
+              <div className="account-console__entry-map" aria-label="GitHub identity convergence">
+                <span>Browser session<b>site controls</b></span><i aria-hidden="true">+</i>
+                <span>CLI identity<b>existing history</b></span><i aria-hidden="true">-&gt;</i>
+                <span>GitHub subject<b>one profile</b></span>
+              </div>
               <small className="account-console__path-note">
-                {browserReady
-                  ? "No C0VIBE or WorkOS account is created. GitHub redirects back to a secure VibeUsage identity session."
-                  : "Run the copied command where gh auth status passes. The raw GitHub token is used once for identity verification and is never persisted by VibeTRACKER."}
+                Browser sign-in gives this site a session. CLI verification gives this machine a keyring token. The raw GitHub token is used once and is never persisted by VibeTRACKER.
               </small>
             </>
           )}
           <p className="account-console__message" aria-live="polite">{message || "Identity proof and usage proof remain separate at every step."}</p>
         </div>
 
-        <div className="account-console__oauth" data-channel={browserReady ? "browser" : "terminal"} aria-label={browserReady ? "GitHub OAuth flow" : "GitHub CLI identity flow"}>
-          <div className="console-top"><span>{browserReady ? "proof@github" : "proof@terminal"}</span><b>{browserReady ? "IDENTITY ONLY" : "LIVE NOW"}</b></div>
-          <h3>{browserReady ? "One browser flow." : "One terminal command."} Four verifiable steps.</h3>
+        <div className="account-console__oauth" data-channel={proofChannel} aria-label={proofChannel === "browser" ? "GitHub browser sign-in flow" : "GitHub CLI identity flow"}>
+          <div className="console-top"><span>{proofChannel === "browser" ? "session@github" : "identity@terminal"}</span><b>{proofChannel === "browser" ? "SITE SESSION" : "MACHINE PROOF"}</b></div>
+          <div className="account-console__proof-tabs" role="group" aria-label="Identity path explanation">
+            <button type="button" aria-pressed={proofChannel === "browser"} onClick={() => setProofChannel("browser")}>Browser session</button>
+            <button type="button" aria-pressed={proofChannel === "terminal"} onClick={() => setProofChannel("terminal")}>CLI identity</button>
+          </div>
+          <h3>{proofChannel === "browser" ? "One browser sign-in." : "One terminal verification."} Four inspectable steps.</h3>
           <ol>
             {proofSteps.map(([title, detail], index) => <li key={title}><span>{String(index + 1).padStart(2, "0")}</span><div><b>{title}</b><small>{detail}</small></div></li>)}
           </ol>

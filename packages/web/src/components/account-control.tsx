@@ -54,16 +54,16 @@ export function AccountControl() {
   }, []);
 
   const label = state === "loading"
-    ? "Checking GitHub"
+    ? "Checking session"
     : state === "signed-out"
-      ? "Verify GitHub"
+      ? "Sign in GitHub"
       : state === "session"
-        ? "Finish GitHub"
+        ? "Finish setup"
         : `@${handle}`;
   const shortLabel = state === "loading"
-    ? "GitHub"
+    ? "Checking"
     : state === "signed-out"
-      ? "Verify"
+      ? "Sign in"
       : state === "session"
         ? "Finish"
         : `@${handle}`;
@@ -74,8 +74,8 @@ export function AccountControl() {
     : state === "session"
       ? `Signed in as @${handle}; finish GitHub linking`
       : state === "loading"
-        ? "Checking GitHub identity status"
-        : "Verify with GitHub; no C0VIBE account required";
+        ? "Checking GitHub session status"
+        : "Sign in with GitHub; no C0VIBE account required";
 
   return (
     <a className={styles.control} data-state={state} href="/account" title={title} aria-label={title} aria-busy={state === "loading"}>

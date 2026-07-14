@@ -60,38 +60,40 @@ test("C0VIBE migration uses a bounded one-time claim and fixed WorkOS entrypoint
   assert.doesNotMatch(bridgeRoute, /email.*claim|provider_token|localStorage|sessionStorage/);
 });
 
-test("global shell exposes an obvious GitHub verification control without requiring C0VIBE", () => {
+test("global shell exposes an obvious GitHub sign-in control without requiring C0VIBE", () => {
   assert.match(layout, /<AccountControl \/>/);
   assert.match(layout, /href="\/account"/);
   assert.match(control, /api\/identity\/github\/status/);
-  assert.match(control, /\? "Verify GitHub"/);
-  assert.match(control, /\? "Finish GitHub"/);
+  assert.match(control, /\? "Sign in GitHub"/);
+  assert.match(control, /\? "Finish setup"/);
   assert.match(control, /no C0VIBE account required/);
   assert.match(control, /data-short-label=\{shortLabel\}/);
   assert.match(control, /state === "linked" \? "✓"/);
-  assert.match(controlCss, /min-width: 122px/);
+  assert.match(controlCss, /min-width: 136px/);
   assert.match(controlCss, /content: attr\(data-short-label\)/);
   assert.doesNotMatch(control, /signInWithOAuth|provider_token|localStorage|sessionStorage/);
 });
 
 test("account console uses real GitHub OAuth when available and the verified CLI path otherwise", () => {
-  assert.match(page, /Prove your GitHub\. Keep your usage history\./);
-  assert.match(page, /This creates a VibeUsage identity, not a full C0VIBE account/);
-  assert.match(page, /browser OAuth or existing gh CLI/);
+  assert.match(page, /Sign in with GitHub\. Keep your usage history\./);
+  assert.match(page, /Both resolve to one GitHub identity, not a full C0VIBE account/);
+  assert.match(page, /browser session or existing CLI/);
   assert.match(page, /blue check.*identity only, NOT usage truth/i);
   assert.match(consoleSource, /signInWithOAuth\(\{/);
   assert.match(consoleSource, /provider: "github"/);
   assert.match(consoleSource, /scopes: "read:user user:email"/);
-  assert.match(consoleSource, /verify with GitHub/);
-  assert.match(consoleSource, /No C0VIBE or WorkOS account is created/);
+  assert.match(consoleSource, /sign in with GitHub/);
   assert.match(consoleSource, /const CLI_COMMAND = "npx vibetracker login"/);
   assert.match(consoleSource, /navigator\.clipboard\.writeText\(CLI_COMMAND\)/);
-  assert.match(consoleSource, /copy npx vibetracker login/);
+  assert.match(consoleSource, /verify this machine/);
   assert.match(consoleSource, /GitHub CLI verification is live now/);
-  assert.match(consoleSource, /browserReady \? signIn : copyCliCommand/);
-  assert.match(consoleSource, /The raw GitHub token is used once for identity verification and is never persisted/);
+  assert.match(consoleSource, /onClick=\{signIn\}/);
+  assert.match(consoleSource, /onClick=\{copyCliCommand\}/);
+  assert.match(consoleSource, /role="group" aria-label="Identity path explanation"/);
+  assert.match(consoleSource, /aria-pressed=\{proofChannel === "browser"\}/);
+  assert.match(consoleSource, /Browser sign-in gives this site a session/);
+  assert.match(consoleSource, /The raw GitHub token is used once.*never persisted by VibeTRACKER/);
   assert.match(consoleSource, /OAuth and GitHub CLI proof resolve to the same immutable subject/);
-  assert.match(consoleSource, /No C0VIBE or WorkOS account is created/);
   assert.match(consoleSource, /signOut\(\{ scope: "local" \}\)/);
   assert.doesNotMatch(consoleSource, /localStorage|sessionStorage|provider_refresh_token/);
 });
@@ -116,7 +118,8 @@ test("account layout remains bounded, responsive, and motion-safe", () => {
   assert.match(styles, /@media \(min-width: 2200px\)/);
   assert.match(styles, /width: min\(1680px, calc\(100% - 64px\)\)/);
   assert.match(styles, /account-console__oauth li > span \{ color: #5ba9ff/);
-  assert.match(styles, /account-console__primary\[data-channel="terminal"\]/);
+  assert.match(styles, /account-console__entry-actions/);
+  assert.match(styles, /account-console__proof-tabs button\[aria-pressed="true"\]/);
   assert.match(styles, /account-console__oauth li small/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(styles, /width: min\(1320px, calc\(100% - 32px\)\)/);
