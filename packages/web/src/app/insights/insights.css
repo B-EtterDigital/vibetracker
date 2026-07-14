@@ -9,6 +9,10 @@
   white-space: normal;
 }
 
+.wrap:has(.intel-console[data-source="public"])::before {
+  content: "INSIGHTS / LIVE PUBLIC PROFILE / LATEST 30-DAY PACE / ZERO WRITES";
+}
+
 .intel-surface {
   --intel-bg: #05090a;
   --intel-panel: #081011;
@@ -30,6 +34,44 @@
   background: var(--intel-bg);
   box-shadow: 0 32px 80px rgba(0, 0, 0, 0.38);
 }
+
+.intel-profile-picker {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(360px, 1.2fr) auto;
+  gap: 24px;
+  align-items: end;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--intel-line);
+  background: #071011;
+}
+
+.intel-profile-picker > div { display: grid; gap: 4px; min-width: 0; }
+.intel-profile-picker > div > span,
+.intel-profile-picker form > label { color: var(--intel-muted); font: 700 9px/1.2 var(--font-data), ui-monospace, monospace; letter-spacing: 0.08em; }
+.intel-profile-picker > div > strong { color: var(--intel-ink); font: 650 15px/1.2 var(--font-display), ui-sans-serif, system-ui, sans-serif; }
+.intel-profile-picker > div > small { color: #86a39e; font: 500 10px/1.4 var(--font-data), ui-monospace, monospace; overflow-wrap: anywhere; }
+.intel-console[data-source="public"] .intel-profile-picker > div > strong { color: var(--intel-mint); }
+
+.intel-profile-picker form { display: grid; gap: 7px; min-width: 0; }
+.intel-profile-picker form > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  min-width: 0;
+  border: 1px solid #28514b;
+  background: #030808;
+}
+.intel-profile-picker form > div > span { padding-left: 12px; color: var(--intel-mint); font: 700 12px/1 var(--font-data), ui-monospace, monospace; }
+.intel-profile-picker input { min-width: 0; padding: 10px 8px; border: 0; outline: 0; background: transparent; color: var(--intel-ink); font: 600 12px/1 var(--font-data), ui-monospace, monospace; }
+.intel-profile-picker input:focus-visible { box-shadow: inset 0 -2px var(--intel-cyan); }
+.intel-profile-picker button,
+.intel-profile-picker > a { min-height: 38px; border: 1px solid #2b5e56; color: var(--intel-ink); font: 700 10px/1 var(--font-data), ui-monospace, monospace; }
+.intel-profile-picker button { padding: 0 14px; background: var(--intel-mint); color: #02110e; cursor: pointer; }
+.intel-profile-picker > a { display: inline-flex; align-items: center; justify-content: center; padding: 0 12px; text-decoration: none; }
+.intel-profile-picker button:hover,
+.intel-profile-picker button:focus-visible,
+.intel-profile-picker > a:hover,
+.intel-profile-picker > a:focus-visible { outline: 2px solid var(--intel-cyan); outline-offset: 2px; }
 
 .intel-mast {
   display: grid;
@@ -67,6 +109,9 @@
 .intel-sample-flag span { padding: 9px 11px; }
 .intel-sample-flag b { background: var(--intel-amber); color: #171204; }
 .intel-sample-flag span { color: #f6df9e; }
+.intel-console[data-source="public"] .intel-sample-flag { border-color: rgba(45, 228, 194, 0.58); }
+.intel-console[data-source="public"] .intel-sample-flag b { background: var(--intel-mint); color: #02110e; }
+.intel-console[data-source="public"] .intel-sample-flag span { color: #a8f4e5; }
 
 .intel-mast h1 {
   max-width: 760px;

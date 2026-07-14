@@ -7,21 +7,20 @@ import {
   type InsightsRunwaySource,
 } from "../../lib/insights-runway.ts";
 import { InsightBrief } from "./insight-brief";
+import { buildPlanScale } from "./plan-scale";
 
 interface RunwayDecisionConsoleProps {
   source: InsightsRunwaySource;
+  sourceMode: "public" | "demo" | "sample";
+  handle: string;
+  requestedHandle: string;
+  notice: string | null;
   recordCount: number;
   activeDays: number;
   providerCount: number;
 }
 
 type CopyState = "idle" | "copied" | "blocked";
-
-const PLAN_PRESETS = [
-  { id: "strict", label: "Strict", detail: "$500 limit · 60% local", cap: 500, shift: 60 },
-  { id: "balanced", label: "Current pace", detail: "$650 limit · 35% local", cap: 650, shift: 35 },
-  { id: "buffer", label: "More buffer", detail: "$750 limit · 10% local", cap: 750, shift: 10 },
-] as const;
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -55,11 +54,16 @@ function recommendation(snapshot: InsightsRunwaySnapshot) {
 
 export function RunwayDecisionConsole({
   source,
+  sourceMode,
+  handle,
+  requestedHandle,
+  notice,
   recordCount,
   activeDays,
   providerCount,
 }: RunwayDecisionConsoleProps) {
-  const [monthlyCapUsd, setMonthlyCapUsd] = useState(650);
+  const planScale = useMemo(() => buildPlanScale(source.forecastUsd), [source.forecastUsd]);
+  const [monthlyCapUsd, setMonthlyCapUsd] = useState(planScale.presets[1].cap);
   const [localShiftPercent, setLocalShiftPercent] = useState(35);
   const [copyState, setCopyState] = useState<CopyState>("idle");
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,7 +92,7 @@ export function RunwayDecisionConsole({
     resetTimer.current = setTimeout(() => setCopyState("idle"), 1800);
   }
 
-  const selectedPreset = PLAN_PRESETS.find(
+  const selectedPreset = planScale.presets.find(
     (preset) => preset.cap === monthlyCapUsd && preset.shift === localShiftPercent,
   )?.id;
   const decision = recommendation(snapshot);
@@ -99,15 +103,45 @@ export function RunwayDecisionConsole({
     "--budget-width": `${(monthlyCapUsd / comparisonMax) * 100}%`,
   } as CSSProperties;
   const remainingLabel = snapshot.varianceUsd >= 0 ? "Budget remaining" : "Amount over budget";
+  const isPublic = sourceMode === "public";
+  const sourceLabel = isPublic ? "Live public profile" : sourceMode === "demo" ? "Bundled demo profile" : "Bundled sample";
+  const publicBasis = source.providerBasis === "recent_30d" ? "latest 30-day provider detail" : "latest pace · provider totals fallback";
+  const sourceDetail = isPublic ? `@${handle} · ${publicBasis}` : sourceMode === "demo" ? "deterministic full-profile data" : "explicit example data · not your account";
+  const observationLabel = isPublic ? "observed active days" : sourceMode === "demo" ? "demo active days" : "sample active days";
+  const knownLabel = isPublic ? `Known from @${handle}` : sourceMode === "demo" ? "Known from the demo" : "Known from the sample";
 
   return (
     <div className="intel-surface">
-      <section className="intel-console" data-state={snapshot.state} aria-labelledby="intel-title">
+      <section className="intel-console" data-source={sourceMode} data-state={snapshot.state} aria-labelledby="intel-title">
+        <div className="intel-profile-picker">
+          <div>
+            <span>USAGE SOURCE</span>
+            <strong>{sourceLabel}</strong>
+            <small>{notice ?? sourceDetail}</small>
+          </div>
+          <form action="/insights" method="get">
+            <label htmlFor="insights-handle">Public profile handle</label>
+            <div>
+              <span aria-hidden="true">@</span>
+              <input
+                autoComplete="off"
+                defaultValue={isPublic ? handle : requestedHandle}
+                id="insights-handle"
+                maxLength={64}
+                name="handle"
+                pattern="[a-zA-Z0-9_.-]{1,64}"
+                placeholder="cyrill-etter"
+              />
+              <button type="submit">Analyze profile</button>
+            </div>
+          </form>
+          {sourceMode !== "sample" ? <a href="/insights">Use sample</a> : <a href="/u/demo">View demo profile</a>}
+        </div>
         <header className="intel-mast">
           <div className="intel-mast__copy">
             <div className="intel-sample-flag">
-              <b>Example calculation</b>
-              <span>Not connected to your account</span>
+              <b>{sourceLabel}</b>
+              <span>{sourceDetail}</span>
             </div>
             <p>MONTHLY AI COST PLAN</p>
             <h1 id="intel-title">Know what next month may cost.</h1>
@@ -117,7 +151,7 @@ export function RunwayDecisionConsole({
             </span>
             <div className="intel-basis">
               <b>Why the forecast is {currency.format(source.forecastUsd)}</b>
-              <span>{currency.format(dailyPace)} average on {activeDays} active example days × 30 days.</span>
+              <span>{currency.format(dailyPace)} average on {activeDays} {observationLabel} × 30 days.</span>
             </div>
           </div>
           <div className="intel-readout" aria-live="polite">
@@ -128,8 +162,8 @@ export function RunwayDecisionConsole({
           </div>
         </header>
 
-        <div className="intel-contract" aria-label="Example data used by this calculation">
-          <span><b>Example</b> not your account</span>
+        <div className="intel-contract" aria-label="Usage data used by this calculation">
+          <span><b>{isPublic ? `@${handle}` : sourceMode}</b> {isPublic ? "public aggregates" : "not account data"}</span>
           <span><b>{recordCount.toLocaleString("en-US")}</b> accepted rows</span>
           <span><b>{providerCount}</b> providers</span>
           <span><b>{activeDays}</b> active days</span>
@@ -171,7 +205,7 @@ export function RunwayDecisionConsole({
               <span>Updates instantly</span>
             </header>
             <div className="intel-presets" role="group" aria-label="Planning presets">
-              {PLAN_PRESETS.map((preset) => (
+              {planScale.presets.map((preset) => (
                 <button
                   aria-pressed={selectedPreset === preset.id}
                   key={preset.id}
@@ -182,7 +216,7 @@ export function RunwayDecisionConsole({
                   type="button"
                 >
                   <b>{preset.label}</b>
-                  <span>{preset.detail}</span>
+                  <span>{currency.format(preset.cap)} · {preset.detail}</span>
                 </button>
               ))}
             </div>
@@ -190,10 +224,10 @@ export function RunwayDecisionConsole({
               <span><b>Monthly spending limit</b><small>The most you are comfortable paying for AI providers in one month.</small></span>
               <input
                 aria-label="Monthly spending limit"
-                max="1000"
-                min="200"
+                max={planScale.max}
+                min={planScale.min}
                 onChange={(event) => setMonthlyCapUsd(Number(event.target.value))}
-                step="25"
+                step={planScale.step}
                 type="range"
                 value={monthlyCapUsd}
               />
@@ -230,7 +264,7 @@ export function RunwayDecisionConsole({
             <div className="intel-provider-note">
               <span>WHERE TO REVIEW FIRST</span>
               <b>{source.topProvider}</b>
-              <p>It has the highest observed spend in this example. That does not mean it is wasteful; check its high-cost jobs before changing providers.</p>
+              <p>It has the highest observed spend in this {isPublic ? "public profile" : "example"}. That does not mean it is wasteful; check its high-cost jobs before changing providers.</p>
             </div>
           </section>
         </div>
@@ -238,7 +272,7 @@ export function RunwayDecisionConsole({
         <section className="intel-details" aria-labelledby="intel-details-title">
           <header><p>CONFIDENCE BOUNDARY</p><h2 id="intel-details-title">What is known, estimated, and unchanged</h2></header>
           <div className="intel-details__grid">
-            <div><b>Known from the example</b><span>Accepted usage rows, provider totals, active days, and observed spend.</span></div>
+            <div><b>{knownLabel}</b><span>Accepted usage rows, provider totals, active days, and observed spend.</span></div>
             <div><b>Estimated here</b><span>Next month’s spend and possible local savings. Workload changes can make both wrong.</span></div>
             <div><b>Never changed here</b><span>Usage totals, provider settings, public profile, score, and rank. This page writes nothing.</span></div>
           </div>
@@ -258,9 +292,9 @@ export function RunwayDecisionConsole({
         </section>
 
         <footer className="intel-foot">
-          <span><i aria-hidden="true" /> Example planning only</span>
+          <span><i aria-hidden="true" /> {isPublic ? `Planning from @${handle}` : "Example planning only"}</span>
           <span>0 usage writes · 0 rank changes · 0 provider changes</span>
-          <a href="/score">See how Vibe Score is calculated</a>
+          <a href={isPublic ? `/u/${encodeURIComponent(handle)}` : "/score"}>{isPublic ? "Back to this profile" : "See how Vibe Score is calculated"}</a>
         </footer>
       </section>
     </div>

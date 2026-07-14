@@ -24,6 +24,10 @@ export interface InsightsRunwaySource {
   forecastUsd: number;
   localShadowUsd: number;
   topProvider: string;
+  activeDays: number;
+  windowStart: string | null;
+  windowEnd: string | null;
+  providerBasis: "recent_30d" | "profile_totals";
 }
 
 const LOCAL_PROVIDERS = new Set(["ollama", "lmstudio", "comfyui", "vllm", "localai", "jan"]);
@@ -36,21 +40,53 @@ function money(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+function recentWindow(profile: ProfileView): { start: string | null; end: string | null; days: ProfileView["usageDays"] } {
+  const dated = profile.usageDays
+    .filter((day) => /^\d{4}-\d{2}-\d{2}$/.test(day.date))
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const end = dated.at(-1)?.date ?? null;
+  if (!end) return { start: null, end: null, days: [] };
+  const start = new Date(Date.parse(`${end}T00:00:00Z`) - 29 * 86_400_000).toISOString().slice(0, 10);
+  return { start, end, days: dated.filter((day) => day.date >= start && day.date <= end) };
+}
+
+function providersForWindow(profile: ProfileView, start: string | null, end: string | null): {
+  providers: ProfileView["providers"];
+  basis: InsightsRunwaySource["providerBasis"];
+} {
+  if (!start || !end) return { providers: profile.providers, basis: "profile_totals" };
+  const rows = profile.providerDays.filter((day) => day.date >= start && day.date <= end);
+  if (!rows.length) return { providers: profile.providers, basis: "profile_totals" };
+
+  const totals = new Map<string, ProfileView["providers"][number]>();
+  for (const row of rows) {
+    const current = totals.get(row.provider) ?? { provider: row.provider, ops: 0, credits: 0, usd: 0 };
+    current.ops += row.ops;
+    current.credits += row.credits;
+    current.usd += row.usd;
+    totals.set(row.provider, current);
+  }
+  return { providers: [...totals.values()], basis: "recent_30d" };
+}
+
 export function buildInsightsRunwaySource(profile: ProfileView): InsightsRunwaySource {
-  const activeDays = profile.usageDays.filter((day) => day.usd > 0);
+  const window = recentWindow(profile);
+  const activeDays = window.days.filter((day) => day.usd > 0);
   const dailyUsd = activeDays.length
     ? activeDays.reduce((sum, day) => sum + day.usd, 0) / activeDays.length
     : profile.latest?.total_usd ?? 0;
-  const localOps = profile.providers
+  const providerWindow = providersForWindow(profile, window.start, window.end);
+  const localOps = providerWindow.providers
     .filter((provider) => LOCAL_PROVIDERS.has(provider.provider.toLowerCase()))
     .reduce((sum, provider) => sum + provider.ops, 0);
-  const nonLocalProviders = profile.providers.filter(
+  const nonLocalProviders = providerWindow.providers.filter(
     (provider) => !LOCAL_PROVIDERS.has(provider.provider.toLowerCase()) && provider.ops > 0 && provider.usd > 0,
   );
   const nonLocalOps = nonLocalProviders.reduce((sum, provider) => sum + provider.ops, 0);
   const nonLocalUsd = nonLocalProviders.reduce((sum, provider) => sum + provider.usd, 0);
   const nonLocalRate = nonLocalOps > 0 ? nonLocalUsd / nonLocalOps : 0;
-  const topProvider = profile.providers
+  const topProvider = providerWindow.providers
     .slice()
     .sort((a, b) => b.usd - a.usd || b.ops - a.ops || a.provider.localeCompare(b.provider))[0];
 
@@ -58,6 +94,10 @@ export function buildInsightsRunwaySource(profile: ProfileView): InsightsRunwayS
     forecastUsd: money(dailyUsd * 30),
     localShadowUsd: money(localOps * nonLocalRate),
     topProvider: topProvider?.provider ?? "none",
+    activeDays: activeDays.length,
+    windowStart: window.start,
+    windowEnd: window.end,
+    providerBasis: providerWindow.basis,
   };
 }
 

@@ -245,6 +245,8 @@ test("profile leads with a plain-language latest read derived from the telemetry
   assert.match(page, /hasGitHubEvidence=\{Boolean\(githubSignal\)\}/);
   assert.match(readout, /Latest 30-day read/);
   assert.match(readout, /What this tells you:/);
+  assert.match(readout, /\/insights\?handle=/);
+  assert.match(readout, /Open live cost scenario/);
   assert.match(readout, /API-equivalent usage/);
   assert.match(readout, /GitHub activity is separate work evidence, not verification of usage totals/);
   assert.match(readout, /vprofile-readout__note/);

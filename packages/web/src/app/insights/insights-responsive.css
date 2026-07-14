@@ -5,6 +5,8 @@
 }
 
 @media (max-width: 1080px) {
+  .intel-profile-picker { grid-template-columns: minmax(180px, 0.8fr) minmax(340px, 1.2fr); }
+  .intel-profile-picker > a { grid-column: 1 / -1; width: fit-content; }
   .intel-mast { gap: 34px; padding: 36px 32px; }
   .intel-decision { grid-template-columns: 1fr; }
   .intel-workspace { grid-template-columns: 1fr; }
@@ -50,6 +52,8 @@
 }
 
 @media (max-width: 420px) {
+  .intel-profile-picker form > div { grid-template-columns: auto minmax(0, 1fr); }
+  .intel-profile-picker button { grid-column: 1 / -1; min-height: 40px; }
   .intel-mast h1 { font-size: 2.3rem; }
   .intel-contract span { padding: 13px 11px; }
   .intel-comparison > div { grid-template-columns: 1fr auto; }
@@ -62,3 +66,5 @@
   .intel-presets button,
   .intel-command button { transition: none; }
 }
+  .intel-profile-picker { grid-template-columns: 1fr; gap: 16px; padding: 18px 20px; }
+  .intel-profile-picker > a { grid-column: auto; width: 100%; }

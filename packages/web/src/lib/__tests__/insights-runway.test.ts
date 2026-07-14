@@ -33,7 +33,33 @@ test("runway source uses the real 30-day pace and keeps eligible local savings s
     forecastUsd: 645,
     localShadowUsd: 11.6,
     topProvider: "higgsfield",
+    activeDays: 3,
+    windowStart: "2026-06-06",
+    windowEnd: "2026-07-05",
+    providerBasis: "profile_totals",
   });
+});
+
+test("runway source excludes stale history and prefers recent provider-day detail", () => {
+  const source = buildInsightsRunwaySource({
+    ...profile,
+    usageDays: [
+      { date: "2025-01-01", ops: 99_000, credits: 0, usd: 99_000 },
+      ...profile.usageDays,
+    ],
+    providerDays: [
+      { provider: "openai", date: "2025-01-01", ops: 1, credits: 0, usd: 99_000 },
+      { provider: "higgsfield", date: "2026-07-03", ops: 200, credits: 800, usd: 44 },
+      { provider: "claude-code", date: "2026-07-04", ops: 1800, credits: 300, usd: 14 },
+      { provider: "ollama", date: "2026-07-05", ops: 400, credits: 100, usd: 6.5 },
+    ],
+  });
+
+  assert.equal(source.forecastUsd, 645);
+  assert.equal(source.topProvider, "higgsfield");
+  assert.equal(source.localShadowUsd, 11.6);
+  assert.equal(source.activeDays, 3);
+  assert.equal(source.providerBasis, "recent_30d");
 });
 
 test("runway planner derives an estimate-only over-cap state", () => {

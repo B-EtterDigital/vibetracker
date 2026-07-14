@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { INSIGHTS_SAMPLE_PROFILE } from "../../app/insights/sample-profile.ts";
+import { buildPlanScale } from "../../app/insights/plan-scale.ts";
 import { buildInsightsRunwaySnapshot, buildInsightsRunwaySource } from "../insights-runway.ts";
 
 test("insights route is a route-local explained cost plan", () => {
@@ -18,6 +19,11 @@ test("insights route is a route-local explained cost plan", () => {
 
   assert.match(layout, /href="\/insights"/);   // reachable from the header
   assert.match(page, /buildInsightsRunwaySource/);
+  assert.match(page, /getProfile/);
+  assert.match(page, /buildDemoProfile/);
+  assert.match(page, /searchParams: Promise/);
+  assert.match(page, /PUBLIC_HANDLE_RE/);
+  assert.match(page, /No published VibeUsage profile exists/);
   assert.match(page, /<RunwayDecisionConsole/);
   assert.match(page, /\.\/insights\.css/);
   assert.match(page, /\.\/insights-brief\.css/);
@@ -25,7 +31,13 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(page, /\.\/insights-ledger\.css/);
   assert.match(page, /\.\/insights-responsive\.css/);
   assert.match(consoleSource, /^"use client";/);
-  assert.match(consoleSource, /PLAN_PRESETS/);
+  assert.match(consoleSource, /buildPlanScale/);
+  assert.match(consoleSource, /action="\/insights"/);
+  assert.match(consoleSource, /name="handle"/);
+  assert.match(consoleSource, /defaultValue=\{isPublic \? handle : requestedHandle\}/);
+  assert.match(consoleSource, /Analyze profile/);
+  assert.match(consoleSource, /Live public profile/);
+  assert.match(consoleSource, /data-source=/);
   assert.match(consoleSource, /<InsightBrief/);
   assert.match(consoleSource, /type="range"/);
   assert.match(consoleSource, /aria-pressed=/);
@@ -33,6 +45,7 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(consoleSource, /Clipboard access failed/);
   assert.match(consoleSource, /0 usage writes · 0 rank changes · 0 provider changes/);
   assert.match(styles, /\.intel-console/);
+  assert.match(styles, /LIVE PUBLIC PROFILE \/ LATEST 30-DAY PACE/);
   assert.match(styles, /\.intel-decision/);
   assert.match(briefSource, /What this scenario is actually saying/);
   assert.match(briefSource, /Low confidence/);
@@ -53,19 +66,35 @@ test("insights route is a route-local explained cost plan", () => {
   assert.doesNotMatch(consoleSource, /type="checkbox"|intel-scope__wave|reviewArmed/);
 });
 
-test("insights explains its sample, math, consequence, and confidence boundary in plain language", () => {
+test("insights explains its source, math, consequence, and confidence boundary in plain language", () => {
   const consoleSource = readFileSync("packages/web/src/app/insights/runway-decision-console.tsx", "utf8");
-  assert.match(consoleSource, /Example calculation/);
-  assert.match(consoleSource, /Not connected to your account/);
+  assert.match(consoleSource, /explicit example data · not your account/);
+  assert.match(consoleSource, /latest 30-day provider detail/);
+  assert.match(consoleSource, /provider totals fallback/);
   assert.match(consoleSource, /Why the forecast is/);
-  assert.match(consoleSource, /average on \{activeDays\} active example days × 30 days/);
+  assert.match(consoleSource, /average on \{activeDays\} \{observationLabel\} × 30 days/);
   assert.match(consoleSource, /This percentage applies only to/);
   assert.match(consoleSource, /not to the full/);
   assert.match(consoleSource, /Where the result comes from/);
   assert.match(consoleSource, /What is known, estimated, and unchanged/);
   assert.match(consoleSource, /This plan leaves almost no room for a spike/);
-  assert.match(consoleSource, /highest observed spend in this example/);
+  assert.match(consoleSource, /highest observed spend in this \{isPublic \? "public profile" : "example"\}/);
   assert.doesNotMatch(consoleSource, /See the burn|Bend the runway|DELTA LEDGER|LIVE PLAN SIGNAL|Local shadow offset/);
+});
+
+test("insights budget controls scale to the profile instead of capping power users at $1k", () => {
+  const small = buildPlanScale(645);
+  assert.deepEqual(small.presets.map((preset) => preset.cap), [525, 650, 775]);
+  assert.equal(small.step, 25);
+  assert.ok(small.max > 1000);
+
+  const power = buildPlanScale(90_900);
+  assert.deepEqual(power.presets.map((preset) => preset.cap), [73_000, 91_000, 109_000]);
+  assert.equal(power.step, 1000);
+  assert.ok(power.max >= 190_000);
+
+  const empty = buildPlanScale(Number.NaN);
+  assert.deepEqual(empty.presets.map((preset) => preset.cap), [40, 50, 60]);
 });
 
 test("insights console derives every planning state from the production runway model", () => {
@@ -74,6 +103,10 @@ test("insights console derives every planning state from the production runway m
     forecastUsd: 645,
     localShadowUsd: 11.6,
     topProvider: "higgsfield",
+    activeDays: 3,
+    windowStart: "2026-06-06",
+    windowEnd: "2026-07-05",
+    providerBasis: "profile_totals",
   });
 
   const protect = buildInsightsRunwaySnapshot({ ...source, monthlyCapUsd: 500, localShiftPercent: 60 });

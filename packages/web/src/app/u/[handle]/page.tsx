@@ -386,6 +386,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     />);
   add("hero", "full",
     <ProfileReadout
+      handle={profile.handle}
       model={latestRead}
       category={readoutCategory}
       trust={tierRaw}

@@ -2,6 +2,7 @@ import { formatUsd } from "../../../lib/leaderboard";
 import type { TelemetryModel } from "./profile-telemetry-model";
 
 interface ProfileReadoutProps {
+  handle: string;
   model: TelemetryModel | null;
   category: { label: string; share: number } | null;
   trust: string;
@@ -39,7 +40,7 @@ function trendRead(model: TelemetryModel): { headline: string; state: string } {
   return { headline: "Usage held steady against the previous 30 days.", state: "flat" };
 }
 
-export function ProfileReadout({ model, category, trust, hasGitHubEvidence, through }: ProfileReadoutProps) {
+export function ProfileReadout({ handle, model, category, trust, hasGitHubEvidence, through }: ProfileReadoutProps) {
   if (!model) return null;
 
   const trend = trendRead(model);
@@ -97,7 +98,13 @@ export function ProfileReadout({ model, category, trust, hasGitHubEvidence, thro
         </div>
       </dl>
 
-      <p className="vprofile-readout__plain"><b>What this tells you:</b> {plainRead}. The totals are {trustLabel}. {evidence}</p>
+      <div className="vprofile-readout__footer">
+        <p className="vprofile-readout__plain"><b>What this tells you:</b> {plainRead}. The totals are {trustLabel}. {evidence}</p>
+        <a href={`/insights?handle=${encodeURIComponent(handle)}`}>
+          <span>Plan this usage</span>
+          <b>Open live cost scenario</b>
+        </a>
+      </div>
     </section>
   );
 }
