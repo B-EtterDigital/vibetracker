@@ -21,6 +21,11 @@ const SUB_MONTHLY_API_EQUIV: Record<string, { label: string; usd: number }> = {
 const MEDIA_PROVIDERS = new Set(["higgsfield", "suno", "falai", "replicate", "runway", "kling", "elevenlabs"]);
 const CREATIVE_CATEGORIES = new Set(["image", "video", "music", "voice", "threed", "3d", "audio"]);
 
+// Token throughput one heavy agent session realistically pushes in a busy day (cache-read-heavy
+// agentic coding), used to estimate how many agents ran in PARALLEL on the peak day — the distinct
+// CLI count undersells a swarm that fans out ~10 concurrent Codex plus others. A reference, not exact.
+const SINGLE_AGENT_DAILY_TOKENS = 600_000_000;
+
 export interface Footprint { label: string; count: number }
 export interface ProfileSignals {
   apiCostUsd: number;
@@ -29,6 +34,7 @@ export interface ProfileSignals {
   outputShare: number;       // output / total
   hasTokens: boolean;
   agentCount: number;
+  peakParallelAgents: number;   // estimated agents running in parallel on the busiest day
   crossProviderDays: number;
   mediaGenerations: number;
   commits: number;
@@ -72,6 +78,17 @@ export function computeProfileSignals(profile: ProfileView): ProfileSignals {
   const agentCount = agents.length;
   const crossProviderDays = profile.crossProviderDays ?? 0;
 
+  // Peak parallel agents: the distinct-CLI count (agentCount) undersells a swarm that fans out many
+  // concurrent instances. Estimate it from the busiest day's real token throughput ÷ what one agent
+  // pushes in a day. Peak-day tokens = peak-day spend × the token/$ ratio (both real).
+  const apiCost = profile.latest?.total_usd ?? 0;
+  const peakDayUsd = (profile.usageDays ?? []).reduce((m, d) => Math.max(m, d.usd), 0);
+  const tokensPerUsd = apiCost > 0 ? totalTokens / apiCost : 0;
+  const peakDayTokens = peakDayUsd * tokensPerUsd;
+  const peakParallelAgents = peakDayTokens > 0
+    ? Math.max(agentCount, Math.round(peakDayTokens / SINGLE_AGENT_DAILY_TOKENS))
+    : agentCount;
+
   const mediaGenerations = (profile.categories ?? [])
     .filter((c) => CREATIVE_CATEGORIES.has(c.category))
     .reduce((sum, c) => sum + c.ops, 0);
@@ -110,7 +127,7 @@ export function computeProfileSignals(profile: ProfileView): ProfileSignals {
   return {
     apiCostUsd: profile.latest?.total_usd ?? 0,
     humanRatio, cacheReuse, outputShare, hasTokens,
-    agentCount, crossProviderDays, mediaGenerations,
+    agentCount, peakParallelAgents, crossProviderDays, mediaGenerations,
     commits, shipRate, archetypes, archetypeLabel, archetypeBlurb, footprint,
   };
 }

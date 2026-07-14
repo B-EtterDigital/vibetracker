@@ -33,8 +33,8 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
   if (agentCount >= 2) {
     reads.push({
       label: "Orchestration",
-      value: `${agentCount} agents`,
-      note: `${crossProviderDays} days ran 2+ agent CLIs together across providers`,
+      value: `~${signals.peakParallelAgents} parallel`,
+      note: `est. agents running at once on the peak day · ${agentCount} distinct CLIs · ${crossProviderDays} cross-provider days`,
     });
   }
   if (shipRate != null) {
