@@ -51,7 +51,9 @@
     "public_paths": [
       "packages/web/src/app/page.tsx",
       "packages/web/src/app/home/leaderboard-console.tsx",
-      "packages/web/src/app/home/home.css"
+      "packages/web/src/app/home/home.css",
+      "packages/web/src/app/home/signal-uplink.tsx",
+      "packages/web/src/app/home/signal-uplink.css"
     ],
     "private_paths": [
       "packages/web/src/lib/__tests__/home-route.test.ts",
@@ -80,8 +82,8 @@
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Server orchestration, client interaction, and route-local styling are separate and below 300 lines each.",
-      "evidence": ["packages/web/src/app/page.tsx", "packages/web/src/app/home/leaderboard-console.tsx", "packages/web/src/app/home/home.css"]
+      "notes": "Server orchestration, leaderboard interaction, empty-lane guidance, and route-local styling are separate and below 300 lines each.",
+      "evidence": ["packages/web/src/app/page.tsx", "packages/web/src/app/home/leaderboard-console.tsx", "packages/web/src/app/home/home.css", "packages/web/src/app/home/signal-uplink.tsx", "packages/web/src/app/home/signal-uplink.css"]
     },
     "ssi": {
       "status": "passing",
@@ -92,7 +94,7 @@
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Focused contracts and the complete package suite pass on the current tree.",
+      "notes": "Focused empty/degraded-state contracts and the complete 568-test package suite pass on the current tree.",
       "evidence": ["packages/web/src/lib/__tests__/home-route.test.ts", "packages/web/src/lib/__tests__/home-leaderboard-console.test.ts"]
     },
     "spe": {
@@ -108,10 +110,10 @@
       "evidence": ["packages/web/src/lib/data.ts", "packages/web/src/app/page.tsx"]
     },
     "ssra": {
-      "status": "partial",
-      "score": 80,
-      "notes": "Release gate, production build, deploy, and visual proof remain mandatory before promotion.",
-      "evidence": ["scripts/release-gate.mjs"]
+      "status": "passing",
+      "score": 95,
+      "notes": "Release gate, production build, Netlify deployment, desktop/mobile visual proof, copy interaction, and reduced-motion behavior passed.",
+      "evidence": ["scripts/release-gate.mjs", "Netlify deploy 6a55b9e4e49edbad1a7888d2"]
     },
     "sas": {
       "status": "passing",
@@ -193,17 +195,17 @@
     "sbom_path": ""
   },
   "quality": {
-    "score": 88,
+    "score": 92,
     "line_count": {
-      "max_file_lines": 289,
+      "max_file_lines": 293,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 665,
+      "feature_lines": 952,
       "file_count": 5,
       "dependency_count": 3,
-      "notes": "The former 3,409-line route is now a 77-line server seam plus focused client and CSS modules."
+      "notes": "The former 3,409-line route remains a small server seam plus focused leaderboard and signal-uplink modules with no new dependency."
     },
     "test_commands": [
       "node --test packages/web/src/lib/__tests__/home-route.test.ts packages/web/src/lib/__tests__/home-leaderboard-console.test.ts packages/web/src/lib/__tests__/leaderboard.test.ts"
@@ -212,8 +214,8 @@
       {
         "command": "focused home tests + pnpm sma:release-gate + pnpm --dir packages/web build",
         "status": "pass",
-        "timestamp": "2026-07-10T15:39:18Z",
-        "notes": "37 focused tests, 15 control-plane tests, 481 package tests, strict VTRS, TypeScript, audit, build, and production-context visual proof passed."
+        "timestamp": "2026-07-14T04:20:17Z",
+        "notes": "23 focused tests, 15 control-plane tests, 568 package tests, strict VTRS, TypeScript, build, Netlify deploy 6a55b9e4e49edbad1a7888d2, live desktop/mobile proof, copy interaction, zero mobile overflow, and reduced-motion checks passed."
       }
     ]
   },

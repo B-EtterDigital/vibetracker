@@ -10,6 +10,7 @@ import {
   type HomeBoardSnapshot,
 } from "./home/leaderboard-console";
 import "./home/home.css";
+import "./home/signal-uplink.css";
 
 export const revalidate = 60;
 
