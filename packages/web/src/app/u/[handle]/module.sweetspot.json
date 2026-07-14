@@ -5,7 +5,7 @@
     "name": "Adaptive Public Profile",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "language": [
       "typescript",
       "tsx",
@@ -38,7 +38,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "ebf9518",
+    "commit": "912a161",
     "paths": [
       "packages/web/src/app/u/[handle]",
       "packages/web/src/lib/profile-complexity.ts",
@@ -123,7 +123,7 @@
     "sstf": {
       "status": "passing",
       "score": 90,
-      "notes": "Focused profile contracts and the full 608-test package suite pass, including peak-load estimate boundaries and initial-head metadata.",
+      "notes": "Focused profile contracts and the full 611-test suite pass, including peak-load estimate boundaries, initial-head metadata, and the live Insights handoff.",
       "evidence": [
         "packages/web/src/lib/__tests__/profile-route.test.ts",
         "packages/web/src/lib/__tests__/profile-signals.test.ts",
@@ -149,10 +149,10 @@
     "ssra": {
       "status": "passing",
       "score": 90,
-      "notes": "Clean production build, exact-commit Netlify deployment, 100/100/100/100 Lighthouse, and overflow-free mobile/4K runtime proof pass.",
+      "notes": "Clean production build, exact isolated release 98d47a8 on deploy 6a5645a4545612df242c771e, a verified profile-to-live-Insights link, and overflow-free mobile/4K runtime proof pass.",
       "evidence": [
         "scripts/release-gate.mjs",
-        "Netlify deploy 6a563b4120e1e2ccc61a93a0"
+        "Netlify deploy 6a5645a4545612df242c771e"
       ]
     },
     "sas": {
@@ -343,6 +343,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T13:40:58Z",
         "notes": "608 tests, strict telemetry, TypeScript, dependency audit, Gen3 validation, exact-commit Netlify deploy 6a563b4120e1e2ccc61a93a0, 30/30 HTTP 200 responses, zero console messages, Lighthouse 100/100/100/100, and overflow-free 390x844 and 3840x2160 renders passed."
+      },
+      {
+        "command": "focused profile/Insights tests + full gates + exact isolated deployment + Chrome DevTools round-trip proof",
+        "status": "pass",
+        "timestamp": "2026-07-14T14:28:21Z",
+        "notes": "The live @cyrill-etter profile exposes /insights?handle=cyrill-etter, the destination loads the same public aggregates with a reversible profile link, all requests succeeded, and neither route produced console errors."
       }
     ]
   },
@@ -468,6 +474,24 @@
           "method": "git_commit",
           "reference": "ebf9518"
         }
+      },
+      {
+        "actor_kind": "agent",
+        "actor_id": "bdd-main@019f4b2d",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "commit": "912a161",
+        "files_touched": ["packages/web/src/app/u/[handle]/profile-readout.tsx", "packages/web/src/app/u/[handle]/page.tsx", "packages/web/src/app/u/[handle]/profile.css", "packages/web/src/lib/__tests__/profile-route.test.ts"],
+        "verification": [{"command": "full gates + exact production deployment + Chrome DevTools round-trip proof", "status": "pass", "timestamp": "2026-07-14T14:28:21Z", "notes": "Live profile link and live Insights source matched @cyrill-etter with zero console errors."}],
+        "timestamp": "2026-07-14T14:28:21Z",
+        "summary": "Linked each public profile to its live cost-planning scenario.",
+        "intent": "Let users move directly from observed usage to an explained, no-write budget plan.",
+        "decision_rationale": "A handle-preserving link keeps the planning source explicit and avoids asking users to re-enter their identity.",
+        "lease_id": "lease-1784039262499-10671e44",
+        "context_event_ids": ["ctx-1784039262592-c559dda1"],
+        "attestation": {"method": "git_commit", "reference": "912a161"}
       }
     ],
     "reviewed_by": [],
@@ -495,6 +519,14 @@
         "path": "packages/web/src/app/u/[handle]",
         "event": "updated",
         "timestamp": "2026-07-14T13:40:58Z"
+      },
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.public-profile.adaptive-depth",
+        "commit": "912a161",
+        "path": "packages/web/src/app/u/[handle]",
+        "event": "updated",
+        "timestamp": "2026-07-14T14:28:21Z"
       }
     ]
   }

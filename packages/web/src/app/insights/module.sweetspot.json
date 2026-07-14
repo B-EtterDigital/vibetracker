@@ -5,7 +5,7 @@
     "name": "Explained AI Cost Plan",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["usage-analytics", "budget-planning", "local-simulation", "explainable-analytics"]
@@ -15,12 +15,12 @@
     "group_id": "000-vibetracker:packages/web/src/app",
     "contains": ["route", "component", "sample", "model-adapter", "style", "test"],
     "component_policy": "internal_by_default",
-    "notes": "Verdict-first, estimate-only cost plan driven by the production Insights model with visible evidence strength, lever materiality, calculation, and no-write boundaries."
+    "notes": "Verdict-first, estimate-only cost plan for a requested public profile or visibly labelled sample fallback, with evidence strength, lever materiality, scaled controls, calculation, and no-write boundaries."
   },
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "526f22d",
+    "commit": "ad52c47",
     "paths": [
       "packages/web/src/app/insights",
       "packages/web/src/lib/insights-runway.ts",
@@ -43,6 +43,7 @@
     "public_paths": [
       "packages/web/src/app/insights/page.tsx",
       "packages/web/src/app/insights/runway-decision-console.tsx",
+      "packages/web/src/app/insights/plan-scale.ts",
       "packages/web/src/app/insights/insight-brief.tsx",
       "packages/web/src/app/insights/sample-profile.ts",
       "packages/web/src/app/insights/insights.css",
@@ -62,6 +63,7 @@
       "undocumented cross-brick private imports"
     ],
     "allowed_side_effects": [
+      "read_public_profile_aggregates",
       "copy_local_dry_run_command",
       "change_local_planning_controls"
     ]
@@ -69,13 +71,13 @@
   "classification": {
     "data_classes": ["public", "synthetic_sample"],
     "risk": "low",
-    "notes": "The route visibly identifies its synthetic example before presenting bounded planning estimates and never writes usage, providers, profiles, spend, or rank."
+    "notes": "The route reads only opt-in public aggregates, visibly identifies live versus sample evidence before results, and never writes usage, providers, profiles, spend, or rank."
   },
   "sweetspot": {
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Server route, sample profile, client decision surface, derived signal brief, production model adapter, styles, and tests are separated; every owned implementation file is below 300 lines.",
+      "notes": "Server profile lookup, sample fallback, client decision surface, scale policy, derived signal brief, model adapter, styles, and tests are separated; every owned implementation file is below 350 lines.",
       "evidence": [
         "packages/web/src/app/insights/page.tsx",
         "packages/web/src/app/insights/runway-decision-console.tsx",
@@ -92,7 +94,7 @@
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Focused estimate tests and the complete clean release gate pass on the implementation commit.",
+      "notes": "Twenty-four focused route/model/profile tests and the complete 611-test suite pass on the implementation commit.",
       "evidence": [
         "packages/web/src/lib/__tests__/insights-route.test.ts",
         "packages/web/src/lib/__tests__/insights-runway.test.ts"
@@ -120,9 +122,9 @@
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Production deploy 6a55fc4ac63cb54bc5076ab5 passed all three planning states, disclosure/copy behavior, network, console, overflow, and visual checks at 390px mobile, 1440px desktop, and 3840px 4K fullscreen viewports.",
+      "notes": "Production deploy 6a5645a4545612df242c771e from isolated release 98d47a8 passed live-profile and missing-profile fallback behavior, native handle validation, network, console, and overflow checks at 390x844 mobile and 3840x2160 fullscreen; Lighthouse scored 100 for accessibility, best practices, SEO, and agentic browsing.",
       "evidence": [
-        "https://6a55fc4ac63cb54bc5076ab5--vibetracker-betterdigital.netlify.app/insights",
+        "https://6a5645a4545612df242c771e--vibeusage.netlify.app/insights?handle=cyrill-etter",
         "packages/web/src/app/insights/insights-brief.css",
         "packages/web/src/lib/__tests__/insights-route.test.ts"
       ]
@@ -136,23 +138,23 @@
     "sva": {
       "status": "passing",
       "score": 95,
-      "notes": "No privileged client, secret, provider mutation, upload, billing call, profile write, or network request is present.",
+      "notes": "The server uses the anonymous public-profile adapter; no privileged client, secret, provider mutation, upload, billing call, or profile write is present.",
       "evidence": [
         "packages/web/src/app/insights/page.tsx",
         "packages/web/src/app/insights/runway-decision-console.tsx"
       ]
     },
     "srls": {
-      "status": "not_applicable",
-      "score": 100,
-      "notes": "The brick does not access a database.",
-      "evidence": []
+      "status": "passing",
+      "score": 90,
+      "notes": "Live plans use the same anonymous, SELECT-only public aggregate path as public profiles; there is no client write policy.",
+      "evidence": ["packages/web/src/lib/data.ts", "docs/compliance/TRUST_MODEL.md"]
     },
     "sev": {
-      "status": "not_applicable",
-      "score": 100,
-      "notes": "The brick requires no environment variables.",
-      "evidence": []
+      "status": "passing",
+      "score": 90,
+      "notes": "Live profile reads use only the public Supabase URL and anonymous key variables already required by the web app.",
+      "evidence": ["packages/web/src/lib/supabase.ts"]
     },
     "ssc": {
       "status": "passing",
@@ -170,6 +172,7 @@
   "interfaces": {
     "public_api": [
       "GET /insights",
+      "GET /insights?handle=<public-handle>",
       "buildInsightsRunwaySource(profile)",
       "buildInsightsRunwaySnapshot(input)",
       "<RunwayDecisionConsole />"
@@ -177,9 +180,10 @@
     "adapters": [
       "packages/web/src/lib/insights-runway.ts#buildInsightsRunwaySource",
       "packages/web/src/lib/insights-runway.ts#buildInsightsRunwaySnapshot",
+      "packages/web/src/lib/data.ts#getProfile",
       "packages/web/src/lib/data.ts#ProfileView"
     ],
-    "required_dependencies": ["next", "react"],
+    "required_dependencies": ["next", "react", "@supabase/supabase-js"],
     "forbidden_dependencies": [
       "service-role client",
       "real provider mutation",
@@ -190,14 +194,17 @@
   },
   "security": {
     "rls": {
-      "required": false,
-      "status": "not_applicable",
-      "negative_tests": []
+      "required": true,
+      "status": "complete",
+      "negative_tests": ["Public aggregate tables expose SELECT policies and no client write policies."]
     },
     "env": {
-      "required": false,
-      "status": "not_applicable",
-      "variables": []
+      "required": true,
+      "status": "complete",
+      "variables": [
+        {"name": "NEXT_PUBLIC_SUPABASE_ANON_KEY", "scope": "public_client", "required_in": ["preview", "production"]},
+        {"name": "NEXT_PUBLIC_SUPABASE_URL", "scope": "public_client", "required_in": ["preview", "production"]}
+      ]
     },
     "vulnerability_findings": {
       "critical": 0,
@@ -220,6 +227,12 @@
         "version": "^19.0.0",
         "purpose": "Planning controls and clipboard feedback.",
         "risk": "low"
+      },
+      {
+        "name": "@supabase/supabase-js",
+        "version": "^2.45.0",
+        "purpose": "Anonymous public aggregate reads for requested profiles.",
+        "risk": "medium"
       }
     ],
     "licenses": ["MIT"],
@@ -229,15 +242,15 @@
   "quality": {
     "score": 90,
     "line_count": {
-      "max_file_lines": 268,
+      "max_file_lines": 302,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1178,
-      "file_count": 12,
-      "dependency_count": 2,
-      "notes": "The route remains a small server surface plus a 268-line client decision component, 113-line derived signal brief, 90-line production model adapter, and split route-local styles."
+      "feature_lines": 1215,
+      "file_count": 13,
+      "dependency_count": 3,
+      "notes": "The route remains a bounded server lookup plus a 302-line client decision component, 46-line scale policy, 113-line derived signal brief, 130-line model adapter, and split route-local styles."
     },
     "test_commands": [
       "node --test packages/web/src/lib/__tests__/insights-route.test.ts",
@@ -249,6 +262,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T08:55:04Z",
         "notes": "7 focused Insights tests, 15 control-plane tests, 596 package tests, strict VTRS with 0 violations, TypeScript, dependency audit with no known vulnerabilities, clean 27-route Next build, and preview interaction proof at 390px, 1440px, and 3840px passed with no overflow, console errors, or failed dynamic requests."
+      },
+      {
+        "command": "24 focused tests + pnpm test + pnpm typecheck + pnpm telemetry:audit:strict + pnpm audit --audit-level high + pnpm sma:gen3:check + production build/deploy + Chrome DevTools proof",
+        "status": "pass",
+        "timestamp": "2026-07-14T14:28:21Z",
+        "notes": "611 tests, strict telemetry, TypeScript, clean dependency audit and Next build, exact isolated release 98d47a8 on deploy 6a5645a4545612df242c771e, live @cyrill-etter and honest missing-profile fallback, valid native input pattern, all requests successful, zero console errors, Lighthouse 100 in four reported categories, and overflow-free 390x844 and 3840x2160 visual proof passed."
       }
     ]
   },
@@ -312,7 +331,26 @@
         "reference": "85d29e6"
       }
     },
-    "touched_by": [],
+    "touched_by": [
+      {
+        "actor_kind": "agent",
+        "actor_id": "bdd-main@019f4b2d",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "commit": "ad52c47",
+        "files_touched": ["packages/web/src/app/insights", "packages/web/src/lib/insights-runway.ts", "packages/web/src/lib/__tests__/insights-route.test.ts", "packages/web/src/lib/__tests__/insights-runway.test.ts"],
+        "verification": ["24 focused tests", "611 full tests", "Netlify 6a5645a4545612df242c771e", "390x844", "3840x2160"],
+        "timestamp": "2026-07-14T14:28:21Z",
+        "summary": "Turned Insights into a live public-profile cost planner with explicit sample fallback and profile-scaled controls.",
+        "intent": "Make real usage understandable and actionable without implying writes or guaranteed forecasts.",
+        "decision_rationale": "The latest observed 30-day pace is useful only when the source, confidence boundary, fallback, and adjustable budget scale stay visible.",
+        "lease_id": "lease-1784039259840-ee637d47",
+        "context_event_ids": ["ctx-1784039259974-4d03e033"],
+        "attestation": {"method": "git_commit", "reference": "ad52c47"}
+      }
+    ],
     "reviewed_by": [],
     "source_chain": [
       {
@@ -322,6 +360,14 @@
         "path": "packages/web/src/app/insights",
         "event": "created",
         "timestamp": "2026-07-12T03:15:45Z"
+      },
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.runway-decision-console",
+        "commit": "ad52c47",
+        "path": "packages/web/src/app/insights",
+        "event": "updated",
+        "timestamp": "2026-07-14T14:28:21Z"
       }
     ]
   }
