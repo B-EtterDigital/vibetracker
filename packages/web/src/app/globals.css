@@ -4130,6 +4130,9 @@ code, pre, .console-top {
 .hdr-menu > summary > i { width: 17px; display: grid; gap: 4px; }
 .hdr-menu > summary > i span { display: block; height: 1px; background: currentColor; }
 
+/* Closed <details> content keeps layout in modern Chromium (content-visibility: hidden), so the
+   420px nav silently inflates scrollWidth on mobile; hide it for real while closed. */
+.hdr-menu:not([open]) > nav { display: none; }
 .hdr-menu > nav {
   position: absolute;
   top: calc(100% + 10px);

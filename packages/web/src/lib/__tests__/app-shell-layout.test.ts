@@ -68,6 +68,7 @@ test("header ships the generated VibeUsage mark without displacing identity cont
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.hdr \.brand img \{ width: clamp\(148px, 45vw, 178px\)/);
   assert.match(css, /\.hdr-menu > nav \{[\s\S]*width: min\(420px, calc\(100% - 28px\)\)/);
   assert.doesNotMatch(css, /\.hdr-menu > nav \{[\s\S]*width: min\(420px, calc\(100vw - 28px\)\)/);
+  assert.match(css, /\.hdr-menu:not\(\[open\]\) > nav \{ display: none; \}/);
 
   assert.deepEqual([...logo.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   assert.equal(logo.readUInt32BE(16), 1400);
