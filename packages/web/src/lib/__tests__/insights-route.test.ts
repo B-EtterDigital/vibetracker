@@ -49,8 +49,9 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(styles, /LIVE PUBLIC PROFILE \/ LATEST 30-DAY PACE/);
   assert.match(styles, /\.intel-decision/);
   assert.match(briefSource, /What this scenario is actually saying/);
-  assert.match(briefSource, /Low confidence/);
-  assert.match(briefSource, /Read the direction, not the forecast as a promise/);
+  assert.match(briefSource, /Thin evidence window/);
+  assert.match(briefSource, /Treat the projection as directional until more days arrive/);
+  assert.match(briefSource, /No daily rhythm/);
   assert.match(briefSource, /NEXT DECISION/);
   assert.match(briefSource, /Review <b>\{source\.topProvider\}<\/b> jobs first/);
   assert.match(briefSource, /Most of this buffer comes from the higher limit, not from local savings/);
@@ -72,11 +73,16 @@ test("insights explains its source, math, consequence, and confidence boundary i
   assert.match(consoleSource, /explicit example data · not your account/);
   assert.match(consoleSource, /latest 30-day provider detail/);
   assert.match(consoleSource, /provider totals fallback/);
-  assert.match(consoleSource, /Why the forecast is/);
-  assert.match(consoleSource, /average on \{activeDays\} \{observationLabel\} × 30 days/);
+  assert.match(consoleSource, /01 · OBSERVED/);
+  assert.match(consoleSource, /02 · CALENDAR PACE/);
+  assert.match(consoleSource, /03 · 30-DAY PLAN/);
+  assert.match(consoleSource, /calendar.*active.*idle/);
+  assert.match(consoleSource, /latest upload total used as provisional baseline/);
   assert.match(consoleSource, /This percentage applies only to/);
   assert.match(consoleSource, /not to the full/);
   assert.match(consoleSource, /Where the result comes from/);
+  assert.match(consoleSource, /Observed source period/);
+  assert.match(consoleSource, /Same-rhythm 30-day projection/);
   assert.match(consoleSource, /What is known, estimated, and unchanged/);
   assert.match(consoleSource, /This plan leaves almost no room for a spike/);
   assert.match(consoleSource, /highest observed spend in this \{isPublic \? "public profile" : "example"\}/);
@@ -102,11 +108,16 @@ test("insights console derives every planning state from the production runway m
   const source = buildInsightsRunwaySource(INSIGHTS_SAMPLE_PROFILE);
   assert.deepEqual(source, {
     forecastUsd: 645,
+    observedUsd: 64.5,
+    dailyPaceUsd: 21.5,
     localShadowUsd: 11.6,
     topProvider: "higgsfield",
     activeDays: 3,
-    windowStart: "2026-06-06",
+    idleDays: 0,
+    observedDays: 3,
+    windowStart: "2026-07-03",
     windowEnd: "2026-07-05",
+    evidenceBasis: "calendar_window",
     providerBasis: "profile_totals",
   });
 

@@ -22,11 +22,16 @@ export interface InsightsRunwaySnapshot {
 
 export interface InsightsRunwaySource {
   forecastUsd: number;
+  observedUsd: number;
+  dailyPaceUsd: number;
   localShadowUsd: number;
   topProvider: string;
   activeDays: number;
+  idleDays: number;
+  observedDays: number;
   windowStart: string | null;
   windowEnd: string | null;
+  evidenceBasis: "calendar_window" | "upload_total_fallback";
   providerBasis: "recent_30d" | "profile_totals";
 }
 
@@ -40,15 +45,27 @@ function money(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-function recentWindow(profile: ProfileView): { start: string | null; end: string | null; days: ProfileView["usageDays"] } {
+function dayDistance(start: string, end: string): number {
+  return Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86_400_000) + 1;
+}
+
+function recentWindow(profile: ProfileView): {
+  start: string | null;
+  end: string | null;
+  days: ProfileView["usageDays"];
+  observedDays: number;
+} {
   const dated = profile.usageDays
     .filter((day) => /^\d{4}-\d{2}-\d{2}$/.test(day.date))
     .slice()
     .sort((a, b) => a.date.localeCompare(b.date));
   const end = dated.at(-1)?.date ?? null;
-  if (!end) return { start: null, end: null, days: [] };
-  const start = new Date(Date.parse(`${end}T00:00:00Z`) - 29 * 86_400_000).toISOString().slice(0, 10);
-  return { start, end, days: dated.filter((day) => day.date >= start && day.date <= end) };
+  if (!end) return { start: null, end: null, days: [], observedDays: 0 };
+  const cutoff = new Date(Date.parse(`${end}T00:00:00Z`) - 29 * 86_400_000).toISOString().slice(0, 10);
+  const days = dated.filter((day) => day.date >= cutoff && day.date <= end);
+  const hasEarlierHistory = dated.some((day) => day.date < cutoff);
+  const start = hasEarlierHistory ? cutoff : days[0]?.date ?? end;
+  return { start, end, days, observedDays: Math.min(30, dayDistance(start, end)) };
 }
 
 function providersForWindow(profile: ProfileView, start: string | null, end: string | null): {
@@ -73,9 +90,15 @@ function providersForWindow(profile: ProfileView, start: string | null, end: str
 export function buildInsightsRunwaySource(profile: ProfileView): InsightsRunwaySource {
   const window = recentWindow(profile);
   const activeDays = window.days.filter((day) => day.usd > 0);
-  const dailyUsd = activeDays.length
-    ? activeDays.reduce((sum, day) => sum + day.usd, 0) / activeDays.length
-    : profile.latest?.total_usd ?? 0;
+  const observedUsd = money(activeDays.length
+    ? activeDays.reduce((sum, day) => sum + day.usd, 0)
+    : profile.latest?.total_usd ?? 0);
+  const evidenceBasis: InsightsRunwaySource["evidenceBasis"] = window.observedDays
+    ? "calendar_window"
+    : "upload_total_fallback";
+  const dailyPaceUsd = evidenceBasis === "calendar_window"
+    ? money(observedUsd / window.observedDays)
+    : 0;
   const providerWindow = providersForWindow(profile, window.start, window.end);
   const localOps = providerWindow.providers
     .filter((provider) => LOCAL_PROVIDERS.has(provider.provider.toLowerCase()))
@@ -91,12 +114,17 @@ export function buildInsightsRunwaySource(profile: ProfileView): InsightsRunwayS
     .sort((a, b) => b.usd - a.usd || b.ops - a.ops || a.provider.localeCompare(b.provider))[0];
 
   return {
-    forecastUsd: money(dailyUsd * 30),
+    forecastUsd: evidenceBasis === "calendar_window" ? money((observedUsd / window.observedDays) * 30) : observedUsd,
+    observedUsd,
+    dailyPaceUsd,
     localShadowUsd: money(localOps * nonLocalRate),
     topProvider: topProvider?.provider ?? "none",
     activeDays: activeDays.length,
+    idleDays: Math.max(0, window.observedDays - activeDays.length),
+    observedDays: window.observedDays,
     windowStart: window.start,
     windowEnd: window.end,
+    evidenceBasis,
     providerBasis: providerWindow.basis,
   };
 }

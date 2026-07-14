@@ -28,19 +28,24 @@ const profile: ProfileView = {
   categories: [], providerDays: [], providerModels: [], trustSignals: [],
 };
 
-test("runway source uses the real 30-day pace and keeps eligible local savings separate", () => {
+test("runway source derives a calendar-day pace and keeps eligible local savings separate", () => {
   assert.deepEqual(buildInsightsRunwaySource(profile), {
     forecastUsd: 645,
+    observedUsd: 64.5,
+    dailyPaceUsd: 21.5,
     localShadowUsd: 11.6,
     topProvider: "higgsfield",
     activeDays: 3,
-    windowStart: "2026-06-06",
+    idleDays: 0,
+    observedDays: 3,
+    windowStart: "2026-07-03",
     windowEnd: "2026-07-05",
+    evidenceBasis: "calendar_window",
     providerBasis: "profile_totals",
   });
 });
 
-test("runway source excludes stale history and prefers recent provider-day detail", () => {
+test("runway source counts idle gaps in an established 30-day history", () => {
   const source = buildInsightsRunwaySource({
     ...profile,
     usageDays: [
@@ -55,11 +60,30 @@ test("runway source excludes stale history and prefers recent provider-day detai
     ],
   });
 
-  assert.equal(source.forecastUsd, 645);
+  assert.equal(source.forecastUsd, 64.5);
+  assert.equal(source.observedUsd, 64.5);
+  assert.equal(source.dailyPaceUsd, 2.15);
   assert.equal(source.topProvider, "higgsfield");
   assert.equal(source.localShadowUsd, 11.6);
   assert.equal(source.activeDays, 3);
+  assert.equal(source.idleDays, 27);
+  assert.equal(source.observedDays, 30);
+  assert.equal(source.windowStart, "2026-06-06");
+  assert.equal(source.evidenceBasis, "calendar_window");
   assert.equal(source.providerBasis, "recent_30d");
+});
+
+test("runway source keeps upload totals provisional when daily evidence is unavailable", () => {
+  const source = buildInsightsRunwaySource({ ...profile, usageDays: [] });
+
+  assert.equal(source.forecastUsd, 64.5);
+  assert.equal(source.observedUsd, 64.5);
+  assert.equal(source.dailyPaceUsd, 0);
+  assert.equal(source.activeDays, 0);
+  assert.equal(source.idleDays, 0);
+  assert.equal(source.observedDays, 0);
+  assert.equal(source.windowStart, null);
+  assert.equal(source.evidenceBasis, "upload_total_fallback");
 });
 
 test("runway planner derives an estimate-only over-cap state", () => {

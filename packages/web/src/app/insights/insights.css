@@ -132,16 +132,21 @@
 
 .intel-basis {
   display: grid;
-  gap: 5px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0;
+  align-items: stretch;
   max-width: 720px;
   margin-top: 25px;
-  padding: 14px 16px;
+  border: 1px solid #244640;
   border-left: 3px solid var(--intel-cyan);
-  background: rgba(70, 187, 239, 0.06);
+  background: rgba(4, 12, 13, 0.86);
 }
 
-.intel-basis b { color: var(--intel-ink); font-size: 13px; }
-.intel-basis span { color: var(--intel-muted); font-size: 13px; line-height: 1.45; }
+.intel-basis > div { display: grid; gap: 5px; min-width: 0; padding: 13px 14px; }
+.intel-basis small { color: var(--intel-cyan); font: 700 9px/1.2 var(--font-data), ui-monospace, monospace; }
+.intel-basis b { overflow-wrap: anywhere; color: var(--intel-ink); font: 650 15px/1.15 var(--font-display), ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.intel-basis span { color: var(--intel-muted); font: 600 9px/1.4 var(--font-data), ui-monospace, monospace; overflow-wrap: anywhere; }
+.intel-basis > i { display: grid; place-items: center; padding: 0 4px; color: var(--intel-mint); font: 700 14px/1 var(--font-data), ui-monospace, monospace; font-style: normal; }
 
 .intel-readout {
   display: grid;

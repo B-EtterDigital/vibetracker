@@ -96,7 +96,16 @@ export function RunwayDecisionConsole({
     (preset) => preset.cap === monthlyCapUsd && preset.shift === localShiftPercent,
   )?.id;
   const decision = recommendation(snapshot);
-  const dailyPace = source.forecastUsd / 30;
+  const hasDailyEvidence = source.evidenceBasis === "calendar_window";
+  const evidenceWindow = hasDailyEvidence
+    ? `${source.observedDays} calendar ${source.observedDays === 1 ? "day" : "days"} · ${activeDays} active · ${source.idleDays} idle`
+    : "latest upload total · daily rows unavailable";
+  const evidenceDates = source.windowStart && source.windowEnd
+    ? `${source.windowStart} → ${source.windowEnd}`
+    : "no daily date range";
+  const projectionFormula = hasDailyEvidence
+    ? `${currency.format(source.observedUsd)} ÷ ${source.observedDays} days × 30`
+    : "latest upload total used as provisional baseline";
   const comparisonMax = Math.max(snapshot.adjustedUsd, monthlyCapUsd, 1);
   const comparisonStyle = {
     "--plan-width": `${(snapshot.adjustedUsd / comparisonMax) * 100}%`,
@@ -105,9 +114,8 @@ export function RunwayDecisionConsole({
   const remainingLabel = snapshot.varianceUsd >= 0 ? "Budget remaining" : "Amount over budget";
   const isPublic = sourceMode === "public";
   const sourceLabel = isPublic ? "Live public profile" : sourceMode === "demo" ? "Bundled demo profile" : "Bundled sample";
-  const publicBasis = source.providerBasis === "recent_30d" ? "latest 30-day provider detail" : "latest pace · provider totals fallback";
+  const publicBasis = source.providerBasis === "recent_30d" ? "latest 30-day provider detail" : "provider totals fallback";
   const sourceDetail = isPublic ? `@${handle} · ${publicBasis}` : sourceMode === "demo" ? "deterministic full-profile data" : "explicit example data · not your account";
-  const observationLabel = isPublic ? "observed active days" : sourceMode === "demo" ? "demo active days" : "sample active days";
   const knownLabel = isPublic ? `Known from @${handle}` : sourceMode === "demo" ? "Known from the demo" : "Known from the sample";
 
   return (
@@ -144,18 +152,21 @@ export function RunwayDecisionConsole({
               <span>{sourceDetail}</span>
             </div>
             <p>MONTHLY AI COST PLAN</p>
-            <h1 id="intel-title">Know what next month may cost.</h1>
+            <h1 id="intel-title">Your usage, translated into a monthly plan.</h1>
             <span>
-              See the budget verdict, the strength of the evidence, and the lever that actually matters.
-              Then test the assumptions without changing your usage or providers.
+              Start with what was observed, inspect the projection assumption, then set the limit you are comfortable with.
+              Every number below stays read-only.
             </span>
-            <div className="intel-basis">
-              <b>Why the forecast is {currency.format(source.forecastUsd)}</b>
-              <span>{currency.format(dailyPace)} average on {activeDays} {observationLabel} × 30 days.</span>
+            <div className="intel-basis" aria-label="Observed spend to monthly projection">
+              <div><small>01 · OBSERVED</small><b>{currency.format(source.observedUsd)}</b><span>{evidenceWindow}</span></div>
+              <i aria-hidden="true">→</i>
+              <div><small>02 · CALENDAR PACE</small><b>{hasDailyEvidence ? `${currency.format(source.dailyPaceUsd)} / day` : "Not available"}</b><span>{evidenceDates}</span></div>
+              <i aria-hidden="true">→</i>
+              <div><small>03 · 30-DAY PLAN</small><b>{currency.format(source.forecastUsd)}</b><span>{projectionFormula}</span></div>
             </div>
           </div>
           <div className="intel-readout" aria-live="polite">
-            <span>PLANNED PAID SPEND</span>
+            <span>CURRENT SCENARIO · PLANNED PAID SPEND</span>
             <strong>{currency.format(snapshot.adjustedUsd)}</strong>
             <small>of a {currency.format(monthlyCapUsd)} monthly limit</small>
             <b>{snapshot.varianceUsd >= 0 ? `${currency.format(snapshot.varianceUsd)} left` : `${currency.format(Math.abs(snapshot.varianceUsd))} over`}</b>
@@ -166,11 +177,10 @@ export function RunwayDecisionConsole({
           <span><b>{isPublic ? `@${handle}` : sourceMode}</b> {isPublic ? "public aggregates" : "not account data"}</span>
           <span><b>{recordCount.toLocaleString("en-US")}</b> accepted rows</span>
           <span><b>{providerCount}</b> providers</span>
-          <span><b>{activeDays}</b> active days</span>
+          <span><b>{source.observedDays || "—"}</b> calendar days observed</span>
         </div>
 
         <InsightBrief
-          activeDays={activeDays}
           localShiftPercent={localShiftPercent}
           snapshot={snapshot}
           source={source}
@@ -192,8 +202,8 @@ export function RunwayDecisionConsole({
             <div><span>Your limit</span><i><b /></i><strong>{currency.format(monthlyCapUsd)}</strong></div>
           </div>
           <div className="intel-decision__facts">
-            <span><small>Forecast before changes</small><strong>{currency.format(snapshot.projectedUsd)}</strong><em>{currency.format(dailyPace)} active-day pace</em></span>
-            <span><small>Estimated local savings</small><strong>−{currency.format(snapshot.localOffsetUsd)}</strong><em>{localShiftPercent}% of {currency.format(source.localShadowUsd)} eligible</em></span>
+            <span><small>Observed spend</small><strong>{currency.format(source.observedUsd)}</strong><em>{evidenceWindow}</em></span>
+            <span><small>30-day projection</small><strong>{currency.format(snapshot.projectedUsd)}</strong><em>{projectionFormula}</em></span>
             <span><small>{remainingLabel}</small><strong>{currency.format(Math.abs(snapshot.varianceUsd))}</strong><em>{snapshot.utilizationPercent}% of limit used</em></span>
           </div>
         </section>
@@ -255,7 +265,8 @@ export function RunwayDecisionConsole({
           <section className="intel-math" aria-labelledby="intel-math-title">
             <header><p>READ THE CALCULATION</p><h2 id="intel-math-title">Where the result comes from</h2></header>
             <ol>
-              <li><span><b>30-day forecast</b><small>Active-day average × 30</small></span><strong>{currency.format(snapshot.projectedUsd)}</strong></li>
+              <li><span><b>Observed source period</b><small>{evidenceWindow}</small></span><strong>{currency.format(source.observedUsd)}</strong></li>
+              <li data-operation="project"><span><b>Same-rhythm 30-day projection</b><small>{projectionFormula}</small></span><strong>{currency.format(snapshot.projectedUsd)}</strong></li>
               <li data-operation="minus"><span><b>Estimated local savings</b><small>{localShiftPercent}% of eligible work</small></span><strong>−{currency.format(snapshot.localOffsetUsd)}</strong></li>
               <li data-operation="equals"><span><b>Planned paid spend</b><small>Forecast after this scenario</small></span><strong>{currency.format(snapshot.adjustedUsd)}</strong></li>
               <li data-operation="compare"><span><b>Your monthly limit</b><small>The boundary you selected</small></span><strong>{currency.format(monthlyCapUsd)}</strong></li>
@@ -272,14 +283,14 @@ export function RunwayDecisionConsole({
         <section className="intel-details" aria-labelledby="intel-details-title">
           <header><p>CONFIDENCE BOUNDARY</p><h2 id="intel-details-title">What is known, estimated, and unchanged</h2></header>
           <div className="intel-details__grid">
-            <div><b>{knownLabel}</b><span>Accepted usage rows, provider totals, active days, and observed spend.</span></div>
-            <div><b>Estimated here</b><span>Next month’s spend and possible local savings. Workload changes can make both wrong.</span></div>
+            <div><b>{knownLabel}</b><span>{currency.format(source.observedUsd)} observed across {evidenceWindow}, plus provider totals and accepted rows.</span></div>
+            <div><b>Estimated here</b><span>The 30-day projection assumes the same calendar rhythm. Local savings are a separate scenario. Either can be wrong if work changes.</span></div>
             <div><b>Never changed here</b><span>Usage totals, provider settings, public profile, score, and rank. This page writes nothing.</span></div>
           </div>
           <details className="intel-technical">
             <summary>Show the formula and CLI dry run</summary>
             <div>
-              <p><code>{currency.format(dailyPace)} × 30 − ({currency.format(source.localShadowUsd)} × {localShiftPercent}%) = {currency.format(snapshot.adjustedUsd)}</code></p>
+              <p><code>{hasDailyEvidence ? `${currency.format(source.observedUsd)} ÷ ${source.observedDays} × 30` : currency.format(source.observedUsd)} − ({currency.format(source.localShadowUsd)} × {localShiftPercent}%) = {currency.format(snapshot.adjustedUsd)}</code></p>
               <div className="intel-command" aria-live="polite">
                 <code>{snapshot.command}</code>
                 <button data-state={copyState} onClick={copyCommand} type="button">

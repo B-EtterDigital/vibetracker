@@ -15,12 +15,17 @@
 
 @media (max-width: 760px) {
   .wrap:has(.intel-surface) { padding: 18px 14px 56px; }
+  .intel-profile-picker { grid-template-columns: 1fr; gap: 16px; padding: 18px 20px; }
+  .intel-profile-picker > a { grid-column: auto; width: 100%; }
   .intel-mast { grid-template-columns: 1fr; gap: 28px; padding: 28px 20px; }
   .intel-mast h1 { font-size: 2.65rem; }
   .intel-mast__copy > span { font-size: 14px; }
   .intel-sample-flag { display: grid; width: 100%; }
   .intel-sample-flag b,
   .intel-sample-flag span { text-align: center; }
+  .intel-basis { grid-template-columns: 1fr; }
+  .intel-basis > div + i { border-top: 1px solid var(--intel-line); }
+  .intel-basis > i { min-height: 22px; transform: rotate(90deg); }
   .intel-readout { min-height: 0; padding: 24px 0 0; border-top: 1px solid var(--intel-line); border-left: 0; }
   .intel-readout strong { font-size: 3.25rem; }
   .intel-contract { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -66,5 +71,3 @@
   .intel-presets button,
   .intel-command button { transition: none; }
 }
-  .intel-profile-picker { grid-template-columns: 1fr; gap: 16px; padding: 18px 20px; }
-  .intel-profile-picker > a { grid-column: auto; width: 100%; }

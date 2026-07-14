@@ -1,7 +1,6 @@
 import type { InsightsRunwaySnapshot, InsightsRunwaySource } from "../../lib/insights-runway.ts";
 
 interface InsightBriefProps {
-  activeDays: number;
   localShiftPercent: number;
   snapshot: InsightsRunwaySnapshot;
   source: InsightsRunwaySource;
@@ -14,25 +13,25 @@ const currency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
-function confidence(activeDays: number) {
-  if (activeDays >= 20) {
+function evidence(source: InsightsRunwaySource) {
+  if (source.evidenceBasis === "upload_total_fallback") {
     return {
-      label: "High confidence",
-      value: `${activeDays} active days`,
-      note: "Enough observed days to treat the pace as a useful monthly baseline.",
+      label: "No daily rhythm",
+      value: "Upload total only",
+      note: "Daily rows are unavailable, so this uses the latest uploaded total as a provisional baseline.",
     };
   }
-  if (activeDays >= 7) {
+  if (source.observedDays >= 21) {
     return {
-      label: "Medium confidence",
-      value: `${activeDays} active days`,
-      note: "Useful for planning, but a different project mix could still move the month materially.",
+      label: "Full evidence window",
+      value: `${source.observedDays} days observed`,
+      note: `${source.activeDays} active and ${source.idleDays} idle days are included in the calendar-day pace.`,
     };
   }
   return {
-    label: "Low confidence",
-    value: `${activeDays} active days`,
-    note: "A short observation window. Read the direction, not the forecast as a promise.",
+    label: source.observedDays >= 7 ? "Partial evidence window" : "Thin evidence window",
+    value: `${source.observedDays} days observed`,
+    note: `${source.activeDays} active and ${source.idleDays} idle days. Treat the projection as directional until more days arrive.`,
   };
 }
 
@@ -69,9 +68,9 @@ function lever(snapshot: InsightsRunwaySnapshot, source: InsightsRunwaySource, l
   };
 }
 
-export function InsightBrief({ activeDays, localShiftPercent, snapshot, source }: InsightBriefProps) {
+export function InsightBrief({ localShiftPercent, snapshot, source }: InsightBriefProps) {
   const budgetSignal = verdict(snapshot);
-  const confidenceSignal = confidence(activeDays);
+  const evidenceSignal = evidence(source);
   const leverSignal = lever(snapshot, source, localShiftPercent);
   const actionTail = snapshot.state === "over"
     ? "The local-work assumption does not close this gap."
@@ -87,12 +86,12 @@ export function InsightBrief({ activeDays, localShiftPercent, snapshot, source }
           <h2 id="intel-brief-title">What this scenario is actually saying</h2>
         </div>
         <code aria-label="Calculation summary">
-          {currency.format(snapshot.projectedUsd)} forecast − {currency.format(snapshot.localOffsetUsd)} local = {currency.format(snapshot.adjustedUsd)} paid
+          {currency.format(source.observedUsd)} observed → {currency.format(snapshot.projectedUsd)} projected → {currency.format(snapshot.adjustedUsd)} planned
         </code>
       </header>
 
       <div className="intel-brief__signals">
-        {[budgetSignal, confidenceSignal, leverSignal].map((signal, index) => (
+        {[budgetSignal, evidenceSignal, leverSignal].map((signal, index) => (
           <article data-signal={index === 0 ? snapshot.state : index === 1 ? "confidence" : "lever"} key={signal.label}>
             <span>0{index + 1}</span>
             <div><small>{signal.label}</small><strong>{signal.value}</strong></div>
