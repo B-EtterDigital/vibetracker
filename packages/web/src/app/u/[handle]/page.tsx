@@ -37,6 +37,7 @@ import { UsageTelemetry } from "./profile-telemetry";
 import { buildTelemetryModel } from "./profile-telemetry-model";
 import { ProfileReadout } from "./profile-readout";
 import "./profile.css";
+import "./profile-readout.css";
 import "./profile-hero.css";
 import "./profile-heatmap.css";
 import "./profile-tokens.css";

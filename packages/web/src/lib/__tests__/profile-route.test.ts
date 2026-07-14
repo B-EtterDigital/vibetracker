@@ -6,6 +6,7 @@ const page = readFileSync("packages/web/src/app/u/[handle]/page.tsx", "utf8");
 const panels = readFileSync("packages/web/src/app/u/[handle]/panels.tsx", "utf8");
 const chart = readFileSync("packages/web/src/app/u/[handle]/profile-chart.tsx", "utf8");
 const styles = readFileSync("packages/web/src/app/u/[handle]/profile.css", "utf8");
+const readoutStyles = readFileSync("packages/web/src/app/u/[handle]/profile-readout.css", "utf8");
 const hero = readFileSync("packages/web/src/app/u/[handle]/profile-hero.tsx", "utf8");
 const heroStyles = readFileSync("packages/web/src/app/u/[handle]/profile-hero.css", "utf8");
 const cta = readFileSync("packages/web/src/app/u/[handle]/profile-cta.tsx", "utf8");
@@ -283,6 +284,8 @@ test("profile leads with a plain-language latest read derived from the telemetry
   assert.match(page, /hasGitHubEvidence=\{Boolean\(githubSignal\)\}/);
   assert.match(readout, /Latest 30-day read/);
   assert.match(readout, /What this tells you:/);
+  assert.match(page, /import "\.\/profile-readout\.css"/);
+  assert.match(readoutStyles, /\.vprofile-readout__facts/);
   assert.match(readout, /\/insights\?handle=/);
   assert.match(readout, /Open live cost scenario/);
   assert.match(readout, /API-equivalent usage/);
