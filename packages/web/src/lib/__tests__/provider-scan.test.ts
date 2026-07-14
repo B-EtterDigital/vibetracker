@@ -442,15 +442,22 @@ test("providers route ships the theatre encore collapsed and drops the freshness
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
   const providerScan = readFileSync("packages/web/src/lib/provider-scan.ts", "utf8");
   const providersCss = readFileSync("packages/web/src/app/providers/providers.css", "utf8");
+  const directoryCss = readFileSync("packages/web/src/app/providers/directory.css", "utf8");
+  const directoryTableCss = readFileSync("packages/web/src/app/providers/directory-table.css", "utf8");
   const directory = readFileSync("packages/web/src/app/providers/directory.tsx", "utf8");
 
   assert.doesNotMatch(page, /buildProviderFreshnessRadar|ProviderFreshnessRadarPanel/);
   assert.match(page, /<details className="providers-theatre">/);
   assert.match(page, /ProviderSurpriseDirectorPanel/);
+  assert.match(page, /import "\.\/directory\.css"/);
+  assert.match(page, /import "\.\/directory-table\.css"/);
   assert.match(directory, /<colgroup className="providers-columns"/);
-  assert.match(providersCss, /table-layout: fixed/);
-  assert.match(providersCss, /providers-columns__action \{ width: 20%/);
-  assert.match(providersCss, /\.providers-row td\.providers-row__cats \{ display: none; \}/);
+  assert.match(directory, /pageProviderRows\(results, page\)/);
+  assert.match(directoryCss, /providers-directory__brief/);
+  assert.match(directoryTableCss, /table-layout: fixed/);
+  assert.match(directoryTableCss, /providers-columns__action \{ width: 20%/);
+  assert.match(providersCss, /\.providers-row td\.providers-row__cats \{/);
+  assert.match(providersCss, /grid-area: cats/);
   assert.match(providersCss, /\.providers-hero \.registry-terminal \{ min-height: 210px; \}/);
   assert.match(providersCss, /@media \(max-width: 767px\)/);
   assert.match(providersCss, /prefers-reduced-motion: reduce/);

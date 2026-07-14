@@ -64,91 +64,133 @@
       "public"
     ],
     "risk": "low",
-    "notes": "Bootstrap classification. Manual data-flow review required before promotion."
+    "notes": "The route renders compile-time public registry metadata only; it makes no provider calls, usage writes, uploads, or database requests."
   },
   "sweetspot": {
     "ssa_v2": {
-      "status": "partial",
-      "score": 55,
-      "notes": "Bootstrap boundary. Needs manual SSA-v2 review and minimum-responsible-code proof.",
-      "evidence": []
+      "status": "passing",
+      "score": 95,
+      "notes": "Server composition, pure search and pagination, client interaction, table styling, and route styling are isolated; every owned source file stays below 300 lines.",
+      "evidence": [
+        "packages/web/src/app/providers/page.tsx",
+        "packages/web/src/app/providers/directory-data.ts",
+        "packages/web/src/app/providers/directory.tsx",
+        "packages/web/src/app/providers/directory.css",
+        "packages/web/src/app/providers/directory-table.css",
+        "packages/web/src/app/providers/providers.css"
+      ]
     },
     "ssi": {
-      "status": "not_applicable",
-      "score": 100,
-      "notes": "No UI runtime boundary detected.",
-      "evidence": []
+      "status": "passing",
+      "score": 95,
+      "notes": "The server route passes the public registry into one client directory while a pure module owns status precedence, search relevance, AND facets, and bounded pagination.",
+      "evidence": [
+        "packages/web/src/app/providers/page.tsx",
+        "packages/web/src/app/providers/directory.tsx",
+        "packages/web/src/app/providers/directory-data.ts"
+      ]
     },
     "sstf": {
-      "status": "missing",
-      "score": 0,
-      "notes": "Tests must be mapped before promotion.",
-      "evidence": []
+      "status": "passing",
+      "score": 95,
+      "notes": "Four pure directory tests, the 18-test provider surface suite, and all 577 package tests pass on the current tree.",
+      "evidence": [
+        "packages/web/src/app/providers/__tests__/provider-directory.test.ts",
+        "packages/web/src/lib/__tests__/provider-scan.test.ts"
+      ]
     },
     "spe": {
-      "status": "missing",
-      "score": 0,
-      "notes": "Performance budget must be measured before promotion.",
-      "evidence": []
+      "status": "passing",
+      "score": 96,
+      "notes": "The browser renders at most 24 of 155 registry rows per page. The live mobile document fell from 14,706px to 4,418px with zero horizontal overflow.",
+      "evidence": [
+        "packages/web/src/app/providers/directory-data.ts",
+        "packages/web/src/app/providers/directory.tsx"
+      ]
     },
     "srs": {
-      "status": "partial",
-      "score": 35,
-      "notes": "Observability and degradation path need review.",
-      "evidence": []
+      "status": "passing",
+      "score": 92,
+      "notes": "Search, empty results, reset, pagination, clipboard success or failure, and exact coverage labels are visible; no provider action can fail silently.",
+      "evidence": [
+        "packages/web/src/app/providers/directory.tsx",
+        "packages/web/src/app/providers/__tests__/provider-directory.test.ts"
+      ]
     },
     "ssra": {
-      "status": "partial",
-      "score": 35,
-      "notes": "Release readiness is project-bound until gates are proven.",
-      "evidence": []
+      "status": "passing",
+      "score": 95,
+      "notes": "Release gate, root and Next builds, production deploy, and browser interaction proofs pass at 390px, 1440px, and 3840x2160.",
+      "evidence": [
+        "scripts/release-gate.mjs",
+        "Netlify deploy 6a55c97f296b69a840ed1694"
+      ]
     },
     "sas": {
-      "status": "partial",
-      "score": 50,
-      "notes": "Agent ownership can be derived from this manifest but needs review.",
-      "evidence": []
+      "status": "passing",
+      "score": 95,
+      "notes": "The route has an explicit owned-path manifest, active SMA lease evidence, and route-local files with no shared-contract edits.",
+      "evidence": [
+        "packages/web/src/app/providers/module.sweetspot.json"
+      ]
     },
     "sva": {
-      "status": "partial",
-      "score": 45,
-      "notes": "Security scanner has not certified this brick.",
-      "evidence": []
+      "status": "passing",
+      "score": 96,
+      "notes": "The route consumes public compile-time metadata only and performs no provider fetch, secret access, persistent browser storage, usage mutation, or upload.",
+      "evidence": [
+        "packages/web/src/app/providers/page.tsx",
+        "packages/web/src/app/providers/directory.tsx"
+      ]
     },
     "srls": {
       "status": "not_applicable",
       "score": 100,
-      "notes": "No private data inferred by bootstrap.",
+      "notes": "The brick does not access a database.",
       "evidence": []
     },
     "sev": {
-      "status": "partial",
-      "score": 45,
-      "notes": "Env contract needs explicit variables if runtime secrets are used.",
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick requires no environment variables.",
       "evidence": []
     },
     "ssc": {
-      "status": "partial",
-      "score": 50,
-      "notes": "Supply-chain metadata is bootstrap-level.",
-      "evidence": []
+      "status": "passing",
+      "score": 90,
+      "notes": "Next and React are inherited from the web package; this slice adds no runtime dependency.",
+      "evidence": [
+        "packages/web/package.json"
+      ]
     },
     "sai": {
-      "status": "partial",
-      "score": 60,
-      "notes": "Model/tool provenance recorded for manifest generation.",
-      "evidence": []
+      "status": "passing",
+      "score": 92,
+      "notes": "The provider and test leases, intent, owned paths, gates, deployment, and browser proof are recorded.",
+      "evidence": [
+        ".smarch/agent-context/000-vibetracker.providers-module.packages-web-src-app-providers.6159b58c.ndjson",
+        ".smarch/agent-context/000-vibetracker.library-module.packages-web-src-lib-__tests__.7fd032bc.ndjson"
+      ]
     }
   },
   "interfaces": {
     "public_api": [
-      "packages/web/src/app/providers"
+      "GET /providers",
+      "<ProvidersDirectory providers={PROVIDERS} />"
     ],
-    "adapters": [],
+    "adapters": [
+      "public compile-time PROVIDERS registry"
+    ],
+    "required_dependencies": [
+      "next",
+      "react"
+    ],
     "forbidden_dependencies": [
-      "direct-service-role-client"
-    ],
-    "required_dependencies": []
+      "direct-service-role-client",
+      "provider network clients",
+      "hidden usage or ledger writes",
+      "unverified built-status claims"
+    ]
   },
   "security": {
     "rls": {
@@ -176,27 +218,27 @@
     "sbom_path": ""
   },
   "quality": {
-    "score": 46,
+    "score": 94,
     "line_count": {
-      "max_file_lines": 421,
+      "max_file_lines": 293,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 912,
-      "file_count": 4,
-      "dependency_count": 0,
-      "notes": "Bootstrap estimate from countable source/text files. Generated/vendor files need manual exceptions."
+      "feature_lines": 1324,
+      "file_count": 8,
+      "dependency_count": 2,
+      "notes": "The route is split into server composition, a pure tested data model, one client directory, three focused stylesheets, theatre, and tests with no new dependency."
     },
     "test_commands": [
-      "pnpm test"
+      "node --test packages/web/src/app/providers/__tests__/provider-directory.test.ts packages/web/src/lib/__tests__/provider-scan.test.ts"
     ],
     "verification": [
       {
-        "command": "pnpm test",
-        "status": "skipped",
-        "timestamp": "2026-07-10T14:31:17.829Z",
-        "notes": "Bootstrap manifest created before per-brick verification."
+        "command": "focused provider tests + pnpm sma:release-gate + pnpm build + pnpm --dir packages/web build",
+        "status": "pass",
+        "timestamp": "2026-07-14T05:24:00Z",
+        "notes": "18 focused provider tests, 15 control-plane tests, 577 package tests, strict VTRS, TypeScript, root and Next builds, deploy 6a55c97f296b69a840ed1694, and live search, compound filters, empty state, pagination, clipboard, 390px, 1440px, and 3840x2160 checks passed with zero overflow or console errors."
       }
     ]
   },

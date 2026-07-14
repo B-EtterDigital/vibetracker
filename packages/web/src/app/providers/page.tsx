@@ -1,3 +1,5 @@
+import "./directory.css";
+import "./directory-table.css";
 import "./providers.css";
 import { PROVIDERS } from "../../../../adapters/src/registry";
 import { buildProviderSurpriseDirector } from "../../lib/provider-scan";

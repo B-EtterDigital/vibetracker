@@ -1,0 +1,198 @@
+/* ---- table ---- */
+.providers-table {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.providers-columns__identity { width: 23%; }
+.providers-columns__status { width: 15%; }
+.providers-columns__categories { width: 18%; }
+.providers-columns__method { width: 24%; }
+.providers-columns__action { width: 20%; }
+.providers-table thead th {
+  padding: 8px 10px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
+  background: #090e11;
+  color: var(--muted);
+  text-align: left;
+  font: 700 9px/1.1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-transform: uppercase;
+}
+.providers-table thead th:last-child { text-align: right; }
+.providers-table tbody tr:last-child td { border-bottom-color: color-mix(in srgb, var(--accent) 18%, var(--line)); }
+.providers-row td {
+  padding: 8px 10px;
+  vertical-align: middle;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+  background: transparent;
+  transition: background-color .16s ease;
+}
+.providers-row td:first-child { border-left: 2px solid transparent; }
+.providers-row:hover td { background: #0d1419; }
+.providers-row:hover td:first-child { border-left-color: var(--brand-from, var(--accent)); }
+
+/* cell 1 — brand mark + full label + id */
+.providers-row__id {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.providers-row__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  border-radius: 6px;
+  vertical-align: middle;
+  background: linear-gradient(135deg, var(--brand-from, var(--accent)), var(--brand-to, var(--verified)));
+  color: var(--brand-ink, #071013);
+  font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .02em;
+}
+/* Real brand glyph variant: neutral dark chip (no gradient) so the monochrome
+   logo reads cleanly; same 24px rounded square as the monogram it replaces. */
+.providers-row__mark--logo {
+  background: #0d1419;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+}
+.providers-row__mark--logo img { width: 14px; height: 14px; display: block; }
+.providers-row__name {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  vertical-align: middle;
+  width: calc(100% - 38px);
+  min-width: 0;
+}
+.providers-row__name b {
+  color: #eef7f4;
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.providers-row__name span {
+  color: var(--muted);
+  font: 400 11px/1.1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* cell 3 — categories */
+.providers-row__cats {
+  color: var(--muted);
+  font: 400 12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.providers-row__cats b { color: #d9fff2; font-size: 10px; text-transform: uppercase; }
+
+/* cell 4 — how we track it (single line, ellipsis, title has full text) */
+.providers-row__method { color: var(--muted); }
+.providers-row__method span {
+  display: block;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* cell 5 — action */
+.providers-row__action {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: right;
+}
+.providers-row__cmd {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: #d9fff2;
+  cursor: pointer;
+  text-decoration: none;
+  font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .03em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color .16s ease, border-color .16s ease;
+}
+.providers-row__cmd:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.providers-row__cmd--link {
+  color: #7a8a93;
+  background: transparent;
+  border-color: color-mix(in srgb, #7a8a93 45%, transparent);
+}
+.providers-row__cmd--link:hover { color: #d9fff2; border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.providers-row__hint {
+  margin-left: 8px;
+  color: var(--verified);
+  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.providers-row__hint--blocked { color: var(--err); }
+
+/* ---- empty state ---- */
+.providers-directory__empty {
+  position: relative;
+  z-index: 1;
+  padding: 20px 12px;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.providers-directory__empty p { margin: 0 0 7px; color: #d9fff2; }
+.providers-directory__empty > span { display: block; margin-bottom: 14px; font-size: 12px; }
+.providers-directory__empty > div { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.providers-directory__empty button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #2ee8d6;
+  cursor: pointer;
+  font: inherit;
+}
+.providers-directory__empty a { color: #2ee8d6; }
+
+/* ---- fixed-height result pagination ---- */
+.providers-directory__pagination {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 46px;
+  color: var(--muted);
+  font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.providers-directory__pagination button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  border-radius: 6px;
+  background: #050708;
+  color: #d9fff2;
+  cursor: pointer;
+  font-size: 15px;
+}
+.providers-directory__pagination button:disabled { opacity: .28; cursor: not-allowed; }
+.providers-directory__pagination b { color: #d9fff2; }
