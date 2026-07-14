@@ -1,5 +1,11 @@
 /* Token breakdown + cross-provider delegation panels. Locked palette, monospace, meter fills. */
 
+/* let the panel subtitle wrap instead of forcing overflow on narrow screens */
+.vtok .vprofile-panel-head,
+.vdeleg .vprofile-panel-head { flex-wrap: wrap; }
+.vtok .vprofile-panel-sub,
+.vdeleg .vprofile-panel-sub { white-space: normal; text-align: right; }
+
 .vtok-rows { display: grid; gap: 13px; }
 .vtok-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 6px; }
 .vtok-label { font: 500 12.5px/1 var(--vp-mono); color: rgba(217, 255, 242, 0.8); }
