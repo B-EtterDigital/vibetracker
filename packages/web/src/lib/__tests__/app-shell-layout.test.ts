@@ -37,17 +37,19 @@ test("home-owned dock escapes the route content width without affecting other pa
 });
 
 // The header used to open with "Verified" and "Self-reported" — two tier words for the same
-// page — and never said the word Leaderboard, so the board (the second-most-important surface
-// after a profile) had no name in the nav. Four destinations now, each carrying what it is.
+// page — and never said the word Leaderboard, so the board had no name in the nav. Four
+// destinations now carry the repeat workflows; the example profile remains in the product menu.
 test("header names the leaderboard and explains every primary destination", () => {
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const primary = layout.slice(layout.indexOf('className="hdr-primary"'), layout.indexOf("hdr-actions"));
 
   assert.match(primary, /<a href="\/" title="[^"]+">Leaderboard<\/a>/);
-  assert.ok(primary.indexOf("Leaderboard") < primary.indexOf("Profile"), "leaderboard leads the nav");
-  assert.match(primary, />Profile</);
+  assert.ok(primary.indexOf("Leaderboard") < primary.indexOf("Compare"), "leaderboard leads the nav");
+  assert.match(primary, />Compare</);
   assert.match(primary, />Sources</);
   assert.match(primary, />Insights</);
+  assert.doesNotMatch(primary, />Profile</);
+  assert.match(layout, /href="\/u\/demo"><span>01<\/span><b>Profile/);
 
   // no unexplained item: every primary link says what it does on hover
   const links = primary.match(/<a href="[^"]+"[^>]*>/g) ?? [];
