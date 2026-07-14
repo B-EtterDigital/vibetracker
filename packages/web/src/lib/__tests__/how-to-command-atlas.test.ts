@@ -159,12 +159,32 @@ test("how-to command atlas carries provider colors, surprise encores, and OSS cr
 
 test("how-to route surfaces the impressive launch aliases", () => {
   const page = readFileSync("packages/web/src/app/how-to/page.tsx", "utf8");
+  const fastStart = readFileSync("packages/web/src/app/how-to/how-to-fast-start.tsx", "utf8");
+  const fastStartStyles = readFileSync("packages/web/src/app/how-to/how-to-fast-start.css", "utf8");
 
   assert.match(page, /Show the launch kit/);
   assert.match(page, /vibetracker impress --open/);
   assert.match(page, /Inspect the launch manifest/);
   assert.match(page, /vibetracker vibe --json/);
-  assert.match(page, /\| 02 impress kit\s+vibetracker impress --open\s+\|/);
-  assert.match(page, /quickCommands\.map/);
+  assert.match(page, /<HowToFastStart commands=\{quickCommands\} \/>/);
+  assert.match(page, /<details className="howto-manual">/);
+  assert.match(page, /Open 37 commands, five lanes, setup choreography, and proof rails/);
   assert.match(page, /buildHowToCommandAtlas\(commandGroups\)/);
+
+  assert.match(fastStart, /Boot your usage cockpit\./);
+  assert.match(fastStart, /commands\.map/);
+  assert.match(fastStart, /navigator\.clipboard\.writeText\(item\.command\)/);
+  assert.match(fastStart, /Open identity gateway/);
+  assert.match(fastStart, /Browse provider coverage/);
+  assert.match(fastStart, /zero hidden uploads/);
+  assert.match(fastStart, /prompt reads<\/dt><dd>0/);
+  assert.match(fastStart, /provider calls<\/dt><dd>0/);
+  assert.match(fastStart, /hidden uploads<\/dt><dd>0/);
+  assert.match(fastStart, /publish actions<\/dt><dd>0/);
+  assert.match(fastStart, /aria-live="polite"/);
+
+  assert.match(fastStartStyles, /\.howto-fast__hero/);
+  assert.match(fastStartStyles, /\.howto-manual:not\(\[open\]\) > \.howto-manual__body \{ display: none; \}/);
+  assert.match(fastStartStyles, /@media \(max-width: 620px\)/);
+  assert.match(fastStartStyles, /@media \(prefers-reduced-motion: reduce\)/);
 });

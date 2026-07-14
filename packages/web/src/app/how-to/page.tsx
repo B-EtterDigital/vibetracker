@@ -2,8 +2,13 @@ import type { CSSProperties } from "react";
 import { buildHowToCommandAtlas, type HowToCommandAtlas, type HowToCommandGroupInput } from "../../lib/how-to-command-atlas";
 import { buildInstallRunway } from "../../lib/install-runway";
 import { buildLaunchSequence } from "../../lib/launch-sequence";
+import { HowToFastStart } from "./how-to-fast-start";
+import "./how-to-fast-start.css";
 
-export const metadata = { title: "Get the CLI — VibeUsage" };
+export const metadata = {
+  title: "Install VibeTRACKER · VibeUsage",
+  description: "Install the local-first VibeTRACKER usage cockpit, inspect sources, audit proof, and preview every upload before publishing.",
+};
 
 const quickCommands = [
   { id: "01", title: "Open the visual wizard", command: "npx vibetracker init --gui" },
@@ -250,53 +255,18 @@ export default function HowTo() {
   const installRunway = buildInstallRunway();
   const launchSequence = buildLaunchSequence();
   const commandAtlas = buildHowToCommandAtlas(commandGroups);
-  const terminalDeck = [
-    "+------------------------------------------------------+",
-    "| VTRK://LAUNCH-BAY//LOCAL-FIRST//VIBERS-UNITE         |",
-    "|------------------------------------------------------|",
-    "| 01 init gui       npx vibetracker init --gui         |",
-    "| 02 impress kit    vibetracker impress --open         |",
-    "| 03 detect local   vibetracker detect                 |",
-    "| 04 audit proof    vibetracker audit                  |",
-    "| 05 share later    vibetracker upload --dry-run       |",
-    "|------------------------------------------------------|",
-    "| browser extension / desktop scan / local llm / media |",
-    "| trust signals stay labelled. usage totals stay clean.|",
-    "+------------------------------------------------------+",
-  ].join("\n");
 
   return (
     <>
-      <section className="howto-hero">
-        <div className="howto-copy">
-          <p className="eyebrow">Launch bay</p>
-          <h1>Install the AI usage cockpit</h1>
-          <p>One local-first CLI for creators and coders across hosted APIs, local models, media tools, AI subscriptions, and trust signals.</p>
-          <div className="motto-rail" aria-label="C0VIBE motto">
-            <span>Vibers Unite</span>
-            <a href="https://c0vibe.app">c0vibe.app</a>
-          </div>
-        </div>
-        <div className="howto-terminal" aria-label="VibeTRACKER launch terminal">
-          <div className="console-top"><span>launch@vibetracker</span><b>local-first</b></div>
-          <pre>{terminalDeck}</pre>
-          <div className="howto-feed">
-            <span>&gt; open GUI wizard</span>
-            <span>&gt; detect local + hosted providers</span>
-            <span>&gt; publish only after dry-run proof</span>
-          </div>
-        </div>
-      </section>
+      <HowToFastStart commands={quickCommands} />
 
-      <section className="quick-commands" aria-label="Fast start commands">
-        {quickCommands.map((item) => (
-          <div key={item.id}>
-            <span>{item.id}</span>
-            <b>{item.title}</b>
-            <code>{item.command}</code>
-          </div>
-        ))}
-      </section>
+      <details className="howto-manual">
+        <summary>
+          <span>Advanced operator manual</span>
+          <b>Open 37 commands, five lanes, setup choreography, and proof rails</b>
+          <i aria-hidden="true" />
+        </summary>
+        <div className="howto-manual__body">
 
       <section className="install-runway" aria-label="First-run install runway">
         <div className="install-runway__head">
@@ -412,6 +382,8 @@ export default function HowTo() {
           </article>
         ))}
       </section>
+        </div>
+      </details>
 
       <section className="privacy-callout">
         <b>Nothing leaves your machine until upload.</b>
