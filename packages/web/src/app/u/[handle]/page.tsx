@@ -31,6 +31,7 @@ import { C0vibeBand } from "./profile-cta";
 import { SyncRhythm, GitHubContributions } from "./profile-heatmap";
 import { TokenBreakdown, Delegation } from "./profile-tokens";
 import { OrchestrationHours } from "./profile-orchestration";
+import { ViberIdentity } from "./profile-identity";
 import { SkillSignals } from "./profile-signals";
 import { computeProfileSignals } from "../../../lib/profile-signals";
 import { UsageTelemetry } from "./profile-telemetry";
@@ -42,6 +43,7 @@ import "./profile-hero.css";
 import "./profile-heatmap.css";
 import "./profile-tokens.css";
 import "./profile-signals.css";
+import "./profile-identity.css";
 import "./profile-orchestration.css";
 import "./profile-telemetry.css";
 import "./profile-accessibility.css";
@@ -447,6 +449,13 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // The Signal read leads: archetype + measured skill signals + the reframed API-equivalent cost.
   // Money is the reference, not the headline — skill is what you see first.
   const signals = computeProfileSignals(profile);
+  // The identity plate leads: the brutalist infographic poster — discipline rings with % callouts
+  // and the earned-badge wall (hybrids stack badges; 2+ archetypes earns the all-rounder crest).
+  const opsCompact = facts.ops >= 1e9 ? `${(facts.ops / 1e9).toFixed(1)}B`
+    : facts.ops >= 1e6 ? `${Math.round(facts.ops / 1e6)}M`
+      : formatInt(facts.ops);
+  add("overview", "full",
+    <ViberIdentity signals={signals} disciplines={disciplines} opsValue={opsCompact} key="identity" />);
   add("overview", "full", <SkillSignals signals={signals} apiCost={formatUsd(facts.usd)} key="signals" />);
   // Local derived orchestration evidence, shown only when the upload carried a usable trace.
   if (profile.orchestration && profile.orchestration.activityHours > 0) {

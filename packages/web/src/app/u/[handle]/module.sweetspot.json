@@ -5,7 +5,7 @@
     "name": "Adaptive Public Profile",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "language": [
       "typescript",
       "tsx",
@@ -33,7 +33,7 @@
       "style"
     ],
     "component_policy": "internal_by_default",
-    "notes": "Public profile route with deterministic fresh, operator, and supernova disclosure tiers."
+    "notes": "Public profile route with deterministic disclosure tiers and a measured brutalist identity dossier for discipline mix and archetype badges."
   },
   "source": {
     "project": "000-vibetracker",
@@ -71,6 +71,7 @@
       "packages/web/src/lib/profile-complexity.ts",
       "packages/web/src/app/u/[handle]/panels.tsx",
       "packages/web/src/app/u/[handle]/profile-chart.tsx",
+      "packages/web/src/app/u/[handle]/profile-identity.tsx",
       "packages/web/src/app/u/[handle]/profile-telemetry.tsx",
       "packages/web/src/app/u/[handle]/profile-telemetry-model.ts"
     ],
@@ -80,6 +81,7 @@
       "packages/web/src/lib/__tests__/profile-route.test.ts",
       "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts",
       "packages/web/src/lib/__tests__/profile-telemetry.test.ts",
+      "packages/web/src/app/u/[handle]/profile-identity.css",
       "packages/web/src/app/u/[handle]/profile-telemetry.css"
     ],
     "forbidden_imports": [
@@ -104,9 +106,11 @@
     "ssa_v2": {
       "status": "passing",
       "score": 90,
-      "notes": "Route orchestration is split by responsibility and every route-local implementation file remains below the 600-line Gen3 ceiling; the 30-day readout owns its stylesheet.",
+      "notes": "Route orchestration, identity poster, and responsive styling are split by responsibility; all 26 product implementation files remain below the 600-line Gen3 ceiling.",
       "evidence": [
         "packages/web/src/app/u/[handle]/page.tsx",
+        "packages/web/src/app/u/[handle]/profile-identity.tsx",
+        "packages/web/src/app/u/[handle]/profile-identity.css",
         "packages/web/src/lib/profile-complexity.ts",
         "packages/web/src/app/u/[handle]/profile-telemetry-model.ts"
       ]
@@ -123,7 +127,7 @@
     "sstf": {
       "status": "passing",
       "score": 90,
-      "notes": "Focused profile contracts and the full 635-test package suite pass, including current-period hierarchy, compact lifetime metrics, GitHub-only identity semantics, and accessible attestation labels.",
+      "notes": "Focused profile contracts and the full package suite cover current-period hierarchy, compact lifetime metrics, measured discipline rings, formula-aligned badge criteria, GitHub-only identity semantics, and accessible attestation labels.",
       "evidence": [
         "packages/web/src/lib/__tests__/profile-route.test.ts",
         "packages/web/src/lib/__tests__/profile-signals.test.ts",
@@ -149,10 +153,10 @@
     "ssra": {
       "status": "passing",
       "score": 90,
-      "notes": "Production deploy 6a568f88411889a2f04deea8 passes 390x844, 1440x900, and 3840x2160 profile proof with no overflow, console errors, page errors, or failed requests; the live Insights handoff and source focus reveal work.",
+      "notes": "Production deploy 6a56994b4db301040d4146d1 passes 390x844, 1440x900, and 3840x2160 profile proof with exact viewport width, no console errors, page errors, or failed requests; the measured identity poster exposes accessible discipline and badge evidence.",
       "evidence": [
         "scripts/release-gate.mjs",
-        "Netlify production deploy 6a568f88411889a2f04deea8",
+        "Netlify production deploy 6a56994b4db301040d4146d1",
         "https://vibeusage.c0vibe.app/u/b-etterdigital"
       ]
     },
@@ -307,15 +311,15 @@
   "quality": {
     "score": 90,
     "line_count": {
-      "max_file_lines": 562,
+      "max_file_lines": 578,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 4708,
-      "file_count": 24,
+      "feature_lines": 5171,
+      "file_count": 26,
       "dependency_count": 3,
-      "notes": "The route is split by responsibility and all 24 route-local TypeScript and CSS implementation files stay below the 600-line Gen3 ceiling."
+      "notes": "The route is split by responsibility and all 26 product TypeScript/TSX/CSS files stay below the 600-line Gen3 ceiling; framework loading, not-found, and layout shims are excluded."
     },
     "test_commands": [
       "node --test packages/web/src/lib/__tests__/profile-complexity.test.ts packages/web/src/lib/__tests__/profile-route.test.ts packages/web/src/lib/__tests__/profile-data-telemetry.test.ts packages/web/src/lib/__tests__/profile-telemetry.test.ts packages/web/src/lib/__tests__/profile-signals.test.ts"
@@ -362,6 +366,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T19:33:26Z",
         "notes": "635 package tests and 15 control-plane tests passed with strict VTRS and real TypeScript. Deploy 6a568f88411889a2f04deea8 is ready with one Next server function. The live profile is overflow-free and error-free at 390x844, 1440x900, and 3840x2160; compact lifetime metrics, source focus, and the profile-to-Insights round trip passed."
+      },
+      {
+        "command": "28 focused profile tests + pnpm sma:release-gate + Netlify production build/deploy + Playwright exact-deploy proof",
+        "status": "pass",
+        "timestamp": "2026-07-14T20:22:41Z",
+        "notes": "636 package tests and 15 Gen3 control-plane tests passed with strict VTRS and TypeScript. Deploy 6a56994b4db301040d4146d1 is ready with one Next server function and a 29-route build. Its measured Viber identity dossier has three accessible formula-aligned badges, zero browser errors, and exact overflow-free widths at 390x844, 1440x900, and 3840x2160."
       }
     ]
   },

@@ -72,18 +72,9 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
         <span className="vprofile-panel-sub">what the data says about how you work</span>
       </header>
 
-      <div className="vsignals-hero">
-        <div className="vsignals-archetype">
-          <span className="vsignals-arch-eyebrow">archetype</span>
-          <strong className="vsignals-arch-label">{signals.archetypeLabel}</strong>
-          <span className="vsignals-arch-blurb">{signals.archetypeBlurb}</span>
-          {signals.archetypes.length >= 2 ? (
-            <ul className="vsignals-arch-tags">
-              {signals.archetypes.map((a) => <li key={a}>{a}</li>)}
-            </ul>
-          ) : null}
-        </div>
-
+      {/* Archetype now headlines the Viber identity plate above — this panel keeps the measured
+          reads and the quiet cost reference, full-width. */}
+      <div className="vsignals-hero vsignals-hero--slim">
         <div className="vsignals-cost" title="What this usage would cost at published API prices, without a subscription. Not what you paid.">
           <span className="vsignals-cost-eyebrow">API-equivalent cost</span>
           <strong className="vsignals-cost-value">{apiCost}</strong>

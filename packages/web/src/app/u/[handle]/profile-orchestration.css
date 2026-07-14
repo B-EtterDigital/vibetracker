@@ -26,9 +26,9 @@
 }
 
 .vorch-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;
-  margin: 20px 0 0; border: 1px solid rgba(217, 255, 242, 0.08); border-radius: 6px;
-  background: rgba(217, 255, 242, 0.08); overflow: hidden;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 2px;
+  margin: 20px 0 0; border: 2px solid rgba(217, 255, 242, 0.12); border-radius: 0;
+  background: rgba(217, 255, 242, 0.12); overflow: hidden;
 }
 .vorch-stat { display: flex; flex-direction: column; gap: 5px; padding: 14px 15px; background: #0b1216; }
 .vorch-stat-label {

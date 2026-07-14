@@ -18,6 +18,8 @@ const telemetryStyles = readFileSync("packages/web/src/app/u/[handle]/profile-te
 const readout = readFileSync("packages/web/src/app/u/[handle]/profile-readout.tsx", "utf8");
 const orchestration = readFileSync("packages/web/src/app/u/[handle]/profile-orchestration.tsx", "utf8");
 const orchestrationStyles = readFileSync("packages/web/src/app/u/[handle]/profile-orchestration.css", "utf8");
+const identity = readFileSync("packages/web/src/app/u/[handle]/profile-identity.tsx", "utf8");
+const identityStyles = readFileSync("packages/web/src/app/u/[handle]/profile-identity.css", "utf8");
 const accessibilityStyles = readFileSync("packages/web/src/app/u/[handle]/profile-accessibility.css", "utf8");
 const layout = readFileSync("packages/web/src/app/u/[handle]/layout.tsx", "utf8");
 const nextConfig = readFileSync("packages/web/next.config.ts", "utf8");
@@ -127,7 +129,8 @@ test("skill signals lead the profile and reframe money as API-equivalent referen
   assert.match(page, /const signals = computeProfileSignals\(profile\)/);
   assert.match(page, /<SkillSignals signals=\{signals\}/);
   assert.match(signalsSrc, /Signal read/);
-  assert.match(signalsSrc, /archetypeLabel/);
+  assert.match(identity, /signals\.archetypeLabel/);
+  assert.match(page, /<ViberIdentity[\s\S]*<SkillSignals/);
   assert.match(signalsSrc, /Work style/);          // human-in-loop vs agentic
   assert.match(signalsSrc, /Orchestration/);
   assert.match(signalsSrc, /Ship rate/);           // git commits per billion tokens
@@ -138,6 +141,23 @@ test("skill signals lead the profile and reframe money as API-equivalent referen
   assert.match(page, /label: "commits shipped"/);
   assert.match(page, /label: "disciplines"/);
   assert.doesNotMatch(page, /label: "total spent"/);
+});
+
+test("viber identity poster renders measured disciplines and honestly earned archetype badges", () => {
+  assert.match(page, /import \{ ViberIdentity \} from "\.\/profile-identity"/);
+  assert.match(page, /import "\.\/profile-identity\.css"/);
+  assert.match(page, /<ViberIdentity signals=\{signals\} disciplines=\{disciplines\} opsValue=\{opsCompact\}/);
+  assert.match(identity, /function DisciplineRings/);
+  assert.match(identity, /aria-label=\{`Discipline mix:/);
+  assert.match(identity, /signals\.archetypes/);
+  assert.match(identity, /badges\.length >= 2/);
+  assert.match(identity, /3\+ active CLIs · 8\+ cross-provider days · under 18% input \+ output share/);
+  assert.match(identity, /22%\+ input \+ output share of all measured tokens/);
+  assert.match(identity, /400\+ creative operations across image, video or music/);
+  assert.doesNotMatch(identity, /typed and read by a human|images, videos and tracks generated/);
+  assert.match(identity, /aria-label=\{`\$\{badges\.length\} badges earned`\}/);
+  assert.match(identityStyles, /grid-template-columns: minmax\(0, 1\.05fr\) minmax\(0, 1fr\)/);
+  assert.match(identityStyles, /@media \(max-width: 680px\)/);
 });
 
 test("token breakdown + measured multi-CLI activity render without inferred delegation", () => {
@@ -312,6 +332,8 @@ test("profile route-local styling stays responsive and motion-safe", () => {
   assert.match(styles, /@media \(max-width: 1020px\)/);
   assert.match(styles, /@media \(max-width: 900px\)/);
   assert.match(styles, /@media \(max-width: 640px\)/);
+  assert.match(styles, /\.vprofile-panel-head \{ flex-direction: column; align-items: flex-start; \}/);
+  assert.match(styles, /\.vprofile-panel-sub \{[\s\S]*overflow-wrap: anywhere;/);
   assert.match(styles, /\.vprofile-bar-amount \{[\s\S]*flex: 1 1 0;[\s\S]*text-overflow: ellipsis;/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(accessibilityStyles, /Profile-only AA contrast corrections/);

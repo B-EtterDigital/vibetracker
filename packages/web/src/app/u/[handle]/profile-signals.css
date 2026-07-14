@@ -6,6 +6,8 @@
   gap: clamp(14px, 2vw, 26px);
   align-items: stretch;
 }
+/* archetype moved to the identity plate — the cost reference rides alone, full-width */
+.vsignals-hero--slim { grid-template-columns: 1fr; }
 .vsignals-archetype { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .vsignals-arch-eyebrow {
   font: 700 9.5px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.2em; color: rgba(217, 255, 242, 0.42);
@@ -25,8 +27,8 @@
 /* cost reframed — deliberately quieter than the archetype, in a boxed "reference" treatment */
 .vsignals-cost {
   display: flex; flex-direction: column; gap: 5px; justify-content: center;
-  padding: 14px 16px; border-radius: 10px;
-  border: 1px dashed rgba(217, 255, 242, 0.18); background: rgba(4, 6, 7, 0.4);
+  padding: 14px 16px; border-radius: 0;
+  border: 2px dashed rgba(217, 255, 242, 0.2); background: rgba(4, 6, 7, 0.4);
 }
 .vsignals-cost-eyebrow {
   font: 700 9px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.16em; color: rgba(217, 255, 242, 0.4);
@@ -36,9 +38,9 @@
 
 /* measured skill reads */
 .vsignals-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px;
-  margin: 18px 0 0; border: 1px solid rgba(217, 255, 242, 0.08); border-radius: 10px;
-  background: rgba(217, 255, 242, 0.08); overflow: hidden;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 2px;
+  margin: 18px 0 0; border: 2px solid rgba(217, 255, 242, 0.12); border-radius: 0;
+  background: rgba(217, 255, 242, 0.12); overflow: hidden;
 }
 .vsignals-read { display: flex; flex-direction: column; gap: 5px; padding: 13px 14px; background: #0b1216; }
 .vsignals-read-label { font: 500 9.5px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.1em; color: rgba(217, 255, 242, 0.4); }
