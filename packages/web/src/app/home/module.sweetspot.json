@@ -20,7 +20,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "9de30ec",
+    "commit": "883f529",
     "paths": [
       "packages/web/src/app/page.tsx",
       "packages/web/src/app/home",
@@ -118,9 +118,9 @@
     },
     "ssra": {
       "status": "passing",
-      "score": 95,
-      "notes": "Preview 6a562393cee52f3b129b3e01 passed live Spend, Credits, and Ops switching, immutable rank order, true zero-width bars, mobile directory fit, and 390px, 1440px, and 3840px 4K overflow and visual checks.",
-      "evidence": ["https://6a562393cee52f3b129b3e01--vibeusage.netlify.app/", "packages/web/src/app/home/leaderboard-lens.ts", "packages/web/src/lib/__tests__/home-leaderboard-lens.test.ts"]
+      "score": 98,
+      "notes": "Production deploy 6a5626fa991b766ff819a029 passed live Spend, Credits, and Ops switching, immutable rank order, true zero-width bars, repaired mobile directory fit, 390px, 1440px, and 3840px 4K overflow and visual checks, and a 58-pass, zero-failure Lighthouse audit.",
+      "evidence": ["https://vibeusage.c0vibe.app/", "Netlify production deploy 6a5626fa991b766ff819a029", "packages/web/src/app/home/leaderboard-lens.ts", "packages/web/src/lib/__tests__/home-leaderboard-lens.test.ts"]
     },
     "sas": {
       "status": "passing",
@@ -221,8 +221,8 @@
       {
         "command": "focused home tests + pnpm sma:release-gate + pnpm audit --audit-level high + pnpm build + pnpm --dir packages/web build + responsive browser proof",
         "status": "pass",
-        "timestamp": "2026-07-14T12:00:46Z",
-        "notes": "29 focused leaderboard tests, 15 control-plane tests, 604 package tests, strict VTRS with zero violations, TypeScript, dependency audit with no known vulnerabilities, CLI build, and 27-route Next build pass. Preview 6a562393cee52f3b129b3e01 proves Spend/Credits/Ops switching, unchanged ranks, zero-width zero rows, repaired mobile directory fit, and 390px, 1440px, and 3840px overflow and visual checks."
+        "timestamp": "2026-07-14T12:12:03Z",
+        "notes": "29 focused leaderboard tests, 15 control-plane tests, 604 package tests, strict VTRS with zero violations, TypeScript, dependency audit with no known vulnerabilities, CLI build, and 27-route Next build pass. Production deploy 6a5626fa991b766ff819a029 proves Spend/Credits/Ops switching, unchanged ranks, zero-width zero rows, repaired mobile directory fit, 390px, 1440px, and 3840px layouts, and Lighthouse 100/100/100/100 with 58 passed and zero failed audits."
       }
     ]
   },
@@ -262,7 +262,41 @@
       "context_event_ids": ["ctx-1783696882481-bbd3010b"],
       "attestation": { "method": "git_commit", "reference": "9de30ec" }
     },
-    "touched_by": [],
+    "touched_by": [
+      {
+        "actor_kind": "agent",
+        "actor_id": "bdd-main@019f4b2d",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "commit": "883f529",
+        "files_touched": [
+          "packages/web/src/app/home/home.css",
+          "packages/web/src/app/home/leaderboard-console.tsx",
+          "packages/web/src/app/home/leaderboard-lens.ts",
+          "packages/web/src/app/home/module.sweetspot.json",
+          "packages/web/src/lib/__tests__/home-leaderboard-console.test.ts",
+          "packages/web/src/lib/__tests__/home-leaderboard-lens.test.ts",
+          "packages/web/src/lib/__tests__/home-route.test.ts"
+        ],
+        "verification": [
+          {
+            "command": "focused home tests + pnpm sma:release-gate + pnpm audit --audit-level high + production builds + stable-domain browser and Lighthouse proof",
+            "status": "pass",
+            "timestamp": "2026-07-14T12:12:03Z",
+            "notes": "Metric switching, immutable ranks, honest zero bars, mobile directory fit, 4K framing, accessible install naming, and all repository gates pass."
+          }
+        ],
+        "timestamp": "2026-07-14T12:12:03Z",
+        "summary": "Added rank-preserving usage lenses, removed synthetic zero bars, repaired mobile directory fit, and aligned the install control's visible and accessible names.",
+        "intent": "Make the live leaderboard a more useful and technically honest repeated-use analysis surface.",
+        "decision_rationale": "A compact metric lens adds real comparison value without reordering the server-ranked rows; pure derivation and explicit rank labels keep the interaction trustworthy.",
+        "lease_id": "lease-1784029699405-c2c47825",
+        "context_event_ids": ["ctx-1784029699478-aa3c79e2"],
+        "attestation": { "method": "agent_runner", "reference": "lease-1784029699405-c2c47825" }
+      }
+    ],
     "reviewed_by": [],
     "source_chain": [
       {
@@ -272,6 +306,22 @@
         "path": "packages/web/src/app/home",
         "event": "created",
         "timestamp": "2026-07-10T15:28:40Z"
+      },
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.home-leaderboard-console",
+        "commit": "5bd8bcf",
+        "path": "packages/web/src/app/home",
+        "event": "updated",
+        "timestamp": "2026-07-14T12:02:36Z"
+      },
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.home-leaderboard-console",
+        "commit": "883f529",
+        "path": "packages/web/src/app/home",
+        "event": "hardened",
+        "timestamp": "2026-07-14T12:09:07Z"
       }
     ]
   }
