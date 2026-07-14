@@ -42,6 +42,9 @@ export interface ProfileSignals {
   archetypeLabel: string;
   archetypeBlurb: string;
   footprint: Footprint[];
+  // Self-reported truths the viber declared (override estimates, shown as self-reported not est).
+  declaredAgents?: number;
+  declaredSubs?: string;
 }
 
 function last30Spend(providerDays: ProfileView["providerDays"]): Map<string, number> {
@@ -128,5 +131,7 @@ export function computeProfileSignals(profile: ProfileView): ProfileSignals {
     humanRatio, cacheReuse, outputShare, hasTokens,
     agentCount, peakAgentLoad, crossProviderDays, mediaGenerations,
     commits, shipRate, archetypes, archetypeLabel, archetypeBlurb, footprint,
+    declaredAgents: profile.selfReportedAgents,
+    declaredSubs: profile.selfReportedSubs,
   };
 }

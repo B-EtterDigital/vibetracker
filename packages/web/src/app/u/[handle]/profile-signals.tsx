@@ -16,9 +16,9 @@ function fmtUsd(n: number): string {
 export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; apiCost: string }) {
   const { humanRatio, cacheReuse, agentCount, crossProviderDays, shipRate, mediaGenerations, footprint } = signals;
 
-  // Ordered skill reads. `est` marks a value RECONSTRUCTED from partial data (logs get pruned) vs
-  // one measured directly from viberank / ccusage / GitHub — the profile is honest about which.
-  const reads: Array<{ label: string; value: string; note: string; est?: boolean }> = [];
+  // Three tiers of honesty per read: `self` = the viber declared it (a truth the data can't reveal),
+  // `est` = reconstructed from partial data (logs get pruned), and unmarked = measured directly.
+  const reads: Array<{ label: string; value: string; note: string; est?: boolean; self?: boolean }> = [];
   if (signals.hasTokens) {
     reads.push({
       label: "Work style",
@@ -31,7 +31,15 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
       note: "share of input served from cache instead of re-sent — higher is leaner spend",
     });
   }
-  if (agentCount >= 2) {
+  if (signals.declaredAgents) {
+    // The viber told us their real parallel-agent count — show that, not the throughput estimate.
+    reads.push({
+      label: "Orchestration",
+      value: `${signals.declaredAgents} agents`,
+      note: `run in parallel · ${agentCount} distinct CLIs · ${crossProviderDays} cross-provider days`,
+      self: true,
+    });
+  } else if (agentCount >= 2) {
     reads.push({
       label: "Orchestration",
       value: `~${signals.peakAgentLoad} agents`,
@@ -53,7 +61,9 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
       note: "images, video and music generated — creative output, not just code",
     });
   }
-  const hasEstimate = reads.some((r) => r.est) || footprint.length > 0;
+  const showEstFootprint = footprint.length > 0 && !signals.declaredSubs;
+  const hasEst = reads.some((r) => r.est) || showEstFootprint;
+  const hasSelf = reads.some((r) => r.self) || Boolean(signals.declaredSubs);
 
   return (
     <section className="vprofile-panel vsignals">
@@ -87,6 +97,7 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
             <div className="vsignals-read" key={r.label}>
               <span className="vsignals-read-label">
                 {r.label}
+                {r.self ? <em className="vsignals-self" title="Self-reported by the viber — the data can't reveal this">you</em> : null}
                 {r.est ? <em className="vsignals-est" title="Estimated — reconstructed from partial data">est</em> : null}
               </span>
               <strong className="vsignals-read-value">{r.value}</strong>
@@ -96,7 +107,23 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
         </div>
       ) : null}
 
-      {footprint.length ? (
+      {signals.declaredSubs ? (
+        <div className="vsignals-footprint">
+          <span className="vsignals-footprint-head">
+            subscription stack
+            <em className="vsignals-self" title="Self-reported by the viber">you</em>
+          </span>
+          <div className="vsignals-footprint-row">
+            {signals.declaredSubs.split(/\s*,\s*/).filter(Boolean).map((s, i) => (
+              <span className="vsignals-footprint-item" key={s}>
+                {i > 0 ? <i aria-hidden="true">+</i> : null}
+                {s}
+              </span>
+            ))}
+          </div>
+          <span className="vsignals-footprint-note">what you actually run — declared with vibetracker profile --subs</span>
+        </div>
+      ) : footprint.length ? (
         <div className="vsignals-footprint">
           <span className="vsignals-footprint-head">
             last 30 days ≈ maxed $200 subscriptions
@@ -116,13 +143,16 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
         </div>
       ) : null}
 
-      {hasEstimate ? (
-        <p className="vsignals-legend">
-          <em className="vsignals-est">est</em>
-          reconstructed from partial data — Claude Code &amp; Codex prune their logs, so per-agent and
-          op-level detail is derived from token volume. Everything unmarked (spend, tokens, commits,
-          generations, cache mix) is measured directly.
-        </p>
+      {hasSelf || hasEst ? (
+        <div className="vsignals-legend">
+          {hasSelf ? (
+            <p><em className="vsignals-self">you</em> self-reported by the viber — a truth the usage data can&apos;t reveal (real parallel-agent count, real subscription stack).</p>
+          ) : null}
+          {hasEst ? (
+            <p><em className="vsignals-est">est</em> reconstructed from partial data — Claude Code &amp; Codex prune their logs, so per-agent and op-level detail is derived from token volume.</p>
+          ) : null}
+          <p className="vsignals-legend-measured">Everything unmarked (spend, tokens, commits, generations, cache mix) is measured directly.</p>
+        </div>
       ) : null}
     </section>
   );

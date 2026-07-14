@@ -53,12 +53,27 @@
   font: 700 8px/1.3 var(--vp-mono); font-style: normal; letter-spacing: 0.08em;
   text-transform: uppercase; color: #ffc64d; cursor: help;
 }
+/* self-reported marker — a solid teal tag, distinct from the amber dashed "est" */
+.vsignals-self {
+  display: inline-flex; align-items: center;
+  margin-left: 6px; padding: 1px 5px; border-radius: 4px;
+  border: 1px solid rgba(46, 232, 214, 0.45); background: rgba(46, 232, 214, 0.12);
+  font: 700 8px/1.3 var(--vp-mono); font-style: normal; letter-spacing: 0.08em;
+  text-transform: uppercase; color: #6ff0e2; cursor: help;
+}
+
 .vsignals-legend {
-  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
   margin: 16px 0 0; padding: 12px 0 0; border-top: 1px solid rgba(217, 255, 242, 0.08);
+}
+.vsignals-legend p {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  margin: 0 0 5px;
   font: 400 10.5px/1.55 var(--vp-mono); color: rgba(217, 255, 242, 0.42);
 }
-.vsignals-legend .vsignals-est { margin-left: 0; flex: none; }
+.vsignals-legend p:last-child { margin-bottom: 0; }
+.vsignals-legend-measured { color: rgba(217, 255, 242, 0.34) !important; }
+.vsignals-legend .vsignals-est,
+.vsignals-legend .vsignals-self { margin-left: 0; flex: none; }
 
 /* subscription footprint */
 .vsignals-footprint {

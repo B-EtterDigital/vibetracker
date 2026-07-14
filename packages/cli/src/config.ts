@@ -18,6 +18,8 @@ export interface VtConfig {
   uploadUrl?: string;
   handle?: string;
   bio?: string;     // the viber's own profile bio, shown on the public profile; set with `profile --bio`
+  parallelAgents?: number; // self-reported: how many agents run in parallel (data can't reveal this)
+  subs?: string;    // self-reported subscription stack, e.g. "2× Claude Max, 1× ChatGPT Pro"
   token?: string;   // C0VIBE session token → attested uploads; stored in the keyring, not on disk
   anonymousTelemetry?: boolean;
 }

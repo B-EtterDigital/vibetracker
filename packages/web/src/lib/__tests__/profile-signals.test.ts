@@ -113,3 +113,14 @@ test("peak agent load falls back to distinct CLIs without usable cost data", () 
   }));
   assert.equal(s.peakAgentLoad, 2);
 });
+
+test("self-reported truths override estimates in the signals output", () => {
+  const s = computeProfileSignals(base({
+    ...tokens(1e9, 1e8, 90e9, 1e9), crossProviderDays: 20,
+    agents: [{ agent: "codex", activeDays: 60, cost: 30000, tokens: 50e9 }, { agent: "claude", activeDays: 30, cost: 12000, tokens: 30e9 }, { agent: "hermes", activeDays: 5, cost: 50, tokens: 2e9 }],
+    selfReportedAgents: 15,
+    selfReportedSubs: "2× Claude Max, 1× ChatGPT Pro",
+  }));
+  assert.equal(s.declaredAgents, 15);
+  assert.equal(s.declaredSubs, "2× Claude Max, 1× ChatGPT Pro");
+});

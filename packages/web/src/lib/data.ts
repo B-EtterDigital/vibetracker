@@ -47,6 +47,9 @@ export interface ProfileView {
   created_at: string;
   isPremium: boolean;
   bio?: string;
+  // Self-reported truths the usage data can't reveal (real parallel-agent count, real sub stack).
+  selfReportedAgents?: number;
+  selfReportedSubs?: string;
   identityVerified?: boolean;
   identityProvider?: string;
   accountLinked?: boolean;
@@ -305,6 +308,8 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
       trustSignals,
       totalTokens: Number((latest as { total_tokens?: number } | null)?.total_tokens ?? 0),
       crossProviderDays: Number((latest as { cross_provider_days?: number } | null)?.cross_provider_days ?? 0),
+      selfReportedAgents: (latest as { self_reported_agents?: number | null } | null)?.self_reported_agents ?? undefined,
+      selfReportedSubs: (latest as { self_reported_subs?: string | null } | null)?.self_reported_subs ?? undefined,
       tokenBreakdown,
       agents,
       rank,
