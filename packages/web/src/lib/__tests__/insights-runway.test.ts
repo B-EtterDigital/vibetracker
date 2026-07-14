@@ -125,6 +125,7 @@ test("runway planner clamps unsafe control values and handles a zero forecast", 
 test("Insights mounts an isolated, accessible planning instrument", () => {
   const page = readFileSync("packages/web/src/app/insights/page.tsx", "utf8");
   const component = readFileSync("packages/web/src/app/insights/runway-decision-console.tsx", "utf8");
+  const methodology = readFileSync("packages/web/src/app/insights/insight-methodology.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/insights/insights.css", "utf8");
   const controls = readFileSync("packages/web/src/app/insights/insights-controls.css", "utf8");
   const responsive = readFileSync("packages/web/src/app/insights/insights-responsive.css", "utf8");
@@ -135,7 +136,8 @@ test("Insights mounts an isolated, accessible planning instrument", () => {
   assert.match(component, /role="img"/);
   assert.match(component, /aria-live="polite"/);
   assert.match(component, /navigator\.clipboard\.writeText/);
-  assert.match(component, /This page writes nothing/);
+  assert.match(methodology, /This page writes nothing/);
+  assert.match(component, /<InsightMethodology/);
   assert.match(styles, /\.intel-comparison/);
   assert.match(controls, /input\[type="range"\]/);
   assert.match(responsive, /@media \(max-width: 760px\)/);

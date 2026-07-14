@@ -8,6 +8,7 @@ import { buildInsightsRunwaySnapshot, buildInsightsRunwaySource } from "../insig
 test("insights route is a route-local explained cost plan", () => {
   const page = readFileSync("packages/web/src/app/insights/page.tsx", "utf8");
   const consoleSource = readFileSync("packages/web/src/app/insights/runway-decision-console.tsx", "utf8");
+  const methodologySource = readFileSync("packages/web/src/app/insights/insight-methodology.tsx", "utf8");
   const briefSource = readFileSync("packages/web/src/app/insights/insight-brief.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/insights/insights.css", "utf8");
   const briefStyles = readFileSync("packages/web/src/app/insights/insights-brief.css", "utf8");
@@ -40,10 +41,11 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(consoleSource, /Live public profile/);
   assert.match(consoleSource, /data-source=/);
   assert.match(consoleSource, /<InsightBrief/);
+  assert.match(consoleSource, /<InsightMethodology/);
   assert.match(consoleSource, /type="range"/);
   assert.match(consoleSource, /aria-pressed=/);
   assert.match(consoleSource, /navigator\.clipboard\.writeText/);
-  assert.match(consoleSource, /Clipboard access failed/);
+  assert.match(methodologySource, /Clipboard access failed/);
   assert.match(consoleSource, /0 usage writes · 0 rank changes · 0 provider changes/);
   assert.match(styles, /\.intel-console/);
   assert.match(styles, /LIVE PUBLIC PROFILE \/ LATEST 30-DAY PACE/);
@@ -61,6 +63,10 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(briefStyles, /@media \(max-width: 760px\)/);
   assert.match(controls, /\.intel-presets/);
   assert.match(ledger, /\.intel-math/);
+  assert.match(ledger, /\.intel-methodology:not\(\[open\]\) > \.intel-methodology__body \{ display: none; \}/);
+  assert.match(methodologySource, /Calculation &amp; confidence ledger/);
+  assert.match(methodologySource, /Open six calculation rows, provider review, evidence boundaries, formula, and CLI dry run/);
+  assert.match(methodologySource, /This page writes nothing/);
   assert.match(responsive, /@media \(max-width: 760px\)/);
   assert.match(responsive, /prefers-reduced-motion/);
   assert.match(manifest, /000-vibetracker\.web\.runway-decision-console/);
@@ -68,10 +74,12 @@ test("insights route is a route-local explained cost plan", () => {
   assert.doesNotMatch(consoleSource, /dangerouslySetInnerHTML/);
   assert.doesNotMatch(briefSource, /dangerouslySetInnerHTML/);
   assert.doesNotMatch(consoleSource, /type="checkbox"|intel-scope__wave|reviewArmed/);
+  assert.ok(consoleSource.split("\n").length < 300, "main client console stays below the SMA target after methodology extraction");
 });
 
 test("insights explains its source, math, consequence, and confidence boundary in plain language", () => {
   const consoleSource = readFileSync("packages/web/src/app/insights/runway-decision-console.tsx", "utf8");
+  const methodologySource = readFileSync("packages/web/src/app/insights/insight-methodology.tsx", "utf8");
   assert.match(consoleSource, /explicit example data · not your account/);
   assert.match(consoleSource, /latest 30-day provider detail/);
   assert.match(consoleSource, /provider totals fallback/);
@@ -82,12 +90,12 @@ test("insights explains its source, math, consequence, and confidence boundary i
   assert.match(consoleSource, /latest upload total used as provisional baseline/);
   assert.match(consoleSource, /This percentage applies only to/);
   assert.match(consoleSource, /not to the full/);
-  assert.match(consoleSource, /Where the result comes from/);
-  assert.match(consoleSource, /Observed source period/);
-  assert.match(consoleSource, /Same-rhythm 30-day projection/);
-  assert.match(consoleSource, /What is known, estimated, and unchanged/);
+  assert.match(methodologySource, /Where the result comes from/);
+  assert.match(methodologySource, /Observed source period/);
+  assert.match(methodologySource, /Same-rhythm 30-day projection/);
+  assert.match(methodologySource, /What is known, estimated, and unchanged/);
   assert.match(consoleSource, /This plan leaves almost no room for a spike/);
-  assert.match(consoleSource, /highest observed spend in this \{isPublic \? "public profile" : "example"\}/);
+  assert.match(methodologySource, /highest observed spend in this \{isPublic \? "public profile" : "example"\}/);
   assert.doesNotMatch(consoleSource, /See the burn|Bend the runway|DELTA LEDGER|LIVE PLAN SIGNAL|Local shadow offset/);
 });
 

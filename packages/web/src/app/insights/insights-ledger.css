@@ -1,3 +1,31 @@
+.intel-workspace { display: block; }
+.intel-workspace .intel-controls { border-right: 0; }
+
+.intel-methodology { border-bottom: 1px solid var(--intel-line); background: #05090a; }
+.intel-methodology > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, .8fr) 34px;
+  gap: 24px;
+  align-items: center;
+  min-height: 84px;
+  padding: 16px 40px;
+  cursor: pointer;
+  list-style: none;
+}
+.intel-methodology > summary::-webkit-details-marker { display: none; }
+.intel-methodology > summary div { display: grid; gap: 7px; }
+.intel-methodology > summary span { color: var(--intel-cyan); font: 700 9px/1 var(--font-data), ui-monospace, monospace; }
+.intel-methodology > summary b { color: var(--intel-ink); font-size: 16px; }
+.intel-methodology > summary p { margin: 0; color: var(--intel-muted); font-size: 11px; line-height: 1.5; }
+.intel-methodology > summary i { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--intel-cyan); color: var(--intel-cyan); font: 700 18px/1 var(--font-data), ui-monospace, monospace; font-style: normal; }
+.intel-methodology:not([open]) > summary i::before { content: "+"; }
+.intel-methodology[open] > summary i::before { content: "−"; }
+.intel-methodology[open] > summary { border-bottom: 1px solid var(--intel-line); }
+.intel-methodology:not([open]) > .intel-methodology__body { display: none; }
+.intel-methodology__body { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
+.intel-methodology__body .intel-math { border-right: 1px solid var(--intel-line); }
+.intel-methodology__body .intel-details { border-bottom: 0; }
+
 .intel-math {
   min-width: 0;
   padding: 32px 36px;
