@@ -1,0 +1,66 @@
+/* Skill Signals — the headline read. Archetype + cost reframe + measured skill signals. */
+
+.vsignals-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: clamp(14px, 2vw, 26px);
+  align-items: stretch;
+}
+.vsignals-archetype { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.vsignals-arch-eyebrow {
+  font: 700 9.5px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.2em; color: rgba(217, 255, 242, 0.42);
+}
+.vsignals-arch-label {
+  font: 800 clamp(1.7rem, 3vw, 2.4rem) / 1.05 var(--vp-mono);
+  letter-spacing: -0.03em; color: #eafff8;
+}
+.vsignals-arch-blurb { font: 400 13px/1.5 var(--vp-mono); color: rgba(217, 255, 242, 0.6); max-width: 46ch; }
+.vsignals-arch-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; padding: 0; list-style: none; }
+.vsignals-arch-tags li {
+  padding: 5px 10px; border-radius: 999px;
+  border: 1px solid rgba(46, 232, 214, 0.3); background: rgba(46, 232, 214, 0.08);
+  font: 600 11px/1 var(--vp-mono); color: #9ff4e8;
+}
+
+/* cost reframed — deliberately quieter than the archetype, in a boxed "reference" treatment */
+.vsignals-cost {
+  display: flex; flex-direction: column; gap: 5px; justify-content: center;
+  padding: 14px 16px; border-radius: 10px;
+  border: 1px dashed rgba(217, 255, 242, 0.18); background: rgba(4, 6, 7, 0.4);
+}
+.vsignals-cost-eyebrow {
+  font: 700 9px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.16em; color: rgba(217, 255, 242, 0.4);
+}
+.vsignals-cost-value { font: 700 clamp(1.3rem, 2.3vw, 1.9rem) / 1 var(--vp-mono); color: rgba(217, 255, 242, 0.82); font-variant-numeric: tabular-nums; }
+.vsignals-cost-note { font: 400 10.5px/1.45 var(--vp-mono); color: rgba(217, 255, 242, 0.42); }
+
+/* measured skill reads */
+.vsignals-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px;
+  margin: 18px 0 0; border: 1px solid rgba(217, 255, 242, 0.08); border-radius: 10px;
+  background: rgba(217, 255, 242, 0.08); overflow: hidden;
+}
+.vsignals-read { display: flex; flex-direction: column; gap: 5px; padding: 13px 14px; background: #0b1216; }
+.vsignals-read-label { font: 500 9.5px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.1em; color: rgba(217, 255, 242, 0.4); }
+.vsignals-read-value { font: 800 20px/1 var(--vp-mono); color: #2ee8d6; font-variant-numeric: tabular-nums; }
+.vsignals-read-note { font: 400 10.5px/1.45 var(--vp-mono); color: rgba(217, 255, 242, 0.5); }
+
+/* subscription footprint */
+.vsignals-footprint {
+  margin: 16px 0 0; padding: 14px; border-radius: 10px;
+  border: 1px solid rgba(46, 232, 214, 0.16);
+  background: radial-gradient(80% 130% at 0% 0%, rgba(46, 232, 214, 0.07), transparent 62%);
+}
+.vsignals-footprint-head { font: 700 9.5px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.14em; color: rgba(217, 255, 242, 0.5); }
+.vsignals-footprint-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 10px 0 8px; }
+.vsignals-footprint-item {
+  display: inline-flex; align-items: center; gap: 7px;
+  font: 500 15px/1 var(--vp-mono); color: #d9fff2;
+}
+.vsignals-footprint-item b { font-weight: 800; color: #2ee8d6; }
+.vsignals-footprint-item i { font-style: normal; color: rgba(217, 255, 242, 0.35); margin-right: 5px; }
+.vsignals-footprint-note { font: 400 10px/1.4 var(--vp-mono); color: rgba(217, 255, 242, 0.38); }
+
+@media (max-width: 720px) {
+  .vsignals-hero { grid-template-columns: 1fr; }
+}

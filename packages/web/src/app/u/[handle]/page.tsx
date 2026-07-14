@@ -24,11 +24,14 @@ import { ProfileHero, type HeroDiscipline } from "./profile-hero";
 import { C0vibeBand } from "./profile-cta";
 import { SyncRhythm, GitHubContributions } from "./profile-heatmap";
 import { TokenBreakdown, Delegation } from "./profile-tokens";
+import { SkillSignals } from "./profile-signals";
+import { computeProfileSignals } from "../../../lib/profile-signals";
 import { UsageTelemetry } from "./profile-telemetry";
 import "./profile.css";
 import "./profile-hero.css";
 import "./profile-heatmap.css";
 import "./profile-tokens.css";
+import "./profile-signals.css";
 import "./profile-telemetry.css";
 
 // The two C0VIBE doors on every profile: a free account, and the device-auth flow that
@@ -163,10 +166,13 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const fmtTokens = (n: number) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${Math.round(n / 1e6)}M` : formatInt(n));
   const cards = [
     {
-      label: "total spent",
+      // Reframed: the dollar is the API-equivalent reference cost (what this usage would run at
+      // published API prices, without a subscription), not a "spend" flex. The Signal read panel
+      // is the headline; this stays a quiet reference.
+      label: "API-equiv cost",
       mark: "spent" as const,
       value: formatUsd(facts.usd),
-      sub: `avg ${formatUsd(facts.usd / Math.max(facts.days, 1))}/day`,
+      sub: "at API list prices, no sub",
     },
     ...(totalTokens > 0
       ? [{
@@ -311,7 +317,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     .map((m) => ({ model: prettyModel(m.model), spend: compactUsd(m.usd) }));
   const heroState = [
     { label: "signal", value: read.tier },
-    { label: "total spent", value: formatUsd(facts.usd) },
+    { label: "api-equiv cost", value: formatUsd(facts.usd) },
     { label: "operations", value: formatInt(facts.ops) },
     { label: "top source", value: topSource },
   ];
@@ -375,6 +381,10 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       migrateHref={C0VIBE_MIGRATE_HREF}
       key="hero"
     />);
+  // The Signal read leads: archetype + measured skill signals + the reframed API-equivalent cost.
+  // Money is the reference, not the headline — skill is what you see first.
+  const signals = computeProfileSignals(profile);
+  add("overview", "full", <SkillSignals signals={signals} apiCost={formatUsd(facts.usd)} key="signals" />);
   add("overview", "full", <SignalProgress tier={read.tier} progress={read.progress} key="progress" />);
   add("overview", "full", <StatCards cards={cards} key="stats" />);
   if (reveal.chart) {

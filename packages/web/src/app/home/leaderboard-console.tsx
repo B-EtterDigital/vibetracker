@@ -62,7 +62,11 @@ function statusCopy(status: HomeBoardSnapshot["status"]): string {
 }
 
 export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) {
-  const [tier, setTier] = useState<HomeBoardTier>("verified");
+  // Open on a board that actually has entries. Verified is empty until the GitHub/WorkOS identity
+  // system is live, so defaulting to it hid every self-reported viber (who IS ranked) behind an
+  // empty tab. Fall back to the declared "verified" only when nothing has data yet.
+  const firstLiveTier = (boards.find((board) => board.rows.length > 0)?.tier ?? "verified") as HomeBoardTier;
+  const [tier, setTier] = useState<HomeBoardTier>(firstLiveTier);
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [copyState, setCopyState] = useState<UplinkCopyState>("idle");

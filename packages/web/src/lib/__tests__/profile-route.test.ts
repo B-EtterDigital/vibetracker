@@ -94,6 +94,25 @@ test("sources are a labelled big-logo row with the brand on hover, and a bio can
 
 const tokensSrc = readFileSync("packages/web/src/app/u/[handle]/profile-tokens.tsx", "utf8");
 
+const signalsSrc = readFileSync("packages/web/src/app/u/[handle]/profile-signals.tsx", "utf8");
+
+test("skill signals lead the profile and reframe money as API-equivalent reference", () => {
+  // the archetype/skill read is the headline (added to overview before the stat cards)
+  assert.match(page, /const signals = computeProfileSignals\(profile\)/);
+  assert.match(page, /<SkillSignals signals=\{signals\}/);
+  assert.match(signalsSrc, /Signal read/);
+  assert.match(signalsSrc, /archetypeLabel/);
+  assert.match(signalsSrc, /Work style/);          // human-in-loop vs agentic
+  assert.match(signalsSrc, /Orchestration/);
+  assert.match(signalsSrc, /Ship rate/);           // git commits per billion tokens
+  assert.match(signalsSrc, /running in parallel/); // subscription footprint
+  // money is reframed, not the flex
+  assert.match(signalsSrc, /API-equivalent cost/);
+  assert.match(signalsSrc, /Burning budget isn/);
+  assert.match(page, /label: "API-equiv cost"/);
+  assert.doesNotMatch(page, /label: "total spent"/);
+});
+
 test("token breakdown + cross-provider delegation render from the new aggregates", () => {
   // token breakdown: input/output/cache split, total + per provider
   assert.match(tokensSrc, /export function TokenBreakdown/);
