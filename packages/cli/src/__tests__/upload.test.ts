@@ -6,6 +6,9 @@ import {
   renderUploadFailure,
   renderUploadPreview,
   renderUploadSuccess,
+  DIRECT_INGEST_URL,
+  SINGLE_DOMAIN_UPLOAD_LIMIT,
+  resolveUploadEndpoint,
 } from "../upload.ts";
 import type { UsageAudit } from "../audit.ts";
 import type { SecretFinding } from "../../../core/src/security/secrets.ts";
@@ -110,4 +113,17 @@ test("upload renderers make block, success, and deferred states explicit", () =>
   const failed = renderUploadFailure(base, "could not reach: network down", "/home/user/.vibetracker/upload-bundle.json");
   assert.match(failed, /VTK:\/\/UPLOAD-DEFERRED\/\/LOCAL-BUNDLE-SAVED/);
   assert.match(failed, /retry later: vibetracker upload/);
+
+  const detailed = renderUploadFailure(base, `rejected 500: ${"storage unavailable ".repeat(8)}`, "/tmp/upload.json");
+  assert.match(detailed, /full reason: rejected 500: storage unavailable/);
+});
+
+test("large default uploads bypass the single-domain body limit without rewriting custom endpoints", () => {
+  const defaultUrl = "https://vibeusage.c0vibe.app/api/ingest";
+  assert.equal(resolveUploadEndpoint(defaultUrl, defaultUrl, SINGLE_DOMAIN_UPLOAD_LIMIT), defaultUrl);
+  assert.equal(resolveUploadEndpoint(defaultUrl, defaultUrl, SINGLE_DOMAIN_UPLOAD_LIMIT + 1), DIRECT_INGEST_URL);
+  assert.equal(
+    resolveUploadEndpoint("https://collector.example.test/ingest", defaultUrl, SINGLE_DOMAIN_UPLOAD_LIMIT + 1),
+    "https://collector.example.test/ingest",
+  );
 });

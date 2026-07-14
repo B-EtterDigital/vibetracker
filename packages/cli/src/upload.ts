@@ -22,6 +22,13 @@ export interface UploadRenderInput {
   site: string;
 }
 
+export const DIRECT_INGEST_URL = "https://tnsaqsqajpjbvlpasojt.supabase.co/functions/v1/vibetracker-ingest";
+export const SINGLE_DOMAIN_UPLOAD_LIMIT = 5_500_000;
+
+export function resolveUploadEndpoint(url: string, defaultUrl: string, payloadBytes: number): string {
+  return url === defaultUrl && payloadBytes > SINGLE_DOMAIN_UPLOAD_LIMIT ? DIRECT_INGEST_URL : url;
+}
+
 const frameWidth = 66;
 const contentWidth = frameWidth - 4;
 
@@ -182,14 +189,16 @@ export function renderUploadSuccess(input: UploadRenderInput, proof: UploadRespo
 }
 
 export function renderUploadFailure(input: UploadRenderInput, reason: string, localPath: string): string {
-  return [
+  const safeReason = reason.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, 2_000);
+  const frame = [
     "+----------------------------------------------------------------+",
     frameLine("VTK://UPLOAD-DEFERRED//LOCAL-BUNDLE-SAVED"),
     "|----------------------------------------------------------------|",
     frameLine(`endpoint ${input.endpoint}`),
-    frameLine(`reason ${reason}`),
+    frameLine(`reason ${safeReason}`),
     frameLine(`saved ${localPath}`),
     frameLine("retry later: vibetracker upload"),
     "+----------------------------------------------------------------+",
   ].join("\n");
+  return safeReason.length > contentWidth ? `${frame}\n\nfull reason: ${safeReason}` : frame;
 }

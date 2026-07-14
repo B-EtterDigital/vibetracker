@@ -129,7 +129,14 @@ async function sha256Hex(input: string): Promise<string> {
       submission_id: sub.id, provider: r.provider, ops: r.ops, credits: r.credits, usd: r.usd ?? 0,
     }));
     const { error: bpErr } = await admin.from("vibetracker_submission_providers").insert(rows);
-    if (bpErr) return json({ ok: false, error: `providers: ${bpErr.message}` }, 500);
+    if (bpErr) {
+      const { error: cleanupErr } = await admin.from("vibetracker_submissions").delete().eq("id", sub.id);
+      return json({
+        ok: false,
+        error: `providers: ${bpErr.message}`,
+        ...(cleanupErr ? { cleanupError: "partial submission cleanup failed" } : {}),
+      }, 500);
+    }
   }
 
   let dailyUsagePersisted = 0;

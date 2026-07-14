@@ -71,7 +71,7 @@ import { lifeDemoInput, renderLifeCommand } from "./life.ts";
 import { resolveMissionCommand } from "./mission/mission-command.ts";
 import { resolveUsageCompareCommand } from "./compare/usage-compare-command.ts";
 import { formatTable, money } from "./format.ts";
-import { renderUploadBlocked, renderUploadFailure, renderUploadPreview, renderUploadSuccess, type UploadResponseProof } from "./upload.ts";
+import { renderUploadBlocked, renderUploadFailure, renderUploadPreview, renderUploadSuccess, resolveUploadEndpoint, type UploadResponseProof } from "./upload.ts";
 import { runLogin, createHttpAuthTransport } from "./login.ts";
 import { readGitHubCliToken } from "./github-identity.ts";
 import { filterRecords, parseSince, type RecordFilter } from "../../core/src/filter.ts";
@@ -1687,7 +1687,11 @@ async function main() {
     const headers: Record<string, string> = { "content-type": "application/json" };
     if (cfg.token) headers.authorization = `Bearer ${cfg.token}`; // attested identity
     try {
-      const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(bundle) });
+      const body = JSON.stringify(bundle);
+      const endpoint = resolveUploadEndpoint(url, DEFAULT_UPLOAD_URL, Buffer.byteLength(body));
+      if (endpoint !== url) console.log(dim("large reviewed bundle: routing directly to the C0VIBE ingest edge"));
+      const resultRender = endpoint === url ? uploadRender : { ...uploadRender, endpoint };
+      const res = await fetch(endpoint, { method: "POST", headers, body });
       if (res.ok) {
         let proof: UploadResponseProof = {};
         try {
@@ -1695,11 +1699,11 @@ async function main() {
         } catch (err) {
           ctx.telemetry.addBreadcrumb("upload.response_json_parse_failed", { error: (err as Error).message }, "warn");
         }
-        console.log(renderUploadSuccess(uploadRender, proof));
+        console.log(renderUploadSuccess(resultRender, proof));
         if (trustSignals.length) console.log(`  ${dim("trust signal attached:")} ${paint(trustSignalSummary(trustSignals), 190)}`);
         return;
       }
-      console.error(renderUploadFailure(uploadRender, `rejected ${res.status}: ${await res.text()}`, saveLocal()));
+      console.error(renderUploadFailure(resultRender, `rejected ${res.status}: ${await res.text()}`, saveLocal()));
       return;
     } catch (err) {
       console.error(renderUploadFailure(uploadRender, `could not reach: ${(err as Error).message}`, saveLocal()));
