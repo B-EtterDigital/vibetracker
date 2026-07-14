@@ -4040,25 +4040,15 @@ code, pre, .console-top {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 0;
-  color: var(--fg);
-  font: 700 18px/1 var(--font-data), ui-monospace, monospace;
-  letter-spacing: 0;
-  text-shadow: none;
+  min-width: 0;
+  line-height: 0;
 }
 
-.brand > i {
-  width: 9px;
-  height: 9px;
-  margin-right: 10px;
-  border: 2px solid #071013;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 0 20px rgba(46, 232, 214, .5);
+.brand img {
+  display: block;
+  width: clamp(160px, 14vw, 198px);
+  height: auto;
 }
-
-.brand span { color: #f4fffb; }
-.brand strong { color: var(--accent); font-weight: 700; }
 
 .hdr .hdr-primary {
   justify-self: center;
@@ -4144,7 +4134,7 @@ code, pre, .console-top {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: min(420px, calc(100vw - 28px));
+  width: min(420px, calc(100% - 28px));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 1px;
@@ -4597,6 +4587,7 @@ code, pre, .console-top {
     padding: 12px 14px 0;
   }
   .hdr .brand { align-self: start; min-height: 38px; }
+  .hdr .brand img { width: clamp(148px, 45vw, 178px); }
   .hdr-actions { align-self: start; }
   .hdr-cli { min-height: 36px; padding-inline: 11px; }
   .hdr .hdr-primary {

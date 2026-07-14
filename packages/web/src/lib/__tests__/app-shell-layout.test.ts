@@ -6,6 +6,7 @@ const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 const home = readFileSync("packages/web/src/app/page.tsx", "utf8");
 const dock = readFileSync("packages/web/src/components/UsageSignalDock.tsx", "utf8");
 const css = readFileSync("packages/web/src/app/globals.css", "utf8");
+const logo = readFileSync("packages/web/public/brand/vibeusage-logo.png");
 
 test("root layout and home stay route-neutral while the legacy signal dock remains reusable", () => {
   assert.doesNotMatch(layout, /buildAppShellStatus/);
@@ -55,4 +56,22 @@ test("header names the leaderboard and explains every primary destination", () =
 
   // the two tier words are no longer top-level nav — they are the boards on the leaderboard page
   assert.doesNotMatch(primary, /Self-reported/);
+});
+
+test("header ships the generated VibeUsage mark without displacing identity controls", () => {
+  assert.match(layout, /import Image from "next\/image"/);
+  assert.match(layout, /className="brand" aria-label="VibeUsage home"/);
+  assert.match(layout, /src="\/brand\/vibeusage-logo\.png"/);
+  assert.match(layout, /width=\{1400\}[\s\S]*height=\{299\}/);
+  assert.match(layout, /<AccountControl \/>/);
+  assert.match(css, /\.brand img \{[\s\S]*width: clamp\(160px, 14vw, 198px\)/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.hdr \.brand img \{ width: clamp\(148px, 45vw, 178px\)/);
+  assert.match(css, /\.hdr-menu > nav \{[\s\S]*width: min\(420px, calc\(100% - 28px\)\)/);
+  assert.doesNotMatch(css, /\.hdr-menu > nav \{[\s\S]*width: min\(420px, calc\(100vw - 28px\)\)/);
+
+  assert.deepEqual([...logo.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.equal(logo.readUInt32BE(16), 1400);
+  assert.equal(logo.readUInt32BE(20), 299);
+  assert.equal(logo[25], 6, "logo stays RGBA so the header background remains visible");
+  assert.ok(logo.byteLength < 300_000, "header asset stays below 300 KB");
 });
