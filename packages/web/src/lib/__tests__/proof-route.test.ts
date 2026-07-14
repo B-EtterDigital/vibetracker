@@ -1,15 +1,37 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { buildEvidenceCockpit } from "../evidence-cockpit.ts";
+import { buildProofVerdict } from "../../app/proof/proof-verdict.ts";
+
+test("proof verdict separates bundled contract coverage from live user evidence", () => {
+  const evidence = buildEvidenceCockpit();
+  const verdict = buildProofVerdict(evidence);
+
+  assert.equal(verdict.mode, "bundled_contract_fixture");
+  assert.equal(verdict.walkthroughCoverage, evidence.bridge.totals.averageMeter);
+  assert.match(verdict.headline, /not your live receipt/i);
+  assert.deepEqual(verdict.boundaries, ["no machine scan", "no account query", "no upload"]);
+  assert.equal(verdict.excludes.some((item) => /No percentage.*product readiness/.test(item)), true);
+  assert.deepEqual(verdict.actions.map((action) => action.command), [
+    "vibetracker audit",
+    "vibetracker upload --dry-run",
+    "vibetracker proof --explain",
+  ]);
+});
 
 test("proof center is exposed as a first-class local-first evidence route", () => {
   const page = readFileSync("packages/web/src/app/proof/page.tsx", "utf8");
+  const verdictPanel = readFileSync("packages/web/src/app/proof/proof-verdict-panel.tsx", "utf8");
+  const verdictStyles = readFileSync("packages/web/src/app/proof/proof-verdict.css", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
   const evidence = readFileSync("packages/web/src/lib/evidence-cockpit.ts", "utf8");
 
   assert.match(layout, /href="\/proof"/);   // reachable from the header
   assert.match(page, /buildEvidenceCockpit/);
+  assert.match(page, /buildProofVerdict/);
+  assert.match(page, /<ProofVerdictPanel verdict=\{verdict\} \/>/);
   assert.match(page, /proof-route-intro/);
   assert.match(page, /proof-route-cockpit evidence-cockpit/);
   assert.match(page, /VTK:\/\/PROOF-CENTER\/\/LOCAL-FIRST\/\/NO-FAKE-PROOF\/\/NO-HIDDEN-UPLOADS/);
@@ -64,6 +86,24 @@ test("proof center is exposed as a first-class local-first evidence route", () =
   assert.match(page, /event\.hash/);
   assert.match(page, /event\.invariant/);
   assert.match(page, /replayToneFor/);
+  assert.match(page, /% FIXTURE/);
+  assert.match(page, /% fixture/);
+  assert.match(page, /fixture coverage/);
+  assert.equal((page.match(/role="progressbar"/g) ?? []).length, 2);
+  assert.equal((page.match(/aria-valuemin=\{0\}/g) ?? []).length, 2);
+  assert.equal((page.match(/aria-valuemax=\{100\}/g) ?? []).length, 2);
+  assert.match(page, /aria-valuenow=\{event\.meter\}/);
+  assert.match(page, /aria-valuenow=\{stage\.meter\}/);
+  assert.doesNotMatch(page, /% READY/);
+  assert.doesNotMatch(page, /proof readiness/);
+  assert.match(verdictPanel, /read this page as a contract/);
+  assert.match(verdictPanel, /bundled fixture/);
+  assert.match(verdictPanel, /Proven by this contract/);
+  assert.match(verdictPanel, /Not proven on this page/);
+  assert.match(verdictPanel, /Prove your own run/);
+  assert.match(verdictPanel, /not live readiness/);
+  assert.match(verdictPanel, /href="\/scan"/);
+  assert.match(verdictPanel, /href="\/account"/);
   assert.match(evidence, /vibetracker upload --target c0vibe/);
   assert.match(evidence, /C0VIBE datastream/);
   assert.match(evidence, /vibetracker trust scan/);
@@ -104,4 +144,11 @@ test("proof center is exposed as a first-class local-first evidence route", () =
   assert.match(styles, /\.proof-datastream-spine__body \{ grid-template-columns: 1fr; \}/);
   assert.match(styles, /\.proof-datastream-spine__nodes \{ grid-template-columns: 1fr; \}/);
   assert.match(styles, /@media \(max-width: 760px\)/);
+  assert.match(verdictStyles, /\.proof-verdict__grid/);
+  assert.match(verdictStyles, /@media \(max-width: 900px\)/);
+  assert.match(verdictStyles, /\.proof-route-intro \{ grid-template-columns: 1fr; align-items: start; \}/);
+  assert.match(verdictStyles, /\.proof-route-intro \.motto-rail \{ justify-content: flex-start; min-width: 0; \}/);
+  assert.match(verdictStyles, /@media \(max-width: 560px\)/);
+  assert.match(verdictStyles, /@media \(min-width: 2200px\)/);
+  assert.doesNotMatch(verdictStyles, /@import/);
 });

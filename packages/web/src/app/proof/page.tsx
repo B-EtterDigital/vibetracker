@@ -9,10 +9,13 @@ import {
   type EvidenceVerificationBridge,
   type EvidenceVerificationGate,
 } from "../../lib/evidence-cockpit";
+import { buildProofVerdict } from "./proof-verdict";
+import { ProofVerdictPanel } from "./proof-verdict-panel";
+import "./proof-verdict.css";
 
 export const metadata = {
   title: "VibeUsage Proof Center",
-  description: "A local-first proof cockpit for VibeTRACKER collection, validation, redaction, trust labels, and C0VIBE publishing.",
+  description: "A local-first proof cockpit that separates bundled contract fixtures from real user evidence.",
 };
 
 function railLabelFor(stage: EvidenceCockpitStage): string {
@@ -102,7 +105,7 @@ function ProofDatastreamSpinePanel({ evidence }: { evidence: EvidenceCockpit }) 
       </div>
       <div className="proof-datastream-spine__body">
         <aside className="proof-datastream-spine__terminal" aria-label="Proof datastream terminal">
-          <div className="console-top"><span>spine@proof</span><b>{evidence.bridge.totals.averageMeter}% READY</b></div>
+          <div className="console-top"><span>spine@proof</span><b>{evidence.bridge.totals.averageMeter}% FIXTURE</b></div>
           <pre>{terminalLines.join("\n")}</pre>
           <div className="proof-datastream-spine__handoff" aria-label="Proof datastream handoff labels">
             <span>score feeds from usage</span>
@@ -162,7 +165,7 @@ function ProofBlackBoxPanel({ evidence }: { evidence: EvidenceCockpit }) {
       </div>
       <div className="proof-black-box__body">
         <aside className="proof-black-box__terminal" aria-label="Proof custody terminal">
-          <div className="console-top"><span>custody@local</span><b>ARMED</b></div>
+          <div className="console-top"><span>custody@local</span><b>BUNDLED</b></div>
           <pre>{terminalLines.join("\n")}</pre>
           <div className="proof-black-box__badges" aria-label="Proof custody guarantees">
             <span>NO RAW PROMPTS</span>
@@ -221,7 +224,7 @@ function ProofVerificationBridgePanel({ bridge }: { bridge: EvidenceVerification
       </div>
       <div className="proof-verification-bridge__body">
         <aside className="proof-verification-bridge__terminal" aria-label="Proof verification bridge terminal">
-          <div className="console-top"><span>bridge@proof</span><b>{bridge.totals.averageMeter}% READY</b></div>
+          <div className="console-top"><span>bridge@proof</span><b>{bridge.totals.averageMeter}% FIXTURE</b></div>
           <pre>{bridge.terminalLines.join("\n")}</pre>
           <div className="proof-verification-bridge__totals" aria-label="Proof verification bridge totals">
             <span>{bridge.totals.usageGates} usage gate</span>
@@ -286,7 +289,7 @@ function ProofReplayRecorderPanel({ replay }: { replay: EvidenceReplayDeck }) {
             <span>{replay.totals.localOnly} local</span>
             <span>{replay.totals.notUsage} not usage</span>
             <span>{replay.totals.publish} publish</span>
-            <span>{replay.totals.averageMeter}% proof</span>
+            <span>{replay.totals.averageMeter}% fixture</span>
           </div>
         </aside>
         <div className="proof-replay-events" aria-label="Proof replay events">
@@ -320,7 +323,14 @@ function ProofReplayRecorderPanel({ replay }: { replay: EvidenceReplayDeck }) {
                   <strong style={{ "--i": markIndex } as CSSProperties} key={`${event.id}-${mark}-${markIndex}`}>{mark}</strong>
                 ))}
               </div>
-              <div className="proof-replay-event__meter" aria-label={`${event.label} proof readiness ${event.meter} percent`}>
+              <div
+                className="proof-replay-event__meter"
+                role="progressbar"
+                aria-label={`${event.label} fixture coverage`}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={event.meter}
+              >
                 <i />
               </div>
               <footer>{event.invariant}</footer>
@@ -334,6 +344,7 @@ function ProofReplayRecorderPanel({ replay }: { replay: EvidenceReplayDeck }) {
 
 export default function ProofPage() {
   const evidence = buildEvidenceCockpit();
+  const verdict = buildProofVerdict(evidence);
 
   return (
     <>
@@ -353,6 +364,8 @@ export default function ProofPage() {
           <code>NO FAKE PROOF</code>
         </div>
       </section>
+
+      <ProofVerdictPanel verdict={verdict} />
 
       <ProofDatastreamSpinePanel evidence={evidence} />
 
@@ -389,7 +402,14 @@ export default function ProofPage() {
                   <code>{stage.command}</code>
                   <p>{stage.note}</p>
                 </div>
-                <div className="evidence-stage__meter" aria-label={`${stage.label} proof readiness ${stage.meter} percent`}>
+                <div
+                  className="evidence-stage__meter"
+                  role="progressbar"
+                  aria-label={`${stage.label} fixture coverage`}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={stage.meter}
+                >
                   <i />
                 </div>
               </article>
