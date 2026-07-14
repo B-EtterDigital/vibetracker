@@ -5,7 +5,7 @@
     "name": "Adaptive Public Profile",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.4.2",
+    "version": "0.5.0",
     "language": [
       "typescript",
       "tsx",
@@ -38,7 +38,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "e949179",
+    "commit": "a81e0307a54513ed68f9f32516d43470abde8b38",
     "paths": [
       "packages/web/src/app/u/[handle]",
       "packages/web/src/lib/profile-complexity.ts",
@@ -104,7 +104,7 @@
     "ssa_v2": {
       "status": "passing",
       "score": 90,
-      "notes": "Route orchestration, deterministic policy, panels, chart, and period model keep TypeScript files below 400 lines; route-local CSS remains below the 600-line Gen3 ceiling.",
+      "notes": "Route orchestration is split by responsibility and every route-local implementation file remains below the 600-line Gen3 ceiling; the 30-day readout owns its stylesheet.",
       "evidence": [
         "packages/web/src/app/u/[handle]/page.tsx",
         "packages/web/src/lib/profile-complexity.ts",
@@ -123,7 +123,7 @@
     "sstf": {
       "status": "passing",
       "score": 90,
-      "notes": "Focused profile contracts and the full 615-test package suite pass, including GitHub-only identity semantics, account-link separation, and accessible attestation labels.",
+      "notes": "Focused profile contracts and the full 635-test package suite pass, including current-period hierarchy, compact lifetime metrics, GitHub-only identity semantics, and accessible attestation labels.",
       "evidence": [
         "packages/web/src/lib/__tests__/profile-route.test.ts",
         "packages/web/src/lib/__tests__/profile-signals.test.ts",
@@ -149,10 +149,10 @@
     "ssra": {
       "status": "passing",
       "score": 90,
-      "notes": "Production deploy 6a565a003e99d225b51cd153 passes mobile and 3840x2160 profile proof with no overflow or console errors; Lighthouse scores 100 for Accessibility, Best Practices, SEO, and Agentic Browsing.",
+      "notes": "Production deploy 6a568f88411889a2f04deea8 passes 390x844, 1440x900, and 3840x2160 profile proof with no overflow, console errors, page errors, or failed requests; the live Insights handoff and source focus reveal work.",
       "evidence": [
         "scripts/release-gate.mjs",
-        "Netlify production deploy 6a565a003e99d225b51cd153",
+        "Netlify production deploy 6a568f88411889a2f04deea8",
         "https://vibeusage.c0vibe.app/u/b-etterdigital"
       ]
     },
@@ -307,15 +307,15 @@
   "quality": {
     "score": 90,
     "line_count": {
-      "max_file_lines": 515,
+      "max_file_lines": 562,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 2367,
-      "file_count": 12,
+      "feature_lines": 4708,
+      "file_count": 24,
       "dependency_count": 3,
-      "notes": "The route is split by responsibility; every TypeScript implementation file is below 400 lines and every owned implementation file is below the 600-line Gen3 ceiling."
+      "notes": "The route is split by responsibility and all 24 route-local TypeScript and CSS implementation files stay below the 600-line Gen3 ceiling."
     },
     "test_commands": [
       "node --test packages/web/src/lib/__tests__/profile-complexity.test.ts packages/web/src/lib/__tests__/profile-route.test.ts packages/web/src/lib/__tests__/profile-data-telemetry.test.ts packages/web/src/lib/__tests__/profile-telemetry.test.ts packages/web/src/lib/__tests__/profile-signals.test.ts"
@@ -356,6 +356,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T15:56:00Z",
         "notes": "615 package tests and 15 control-plane tests passed. The live @b-etterdigital profile says GitHub verified but not C0VIBE-linked, uses Identity attested, has no horizontal overflow or console errors at 390x844 and 3840x2160, and Lighthouse scored 100/100/100/100."
+      },
+      {
+        "command": "17 focused profile tests + pnpm test + pnpm sma:release-gate + atomic Netlify deployment + Playwright production proof",
+        "status": "pass",
+        "timestamp": "2026-07-14T19:33:26Z",
+        "notes": "635 package tests and 15 control-plane tests passed with strict VTRS and real TypeScript. Deploy 6a568f88411889a2f04deea8 is ready with one Next server function. The live profile is overflow-free and error-free at 390x844, 1440x900, and 3840x2160; compact lifetime metrics, source focus, and the profile-to-Insights round trip passed."
       }
     ]
   },
@@ -499,6 +505,47 @@
         "lease_id": "lease-1784039262499-10671e44",
         "context_event_ids": ["ctx-1784039262592-c559dda1"],
         "attestation": {"method": "git_commit", "reference": "912a161"}
+      },
+      {
+        "actor_kind": "agent",
+        "actor_id": "bdd-main@vibe",
+        "provider": "OpenAI",
+        "model": "gpt-5",
+        "role": "implementer",
+        "session_id": "vibe-profile-first-read-20260715",
+        "commit": "a81e0307a54513ed68f9f32516d43470abde8b38",
+        "files_touched": [
+          "packages/web/src/app/u/[handle]/page.tsx",
+          "packages/web/src/app/u/[handle]/profile-hero.tsx",
+          "packages/web/src/app/u/[handle]/profile-hero.css",
+          "packages/web/src/app/u/[handle]/profile-readout.css",
+          "packages/web/src/app/u/[handle]/profile.css",
+          "packages/web/src/lib/__tests__/profile-route.test.ts",
+          "packages/web/src/app/u/[handle]/module.sweetspot.json"
+        ],
+        "verification": [
+          {
+            "command": "full Gen3 release gates + atomic production deployment + Playwright mobile/desktop/4K proof",
+            "status": "pass",
+            "timestamp": "2026-07-14T19:33:26Z",
+            "notes": "The compact identity masthead, current 30-day read, deeper evidence bay, responsive action row, accessible source focus, and Insights navigation passed on the live production route."
+          }
+        ],
+        "timestamp": "2026-07-14T19:33:26Z",
+        "summary": "Rebuilt the public profile first read around compact lifetime scale, current usage interpretation, and inspectable deep evidence.",
+        "intent": "Make a high-volume operator profile understandable on first scan without hiding exact evidence or weakening trust boundaries.",
+        "decision_rationale": "Current-period evidence now follows a compact identity and lifetime footprint; exact reconstructed totals remain accessible while model, source, discipline, and signal inventory stays complete below it.",
+        "lease_id": "lease-1784057381943-38c934d7",
+        "context_event_ids": [
+          "ctx-1784055685089-d1cbedf9",
+          "ctx-1784056856765-9109b9bd",
+          "ctx-1784057382011-9f19f7a4",
+          "ctx-1784057895422-38da2510"
+        ],
+        "attestation": {
+          "method": "git_commit",
+          "reference": "a81e0307a54513ed68f9f32516d43470abde8b38"
+        }
       }
     ],
     "reviewed_by": [],
@@ -534,6 +581,14 @@
         "path": "packages/web/src/app/u/[handle]",
         "event": "updated",
         "timestamp": "2026-07-14T14:28:21Z"
+      },
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.public-profile.adaptive-depth",
+        "commit": "a81e0307a54513ed68f9f32516d43470abde8b38",
+        "path": "packages/web/src/app/u/[handle]",
+        "event": "updated",
+        "timestamp": "2026-07-14T19:33:26Z"
       }
     ]
   }
