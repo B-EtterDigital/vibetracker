@@ -35,7 +35,7 @@ export function buildLeaderboardReadout(rows: BoardReadoutRow[]): BoardReadout {
       summary: "No ranked signal yet. The field readout will appear after the first valid public usage bundle.",
       signals: [
         { id: "concentration", label: "Spend concentration", value: "—", note: "waiting for ranked spend" },
-        { id: "unit-cost", label: "Board unit cost", value: "—", note: "waiting for accepted operations" },
+        { id: "unit-cost", label: "Board unit cost", value: "—", note: "waiting for accepted normalized records" },
         { id: "active-depth", label: "Active depth", value: "0 / 0", note: "operators carry non-zero usage" },
         { id: "identity", label: "Identity coverage", value: "0 / 0", note: "operators have verified identity" },
       ],
@@ -68,8 +68,8 @@ export function buildLeaderboardReadout(rows: BoardReadoutRow[]): BoardReadout {
       {
         id: "unit-cost",
         label: "Board unit cost",
-        value: totalOps > 0 ? `${money.format(unitCost)} / op` : "—",
-        note: "estimated USD divided by accepted operations",
+        value: totalOps > 0 ? `${money.format(unitCost)} / record` : "—",
+        note: "estimated USD divided by accepted normalized records",
       },
       {
         id: "active-depth",

@@ -300,7 +300,7 @@
   .home-board__table-shell td[data-label="Operator"] { grid-column: 2 / -1; min-width: 0; }
   .home-board__table-shell td[data-label="Operator"] .home-board__operator { min-width: 0; max-width: calc(100% - 58px); }
   .home-board__table-shell td[data-label="Operator"] a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .home-board__table-shell td:is([data-label="Spend"], [data-label="Credits"], [data-label="Ops"]) { align-items: flex-start; flex-direction: column; gap: 5px; text-align: left; }
+  .home-board__table-shell td:is([data-label="Spend"], [data-label="Credits"], [data-label="Records"]) { align-items: flex-start; flex-direction: column; gap: 5px; text-align: left; }
   .home-board__table-shell td:last-child { grid-column: 1 / -1; justify-content: flex-end; }
   .home-board__table-shell td:last-child::before { content: none; }
   .home-board__encore div { grid-template-columns: 1fr; }

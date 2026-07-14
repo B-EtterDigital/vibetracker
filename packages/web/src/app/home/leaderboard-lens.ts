@@ -1,7 +1,7 @@
 export const HOME_BOARD_LENSES = [
   { id: "usd", label: "Spend", title: "Spend runway", meta: "ESTIMATED USD // DISPLAY LENS" },
   { id: "credits", label: "Credits", title: "Credit runway", meta: "NATIVE CREDITS // DISPLAY LENS" },
-  { id: "ops", label: "Ops", title: "Operation runway", meta: "ACCEPTED OPS // DISPLAY LENS" },
+  { id: "ops", label: "Records", title: "Record runway", meta: "ACCEPTED NORMALIZED RECORDS // DISPLAY LENS" },
 ] as const;
 
 export type HomeBoardLensId = (typeof HOME_BOARD_LENSES)[number]["id"];

@@ -79,7 +79,10 @@ test("leaderboard explains concentration, unit cost, active depth, and identity 
   assert.match(readout.summary, /top-heavy/);
   assert.deepEqual(readout.signals.map((signal) => signal.id), ["concentration", "unit-cost", "active-depth", "identity"]);
   assert.equal(readout.signals[0].value, "90%");
-  assert.equal(readout.signals[1].value, "$10.00 / op");
+  assert.equal(readout.signals[1].value, "$10.00 / record");
+  assert.match(readout.signals[1].note, /accepted normalized records/);
+  assert.match(source, /<dt>Accepted records<\/dt>/);
+  assert.match(lens, /label: "Records"/);
   assert.equal(readout.signals[2].value, "2 / 3");
   assert.equal(readout.signals[3].value, "1 / 3");
   assert.match(brief, /What the ranking actually means/);

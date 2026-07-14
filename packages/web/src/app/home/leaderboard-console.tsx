@@ -158,7 +158,7 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
         <div><dt>Ranked operators</dt><dd>{active.totals.operators}</dd></div>
         <div><dt>Spend signal</dt><dd>{active.totals.usd}</dd></div>
         <div><dt>Credits</dt><dd>{active.totals.credits}</dd></div>
-        <div><dt>Operations</dt><dd>{active.totals.ops}</dd></div>
+        <div><dt>Accepted records</dt><dd>{active.totals.ops}</dd></div>
       </dl>
 
       {active.status !== "error" ? <LeaderboardBrief rows={active.rows} /> : null}
@@ -236,7 +236,7 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
           <div className="home-board__table-shell">
             <table>
               <thead>
-                <tr><th>#</th><th>Operator</th><th>Spend</th><th>Credits</th><th>Ops</th><th aria-label="Open profile" /></tr>
+                <tr><th>#</th><th>Operator</th><th>Spend</th><th>Credits</th><th>Records</th><th aria-label="Open profile" /></tr>
               </thead>
               <tbody>
                 {visibleRows.map((row) => (
@@ -245,7 +245,7 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
                     <td data-label="Operator"><span className="home-board__operator"><a href={`/u/${row.handle}`}>@{row.handle}</a><IdentityProof row={row} /></span></td>
                     <td data-label="Spend">{row.usdLabel}</td>
                     <td data-label="Credits">{row.creditsLabel}</td>
-                    <td data-label="Ops">{row.opsLabel}</td>
+                    <td data-label="Records">{row.opsLabel}</td>
                     <td><a href={`/u/${row.handle}`} aria-label={`Open @${row.handle} profile`}>-&gt;</a></td>
                   </tr>
                 ))}
@@ -266,7 +266,7 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
       <details className="home-board__encore">
         <summary>Open signal discipline</summary>
         <div>
-          <span><b>USAGE</b> feeds spend, credits, ops, and rank.</span>
+          <span><b>USAGE</b> feeds spend and credits; accepted records show bundle depth.</span>
           <span><b>NOT USAGE</b> trust evidence explains context and adds zero.</span>
           <span><b>LOCAL ONLY</b> stays on-machine until explicit review.</span>
           <span><b>PUBLISH</b> is manual; hidden uploads remain zero.</span>
