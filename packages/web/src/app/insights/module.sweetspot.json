@@ -5,7 +5,7 @@
     "name": "Explained AI Cost Plan",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["usage-analytics", "budget-planning", "local-simulation", "explainable-analytics"]
@@ -15,12 +15,12 @@
     "group_id": "000-vibetracker:packages/web/src/app",
     "contains": ["route", "component", "sample", "model-adapter", "style", "test"],
     "component_policy": "internal_by_default",
-    "notes": "Verdict-first, estimate-only cost plan for a requested public profile or visibly labelled sample fallback, with evidence strength, lever materiality, scaled controls, calculation, and no-write boundaries."
+    "notes": "Evidence-first, estimate-only cost plan for a requested public profile or visibly labelled sample fallback, with observed calendar coverage, projection assumptions, verdict, scaled controls, calculation, and no-write boundaries."
   },
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "ad52c47",
+    "commit": "54f35b0",
     "paths": [
       "packages/web/src/app/insights",
       "packages/web/src/lib/insights-runway.ts",
@@ -88,13 +88,13 @@
     "ssi": {
       "status": "passing",
       "score": 95,
-      "notes": "One typed snapshot drives the verdict, confidence brief, lever materiality, exact comparison, calculation trace, presets, and copied dry-run command; no generated visualization is presented as evidence.",
+      "notes": "One typed source separates observed spend, calendar coverage, idle gaps, projection pace, and upload-total fallback; one snapshot drives the verdict, comparison, controls, and copied dry-run command.",
       "evidence": ["packages/web/src/lib/insights-runway.ts"]
     },
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Twenty-four focused route/model/profile tests and the complete 611-test suite pass on the implementation commit.",
+      "notes": "Ten focused Insights tests and the complete 634-test suite pass on the final implementation commit.",
       "evidence": [
         "packages/web/src/lib/__tests__/insights-route.test.ts",
         "packages/web/src/lib/__tests__/insights-runway.test.ts"
@@ -103,7 +103,7 @@
     "spe": {
       "status": "passing",
       "score": 95,
-      "notes": "Two bounded sliders, three presets, one exact comparison, and a five-row calculation trace keep client work constant.",
+      "notes": "Two bounded sliders, three presets, one exact comparison, and a six-row calculation trace keep client work constant.",
       "evidence": [
         "packages/web/src/app/insights/runway-decision-console.tsx",
         "packages/web/src/lib/insights-runway.ts"
@@ -112,7 +112,7 @@
     "srs": {
       "status": "passing",
       "score": 95,
-      "notes": "Budget verdict, observation confidence, lever materiality, next decision, sample status, formula basis, clipboard failures, and zero-write boundaries are visible in plain language.",
+      "notes": "Observed spend, calendar coverage, active and idle days, projection assumption, budget verdict, lever materiality, sample status, and zero-write boundaries are visible in plain language.",
       "evidence": [
         "packages/web/src/app/insights/runway-decision-console.tsx",
         "packages/web/src/app/insights/insight-brief.tsx",
@@ -122,9 +122,9 @@
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Production deploy 6a5645a4545612df242c771e from isolated release 98d47a8 passed live-profile and missing-profile fallback behavior, native handle validation, network, console, and overflow checks at 390x844 mobile and 3840x2160 fullscreen; Lighthouse scored 100 for accessibility, best practices, SEO, and agentic browsing.",
+      "notes": "Production deploy 6a5684919d0a839bae067ab5 passed live-profile, missing-profile fallback, account sign-in presence, guarded bridge API, preset interaction, network, console, document overflow, and internal readout containment at 390x844, 1440x900, and 3840x2160.",
       "evidence": [
-        "https://6a5645a4545612df242c771e--vibeusage.netlify.app/insights?handle=cyrill-etter",
+        "https://6a5684919d0a839bae067ab5--vibeusage.netlify.app/insights?handle=b-etterdigital",
         "packages/web/src/app/insights/insights-brief.css",
         "packages/web/src/lib/__tests__/insights-route.test.ts"
       ]
@@ -242,15 +242,15 @@
   "quality": {
     "score": 90,
     "line_count": {
-      "max_file_lines": 302,
+      "max_file_lines": 313,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1215,
+      "feature_lines": 1544,
       "file_count": 13,
       "dependency_count": 3,
-      "notes": "The route remains a bounded server lookup plus a 302-line client decision component, 46-line scale policy, 113-line derived signal brief, 130-line model adapter, and split route-local styles."
+      "notes": "The route remains a bounded server lookup plus a 313-line client decision component, 46-line scale policy, 112-line derived signal brief, 158-line model adapter, and split route-local styles."
     },
     "test_commands": [
       "node --test packages/web/src/lib/__tests__/insights-route.test.ts",
@@ -268,6 +268,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T14:28:21Z",
         "notes": "611 tests, strict telemetry, TypeScript, clean dependency audit and Next build, exact isolated release 98d47a8 on deploy 6a5645a4545612df242c771e, live @cyrill-etter and honest missing-profile fallback, valid native input pattern, all requests successful, zero console errors, Lighthouse 100 in four reported categories, and overflow-free 390x844 and 3840x2160 visual proof passed."
+      },
+      {
+        "command": "10 focused Insights tests + pnpm sma:release-gate + pnpm audit --audit-level high + pnpm sma:gen3:check + atomic Netlify production build/deploy + Playwright matrix",
+        "status": "pass",
+        "timestamp": "2026-07-14T18:52:16Z",
+        "notes": "634 package tests, 15 control-plane tests, strict telemetry, TypeScript, no known dependency vulnerabilities, clean 29-route Next build, atomic deploy 6a5684919d0a839bae067ab5, and live plus immutable proof at 390x844, 1440x900, and 3840x2160 passed with working controls, honest sample fallback, account sign-in, guarded unauthenticated bridge response, exact containment, zero overflow, zero console errors, and zero failed requests."
       }
     ]
   },
@@ -349,6 +355,24 @@
         "lease_id": "lease-1784039259840-ee637d47",
         "context_event_ids": ["ctx-1784039259974-4d03e033"],
         "attestation": {"method": "git_commit", "reference": "ad52c47"}
+      },
+      {
+        "actor_kind": "agent",
+        "actor_id": "bdd-main@019f4b2d",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "commit": "54f35b0",
+        "files_touched": ["packages/web/src/app/insights", "packages/web/src/lib/insights-runway.ts", "packages/web/src/lib/__tests__/insights-route.test.ts", "packages/web/src/lib/__tests__/insights-runway.test.ts"],
+        "verification": ["10 focused tests", "634 full tests", "Netlify 6a5684919d0a839bae067ab5", "390x844", "1440x900", "3840x2160"],
+        "timestamp": "2026-07-14T18:52:16Z",
+        "summary": "Made Insights evidence-first, counted idle gaps in the calendar pace, labelled upload-total fallback, repaired the desktop picker, and contained the spend readout.",
+        "intent": "Make real usage understandable before asking the user to trust or adjust a monthly plan.",
+        "decision_rationale": "Observed spend, calendar coverage, and the projection assumption must be visible before the budget verdict; active-day-only extrapolation hides idle gaps and can overstate ordinary spend.",
+        "lease_id": "lease-1784052830033-f52987f7",
+        "context_event_ids": ["ctx-1784052830140-a09bb600", "ctx-1784055221103-3cdb75f2"],
+        "attestation": {"method": "git_commit", "reference": "54f35b0"}
       }
     ],
     "reviewed_by": [],
@@ -368,6 +392,14 @@
         "path": "packages/web/src/app/insights",
         "event": "updated",
         "timestamp": "2026-07-14T14:28:21Z"
+      },
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.runway-decision-console",
+        "commit": "54f35b0",
+        "path": "packages/web/src/app/insights",
+        "event": "updated",
+        "timestamp": "2026-07-14T18:52:16Z"
       }
     ]
   }
