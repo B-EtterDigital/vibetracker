@@ -5,7 +5,7 @@
     "name": "Adaptive Public Profile",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "language": [
       "typescript",
       "tsx",
@@ -38,11 +38,13 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "bed0df8",
+    "commit": "ebf9518",
     "paths": [
       "packages/web/src/app/u/[handle]",
       "packages/web/src/lib/profile-complexity.ts",
+      "packages/web/src/lib/profile-signals.ts",
       "packages/web/src/lib/__tests__/profile-complexity.test.ts",
+      "packages/web/src/lib/__tests__/profile-signals.test.ts",
       "packages/web/src/lib/__tests__/profile-route.test.ts",
       "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts",
       "packages/web/src/lib/__tests__/profile-telemetry.test.ts"
@@ -57,7 +59,9 @@
     "owned_paths": [
       "packages/web/src/app/u/[handle]",
       "packages/web/src/lib/profile-complexity.ts",
+      "packages/web/src/lib/profile-signals.ts",
       "packages/web/src/lib/__tests__/profile-complexity.test.ts",
+      "packages/web/src/lib/__tests__/profile-signals.test.ts",
       "packages/web/src/lib/__tests__/profile-route.test.ts",
       "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts",
       "packages/web/src/lib/__tests__/profile-telemetry.test.ts"
@@ -119,9 +123,10 @@
     "sstf": {
       "status": "passing",
       "score": 90,
-      "notes": "Focused profile contracts and the full package suite pass on the current tree.",
+      "notes": "Focused profile contracts and the full 608-test package suite pass, including peak-load estimate boundaries and initial-head metadata.",
       "evidence": [
         "packages/web/src/lib/__tests__/profile-route.test.ts",
+        "packages/web/src/lib/__tests__/profile-signals.test.ts",
         "packages/web/src/lib/__tests__/profile-data-telemetry.test.ts",
         "packages/web/src/lib/__tests__/profile-telemetry.test.ts"
       ]
@@ -144,10 +149,10 @@
     "ssra": {
       "status": "passing",
       "score": 90,
-      "notes": "Release gate, clean production build, Netlify preview, and desktop/mobile runtime proof pass.",
+      "notes": "Clean production build, exact-commit Netlify deployment, 100/100/100/100 Lighthouse, and overflow-free mobile/4K runtime proof pass.",
       "evidence": [
         "scripts/release-gate.mjs",
-        "Netlify deploy 6a5127f3f9933d0d39aae904"
+        "Netlify deploy 6a563b4120e1e2ccc61a93a0"
       ]
     },
     "sas": {
@@ -312,7 +317,7 @@
       "notes": "The route is split by responsibility; every TypeScript implementation file is below 400 lines and every owned implementation file is below the 600-line Gen3 ceiling."
     },
     "test_commands": [
-      "node --test packages/web/src/lib/__tests__/profile-complexity.test.ts packages/web/src/lib/__tests__/profile-route.test.ts packages/web/src/lib/__tests__/profile-data-telemetry.test.ts packages/web/src/lib/__tests__/profile-telemetry.test.ts"
+      "node --test packages/web/src/lib/__tests__/profile-complexity.test.ts packages/web/src/lib/__tests__/profile-route.test.ts packages/web/src/lib/__tests__/profile-data-telemetry.test.ts packages/web/src/lib/__tests__/profile-telemetry.test.ts packages/web/src/lib/__tests__/profile-signals.test.ts"
     ],
     "verification": [
       {
@@ -332,6 +337,12 @@
         "status": "pass",
         "timestamp": "2026-07-13T18:17:40Z",
         "notes": "26 focused profile tests, 15 control-plane tests, 554 package tests, strict VTRS, TypeScript, dependency audit, production Next build, interactive Delta Scope proof, and overflow-free 390x844, 1440x1200, and 3840x2160 renders passed."
+      },
+      {
+        "command": "pnpm test + pnpm typecheck + pnpm telemetry:audit:strict + pnpm sma:gen3:check + production build/deploy + Chrome DevTools proof",
+        "status": "pass",
+        "timestamp": "2026-07-14T13:40:58Z",
+        "notes": "608 tests, strict telemetry, TypeScript, dependency audit, Gen3 validation, exact-commit Netlify deploy 6a563b4120e1e2ccc61a93a0, 30/30 HTTP 200 responses, zero console messages, Lighthouse 100/100/100/100, and overflow-free 390x844 and 3840x2160 renders passed."
       }
     ]
   },
@@ -421,6 +432,42 @@
           "method": "git_commit",
           "reference": "bb4a030"
         }
+      },
+      {
+        "actor_kind": "agent",
+        "actor_id": "bdd-main@019f4b2d",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "commit": "ebf9518",
+        "files_touched": [
+          "packages/web/src/app/u/[handle]",
+          "packages/web/src/lib/profile-signals.ts",
+          "packages/web/src/lib/__tests__/profile-route.test.ts",
+          "packages/web/src/lib/__tests__/profile-signals.test.ts",
+          "packages/web/next.config.ts"
+        ],
+        "verification": [
+          {
+            "command": "full gates + exact production deployment + Chrome DevTools audit",
+            "status": "pass",
+            "timestamp": "2026-07-14T13:40:58Z",
+            "notes": "Plain-language readout, honest workload estimates, accessible interactions, initial-head metadata, 4K/mobile stability, and 100 Lighthouse category scores proved live."
+          }
+        ],
+        "timestamp": "2026-07-14T13:40:58Z",
+        "summary": "Made the public profile understandable at a glance and proved it accessible, indexable, and stable in production.",
+        "intent": "Explain recent usage, work mix, source leadership, and trust boundaries without overstating inferred concurrency.",
+        "decision_rationale": "Derived prose stays tied to public aggregates, workload estimates are labelled directional, and metadata blocks into the initial head for deterministic clients.",
+        "lease_id": "lease-1784036429572-29aca576",
+        "context_event_ids": [
+          "ctx-1784036429729-ee4f7f19"
+        ],
+        "attestation": {
+          "method": "git_commit",
+          "reference": "ebf9518"
+        }
       }
     ],
     "reviewed_by": [],
@@ -440,6 +487,14 @@
         "path": "packages/web/src/app/u/[handle]",
         "event": "updated",
         "timestamp": "2026-07-10T16:57:17Z"
+      },
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.public-profile.adaptive-depth",
+        "commit": "ebf9518",
+        "path": "packages/web/src/app/u/[handle]",
+        "event": "updated",
+        "timestamp": "2026-07-14T13:40:58Z"
       }
     ]
   }
