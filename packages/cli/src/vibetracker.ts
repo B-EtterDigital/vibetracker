@@ -1492,15 +1492,16 @@ async function main() {
     const cfg = loadConfig();
     const site = flag(argv, "--site") || SITE;
     try {
-      const token = await runLogin(createHttpAuthTransport(site), {
+      const login = await runLogin(createHttpAuthTransport(site), {
         open: openBrowser,
         sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
         log: (m) => console.log(m),
         githubToken: readGitHubCliToken,
       });
-      storeToken(cfg, token);
+      storeToken(cfg, login.accessToken);
+      if (login.identity) cfg.handle = login.identity.handle;
       saveConfig(cfg);
-      console.log(`✓ identity verified — VibeTRACKER token stored in the OS keyring when available. Uploads are now identity-attested.`);
+      console.log(`✓ identity verified${login.identity ? ` as @${login.identity.handle}` : ""} — VibeTRACKER token stored in the OS keyring when available. Uploads are now identity-attested.`);
     } catch (err) {
       console.error(`✗ login failed: ${(err as Error).message}`);
       process.exit(1);

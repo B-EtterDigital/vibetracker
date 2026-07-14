@@ -14,8 +14,8 @@ const noop = { sleep: async () => {}, log: () => {} };
 test("runLogin opens the verify URL with the user code and returns the token when approved", async () => {
   const opened: string[] = [];
   const t = transport([{ status: "pending" }, { status: "pending" }, { status: "approved", access_token: "tok_123" }]);
-  const token = await runLogin(t, { ...noop, open: (u) => opened.push(u), maxAttempts: 10 });
-  assert.equal(token, "tok_123");
+  const login = await runLogin(t, { ...noop, open: (u) => opened.push(u), maxAttempts: 10 });
+  assert.deepEqual(login, { accessToken: "tok_123", identity: undefined });
   assert.match(opened[0], /cli-login\?code=WXYZ-1234$/);
 });
 
@@ -27,15 +27,15 @@ test("runLogin reuses a GitHub CLI session and skips browser approval", async ()
     async poll() { return { status: "pending" }; },
     async verifyGithub(deviceCode, githubToken) {
       proof = { deviceCode, githubToken };
-      return { status: "approved", access_token: "vt_github" };
+      return { status: "approved", access_token: "vt_github", identity: { provider: "github", handle: "B-EtterDigital", verified: true } };
     },
   };
-  const token = await runLogin(t, {
+  const login = await runLogin(t, {
     ...noop,
     open: (url) => opened.push(url),
     githubToken: () => "github_secret",
   });
-  assert.equal(token, "vt_github");
+  assert.deepEqual(login, { accessToken: "vt_github", identity: { provider: "github", handle: "b-etterdigital", verified: true } });
   assert.deepEqual(proof, { deviceCode: "dc_secret", githubToken: "github_secret" });
   assert.deepEqual(opened, []);
 });
@@ -44,13 +44,25 @@ test("runLogin falls back to browser approval when GitHub proof is rejected", as
   const opened: string[] = [];
   const t = transport([{ status: "approved", access_token: "vt_browser" }]);
   t.verifyGithub = async () => { throw new Error("credential expired"); };
-  const token = await runLogin(t, {
+  const login = await runLogin(t, {
     ...noop,
     open: (url) => opened.push(url),
     githubToken: () => "github_expired",
   });
-  assert.equal(token, "vt_browser");
+  assert.deepEqual(login, { accessToken: "vt_browser", identity: undefined });
   assert.match(opened[0], /cli-login\?code=WXYZ-1234$/);
+});
+
+test("runLogin ignores malformed identity metadata without discarding a valid token", async () => {
+  const t: AuthTransport = {
+    async start() { return { device_code: "dc_secret", user_code: "WXYZ-1234", verify_url: "https://vibeusage.c0vibe.app/cli-login" }; },
+    async poll() { return { status: "pending" }; },
+    async verifyGithub() {
+      return { status: "approved", access_token: "vt_safe", identity: { provider: "github", handle: "../BAD HANDLE", verified: true } };
+    },
+  };
+  const login = await runLogin(t, { ...noop, open: () => {}, githubToken: () => "github_secret" });
+  assert.deepEqual(login, { accessToken: "vt_safe", identity: undefined });
 });
 
 test("denied authorization throws", async () => {

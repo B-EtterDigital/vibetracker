@@ -7,11 +7,16 @@ const linkRoute = readFileSync("packages/web/src/app/api/identity/github/link/ro
 const statusRoute = readFileSync("packages/web/src/app/api/identity/github/status/route.ts", "utf8");
 const accountLink = readFileSync("packages/web/src/lib/github-account-link.ts", "utf8");
 const migration = readFileSync("supabase/migrations/009_vibetracker_github_identity.sql", "utf8");
+const cli = readFileSync("packages/cli/src/vibetracker.ts", "utf8");
+const login = readFileSync("packages/cli/src/login.ts", "utf8");
 
 test("GitHub device verification exchanges an existing gh credential without persisting it", () => {
   assert.match(verifyRoute, /verifyGitHubAccessToken\(githubToken\)/);
   assert.match(verifyRoute, /vibetracker_verify_github_device/);
   assert.match(verifyRoute, /identity: \{[\s\S]*provider: "github"[\s\S]*verified: true/);
+  assert.match(login, /\^\[a-z0-9_\.\-\]\{1,64\}\$/);
+  assert.match(cli, /if \(login\.identity\) cfg\.handle = login\.identity\.handle/);
+  assert.match(cli, /storeToken\(cfg, login\.accessToken\)/);
   assert.doesNotMatch(migration, /github_token|access_token/);
   assert.doesNotMatch(verifyRoute, /console\.log|github_token:\s*githubToken/);
 });

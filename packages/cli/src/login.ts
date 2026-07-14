@@ -10,7 +10,22 @@ export interface DeviceStart {
   interval?: number;     // poll seconds
   expires_in?: number;
 }
-export interface DevicePoll { status: "pending" | "approved" | "denied"; access_token?: string }
+export interface DevicePoll {
+  status: "pending" | "approved" | "denied";
+  access_token?: string;
+  identity?: unknown;
+}
+
+export interface VerifiedLoginIdentity {
+  provider: "github";
+  handle: string;
+  verified: true;
+}
+
+export interface LoginResult {
+  accessToken: string;
+  identity?: VerifiedLoginIdentity;
+}
 
 export interface AuthTransport {
   start(): Promise<DeviceStart>;
@@ -26,16 +41,27 @@ export interface LoginDeps {
   maxAttempts?: number;
 }
 
-export async function runLogin(t: AuthTransport, deps: LoginDeps): Promise<string> {
+function approvedResult(poll: DevicePoll): LoginResult | null {
+  if (poll.status !== "approved" || !poll.access_token) return null;
+  const raw = poll.identity as { provider?: unknown; handle?: unknown; verified?: unknown } | null;
+  const handle = typeof raw?.handle === "string" ? raw.handle.trim().toLowerCase() : "";
+  const identity = raw?.provider === "github" && raw.verified === true && /^[a-z0-9_.-]{1,64}$/.test(handle)
+    ? { provider: "github" as const, handle, verified: true as const }
+    : undefined;
+  return { accessToken: poll.access_token, identity };
+}
+
+export async function runLogin(t: AuthTransport, deps: LoginDeps): Promise<LoginResult> {
   const s = await t.start();
   const githubToken = deps.githubToken?.();
   if (githubToken && t.verifyGithub) {
     deps.log("Found an existing GitHub CLI session. Verifying identity without opening an account page...");
     try {
       const verified = await t.verifyGithub(s.device_code, githubToken);
-      if (verified.status === "approved" && verified.access_token) {
-        deps.log("GitHub identity verified. Browser approval skipped; usage remains local until upload.");
-        return verified.access_token;
+      const result = approvedResult(verified);
+      if (result) {
+        deps.log(`GitHub identity verified${result.identity ? ` as @${result.identity.handle}` : ""}. Browser approval skipped; usage remains local until upload.`);
+        return result;
       }
       deps.log("GitHub identity was not accepted. Falling back to browser approval.");
     } catch (error) {
@@ -52,7 +78,8 @@ export async function runLogin(t: AuthTransport, deps: LoginDeps): Promise<strin
   for (let i = 0; i < max; i++) {
     await deps.sleep(interval * 1000);
     const p = await t.poll(s.device_code);
-    if (p.status === "approved" && p.access_token) return p.access_token;
+    const result = approvedResult(p);
+    if (result) return result;
     if (p.status === "denied") throw new Error("authorization was denied");
   }
   throw new Error("login timed out — run `vibetracker login` again");
