@@ -25,11 +25,19 @@ export interface HeroDiscipline {
 export interface HeroState {
   label: string;
   value: string;
+  title?: string;
 }
 
 export interface HeroModel {
   model: string;
   spend: string;
+}
+
+export interface HeroMetric {
+  label: string;
+  value: string;
+  note: string;
+  title?: string;
 }
 
 export interface ProfileHeroProps {
@@ -40,15 +48,21 @@ export interface ProfileHeroProps {
   signalTier: string;
   signalHint: string;
   tierChip: string;
-  bio: string;
-  userBio: string;
+  metrics: HeroMetric[];
+  joinHref: string;
+  migrateHref: string;
+}
+
+export interface ProfileHeroEvidenceProps {
+  accent: string;
+  signalTier: string;
+  signalHint: string;
   since: string;
-  disciplines: HeroDiscipline[];
   state: HeroState[];
   topModels: HeroModel[];
   brands: BrandChip[];
-  joinHref: string;
-  migrateHref: string;
+  disciplines: HeroDiscipline[];
+  userBio: string;
 }
 
 // Source = a big logo tile, no label until you hover — the name floats up on hover / focus. The
@@ -80,13 +94,7 @@ export function ProfileHero({
   signalTier,
   signalHint,
   tierChip,
-  bio,
-  userBio,
-  since,
-  disciplines,
-  state,
-  topModels,
-  brands,
+  metrics,
   joinHref,
   migrateHref,
 }: ProfileHeroProps) {
@@ -119,39 +127,80 @@ export function ProfileHero({
         </div>
       </div>
 
-      {/* ---- body: bio + disciplines + doors on the left, viber state on the right ---- */}
+      {/* ---- compact lifetime footprint: current-period evidence follows immediately after ---- */}
       <div className="vhero-body">
-        <div className="vhero-lead">
-          <p className="vhero-bio">{bio}</p>
-
-          {disciplines.length ? (
-            <ul className="vhero-disciplines" aria-label="Disciplines this viber creates in">
-              {disciplines.map((d) => (
-                <li className="vhero-discipline" style={{ "--vd": d.color } as CSSProperties} key={d.id}>
-                  <i aria-hidden="true" />
-                  {d.label}
-                  <b>{d.share < 1 ? "<1" : Math.round(d.share)}%</b>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-
-          <div className="vhero-actions">
-            <a className="vhero-cta vhero-cta--primary" href={joinHref}>
-              Join C0VIBE — free
-              <i aria-hidden="true">&#8599;</i>
-            </a>
-            <a className="vhero-cta" href={migrateHref}>Migrate this profile</a>
-          </div>
+        <div className="vhero-footprint-head">
+          <p>Lifetime footprint</p>
+          <span>uploaded aggregates · current 30-day read follows</span>
         </div>
 
+        <dl className="vhero-metrics">
+          {metrics.map((metric) => (
+            <div className="vhero-metric" key={metric.label}>
+              <dt>{metric.label}</dt>
+              <dd title={metric.title} aria-label={metric.title ?? metric.value}>{metric.value}</dd>
+              <p>{metric.note}</p>
+            </div>
+          ))}
+        </dl>
+
+        <div className="vhero-actions">
+          <a className="vhero-cta vhero-cta--primary" href={joinHref}>
+            Join C0VIBE — free
+            <i aria-hidden="true">&#8599;</i>
+          </a>
+          <a className="vhero-cta" href={migrateHref}>Migrate this profile</a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function ProfileHeroEvidence({
+  accent,
+  signalTier,
+  signalHint,
+  since,
+  state,
+  topModels,
+  brands,
+  disciplines,
+  userBio,
+}: ProfileHeroEvidenceProps) {
+  return (
+    <section
+      className="vhero-evidence"
+      style={{ "--vhero-accent": accent } as CSSProperties}
+      aria-labelledby="vhero-evidence-title"
+    >
+      <header className="vhero-evidence-head">
+        <div>
+          <p>Evidence bay</p>
+          <h2 id="vhero-evidence-title">What sits behind this profile</h2>
+        </div>
+        <span>models ranked by spend · sources are complete</span>
+      </header>
+
+      {disciplines.length ? (
+        <ul className="vhero-disciplines" aria-label="Disciplines this viber creates in">
+          {disciplines.map((d) => (
+            <li className="vhero-discipline" style={{ "--vd": d.color } as CSSProperties} key={d.id}>
+              <i aria-hidden="true" />
+              {d.label}
+              <b>{d.share < 1 ? "<1" : Math.round(d.share)}%</b>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <div className="vhero-evidence-grid">
         <aside className="vhero-state" aria-label="Viber state">
           <p className="vhero-state-head">viber state</p>
           <dl className="vhero-state-grid">
             {state.map((row) => (
               <div className="vhero-state-cell" key={row.label}>
                 <dt>{row.label}</dt>
-                <dd>{row.value}</dd>
+                <dd title={row.title} aria-label={row.title ?? row.value}>{row.value}</dd>
               </div>
             ))}
           </dl>
@@ -184,29 +233,31 @@ export function ProfileHero({
             </span>
           </p>
         </aside>
-      </div>
 
-      {brands.length ? (
-        <div className="vhero-sources" aria-label="Sources tracked on this profile">
-          <p className="vhero-sources-head">
-            Sources
-            <span>{brands.length} tracked · full stack below</span>
-          </p>
-          <div className="vhero-source-row">
-            {brands.map((brand) => <SourceTile brand={brand} key={brand.id} />)}
+        <div className="vhero-evidence-stack">
+          {brands.length ? (
+            <div className="vhero-sources" aria-label="Sources tracked on this profile">
+              <p className="vhero-sources-head">
+                Tracked sources
+                <span>{brands.length} total · focus a tile for its name</span>
+              </p>
+              <div className="vhero-source-row">
+                {brands.map((brand) => <SourceTile brand={brand} key={brand.id} />)}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="vhero-biobar">
+            {userBio ? (
+              <p className="vhero-userbio">{userBio}</p>
+            ) : (
+              <p className="vhero-addbio">
+                <i aria-hidden="true">+</i>
+                Add a bio — <code>vibetracker profile --bio &quot;…&quot;</code> then re-sync
+              </p>
+            )}
           </div>
         </div>
-      ) : null}
-
-      <div className="vhero-biobar">
-        {userBio ? (
-          <p className="vhero-userbio">{userBio}</p>
-        ) : (
-          <p className="vhero-addbio">
-            <i aria-hidden="true">+</i>
-            Add a bio — <code>vibetracker profile --bio &quot;…&quot;</code> then re-sync
-          </p>
-        )}
       </div>
     </section>
   );

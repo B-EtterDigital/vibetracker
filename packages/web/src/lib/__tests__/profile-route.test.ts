@@ -73,6 +73,21 @@ test("profile hero carries the identity surface, the full discipline set, and th
   assert.match(heroStyles, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
+test("profile first read compresses lifetime scale and puts current evidence before the deep inventory", () => {
+  assert.match(page, /notation: "compact"/);
+  assert.match(page, /label: "Estimated operations"/);
+  assert.match(page, /reconstructed from usage records/);
+  assert.match(hero, /Lifetime footprint/);
+  assert.match(hero, /current 30-day read follows/);
+  assert.match(hero, /export function ProfileHeroEvidence/);
+  assert.match(hero, /What sits behind this profile/);
+  assert.match(page, /<ProfileHero[\s\S]*<ProfileReadout[\s\S]*<ProfileHeroEvidence/);
+  assert.match(heroStyles, /\.vhero-banner \{[\s\S]*min-height: 260px/);
+  assert.match(heroStyles, /\.vhero-metrics \{[\s\S]*repeat\(4/);
+  assert.match(heroStyles, /@media \(max-width: 760px\) \{[\s\S]*min-height: 200px/);
+  assert.match(heroStyles, /@media \(max-width: 620px\) \{[\s\S]*grid-template-columns: repeat\(2/);
+});
+
 test("vibe state ranks by spend, lists top 5 models, and explains the signal tier", () => {
   // Op-count made cheap high-volume haiku read as top model and mis-ranked the top source; spend
   // is the honest headline and stays consistent with the money everywhere.
@@ -91,10 +106,11 @@ test("sources are a labelled big-logo row with the brand on hover, and a bio can
   assert.match(page, /\.filter\(\(p\) => p\.usd > 0 \|\| p\.ops > 0\)/);
   assert.match(hero, /vhero-sources/);
   assert.match(hero, /vhero-sources-head/);
-  assert.match(hero, />\s*Sources\s*<span>/);
+  assert.match(hero, />\s*Tracked sources\s*<span>/);
   assert.match(hero, /function SourceTile/);
   assert.match(hero, /vhero-source-name/);               // brand name revealed on hover
   assert.match(heroStyles, /\.vhero-source:hover \.vhero-source-name/);
+  assert.match(heroStyles, /\.vhero-source:focus \.vhero-source-name/);
   // bio: render the viber's own, else the "add a bio" affordance with the CLI command
   assert.match(hero, /userBio \?/);
   assert.match(hero, /Add a bio/);

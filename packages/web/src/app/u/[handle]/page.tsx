@@ -20,7 +20,13 @@ import {
   type KeyValueRow,
   type MixBar,
 } from "./panels";
-import { ProfileHero, type HeroDiscipline } from "./profile-hero";
+import {
+  ProfileHero,
+  ProfileHeroEvidence,
+  type HeroDiscipline,
+  type HeroMetric,
+  type HeroState,
+} from "./profile-hero";
 import { C0vibeBand } from "./profile-cta";
 import { SyncRhythm, GitHubContributions } from "./profile-heatmap";
 import { TokenBreakdown, Delegation } from "./profile-tokens";
@@ -87,6 +93,13 @@ function providerLabel(id: string): string {
 // Model ids carry a build date suffix (claude-haiku-4-5-20251001); the rail wants the model.
 function prettyModel(model: string): string {
   return model.replace(/-\d{8}$/, "");
+}
+
+function compactNumber(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 function primaryCategory(id: string): string {
@@ -309,22 +322,50 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // read as the "top model" and a high-message source outrank the one that actually cost the most;
   // spend is the honest headline and it stays consistent with the money everywhere else.
   const topSource = byUsd[0] ? providerLabel(byUsd[0].provider) : "—";
-  const compactUsd = (n: number) =>
-    n >= 1000 ? `$${Math.round(n / 1000)}k` : n >= 1 ? `$${Math.round(n)}` : `$${n.toFixed(2)}`;
+  const compactUsd = (n: number) => {
+    const magnitude = Math.abs(n);
+    const sign = n < 0 ? "-" : "";
+    if (magnitude >= 1_000_000) return `${sign}$${(magnitude / 1_000_000).toFixed(1)}m`;
+    if (magnitude >= 1_000) return `${sign}$${(magnitude / 1_000).toFixed(1)}k`;
+    return formatUsd(n);
+  };
   const topModels = profile.providerModels
     .slice()
     .sort((a, b) => b.usd - a.usd || b.ops - a.ops)
     .slice(0, 5)
     .map((m) => ({ model: prettyModel(m.model), spend: compactUsd(m.usd) }));
-  const heroState = [
+  const exactOps = Math.round(facts.ops).toLocaleString("en-US");
+  const heroState: HeroState[] = [
     { label: "signal", value: read.tier },
-    ...(profile.rank ? [{ label: "global rank", value: `#${profile.rank}` }] : [{ label: "operations", value: formatInt(facts.ops) }]),
+    ...(profile.rank
+      ? [{ label: "global rank", value: `#${profile.rank}` }]
+      : [{ label: "estimated ops", value: compactNumber(facts.ops), title: `${exactOps} reconstructed operations` }]),
     { label: "disciplines", value: String(facts.categories) },
     { label: "top source", value: topSource },
   ];
-
-  const bio = `${formatInt(facts.ops)} operations across ${facts.providers} sources and ${facts.categories} disciplines. `
-    + `${formatUsd(facts.usd)} tracked over ${facts.days} active days.`;
+  const heroMetrics: HeroMetric[] = [
+    {
+      label: "API-equivalent cost",
+      value: compactUsd(facts.usd),
+      note: `${formatUsd(facts.usd)} reference value, not a bill`,
+    },
+    {
+      label: "Estimated operations",
+      value: compactNumber(facts.ops),
+      note: "reconstructed from usage records",
+      title: `${exactOps} reconstructed operations`,
+    },
+    {
+      label: "Active days",
+      value: formatInt(facts.days),
+      note: "days with tracked usage",
+    },
+    {
+      label: "Source coverage",
+      value: formatInt(facts.providers),
+      note: `sources across ${facts.categories} disciplines`,
+    },
+  ];
   // A viber's own bio (set with `vibetracker profile --bio`), shown below the sources. Empty for
   // most profiles today, which surfaces the "add a bio" affordance instead.
   const userBio = (profile.bio ?? "").trim();
@@ -374,13 +415,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       signalTier={read.tier}
       signalHint={read.hint}
       tierChip={tierRaw}
-      bio={bio}
-      userBio={userBio}
-      since={fmtDate(profile.usageDays[0]?.date ?? profile.created_at)}
-      disciplines={disciplines}
-      state={heroState}
-      topModels={topModels}
-      brands={brands}
+      metrics={heroMetrics}
       joinHref={C0VIBE_JOIN_HREF}
       migrateHref={C0VIBE_MIGRATE_HREF}
       key="hero"
@@ -394,6 +429,19 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       hasGitHubEvidence={Boolean(githubSignal)}
       through={fmtDate(latestRead?.current.at(-1)?.date ?? profile.latest?.created_at ?? profile.created_at)}
       key="readout"
+    />);
+  add("hero", "full",
+    <ProfileHeroEvidence
+      accent={heroAccent}
+      signalTier={read.tier}
+      signalHint={read.hint}
+      since={fmtDate(profile.usageDays[0]?.date ?? profile.created_at)}
+      state={heroState}
+      topModels={topModels}
+      brands={brands}
+      disciplines={disciplines}
+      userBio={userBio}
+      key="hero-evidence"
     />);
   // The Signal read leads: archetype + measured skill signals + the reframed API-equivalent cost.
   // Money is the reference, not the headline — skill is what you see first.

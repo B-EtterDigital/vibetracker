@@ -9,7 +9,7 @@
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(46, 232, 214, 0.18);
-  border-radius: 14px;
+  border-radius: 8px;
   background: #0c1318;
 }
 
@@ -20,7 +20,7 @@
   isolation: isolate;
   display: flex;
   align-items: flex-end;
-  min-height: clamp(300px, 30vw, 440px);
+  min-height: 260px;
   padding: clamp(20px, 3vw, 34px);
   overflow: hidden;
 }
@@ -105,8 +105,8 @@
 .vhero-avatar-mark {
   position: relative;
   z-index: 1;
-  font: 800 clamp(30px, 3.4vw, 44px) / 1 var(--vp-mono);
-  letter-spacing: -0.04em;
+  font: 800 42px / 1 var(--vp-mono);
+  letter-spacing: 0;
   color: #eafff8;
   text-shadow: 0 0 22px color-mix(in srgb, var(--vhero-accent) 60%, transparent);
 }
@@ -138,8 +138,8 @@
 }
 .vhero-name {
   margin: 0;
-  font: 800 clamp(2rem, 4.6vw, 3.4rem) / 1.02 var(--vp-mono);
-  letter-spacing: -0.045em;
+  font: 800 3rem / 1.02 var(--vp-mono);
+  letter-spacing: 0;
   color: #f2fffb;
   overflow-wrap: anywhere;
   text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
@@ -167,21 +167,47 @@
 /* ---------------------------------- body ----------------------------------- */
 
 .vhero-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(216px, 0.5fr);
-  gap: clamp(16px, 2.2vw, 30px);
   padding: clamp(18px, 2.4vw, 28px);
 }
-.vhero-lead { min-width: 0; }
-.vhero-bio {
-  margin: 0;
-  max-width: 62ch;
-  font: 400 14.5px/1.65 var(--vp-mono);
-  color: rgba(217, 255, 242, 0.7);
+.vhero-footprint-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
 }
+.vhero-footprint-head p,
+.vhero-footprint-head span { margin: 0; font-family: var(--vp-mono); }
+.vhero-footprint-head p { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #d9fff2; }
+.vhero-footprint-head span { font-size: 10px; color: rgba(217, 255, 242, 0.42); }
+
+.vhero-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  border-block: 1px solid rgba(217, 255, 242, 0.1);
+}
+.vhero-metric { min-width: 0; padding: 14px 16px 14px 0; }
+.vhero-metric + .vhero-metric { padding-left: 16px; border-left: 1px solid rgba(217, 255, 242, 0.1); }
+.vhero-metric dt {
+  margin: 0 0 7px;
+  font: 700 9px/1 var(--vp-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(217, 255, 242, 0.46);
+}
+.vhero-metric dd {
+  margin: 0;
+  font: 750 22px/1.05 var(--vp-mono);
+  color: #f2fffb;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.vhero-metric:first-child dd { color: var(--vhero-accent); }
+.vhero-metric p { margin: 7px 0 0; font: 500 10px/1.4 var(--vp-mono); color: rgba(217, 255, 242, 0.46); }
 
 /* disciplines — the FULL set, never collapsed to "generalist" */
-.vhero-disciplines { display: flex; flex-wrap: wrap; gap: 7px; margin: 16px 0 0; padding: 0; list-style: none; }
+.vhero-disciplines { display: flex; flex-wrap: wrap; gap: 7px; margin: 14px 0 0; padding: 0; list-style: none; }
 .vhero-discipline {
   display: inline-flex;
   align-items: center;
@@ -197,7 +223,7 @@
 .vhero-discipline b { font-weight: 500; color: rgba(217, 255, 242, 0.45); font-variant-numeric: tabular-nums; }
 
 /* --- CTAs (shared base with the C0VIBE band buttons) --- */
-.vhero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 0; }
+.vhero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 0; }
 .vhero-cta,
 .vjoin-btn {
   display: inline-flex;
@@ -233,6 +259,31 @@
 }
 .vhero-cta i,
 .vjoin-btn i { font-style: normal; opacity: 0.7; }
+
+/* ---------------------------- profile evidence ---------------------------- */
+
+.vhero-evidence {
+  padding: clamp(18px, 2.4vw, 28px);
+  border: 1px solid rgba(46, 232, 214, 0.14);
+  border-radius: 8px;
+  background: #0c1318;
+}
+.vhero-evidence-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+.vhero-evidence-head p,
+.vhero-evidence-head h2,
+.vhero-evidence-head > span { margin: 0; }
+.vhero-evidence-head p { margin-bottom: 7px; font: 700 9px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.14em; color: var(--vhero-accent); }
+.vhero-evidence-head h2 { font: 650 1.15rem/1.2 var(--font-display), ui-sans-serif, system-ui, sans-serif; letter-spacing: 0; color: #effbf7; }
+.vhero-evidence-head > span { font: 500 10px/1.4 var(--vp-mono); color: rgba(217, 255, 242, 0.42); text-align: right; }
+.vhero-evidence > .vhero-disciplines { margin: 0 0 16px; }
+.vhero-evidence-grid { display: grid; grid-template-columns: minmax(250px, 0.72fr) minmax(0, 1.28fr); gap: 18px; align-items: start; }
+.vhero-evidence-stack { min-width: 0; }
 
 /* --- viber-state rail (C0VIBE's hero-meta, terminal-ised) --- */
 .vhero-state {
@@ -322,7 +373,7 @@
 .vhero-topmodels-spend { font: 600 11px/1 var(--vp-mono); color: rgba(217, 255, 242, 0.55); font-variant-numeric: tabular-nums; }
 
 /* ---- sources: big logo tiles, brand name on hover ---- */
-.vhero-sources { padding: 4px clamp(18px, 2.4vw, 28px) 0; }
+.vhero-sources { min-width: 0; padding: 13px 14px; border: 1px solid rgba(217, 255, 242, 0.1); border-radius: 8px; background: rgba(4, 6, 7, 0.36); }
 .vhero-sources-head {
   display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
   margin: 0 0 12px;
@@ -369,10 +420,11 @@
   z-index: 3;
 }
 .vhero-source:hover .vhero-source-name,
+.vhero-source:focus .vhero-source-name,
 .vhero-source:focus-visible .vhero-source-name { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ---- bio bar (below the sources) ---- */
-.vhero-biobar { padding: 16px clamp(18px, 2.4vw, 28px) clamp(18px, 2.4vw, 26px); }
+.vhero-biobar { padding: 14px 0 0; }
 .vhero-userbio { margin: 0; max-width: 76ch; font: 400 14px/1.65 var(--vp-mono); color: rgba(217, 255, 242, 0.78); }
 .vhero-addbio {
   display: inline-flex; align-items: center; gap: 9px; flex-wrap: wrap;
@@ -391,13 +443,32 @@
 }
 
 @media (max-width: 1000px) {
-  .vhero-body { grid-template-columns: 1fr; }
+  .vhero-evidence-grid { grid-template-columns: 1fr; }
   .vhero-state-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 760px) {
+  .vhero-banner { min-height: 200px; padding: 20px; }
+  .vhero-avatar { width: 78px; }
+  .vhero-avatar-mark { font-size: 30px; }
+  .vhero-name { font-size: 1.9rem; }
+  .vhero-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vhero-metric:nth-child(3) { padding-left: 0; border-left: 0; border-top: 1px solid rgba(217, 255, 242, 0.1); }
+  .vhero-metric:nth-child(4) { border-top: 1px solid rgba(217, 255, 242, 0.1); }
+  .vhero-footprint-head,
+  .vhero-evidence-head { align-items: start; flex-direction: column; gap: 7px; }
+  .vhero-evidence-head > span { text-align: left; }
 }
 @media (max-width: 620px) {
   .vhero-banner-foot { align-items: flex-start; gap: 14px; }
   .vhero-state-grid { grid-template-columns: 1fr 1fr; }
-  .vhero-actions .vhero-cta { flex: 1 1 auto; justify-content: center; }
+  .vhero-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .vhero-actions .vhero-cta {
+    min-width: 0;
+    padding: 10px 8px;
+    justify-content: center;
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
   .vhero-source { width: 52px; height: 52px; }
   .vhero-source-logo, .vhero-source-glyph { width: 34px; height: 34px; }
 }
