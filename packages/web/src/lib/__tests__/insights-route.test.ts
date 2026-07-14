@@ -7,7 +7,9 @@ import { buildInsightsRunwaySnapshot, buildInsightsRunwaySource } from "../insig
 test("insights route is a route-local explained cost plan", () => {
   const page = readFileSync("packages/web/src/app/insights/page.tsx", "utf8");
   const consoleSource = readFileSync("packages/web/src/app/insights/runway-decision-console.tsx", "utf8");
+  const briefSource = readFileSync("packages/web/src/app/insights/insight-brief.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/insights/insights.css", "utf8");
+  const briefStyles = readFileSync("packages/web/src/app/insights/insights-brief.css", "utf8");
   const controls = readFileSync("packages/web/src/app/insights/insights-controls.css", "utf8");
   const ledger = readFileSync("packages/web/src/app/insights/insights-ledger.css", "utf8");
   const responsive = readFileSync("packages/web/src/app/insights/insights-responsive.css", "utf8");
@@ -18,11 +20,13 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(page, /buildInsightsRunwaySource/);
   assert.match(page, /<RunwayDecisionConsole/);
   assert.match(page, /\.\/insights\.css/);
+  assert.match(page, /\.\/insights-brief\.css/);
   assert.match(page, /\.\/insights-controls\.css/);
   assert.match(page, /\.\/insights-ledger\.css/);
   assert.match(page, /\.\/insights-responsive\.css/);
   assert.match(consoleSource, /^"use client";/);
   assert.match(consoleSource, /PLAN_PRESETS/);
+  assert.match(consoleSource, /<InsightBrief/);
   assert.match(consoleSource, /type="range"/);
   assert.match(consoleSource, /aria-pressed=/);
   assert.match(consoleSource, /navigator\.clipboard\.writeText/);
@@ -30,6 +34,14 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(consoleSource, /0 usage writes · 0 rank changes · 0 provider changes/);
   assert.match(styles, /\.intel-console/);
   assert.match(styles, /\.intel-decision/);
+  assert.match(briefSource, /What this scenario is actually saying/);
+  assert.match(briefSource, /Low confidence/);
+  assert.match(briefSource, /Read the direction, not the forecast as a promise/);
+  assert.match(briefSource, /NEXT DECISION/);
+  assert.match(briefSource, /Review <b>\{source\.topProvider\}<\/b> jobs first/);
+  assert.match(briefSource, /Most of this buffer comes from the higher limit, not from local savings/);
+  assert.match(briefStyles, /\.intel-brief__signals/);
+  assert.match(briefStyles, /@media \(max-width: 760px\)/);
   assert.match(controls, /\.intel-presets/);
   assert.match(ledger, /\.intel-math/);
   assert.match(responsive, /@media \(max-width: 760px\)/);
@@ -37,6 +49,7 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(manifest, /000-vibetracker\.web\.runway-decision-console/);
   assert.doesNotMatch(page, /InsightsDecisionRadarPanel|InsightsBudgetPulsePanel|InsightsDeckPanel/);
   assert.doesNotMatch(consoleSource, /dangerouslySetInnerHTML/);
+  assert.doesNotMatch(briefSource, /dangerouslySetInnerHTML/);
   assert.doesNotMatch(consoleSource, /type="checkbox"|intel-scope__wave|reviewArmed/);
 });
 

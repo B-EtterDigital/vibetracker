@@ -6,6 +6,7 @@ import {
   type InsightsRunwaySnapshot,
   type InsightsRunwaySource,
 } from "../../lib/insights-runway.ts";
+import { InsightBrief } from "./insight-brief";
 
 interface RunwayDecisionConsoleProps {
   source: InsightsRunwaySource;
@@ -111,8 +112,8 @@ export function RunwayDecisionConsole({
             <p>MONTHLY AI COST PLAN</p>
             <h1 id="intel-title">Know what next month may cost.</h1>
             <span>
-              Set a monthly spending limit, test a local-work scenario, and see the consequence in dollars.
-              Nothing on this page changes your usage or providers.
+              See the budget verdict, the strength of the evidence, and the lever that actually matters.
+              Then test the assumptions without changing your usage or providers.
             </span>
             <div className="intel-basis">
               <b>Why the forecast is {currency.format(source.forecastUsd)}</b>
@@ -133,6 +134,13 @@ export function RunwayDecisionConsole({
           <span><b>{providerCount}</b> providers</span>
           <span><b>{activeDays}</b> active days</span>
         </div>
+
+        <InsightBrief
+          activeDays={activeDays}
+          localShiftPercent={localShiftPercent}
+          snapshot={snapshot}
+          source={source}
+        />
 
         <section className="intel-decision" aria-labelledby="intel-decision-title">
           <header>

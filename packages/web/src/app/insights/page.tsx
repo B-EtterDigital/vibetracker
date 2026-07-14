@@ -2,6 +2,7 @@ import { buildInsightsRunwaySource } from "../../lib/insights-runway.ts";
 import { RunwayDecisionConsole } from "./runway-decision-console";
 import { INSIGHTS_SAMPLE_PROFILE } from "./sample-profile";
 import "./insights.css";
+import "./insights-brief.css";
 import "./insights-controls.css";
 import "./insights-ledger.css";
 import "./insights-responsive.css";

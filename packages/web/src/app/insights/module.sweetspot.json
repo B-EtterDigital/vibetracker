@@ -5,7 +5,7 @@
     "name": "Explained AI Cost Plan",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["usage-analytics", "budget-planning", "local-simulation", "explainable-analytics"]
@@ -15,7 +15,7 @@
     "group_id": "000-vibetracker:packages/web/src/app",
     "contains": ["route", "component", "sample", "model-adapter", "style", "test"],
     "component_policy": "internal_by_default",
-    "notes": "Recommendation-first, estimate-only cost plan driven by the production Insights model with visible sample-data, calculation, confidence, and no-write boundaries."
+    "notes": "Verdict-first, estimate-only cost plan driven by the production Insights model with visible evidence strength, lever materiality, calculation, and no-write boundaries."
   },
   "source": {
     "project": "000-vibetracker",
@@ -43,8 +43,10 @@
     "public_paths": [
       "packages/web/src/app/insights/page.tsx",
       "packages/web/src/app/insights/runway-decision-console.tsx",
+      "packages/web/src/app/insights/insight-brief.tsx",
       "packages/web/src/app/insights/sample-profile.ts",
       "packages/web/src/app/insights/insights.css",
+      "packages/web/src/app/insights/insights-brief.css",
       "packages/web/src/app/insights/insights-controls.css",
       "packages/web/src/app/insights/insights-ledger.css",
       "packages/web/src/app/insights/insights-responsive.css",
@@ -73,17 +75,18 @@
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Server route, sample profile, client decision surface, production model adapter, styles, and tests are separated; every owned implementation file is below 300 lines.",
+      "notes": "Server route, sample profile, client decision surface, derived signal brief, production model adapter, styles, and tests are separated; every owned implementation file is below 300 lines.",
       "evidence": [
         "packages/web/src/app/insights/page.tsx",
         "packages/web/src/app/insights/runway-decision-console.tsx",
+        "packages/web/src/app/insights/insight-brief.tsx",
         "packages/web/src/lib/insights-runway.ts"
       ]
     },
     "ssi": {
       "status": "passing",
       "score": 95,
-      "notes": "One typed snapshot drives the recommendation, exact comparison, calculation trace, presets, and copied dry-run command; no generated visualization is presented as evidence.",
+      "notes": "One typed snapshot drives the verdict, confidence brief, lever materiality, exact comparison, calculation trace, presets, and copied dry-run command; no generated visualization is presented as evidence.",
       "evidence": ["packages/web/src/lib/insights-runway.ts"]
     },
     "sstf": {
@@ -107,26 +110,27 @@
     "srs": {
       "status": "passing",
       "score": 95,
-      "notes": "Sample status, formula basis, local-savings denominator, estimate confidence, clipboard failures, and zero-write boundaries are visible in plain language.",
+      "notes": "Budget verdict, observation confidence, lever materiality, next decision, sample status, formula basis, clipboard failures, and zero-write boundaries are visible in plain language.",
       "evidence": [
         "packages/web/src/app/insights/runway-decision-console.tsx",
+        "packages/web/src/app/insights/insight-brief.tsx",
         "packages/web/src/lib/__tests__/insights-route.test.ts"
       ]
     },
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "The production build passed interaction, network, console, and overflow checks at 390px mobile, 1440px desktop, and 3840px 4K fullscreen viewports.",
+      "notes": "Preview 6a55fae0b57be3407b61670f passed all three planning states, disclosure/copy behavior, network, console, overflow, and visual checks at 390px mobile, 1440px desktop, and 3840px 4K fullscreen viewports.",
       "evidence": [
-        "/tmp/insights-final-mobile.png",
-        "/tmp/insights-final-desktop.png",
-        "/tmp/insights-final-4k.png"
+        "/tmp/vibeusage-insights-brief-390.png",
+        "/tmp/vibeusage-insights-brief-1440.png",
+        "/tmp/vibeusage-insights-brief-4k.png"
       ]
     },
     "sas": {
       "status": "passing",
       "score": 95,
-      "notes": "The route, console, adapter, styles, sample, and focused tests have explicit owned and public boundaries.",
+      "notes": "The route, console, signal brief, adapter, styles, sample, and focused tests have explicit owned and public boundaries.",
       "evidence": ["packages/web/src/app/insights/module.sweetspot.json"]
     },
     "sva": {
@@ -225,15 +229,15 @@
   "quality": {
     "score": 90,
     "line_count": {
-      "max_file_lines": 261,
+      "max_file_lines": 268,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 959,
-      "file_count": 10,
+      "feature_lines": 1178,
+      "file_count": 12,
       "dependency_count": 2,
-      "notes": "The route remains a small server surface plus a 261-line client decision component, 91-line production model adapter, and split route-local styles."
+      "notes": "The route remains a small server surface plus a 268-line client decision component, 113-line derived signal brief, 90-line production model adapter, and split route-local styles."
     },
     "test_commands": [
       "node --test packages/web/src/lib/__tests__/insights-route.test.ts",
@@ -243,8 +247,8 @@
       {
         "command": "focused insights tests + pnpm sma:release-gate + pnpm audit --audit-level high + pnpm --dir packages/web build",
         "status": "pass",
-        "timestamp": "2026-07-13T19:29:00Z",
-        "notes": "7 focused Insights tests, 15 control-plane tests, 555 package tests, strict VTRS with 0 violations, TypeScript, dependency audit with no known vulnerabilities, clean 23-route Next build, and production interaction proof at 390px, 1440px, and 3840px passed with no overflow, console errors, or failed dynamic requests."
+        "timestamp": "2026-07-14T08:55:04Z",
+        "notes": "7 focused Insights tests, 15 control-plane tests, 596 package tests, strict VTRS with 0 violations, TypeScript, dependency audit with no known vulnerabilities, clean 27-route Next build, and preview interaction proof at 390px, 1440px, and 3840px passed with no overflow, console errors, or failed dynamic requests."
       }
     ]
   },
