@@ -74,7 +74,7 @@
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Session derivation, provider availability, global status, account interaction, and server status lookup are separated into focused files; every source file stays below 300 lines.",
+      "notes": "Session derivation, provider availability, global status, account interaction, and server status lookup are separated into focused files; the largest source file is 245 lines.",
       "evidence": ["packages/web/src/app/account", "packages/web/src/components/account-control.tsx"]
     },
     "ssi": {
@@ -103,9 +103,9 @@
     },
     "ssra": {
       "status": "partial",
-      "score": 91,
-      "notes": "Release gate, production builds, deploy, API probe, interaction, and mobile/desktop/4K layout proof pass. Browser OAuth remains visibly disabled because no dedicated GitHub OAuth app is configured; the existing GitHub CLI verification path remains live.",
-      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/__tests__/account-route.test.ts", "Netlify deploy 6a55e42a25aa7657de3227db"]
+      "score": 94,
+      "notes": "Focused tests, release gate, production builds, immutable preview, account interaction, mobile/desktop/4K layout proof, and live CLI start/poll/rejection probes pass. Browser OAuth remains visibly unavailable because no dedicated GitHub OAuth app is configured; GitHub CLI sign-in is the live account-free path.",
+      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/__tests__/account-route.test.ts", "Netlify deploy 6a561d9d27546731cca4f52a"]
     },
     "sas": {
       "status": "passing",
@@ -127,9 +127,9 @@
     },
     "sev": {
       "status": "passing",
-      "score": 94,
-      "notes": "Public Supabase configuration is guarded client-side and the service-role key remains server-only.",
-      "evidence": ["packages/web/src/lib/supabase-browser.ts", "packages/web/src/lib/supabase-server.ts"]
+      "score": 96,
+      "notes": "Public Supabase configuration is guarded client-side, the service-role key is secret-scoped in Netlify, and live invalid-token/session probes fail without returning credentials.",
+      "evidence": ["packages/web/src/lib/supabase-browser.ts", "packages/web/src/lib/supabase-admin.ts", "Netlify deploy 6a561d9d27546731cca4f52a"]
     },
     "ssc": {
       "status": "passing",
@@ -198,14 +198,14 @@
     "sbom_path": ""
   },
   "quality": {
-    "score": 94,
+    "score": 96,
     "line_count": {
-      "max_file_lines": 223,
+      "max_file_lines": 245,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 782,
+      "feature_lines": 788,
       "file_count": 10,
       "dependency_count": 3,
       "notes": "The implementation is split across the route, pure session helper, global control, server status endpoint, styles, and focused contracts."
@@ -220,13 +220,13 @@
       {
         "command": "focused auth tests + pnpm sma:release-gate + pnpm build + pnpm --dir packages/web build",
         "status": "pass",
-        "timestamp": "2026-07-14T06:45:13Z",
-        "notes": "11 focused auth tests, 15 control-plane tests, 595 package tests, strict telemetry with zero violations, typecheck, root build, and Next production build pass. Netlify deploy 6a55e42a25aa7657de3227db is live; account interaction, 401 private no-store status, all-200 route assets, and 390/1440/3840 viewport proofs pass with zero horizontal scroll."
+        "timestamp": "2026-07-14T11:34:03Z",
+        "notes": "11 focused auth tests, 15 control-plane tests, 600 package tests, strict telemetry with zero violations, typecheck, root build, Next production build, and high-severity dependency audit pass. Netlify deploy 6a561d9d27546731cca4f52a is live; CLI start returns 200, poll remains pending without a token, invalid GitHub verification and browser sessions return 401 without credentials, and mobile/desktop/4K interaction proofs pass without horizontal overflow."
       }
     ]
   },
   "clone": {
-    "readiness": "manual_only",
+    "readiness": "project_bound",
     "adaptation_points": [
       "Create a dedicated GitHub OAuth app for the target Supabase callback.",
       "Configure the GitHub provider and production redirect allowlist.",

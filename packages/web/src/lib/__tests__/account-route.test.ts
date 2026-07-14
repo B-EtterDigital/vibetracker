@@ -40,16 +40,20 @@ test("account return paths stay same-origin and avoid account loops", () => {
   assert.equal(accountRedirectUrl("https://vibeusage.c0vibe.app", "/proof"), "https://vibeusage.c0vibe.app/account?next=%2Fproof");
 });
 
-test("global shell exposes a stable identity control without claiming verification early", () => {
+test("global shell exposes an obvious sign-in control without claiming verification early", () => {
   assert.match(layout, /<AccountControl \/>/);
   assert.match(layout, /href="\/account"/);
   assert.match(control, /api\/identity\/github\/status/);
+  assert.match(control, /\? "sign in" : `@\$\{handle\}`/);
+  assert.match(control, /Sign in with GitHub or verify through your existing GitHub CLI session/);
   assert.match(control, /state === "linked" \? "✓"/);
   assert.doesNotMatch(control, /signInWithOAuth|provider_token|localStorage|sessionStorage/);
 });
 
 test("account console supports GitHub OAuth, CLI fallback, local sign-out, and one-time linking", () => {
-  assert.match(page, /Verify once\. Keep your CLI history\./);
+  assert.match(page, /Sign in with GitHub\. Keep your CLI history\./);
+  assert.match(page, /CLI badge before proof/);
+  assert.match(page, /blue check after proof/);
   assert.match(page, /blue check.*identity only, NOT usage truth/i);
   assert.match(consoleSource, /signInWithOAuth\(\{/);
   assert.match(consoleSource, /provider: "github"/);
@@ -58,7 +62,10 @@ test("account console supports GitHub OAuth, CLI fallback, local sign-out, and o
   assert.match(consoleSource, /github_token: providerToken/);
   assert.match(consoleSource, /signOut\(\{ scope: "local" \}\)/);
   assert.match(consoleSource, /npx vibetracker login/);
-  assert.match(consoleSource, /GitHub OAuth needs enabling/);
+  assert.match(consoleSource, /gh auth status/);
+  assert.match(consoleSource, /copy GitHub CLI sign-in/);
+  assert.match(consoleSource, /does not require a C0VIBE account/);
+  assert.doesNotMatch(consoleSource, /GitHub OAuth needs enabling/);
   assert.doesNotMatch(consoleSource, /localStorage|sessionStorage|provider_refresh_token/);
 });
 
@@ -66,6 +73,11 @@ test("account layout remains bounded, responsive, and motion-safe", () => {
   assert.match(styles, /grid-template-columns: minmax\(0, \.9fr\) minmax\(480px, 1\.1fr\)/);
   assert.match(styles, /@media \(max-width: 920px\)/);
   assert.match(styles, /@media \(max-width: 620px\)/);
+  assert.match(styles, /@media \(min-width: 2200px\)/);
+  assert.match(styles, /width: min\(1680px, calc\(100% - 64px\)\)/);
+  assert.match(styles, /account-console__primary\[data-path="cli"\]/);
+  assert.match(styles, /account-console__preflight/);
+  assert.match(styles, /account-console__cli li span \{ color: #718589; \}/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(styles, /width: min\(1320px, calc\(100% - 32px\)\)/);
   assert.match(styles, /width: calc\(100% - 16px\)/);

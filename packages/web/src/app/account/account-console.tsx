@@ -96,8 +96,18 @@ export function AccountConsole() {
     }
 
     void authProviderAvailability(controller.signal)
-      .then((availability) => { if (active) setProvider(availability.github ? "available" : "disabled"); })
-      .catch(() => { if (active) setProvider("unavailable"); });
+      .then((availability) => {
+        if (!active) return;
+        setProvider(availability.github ? "available" : "disabled");
+        if (!availability.github) {
+          setMessage("Browser GitHub sign-in is not enabled yet. GitHub CLI verification is live now and does not require a C0VIBE account.");
+        }
+      })
+      .catch(() => {
+        if (!active) return;
+        setProvider("unavailable");
+        setMessage("Browser provider status is unavailable. GitHub CLI verification remains available.");
+      });
     void client.auth.getSession().then(({ data, error }) => {
       if (error) {
         setLinkState("error");
@@ -156,12 +166,12 @@ export function AccountConsole() {
     }
   }
 
-  const providerCopy = provider === "available" ? "browser OAuth ready" : provider === "checking" ? "checking provider" : provider === "disabled" ? "browser OAuth not enabled" : "provider check unavailable";
+  const providerCopy = provider === "available" ? "browser sign-in ready" : provider === "checking" ? "checking browser sign-in" : "GitHub CLI ready";
   const linkCopy = linkState === "linked" ? "identity linked" : linkState === "linking" ? "attaching CLI history" : linkState === "checking" ? "checking account link" : linkState === "unlinked" ? "session ready, link pending" : linkState === "error" ? "link needs attention" : "no browser session";
   return (
     <section className="account-console" aria-labelledby="account-console-title">
       <div className="account-console__head">
-        <div><p className="eyebrow">Live identity state</p><h2 id="account-console-title">GitHub proof console</h2></div>
+        <div><p className="eyebrow">Live identity state</p><h2 id="account-console-title">GitHub sign-in console</h2></div>
         <div className="account-console__lights" aria-label="Authentication state">
           <span data-tone={provider === "available" ? "ready" : "waiting"}>{providerCopy}</span>
           <span data-tone={linkState === "linked" ? "verified" : "waiting"}>{linkCopy}</span>
@@ -189,20 +199,32 @@ export function AccountConsole() {
             <>
               <div className="account-console__pitch">
                 <span className="account-console__github" aria-hidden="true">GH</span>
-                <div><h3>Use the GitHub identity you already have.</h3><p>No password, no billing profile, and no usage moves during sign-in.</p></div>
+                <div><h3>Sign in with the GitHub identity you already have.</h3><p>No new password, no billing profile, and no usage moves during identity proof.</p></div>
               </div>
-              <button className="account-console__primary" type="button" onClick={signIn} disabled={busy || provider !== "available"}>
-                {provider === "available" ? "continue with GitHub" : provider === "checking" ? "checking GitHub OAuth" : "GitHub OAuth needs enabling"}
+              <button
+                className="account-console__primary"
+                data-path={provider === "available" ? "browser" : "cli"}
+                type="button"
+                onClick={provider === "available" ? signIn : copyCliCommand}
+                disabled={busy || provider === "checking"}
+              >
+                {provider === "available" ? "sign in with GitHub" : provider === "checking" ? "checking GitHub sign-in" : "copy GitHub CLI sign-in"}
               </button>
+              <small className="account-console__path-note">
+                {provider === "available"
+                  ? "Browser sign-in creates the account session; GitHub identity linking still happens as a separate proof step."
+                  : "Run the copied command in a terminal with gh already authenticated. This verifies identity without creating a C0VIBE account."}
+              </small>
             </>
           )}
           <p className="account-console__message" aria-live="polite">{message || "Identity proof and usage proof remain separate at every step."}</p>
         </div>
 
-        <div className="account-console__cli">
+        <div className="account-console__cli" id="github-cli-verification">
           <div className="console-top"><span>fallback@terminal</span><b>LIVE NOW</b></div>
           <h3>Verify through your existing GitHub CLI session.</h3>
-          <p>VibeTRACKER reuses <code>gh auth</code>, verifies the immutable GitHub user ID, and issues an identity-bound CLI token.</p>
+          <p>If <code>gh auth status</code> passes, VibeTRACKER verifies the immutable GitHub user ID and issues an identity-bound CLI token.</p>
+          <div className="account-console__preflight"><span>preflight</span><code>gh auth status</code></div>
           <div className="account-console__command"><code>npx vibetracker login</code><button type="button" onClick={copyCliCommand} title="Copy CLI verification command">copy</button></div>
           <ul>
             <li><span>credential storage</span><b>raw token never persisted</b></li>

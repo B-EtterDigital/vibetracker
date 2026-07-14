@@ -13,10 +13,10 @@ export default function AccountPage() {
       <section className="account-hero" aria-labelledby="account-title">
         <div className="account-hero__copy">
           <p className="eyebrow">Identity control room</p>
-          <h1 id="account-title">Verify once. Keep your CLI history.</h1>
-          <p>GitHub is the first proof layer. It can place your CLI batches in the attested board without asking for a full C0VIBE account first.</p>
+          <h1 id="account-title">Sign in with GitHub. Keep your CLI history.</h1>
+          <p>Use browser sign-in when it is available, or verify immediately through the GitHub CLI already on your machine. A full C0VIBE account is not required first.</p>
           <div className="account-hero__rails" aria-label="Identity guarantees">
-            <span>GitHub first</span><span>no usage upload</span><span>WorkOS later</span>
+            <span>GitHub first</span><span>CLI badge before proof</span><span>blue check after proof</span><span>WorkOS later</span>
           </div>
         </div>
         <div className="account-hero__terminal" aria-label="GitHub identity migration terminal">
@@ -37,7 +37,7 @@ export default function AccountPage() {
       <AccountConsole />
 
       <section className="account-boundary" aria-label="Account trust boundary">
-        <article><b>01 / identity</b><span>GitHub proves who owns the handle. Raw provider tokens are never stored by VibeUsage.</span></article>
+        <article><b>01 / identity</b><span>GitHub proves who owns the handle. Verified identities receive the blue check; handle-only batches stay marked CLI.</span></article>
         <article><b>02 / usage</b><span>Identity proof does not verify spend, tokens, credits, records, or rank inputs.</span></article>
         <article><b>03 / migration</b><span>A later C0VIBE account attaches to the same identity instead of creating a second profile.</span></article>
       </section>

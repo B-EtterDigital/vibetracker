@@ -53,14 +53,14 @@ export function AccountControl() {
     };
   }, []);
 
-  const label = state === "loading" ? "identity" : state === "signed-out" ? "verify" : `@${handle}`;
+  const label = state === "loading" || state === "signed-out" ? "sign in" : `@${handle}`;
   const title = state === "linked"
     ? `GitHub identity verified as @${handle}`
     : state === "unavailable"
       ? `Signed in as @${handle}; identity status is unavailable`
     : state === "session"
       ? `Signed in as @${handle}; finish GitHub linking`
-      : "Verify with GitHub or inspect account status";
+      : "Sign in with GitHub or verify through your existing GitHub CLI session";
 
   return (
     <a className={styles.control} data-state={state} href="/account" title={title} aria-label={title} aria-busy={state === "loading"}>
