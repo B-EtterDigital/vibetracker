@@ -4,8 +4,10 @@ import { test } from "node:test";
 
 const page = readFileSync("packages/web/src/app/life/page.tsx", "utf8");
 const cockpit = readFileSync("packages/web/src/app/life/local-cockpit.tsx", "utf8");
+const guide = readFileSync("packages/web/src/app/life/local-cockpit-guide.tsx", "utf8");
 const data = readFileSync("packages/web/src/app/life/local-cockpit-data.ts", "utf8");
 const css = readFileSync("packages/web/src/app/life/life.css", "utf8");
+const guideCss = readFileSync("packages/web/src/app/life/life-guide.css", "utf8");
 const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 
 test("AI Life is a real consent-driven local usage cockpit", () => {
@@ -25,6 +27,14 @@ test("AI Life is a real consent-driven local usage cockpit", () => {
   assert.match(cockpit, /LEDGER RHYTHM/);
   assert.match(cockpit, /SOURCE PRESSURE/);
   assert.match(cockpit, /DECISION TAPE/);
+  assert.match(cockpit, /<LocalCockpitGuide \/>/);
+  assert.match(guide, /Know what unlocks before you connect\./);
+  assert.match(guide, /NO SAMPLE NUMBERS \/\/ NO CLOUD READ/);
+  assert.match(guide, /From machine evidence to useful action\./);
+  assert.match(guide, /href: "\/scan"/);
+  assert.match(guide, /href: "\/sources"/);
+  assert.match(guide, /href: "\/insights"/);
+  assert.match(guide, /href: "\/u\/demo"/);
   assert.doesNotMatch(page, /href="\/u\/anonymous"/);
   assert.doesNotMatch(page, /Six rails, one tracker/);
 });
@@ -51,6 +61,9 @@ test("local cockpit layout is stable on desktop mobile and reduced motion", () =
   assert.match(css, /grid-template-columns: repeat\(21, minmax\(3px, 1fr\)\)/);
   assert.match(css, /@media \(max-width: 680px\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(guideCss, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
+  assert.match(guideCss, /@media \(max-width: 680px\)/);
+  assert.match(guideCss, /overflow-wrap: anywhere/);
   assert.match(css, /overflow-wrap: anywhere/);
   assert.match(cockpit, /notation: "compact"/);
   assert.doesNotMatch(css, /font-size:\s*clamp\(/);

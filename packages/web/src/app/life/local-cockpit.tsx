@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
 import { buildCockpitSnapshot, parseLocalInsights, parseLocalStats, type CockpitSnapshot } from "./local-cockpit-data";
+import { LocalCockpitGuide } from "./local-cockpit-guide";
 
 type ConnectionState = "idle" | "connecting" | "connected" | "offline" | "permission" | "unauthorized" | "invalid";
 type CopyState = "idle" | "copied" | "blocked";
@@ -143,54 +144,57 @@ export function LocalCockpit() {
       {connection === "connected" && snapshot ? (
         <ConnectedCockpit snapshot={snapshot} onRefresh={() => void connect(token, port)} onDisconnect={disconnect} />
       ) : (
-        <section className="vlife-linker" aria-labelledby="vlife-link-title">
-          <div className="vlife-linker-copy">
-            <p>PRIVATE SESSION HANDSHAKE</p>
-            <h2 id="vlife-link-title">Open the local relay.</h2>
-            <span>Run the command, then open its private dashboard link. The session token lives in the URL fragment and is removed after connection.</span>
-          </div>
+        <div className="vlife-disconnected">
+          <section className="vlife-linker" aria-labelledby="vlife-link-title">
+            <div className="vlife-linker-copy">
+              <p>PRIVATE SESSION HANDSHAKE</p>
+              <h2 id="vlife-link-title">Open the local relay.</h2>
+              <span>Run the command, then open its private dashboard link. The session token lives in the URL fragment and is removed after connection.</span>
+            </div>
 
-          <div className="vlife-command">
-            <span>TERMINAL</span>
-            <code>{COMMAND}</code>
-            <button type="button" data-state={copyState} onClick={copyCommand}>
-              <span aria-hidden="true">[+]</span>
-              {copyState === "copied" ? "COPIED" : copyState === "blocked" ? "COPY BLOCKED" : "COPY"}
-            </button>
-          </div>
+            <div className="vlife-command">
+              <span>TERMINAL</span>
+              <code>{COMMAND}</code>
+              <button type="button" data-state={copyState} onClick={copyCommand}>
+                <span aria-hidden="true">[+]</span>
+                {copyState === "copied" ? "COPIED" : copyState === "blocked" ? "COPY BLOCKED" : "COPY"}
+              </button>
+            </div>
 
-          <form className="vlife-session-form" onSubmit={submit}>
-            <label>
-              <span>SESSION TOKEN</span>
-              <input type="password" autoComplete="off" value={token} onChange={(event) => setToken(event.target.value)} placeholder="paste token from terminal" />
-            </label>
-            <label className="vlife-port">
-              <span>PORT</span>
-              <input type="number" min="1" max="65535" value={port} onChange={(event) => setPort(Number(event.target.value))} />
-            </label>
-            <button type="submit" disabled={connection === "connecting" || !token.trim() || port < 1 || port > 65535}>
-              <span aria-hidden="true">[&gt;]</span>
-              {connection === "connecting" ? "CONNECTING" : "CONNECT LOCAL"}
-            </button>
-          </form>
+            <form className="vlife-session-form" onSubmit={submit}>
+              <label>
+                <span>SESSION TOKEN</span>
+                <input type="password" autoComplete="off" value={token} onChange={(event) => setToken(event.target.value)} placeholder="paste token from terminal" />
+              </label>
+              <label className="vlife-port">
+                <span>PORT</span>
+                <input type="number" min="1" max="65535" value={port} onChange={(event) => setPort(Number(event.target.value))} />
+              </label>
+              <button type="submit" disabled={connection === "connecting" || !token.trim() || port < 1 || port > 65535}>
+                <span aria-hidden="true">[&gt;]</span>
+                {connection === "connecting" ? "CONNECTING" : "CONNECT LOCAL"}
+              </button>
+            </form>
 
-          {connection === "permission" ? (
-            <p className="vlife-connection-note" data-tone="permission">Allow Local Network Access for this site in the browser, then connect again.</p>
-          ) : connection === "unauthorized" ? (
-            <p className="vlife-connection-note" data-tone="error">The session expired or does not match this API. Open the newest private dashboard link from the terminal.</p>
-          ) : connection === "offline" ? (
-            <p className="vlife-connection-note" data-tone="error">Keep the terminal command running and confirm the loopback port before retrying.</p>
-          ) : connection === "invalid" ? (
-            <p className="vlife-connection-note" data-tone="error">Enter the session token printed by the CLI and a port from 1 to 65535.</p>
-          ) : null}
+            {connection === "permission" ? (
+              <p className="vlife-connection-note" data-tone="permission">Allow Local Network Access for this site in the browser, then connect again.</p>
+            ) : connection === "unauthorized" ? (
+              <p className="vlife-connection-note" data-tone="error">The session expired or does not match this API. Open the newest private dashboard link from the terminal.</p>
+            ) : connection === "offline" ? (
+              <p className="vlife-connection-note" data-tone="error">Keep the terminal command running and confirm the loopback port before retrying.</p>
+            ) : connection === "invalid" ? (
+              <p className="vlife-connection-note" data-tone="error">Enter the session token printed by the CLI and a port from 1 to 65535.</p>
+            ) : null}
 
-          <div className="vlife-custody">
-            <span><b>READS</b> aggregate stats + insights</span>
-            <span><b>NEVER READS</b> prompts + outputs</span>
-            <span><b>NETWORK</b> loopback only</span>
-            <span><b>UPLOAD</b> none</span>
-          </div>
-        </section>
+            <div className="vlife-custody">
+              <span><b>READS</b> aggregate stats + insights</span>
+              <span><b>NEVER READS</b> prompts + outputs</span>
+              <span><b>NETWORK</b> loopback only</span>
+              <span><b>UPLOAD</b> none</span>
+            </div>
+          </section>
+          <LocalCockpitGuide />
+        </div>
       )}
     </section>
   );

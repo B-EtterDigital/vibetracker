@@ -5,7 +5,7 @@
     "name": "AI Life Practice",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["usage-analytics", "practice-map", "local-first"]
@@ -15,7 +15,7 @@
     "group_id": "000-vibetracker:packages/web/src/app",
     "contains": ["route", "component", "style", "test"],
     "component_policy": "internal_by_default",
-    "notes": "A consent-driven local cockpit that reads aggregate usage intelligence from a tokenized loopback API without uploading the ledger."
+    "notes": "A consent-driven local command center that explains the usage pipeline before connection, then reads aggregate intelligence from a tokenized loopback API without uploading the ledger."
   },
   "source": {
     "project": "000-vibetracker",
@@ -39,7 +39,9 @@
     "public_paths": [
       "packages/web/src/app/life/page.tsx",
       "packages/web/src/app/life/local-cockpit.tsx",
-      "packages/web/src/app/life/life.css"
+      "packages/web/src/app/life/local-cockpit-guide.tsx",
+      "packages/web/src/app/life/life.css",
+      "packages/web/src/app/life/life-guide.css"
     ],
     "private_paths": [
       "packages/web/src/app/life/local-cockpit-data.ts",
@@ -66,19 +68,19 @@
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Route composition, local transport, payload normalization, cockpit rendering, and styling are isolated and every owned file remains below 400 lines.",
-      "evidence": ["packages/web/src/app/life/page.tsx", "packages/web/src/app/life/local-cockpit.tsx", "packages/web/src/app/life/local-cockpit-data.ts", "packages/web/src/app/life/life.css"]
+      "notes": "Route composition, dormant guidance, local transport, payload normalization, connected rendering, and styling are isolated and every owned file remains below 400 lines.",
+      "evidence": ["packages/web/src/app/life/page.tsx", "packages/web/src/app/life/local-cockpit.tsx", "packages/web/src/app/life/local-cockpit-guide.tsx", "packages/web/src/app/life/local-cockpit-data.ts", "packages/web/src/app/life/life.css", "packages/web/src/app/life/life-guide.css"]
     },
     "ssi": {
       "status": "passing",
       "score": 95,
-      "notes": "The server route mounts one client cockpit; a pure parser validates the loopback JSON boundary before rendering.",
-      "evidence": ["packages/web/src/app/life/local-cockpit.tsx", "packages/web/src/app/life/local-cockpit-data.ts"]
+      "notes": "The server route mounts one client cockpit; dormant guidance is view-only and a pure parser validates the loopback JSON boundary before connected rendering.",
+      "evidence": ["packages/web/src/app/life/local-cockpit.tsx", "packages/web/src/app/life/local-cockpit-guide.tsx", "packages/web/src/app/life/local-cockpit-data.ts"]
     },
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Focused route, payload, token, origin, and adjacent local-tool contracts plus the complete 573-test package suite pass on the current tree.",
+      "notes": "Focused route, dormant guidance, payload, token, origin, and adjacent local-tool contracts plus the complete 635-test package suite pass on the current tree.",
       "evidence": ["packages/web/src/app/life/__tests__/local-cockpit-data.test.ts", "packages/web/src/lib/__tests__/life-route.test.ts", "packages/cli/src/__tests__/api-server.test.ts"]
     },
     "spe": {
@@ -90,14 +92,14 @@
     "srs": {
       "status": "passing",
       "score": 90,
-      "notes": "Clipboard, authorization, network, malformed payload, empty-ledger, and connected states are visible and fail closed.",
-      "evidence": ["packages/web/src/app/life/local-cockpit.tsx", "packages/web/src/app/life/local-cockpit-data.ts"]
+      "notes": "Dormant, clipboard, authorization, network, malformed payload, empty-ledger, and connected states are visible and fail closed without fabricated usage.",
+      "evidence": ["packages/web/src/app/life/local-cockpit.tsx", "packages/web/src/app/life/local-cockpit-guide.tsx", "packages/web/src/app/life/local-cockpit-data.ts"]
     },
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Release gate, production build, production deploy, and a real tokenized local-ledger connection pass at desktop and mobile widths.",
-      "evidence": ["scripts/release-gate.mjs", "Netlify deploy 6a55c088bc2a11226db4088f"]
+      "notes": "Release gate, production build, production deploy, and exact-deploy Playwright passes cover dormant guidance at mobile, desktop, and 4K plus the previously proven real tokenized local-ledger connection.",
+      "evidence": ["scripts/release-gate.mjs", "Netlify deploy 6a569427623071e7f8ec56de", "Netlify deploy 6a55c088bc2a11226db4088f"]
     },
     "sas": {
       "status": "passing",
@@ -178,10 +180,10 @@
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 940,
-      "file_count": 6,
+      "feature_lines": 1175,
+      "file_count": 8,
       "dependency_count": 2,
-      "notes": "The route is an 11-line server surface plus isolated transport/view-model, client cockpit, responsive stylesheet, and focused tests with no new dependency."
+      "notes": "The route is a 12-line server surface plus isolated transport/view-model, connected cockpit, dormant-state guide, two responsive stylesheets, and focused tests with no new dependency."
     },
     "test_commands": [
       "node --test packages/web/src/app/life/__tests__/local-cockpit-data.test.ts packages/web/src/lib/__tests__/life-route.test.ts packages/cli/src/__tests__/api-server.test.ts"
@@ -192,6 +194,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T04:54:20Z",
         "notes": "13 focused and adjacent tests, 15 control-plane tests, 573 package tests, strict VTRS, TypeScript, CLI and Next builds, deploy 6a55c088bc2a11226db4088f, and a real 48,023-row loopback ledger passed at 1440px and 390px with zero overflow or console errors."
+      },
+      {
+        "command": "focused Life tests + pnpm test + pnpm sma:release-gate + pnpm --dir packages/web build + exact-deploy Playwright",
+        "status": "pass",
+        "timestamp": "2026-07-14T19:56:36Z",
+        "notes": "6 focused and adjacent tests, 15 control-plane tests, 635 package tests, strict VTRS, TypeScript, the 29-route Next build, and Netlify deploy 6a569427623071e7f8ec56de passed. Exact-deploy views at 390x844, 1440x900, and 3840x2160 returned HTTP 200 with zero overflow or browser errors; Scan, Sources, Insights, and Profile destinations also returned 200."
       }
     ]
   },

@@ -1,5 +1,6 @@
 import { LocalCockpit } from "./local-cockpit";
 import "./life.css";
+import "./life-guide.css";
 
 export const metadata = {
   title: "Local AI Usage Cockpit - VibeUsage",
