@@ -20,7 +20,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "a4780af",
+    "commit": "d0332d8",
     "paths": [
       "packages/web/src/app/proof",
       "packages/web/src/lib/__tests__/proof-route.test.ts"
@@ -93,7 +93,7 @@
       "status": "passing",
       "score": 96,
       "notes": "The full release gate, vulnerability audit, CLI and web production builds, immutable preview deploy, mobile and 4K geometry checks, and browser accessibility proof pass.",
-      "evidence": ["packages/web/src/lib/__tests__/proof-route.test.ts", "https://6a56153f73fb2b149f56c298--vibeusage.netlify.app/proof"]
+      "evidence": ["packages/web/src/lib/__tests__/proof-route.test.ts", "https://vibeusage.c0vibe.app/proof", "https://6a561648e30ad41a89ca1a88--vibeusage.netlify.app/proof"]
     },
     "sas": {
       "status": "passing",
@@ -200,6 +200,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T10:57:00Z",
         "notes": "390x844 and 3840x2160 had no horizontal overflow or panel overlap; Lighthouse scored accessibility 100, best practices 100, and agentic browsing 100. Preview SEO was 66 solely because Netlify preview responses intentionally send noindex."
+      },
+      {
+        "command": "production deploy 6a561648e30ad41a89ca1a88 plus Chrome DevTools proof at https://vibeusage.c0vibe.app/proof",
+        "status": "pass",
+        "timestamp": "2026-07-14T11:00:49Z",
+        "notes": "Stable-domain mobile Lighthouse scored accessibility, best practices, SEO, and agentic browsing at 100; 390x844 and 3840x2160 had no horizontal overflow, no percent-ready labels, and the verdict fit the first 4K viewport. No fetch, XHR, WebSocket, or event-source request occurred."
       }
     ]
   },
@@ -221,7 +227,7 @@
       "model": "gpt-5-codex",
       "role": "implementer",
       "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
-      "commit": "a4780af",
+      "commit": "d0332d8",
       "files_touched": ["packages/web/src/app/proof/module.sweetspot.json"],
       "verification": [
         {
@@ -239,13 +245,39 @@
       "context_event_ids": ["ctx-1784025406466-4e74aca9"],
       "attestation": { "method": "agent_runner", "reference": "lease-1784025406415-0bb3d563" }
     },
-    "touched_by": [],
+    "touched_by": [
+      {
+        "actor_kind": "ai_model",
+        "actor_id": "codex",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "verifier",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "commit": "d0332d8",
+        "files_touched": ["packages/web/src/app/proof/module.sweetspot.json"],
+        "verification": [
+          {
+            "command": "production deploy and stable-domain mobile/4K browser proof",
+            "status": "pass",
+            "timestamp": "2026-07-14T11:00:49Z",
+            "notes": "Netlify deploy 6a561648e30ad41a89ca1a88 serves the committed verdict at the public custom domain with four Lighthouse 100 scores."
+          }
+        ],
+        "timestamp": "2026-07-14T11:00:49Z",
+        "summary": "Promoted and verified the fixture-versus-live proof boundary on the stable VibeUsage domain.",
+        "intent": "Bind the product claim to an immutable deploy and public runtime evidence.",
+        "decision_rationale": "A deploy command alone does not prove custom-domain routing, responsive layout, accessibility, or the absence of runtime data calls.",
+        "lease_id": "lease-1784025406415-0bb3d563",
+        "context_event_ids": ["ctx-1784025406466-4e74aca9"],
+        "attestation": { "method": "netlify_deploy", "reference": "6a561648e30ad41a89ca1a88" }
+      }
+    ],
     "reviewed_by": [],
     "source_chain": [
       {
         "project": "000-vibetracker",
         "brick_id": "000-vibetracker.web.proof-contract-console",
-        "commit": "a4780af",
+        "commit": "d0332d8",
         "path": "packages/web/src/app/proof",
         "event": "declared",
         "timestamp": "2026-07-14T10:41:19Z"
