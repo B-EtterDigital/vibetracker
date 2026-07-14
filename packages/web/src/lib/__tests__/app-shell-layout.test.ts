@@ -59,10 +59,10 @@ test("header names the leaderboard and explains every primary destination", () =
 });
 
 test("header ships the generated VibeUsage mark without displacing identity controls", () => {
-  assert.match(layout, /import Image from "next\/image"/);
+  assert.doesNotMatch(layout, /import Image from "next\/image"/);
   assert.match(layout, /className="brand" aria-label="VibeUsage home"/);
   assert.match(layout, /src="\/brand\/vibeusage-logo\.png"/);
-  assert.match(layout, /width=\{1400\}[\s\S]*height=\{299\}/);
+  assert.match(layout, /<img[\s\S]*width="1400"[\s\S]*height="299"/);
   assert.match(layout, /<AccountControl \/>/);
   assert.match(css, /\.brand img \{[\s\S]*width: clamp\(160px, 14vw, 198px\)/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.hdr \.brand img \{ width: clamp\(148px, 45vw, 178px\)/);

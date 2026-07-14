@@ -1,6 +1,5 @@
 import "./globals.css";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
-import Image from "next/image";
 import type { ReactNode } from "react";
 import { AccountControl } from "../components/account-control";
 
@@ -29,13 +28,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <header className="hdr">
           <a href="/" className="brand" aria-label="VibeUsage home">
-            <Image
+            <img
               src="/brand/vibeusage-logo.png"
               alt="VibeUsage"
-              width={1400}
-              height={299}
-              sizes="(max-width: 760px) 45vw, 198px"
-              priority
+              width="1400"
+              height="299"
             />
           </a>
           {/* Four destinations, each named for what it is. The board lives at "/" and is now
