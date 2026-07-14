@@ -25,6 +25,8 @@ test("home console keeps trust lanes separate and the repeated workflow efficien
   assert.match(consoleSource, /filteredRows\.slice\(0, PAGE_SIZE\)/);
   assert.match(consoleSource, /Show all \$\{filteredRows\.length\}/);
   assert.match(consoleSource, /navigator\.clipboard\.writeText\(COMMAND\)/);
+  assert.match(consoleSource, /title="Copy VibeTRACKER GUI install command"/);
+  assert.doesNotMatch(consoleSource, /aria-label="Copy VibeTRACKER GUI install command"/);
   assert.match(consoleSource, /TRUST \+0 \/\/ MIXED RANKS 0/);
   assert.match(consoleSource, /trust evidence explains context and adds zero/i);
   assert.match(consoleSource, /hidden uploads remain zero/);

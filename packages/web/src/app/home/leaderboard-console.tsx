@@ -137,7 +137,7 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
           type="button"
           data-state={copyState}
           onClick={copyCommand}
-          aria-label="Copy VibeTRACKER GUI install command"
+          title="Copy VibeTRACKER GUI install command"
         >
           <span aria-hidden="true">[+]</span>
           <code>{COMMAND}</code>
