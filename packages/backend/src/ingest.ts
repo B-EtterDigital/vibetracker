@@ -34,6 +34,7 @@ export interface IngestResult {
   errors: string[];
   handle: string;
   userId?: string;
+  identityId?: string;
   tier: "attested" | "self_reported";        // never 'verified' from an upload
   accepted: number;
   rejected: number;
@@ -168,7 +169,7 @@ export function sanitizeTrustSignals(raw: unknown): TrustSignal[] {
   return out;
 }
 
-export function handleIngest(payload: unknown, opts: { userId?: string; maxRecords?: number } = {}): IngestResult {
+export function handleIngest(payload: unknown, opts: { userId?: string; identityId?: string; maxRecords?: number } = {}): IngestResult {
   const max = opts.maxRecords ?? MAX_RECORDS;
   const errors: string[] = [];
   const bundle: UploadBundle = typeof payload === "object" && payload !== null ? (payload as UploadBundle) : {};
@@ -192,7 +193,7 @@ export function handleIngest(payload: unknown, opts: { userId?: string; maxRecor
   const { accepted, rejected } = ingestRecords(limited, { untrustedSource: true });
 
   // tier is server-controlled — the client's payload.tier is ignored on purpose.
-  const tier: "attested" | "self_reported" = opts.userId ? "attested" : "self_reported";
+  const tier: "attested" | "self_reported" = opts.userId || opts.identityId ? "attested" : "self_reported";
 
   const t = totals(accepted);
   const byProvider: ProviderRollup[] = aggregate(accepted, "provider").map((r) => ({
@@ -245,6 +246,7 @@ export function handleIngest(payload: unknown, opts: { userId?: string; maxRecor
     errors,
     handle,
     userId: opts.userId,
+    identityId: opts.identityId,
     tier,
     accepted: accepted.length,
     rejected: rejected.length,

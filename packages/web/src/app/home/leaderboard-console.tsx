@@ -12,6 +12,9 @@ export interface HomeBoardRow {
   usdLabel: string;
   creditsLabel: string;
   opsLabel: string;
+  identityVerified: boolean;
+  identityProvider: string | null;
+  usageTier: "verified" | "attested" | "self_reported";
 }
 
 export interface HomeBoardSnapshot {
@@ -31,6 +34,25 @@ export interface HomeBoardSnapshot {
 
 const COMMAND = "npx vibetrack init --gui";
 const PAGE_SIZE = 25;
+
+function identityProofLabel(row: HomeBoardRow): string {
+  if (!row.identityVerified) return "CLI upload; identity not verified";
+  const usage = row.usageTier === "verified" ? "provider-verified usage" : "identity-attested CLI usage";
+  if (row.identityProvider === "github") return `GitHub identity verified; ${usage}`;
+  return `C0VIBE identity verified; ${usage}`;
+}
+
+function IdentityProof({ row }: { row: HomeBoardRow }) {
+  return row.identityVerified ? (
+    <span className="home-board__identity-proof" data-provider={row.identityProvider ?? "c0vibe"} title={identityProofLabel(row)} aria-label={identityProofLabel(row)}>
+      <span aria-hidden="true">✓</span>
+    </span>
+  ) : (
+    <span className="home-board__identity-proof home-board__identity-proof--cli" title={identityProofLabel(row)} aria-label={identityProofLabel(row)}>
+      CLI
+    </span>
+  );
+}
 
 function statusCopy(status: HomeBoardSnapshot["status"]): string {
   if (status === "live") return "LIVE BOARD";
@@ -76,7 +98,7 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
           <p className="home-board__eyebrow">PUBLIC AI USAGE LEDGER</p>
           <h1 id="home-board-title">VibeUsage</h1>
           <p className="home-board__dek">
-            Ranked AI spend with verified and self-reported signals kept in separate lanes.
+            Ranked AI spend with identity-verified and handle-only CLI operators kept in separate lanes.
           </p>
         </div>
         <div className="home-board__status" data-state={active.status} aria-live="polite">
@@ -148,7 +170,7 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
               <li key={row.handle}>
                 <a href={`/u/${row.handle}`}>
                   <span className="home-board__rank">{row.medal}</span>
-                  <b>@{row.handle}</b>
+                  <span className="home-board__operator"><b>@{row.handle}</b><IdentityProof row={row} /></span>
                   <span className="home-board__bar" aria-hidden="true">
                     <i style={{ "--bar": `${Math.max((row.usd / maxUsd) * 100, 1.5)}%` } as CSSProperties} />
                   </span>
@@ -193,7 +215,7 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
               {visibleRows.map((row) => (
                 <tr key={row.handle}>
                   <td data-label="Rank">{row.medal}</td>
-                  <td data-label="Operator"><a href={`/u/${row.handle}`}>@{row.handle}</a></td>
+                  <td data-label="Operator"><span className="home-board__operator"><a href={`/u/${row.handle}`}>@{row.handle}</a><IdentityProof row={row} /></span></td>
                   <td data-label="Spend">{row.usdLabel}</td>
                   <td data-label="Credits">{row.creditsLabel}</td>
                   <td data-label="Ops">{row.opsLabel}</td>

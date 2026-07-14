@@ -15,17 +15,34 @@ export interface DevicePoll { status: "pending" | "approved" | "denied"; access_
 export interface AuthTransport {
   start(): Promise<DeviceStart>;
   poll(deviceCode: string): Promise<DevicePoll>;
+  verifyGithub?(deviceCode: string, githubToken: string): Promise<DevicePoll>;
 }
 
 export interface LoginDeps {
   open: (url: string) => void;
   sleep: (ms: number) => Promise<void>;
   log: (msg: string) => void;
+  githubToken?: () => string | null;
   maxAttempts?: number;
 }
 
 export async function runLogin(t: AuthTransport, deps: LoginDeps): Promise<string> {
   const s = await t.start();
+  const githubToken = deps.githubToken?.();
+  if (githubToken && t.verifyGithub) {
+    deps.log("Found an existing GitHub CLI session. Verifying identity without opening an account page...");
+    try {
+      const verified = await t.verifyGithub(s.device_code, githubToken);
+      if (verified.status === "approved" && verified.access_token) {
+        deps.log("GitHub identity verified. Browser approval skipped; usage remains local until upload.");
+        return verified.access_token;
+      }
+      deps.log("GitHub identity was not accepted. Falling back to browser approval.");
+    } catch (error) {
+      deps.log(`GitHub identity verification was unavailable (${error instanceof Error ? error.message : "unknown error"}). Falling back to browser approval.`);
+    }
+  }
+
   const url = `${s.verify_url}?code=${encodeURIComponent(s.user_code)}`;
   deps.log(`\nAuthorize this device (opening your browser):\n  ${url}\nConfirm the code shown: ${s.user_code}\n`);
   deps.open(url);
@@ -55,6 +72,20 @@ export function createHttpAuthTransport(site: string): AuthTransport {
         body: JSON.stringify({ device_code: deviceCode }),
       });
       if (!res.ok) throw new Error(`login poll ${res.status}: ${await res.text()}`);
+      return (await res.json()) as DevicePoll;
+    },
+    async verifyGithub(deviceCode, githubToken) {
+      const res = await fetch(`${site}/api/cli/github-verify`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ device_code: deviceCode, github_token: githubToken }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch((error) => ({
+          error: error instanceof Error ? "invalid verifier response" : "identity verification failed",
+        })) as { error?: string };
+        throw new Error(body.error ?? `GitHub verification ${res.status}`);
+      }
       return (await res.json()) as DevicePoll;
     },
   };

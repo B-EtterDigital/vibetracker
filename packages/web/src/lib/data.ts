@@ -47,6 +47,9 @@ export interface ProfileView {
   created_at: string;
   isPremium: boolean;
   bio?: string;
+  identityVerified?: boolean;
+  identityProvider?: string;
+  accountLinked?: boolean;
   latest: { total_usd: number; total_credits: number; record_count: number; created_at: string; tier: string } | null;
   providers: Array<{ provider: string; ops: number; credits: number; usd: number }>;
   usageDays: Array<{ date: string; ops: number; credits: number; usd: number }>;
@@ -56,10 +59,14 @@ export interface ProfileView {
   trustSignals: ProfileTrustSignal[];
 }
 
-async function latestFor(filter: { user_id: string } | { handle: string }): Promise<ProfileView["latest"] & { id: string } | null> {
+async function latestFor(filter: { user_id: string } | { identity_id: string } | { handle: string }): Promise<ProfileView["latest"] & { id: string } | null> {
   const sb = supabaseServer();
   let q = sb.from("vibetracker_submissions").select("*").order("created_at", { ascending: false }).limit(1);
-  q = "user_id" in filter ? q.eq("user_id", filter.user_id) : q.eq("handle", filter.handle);
+  q = "user_id" in filter
+    ? q.eq("user_id", filter.user_id)
+    : "identity_id" in filter
+      ? q.eq("identity_id", filter.identity_id)
+      : q.eq("handle", filter.handle);
   const { data, error } = await q;
   if (error) throw queryFailure("profile.latest", error);
   return (data?.[0] as (ProfileView["latest"] & { id: string }) | undefined) ?? null;
@@ -183,8 +190,19 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
       .select("user_id,handle,is_premium,created_at").eq("handle", handle).maybeSingle();
     if (handleError) throw queryFailure("profile.handle", handleError);
 
-    const latest = h?.user_id ? await latestFor({ user_id: h.user_id }) : await latestFor({ handle });
-    if (!h && !latest) return null;
+    const { data: identity, error: identityError } = await sb.from("vibetracker_public_identities")
+      .select("id,provider,canonical_handle,verified_at,created_at,account_linked,is_premium")
+      .eq("canonical_handle", handle.toLowerCase()).maybeSingle();
+    // The identity bridge is additive. During a rolling migration, existing WorkOS and anonymous
+    // profiles must keep rendering instead of turning a missing view into a public outage.
+    if (identityError) reportOptionalFallback("profile.identity.fallback", identityError);
+
+    const latest = identity?.id
+      ? await latestFor({ identity_id: identity.id })
+      : h?.user_id
+        ? await latestFor({ user_id: h.user_id })
+        : await latestFor({ handle });
+    if (!h && !identity && !latest) return null;
 
     let providers: ProfileView["providers"] = [];
     if (latest) {
@@ -202,12 +220,15 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
     const trustSignals = latest ? await trustSignalsFor(latest.id) : [];
 
     return {
-      handle: h?.handle ?? handle,
-      created_at: h?.created_at ?? latest?.created_at ?? "",
-      isPremium: Boolean(h?.is_premium),
+      handle: identity?.canonical_handle ?? h?.handle ?? handle,
+      created_at: identity?.created_at ?? h?.created_at ?? latest?.created_at ?? "",
+      isPremium: Boolean(identity?.is_premium ?? h?.is_premium),
       // The viber's own bio, set with `vibetracker profile --bio` and carried on the submission.
       // Additive column — older rows return undefined and the profile shows the "add a bio" hint.
       bio: (latest as { bio?: string | null } | null)?.bio?.trim() || undefined,
+      identityVerified: Boolean(identity?.verified_at || h?.user_id),
+      identityProvider: identity?.provider ?? (h?.user_id ? "c0vibe" : undefined),
+      accountLinked: Boolean(identity?.account_linked || h?.user_id),
       latest: latest ? { total_usd: latest.total_usd, total_credits: latest.total_credits, record_count: latest.record_count, created_at: latest.created_at, tier: latest.tier } : null,
       providers,
       usageDays,

@@ -12,6 +12,7 @@ npx vibetracker sync                # refresh local ledger from connected adapte
 npx vibetracker live                # TUI: balances + burn rate
 npx vibetracker export --json|csv
 npx vibetracker upload              # opt-in push to the VibeTRACKER leaderboard
+npx vibetracker login               # reuse an existing `gh auth` session; browser/C0VIBE fallback
 ```
 
 - Local store: SQLite at `~/.vibetracker/db.sqlite` (git-ignored).

@@ -1,0 +1,372 @@
+{
+  "schema_version": "1.0.0",
+  "brick": {
+    "id": "000-vibetracker.auth.github-first-identity",
+    "name": "GitHub First Identity",
+    "kind": "service",
+    "status": "canonical",
+    "version": "0.1.0",
+    "language": [
+      "sql",
+      "tsx",
+      "typescript"
+    ],
+    "frameworks": [
+      "nextjs",
+      "supabase-edge-functions"
+    ],
+    "domain": [
+      "authentication",
+      "identity",
+      "leaderboard"
+    ]
+  },
+  "hierarchy": {
+    "level": "brick",
+    "group_id": "000-vibetracker:identity",
+    "contains": [
+      "module",
+      "component",
+      "service",
+      "adapter",
+      "hook",
+      "utility",
+      "file"
+    ],
+    "component_policy": "internal_by_default",
+    "notes": "Security-critical vertical brick: GitHub proof, VibeTRACKER token binding, C0VIBE linking, and public identity semantics."
+  },
+  "source": {
+    "project": "000-vibetracker",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "f34922b",
+    "paths": [
+      "packages/cli/src/login.ts",
+      "packages/cli/src/github-identity.ts",
+      "packages/cli/src/vibetracker.ts",
+      "packages/backend/src/ingest.ts",
+      "packages/web/src/lib/auth.ts",
+      "packages/web/src/lib/data.ts",
+      "packages/web/src/lib/leaderboard.ts",
+      "packages/web/src/app/api/cli/github-verify",
+      "packages/web/src/app/api/identity/github/link",
+      "packages/web/src/app/home/leaderboard-console.tsx",
+      "supabase/functions/vibetracker-ingest/index.ts",
+      "supabase/migrations/009_vibetracker_github_identity.sql"
+    ]
+  },
+  "owner": {
+    "primary": "Cyrill",
+    "team": "Better Digital",
+    "reviewers": []
+  },
+  "boundaries": {
+    "owned_paths": [
+      "packages/cli/src/login.ts",
+      "packages/cli/src/github-identity.ts",
+      "packages/cli/src/vibetracker.ts",
+      "packages/backend/src/ingest.ts",
+      "packages/web/src/lib/auth.ts",
+      "packages/web/src/lib/data.ts",
+      "packages/web/src/lib/leaderboard.ts",
+      "packages/web/src/app/api/cli/github-verify",
+      "packages/web/src/app/api/identity/github/link",
+      "packages/web/src/app/home/leaderboard-console.tsx",
+      "supabase/functions/vibetracker-ingest/index.ts",
+      "supabase/migrations/009_vibetracker_github_identity.sql"
+    ],
+    "public_paths": [
+      "packages/cli/src/login.ts",
+      "packages/web/src/app/api/cli/github-verify",
+      "packages/web/src/app/api/identity/github/link",
+      "supabase/functions/vibetracker-ingest/index.ts"
+    ],
+    "private_paths": [
+      "packages/web/src/lib/auth.ts",
+      "supabase/migrations/009_vibetracker_github_identity.sql"
+    ],
+    "forbidden_imports": [
+      "client-side service-role keys",
+      "raw GitHub credential persistence",
+      "GitHub credential logging or telemetry",
+      "client-controlled identity verification flags"
+    ],
+    "allowed_side_effects": [
+      "server-only GitHub /user verification",
+      "service-role identity and CLI token RPC calls",
+      "aggregate submission persistence"
+    ]
+  },
+  "classification": {
+    "data_classes": [
+      "public",
+      "user_private",
+      "pii"
+    ],
+    "risk": "high",
+    "notes": "Immutable GitHub subject is private identity data; only sanitized public profile metadata is exposed. Raw GitHub credentials are transient."
+  },
+  "sweetspot": {
+    "ssa_v2": {
+      "status": "complete",
+      "score": 95,
+      "notes": "Identity proof, token issuance, account linking, ingest, and presentation remain explicit bounded adapters.",
+      "evidence": [
+        "modules/github-identity/module.sweetspot.json",
+        "sma.gen3.json"
+      ]
+    },
+    "ssi": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "No UI runtime boundary detected.",
+      "evidence": []
+    },
+    "sstf": {
+      "status": "complete",
+      "score": 100,
+      "notes": "Focused identity coverage and all 567 project tests pass together with the release gate.",
+      "evidence": [
+        "packages/cli/src/__tests__/github-identity.test.ts",
+        "packages/cli/src/__tests__/login.test.ts",
+        "packages/web/src/lib/__tests__/github-identity.test.ts",
+        "packages/web/src/lib/__tests__/github-identity-route.test.ts",
+        "packages/backend/src/__tests__/ingest.test.ts"
+      ]
+    },
+    "spe": {
+      "status": "missing",
+      "score": 0,
+      "notes": "Performance budget must be measured before promotion.",
+      "evidence": []
+    },
+    "srs": {
+      "status": "complete",
+      "score": 95,
+      "notes": "All server-side failure paths use VTRS telemetry without secret payloads.",
+      "evidence": [
+        "packages/web/src/app/api/cli/github-verify/route.ts",
+        "packages/web/src/app/api/identity/github/link/route.ts"
+      ]
+    },
+    "ssra": {
+      "status": "complete",
+      "score": 100,
+      "notes": "Release gate, production builds, migration, edge function, Netlify deploy, and live CLI fast path are proven.",
+      "evidence": [
+        "supabase/migrations/009_vibetracker_github_identity.sql",
+        "supabase/functions/vibetracker-ingest/index.ts"
+      ]
+    },
+    "sas": {
+      "status": "complete",
+      "score": 100,
+      "notes": "Dedicated brick manifest and shared-hot-path lease serialize the security-critical vertical slice.",
+      "evidence": [
+        "modules/github-identity/module.sweetspot.json",
+        ".smarch/agent-context/000-vibetracker.auth.github-first-identity.ndjson"
+      ]
+    },
+    "sva": {
+      "status": "partial",
+      "score": 90,
+      "notes": "Service-role-only RPCs, RLS-denied private identity table, one-time GitHub proof, and hashed VibeTRACKER tokens.",
+      "evidence": [
+        "supabase/migrations/009_vibetracker_github_identity.sql",
+        "packages/web/src/lib/__tests__/github-identity-route.test.ts"
+      ]
+    },
+    "srls": {
+      "status": "complete",
+      "score": 100,
+      "notes": "Private identity table has RLS with no client policies; only a restricted public projection is granted.",
+      "evidence": [
+        "supabase/migrations/009_vibetracker_github_identity.sql"
+      ]
+    },
+    "sev": {
+      "status": "complete",
+      "score": 100,
+      "notes": "Public Supabase URL and anon key are build/runtime inputs; service role remains a Netlify production secret.",
+      "evidence": [
+        "packages/web/src/lib/supabase-admin.ts"
+      ]
+    },
+    "ssc": {
+      "status": "partial",
+      "score": 50,
+      "notes": "Supply-chain metadata is bootstrap-level.",
+      "evidence": []
+    },
+    "sai": {
+      "status": "partial",
+      "score": 60,
+      "notes": "Model/tool provenance recorded for manifest generation.",
+      "evidence": []
+    }
+  },
+  "interfaces": {
+    "public_api": [
+      "POST /api/cli/github-verify",
+      "POST /api/identity/github/link",
+      "vibetracker login",
+      "vibetracker-ingest"
+    ],
+    "adapters": [
+      "GitHub REST /user",
+      "Supabase service-role RPC"
+    ],
+    "forbidden_dependencies": [
+      "browser-side GitHub token handling",
+      "direct client service-role access"
+    ],
+    "required_dependencies": [
+      "GitHub CLI gh",
+      "@supabase/supabase-js",
+      "Next.js route handlers"
+    ]
+  },
+  "security": {
+    "rls": {
+      "required": true,
+      "status": "complete",
+      "negative_tests": [
+        "raw GitHub token is absent from schema and telemetry",
+        "identity RPCs execute only as service_role",
+        "cross-account GitHub linking is rejected"
+      ]
+    },
+    "env": {
+      "required": true,
+      "status": "complete",
+      "variables": [
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_URL",
+          "scope": "public_client",
+          "required_in": [
+            "production"
+          ]
+        },
+        {
+          "name": "SUPABASE_SERVICE_ROLE_KEY",
+          "scope": "server_only",
+          "required_in": [
+            "production"
+          ],
+          "forbidden_in": [
+            "client_bundle",
+            "logs",
+            "docs",
+            "tests"
+          ]
+        }
+      ]
+    },
+    "vulnerability_findings": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "report_paths": []
+    }
+  },
+  "supply_chain": {
+    "dependencies": [],
+    "licenses": [],
+    "checksums": [],
+    "sbom_path": ""
+  },
+  "quality": {
+    "score": 85,
+    "line_count": {
+      "max_file_lines": 257,
+      "over_600_count": 0
+    },
+    "code_budget": {
+      "status": "lean",
+      "feature_lines": 780,
+      "file_count": 12,
+      "dependency_count": 0,
+      "notes": "Vertical identity slice reuses existing CLI, auth, telemetry, and Supabase boundaries."
+    },
+    "test_commands": [
+      "node --test packages/cli/src/__tests__/login.test.ts packages/cli/src/__tests__/github-identity.test.ts packages/backend/src/__tests__/ingest.test.ts packages/web/src/lib/__tests__/github-identity.test.ts packages/web/src/lib/__tests__/github-identity-route.test.ts packages/web/src/lib/__tests__/leaderboard.test.ts packages/web/src/lib/__tests__/home-leaderboard-console.test.ts",
+      "pnpm typecheck",
+      "pnpm telemetry:audit:strict",
+      "pnpm sma:release-gate"
+    ],
+    "verification": [
+      {
+        "command": "focused identity test suite",
+        "status": "pass",
+        "timestamp": "2026-07-13T21:07:00Z",
+        "notes": "41 tests passed."
+      },
+      {
+        "command": "pnpm typecheck",
+        "status": "pass",
+        "timestamp": "2026-07-13T21:09:00Z",
+        "notes": "Workspace clean."
+      },
+      {
+        "command": "supabase db push",
+        "status": "pass",
+        "timestamp": "2026-07-13T21:20:00Z",
+        "notes": "Production migration 20260713212000 applied."
+      },
+      {
+        "command": "pnpm test && pnpm sma:release-gate",
+        "status": "pass",
+        "timestamp": "2026-07-13T21:20:00Z",
+        "notes": "All 567 tests and the serialized release gate passed."
+      },
+      {
+        "command": "vibetracker login --site https://vibetracker-betterdigital.netlify.app",
+        "status": "pass",
+        "timestamp": "2026-07-13T21:39:00Z",
+        "notes": "Existing gh keyring identity verified; browser skipped; VibeTRACKER token stored in the OS keyring."
+      }
+    ]
+  },
+  "clone": {
+    "readiness": "manual_only",
+    "adaptation_points": [
+      "Provide a server-side GitHub identity verifier.",
+      "Bind issued product tokens to an immutable provider subject.",
+      "Keep identity proof distinct from usage provenance."
+    ],
+    "install_steps": [
+      "Apply the identity migration.",
+      "Deploy the ingest edge function and web routes.",
+      "Run the focused identity and release gates."
+    ],
+    "known_traps": [
+      "Never persist or log the GitHub CLI credential.",
+      "A blue check proves identity, not provider-fetched usage.",
+      "Link accounts only after fresh proof of both the C0VIBE session and GitHub identity."
+    ]
+  },
+  "provenance": {
+    "created_by": {
+      "actor_kind": "ai_model",
+      "actor_id": "codex",
+      "provider": "OpenAI",
+      "model": "gpt-5-codex",
+      "role": "implementer",
+      "timestamp": "2026-07-13T21:20:00Z",
+      "summary": "Defined the GitHub-first identity security boundary and verification contract."
+    },
+    "touched_by": [],
+    "reviewed_by": [],
+    "source_chain": [
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.auth.github-first-identity",
+        "commit": "f34922b",
+        "path": "modules/github-identity/module.sweetspot.json",
+        "event": "created",
+        "timestamp": "2026-07-13T21:20:00Z"
+      }
+    ]
+  }
+}

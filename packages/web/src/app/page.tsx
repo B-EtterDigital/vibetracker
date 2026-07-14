@@ -17,10 +17,10 @@ function unavailableBoard(tier: Tier): HomeBoardSnapshot {
   return {
     tier,
     label: tier === "verified" ? "Verified" : "Self-reported",
-    signal: tier === "verified" ? "BACKEND ATTESTED" : "USER DECLARED",
+    signal: tier === "verified" ? "GITHUB / C0VIBE" : "UNVERIFIED HANDLE",
     blurb: tier === "verified"
-      ? "Provider-backed aggregate usage. Trust evidence remains separate."
-      : "Public user-declared aggregate usage, never mixed with verified rank.",
+      ? "The operator identity is proven. Usage remains explicitly attested or provider-verified."
+      : "Handle-only CLI uploads. Identity is not proven and ranks never mix with verified identities.",
     status: "error",
     rows: [],
     totals: {
@@ -38,7 +38,7 @@ async function loadBoard(tier: Tier): Promise<HomeBoardSnapshot> {
     return {
       tier,
       label: arena.label,
-      signal: tier === "verified" ? "BACKEND ATTESTED" : "USER DECLARED",
+      signal: tier === "verified" ? "GITHUB / C0VIBE" : "UNVERIFIED HANDLE",
       blurb: arena.blurb,
       status: arena.rows.length ? "live" : "waiting",
       totals: {
@@ -55,6 +55,9 @@ async function loadBoard(tier: Tier): Promise<HomeBoardSnapshot> {
         usdLabel: formatUsd(row.total_usd),
         creditsLabel: formatInt(row.total_credits),
         opsLabel: formatInt(row.record_count),
+        identityVerified: Boolean(row.identity_verified),
+        identityProvider: row.identity_provider ?? null,
+        usageTier: row.usage_tier ?? (tier === "verified" ? "attested" : "self_reported"),
       })),
     };
   } catch {

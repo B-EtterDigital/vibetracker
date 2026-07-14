@@ -51,14 +51,14 @@ test("buildLeaderboardArena prepares public board totals without mixing tiers", 
   assert.equal(verified.totalCredits, 1399);
   assert.equal(verified.totalOps, 55);
   assert.equal(verified.leader?.handle, "a");
-  assert.match(verified.terminalLines.join("\n"), /provider fetched/);
+  assert.match(verified.terminalLines.join("\n"), /github \/ c0vibe/);
   assert.match(verified.terminalLines.join("\n"), /@a/);
 
   const self = buildLeaderboardArena("self_reported", []);
   assert.equal(self.rows.length, 0);
   assert.equal(self.podium.length, 0);
   assert.equal(self.leader, null);
-  assert.match(self.terminalLines.join("\n"), /cli uploaded/);
+  assert.match(self.terminalLines.join("\n"), /unverified handle/);
   assert.match(self.terminalLines.join("\n"), /none/);
 });
 

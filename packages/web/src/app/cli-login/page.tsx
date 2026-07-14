@@ -336,9 +336,8 @@ function DeviceAuthControlRoomPanel({ room }: { room: DeviceAuthControlRoom }) {
   );
 }
 
-// The human confirms the code shown in their terminal, then approves with their C0VIBE
-// (WorkOS) session. Requires the visitor to be signed in — approval binds the CLI token
-// to their account so uploads become 'attested'.
+// Browser fallback for machines without an existing `gh auth` session. The fast path verifies
+// GitHub in the terminal and never opens this page; this path binds the token to WorkOS instead.
 export default function CliLogin() {
   const [code, setCode] = useState("");
   const [state, setState] = useState<"idle" | "working" | "done" | "error">("idle");
@@ -381,7 +380,7 @@ export default function CliLogin() {
         <div className="device-copy">
           <p className="eyebrow">C0VIBE device flow</p>
           <h1>Authorize the CLI</h1>
-          <p>Match the terminal code, approve this device, then return to VibeTRACKER with an attested upload token.</p>
+          <p>VibeTRACKER first reuses an existing GitHub CLI session. If none is available, match this code and approve with C0VIBE.</p>
           <div className="motto-rail" aria-label="C0VIBE motto">
             <span>Vibers Unite</span>
             <a href="https://c0vibe.app">c0vibe.app</a>
@@ -416,7 +415,7 @@ export default function CliLogin() {
         <div className={`device-status device-status-${state}`} aria-live="polite">
           <span>{statusLabel}</span>
           <b>{state === "done" ? msg : state === "error" ? msg : code ? "Ready to approve this terminal session." : "Open this link from `vibetracker login` to load a code."}</b>
-          <small>C0VIBE account proof is separate from self-reported usage. Approval never uploads local records.</small>
+          <small>GitHub or C0VIBE proves identity only. Approval never uploads local records or marks uploaded usage provider-verified.</small>
         </div>
 
         <button type="button" onClick={approve} disabled={!code || state === "working" || state === "done"} className="device-approve-button">
@@ -502,6 +501,7 @@ export default function CliLogin() {
       </section>
 
       <section className="device-proof-grid" aria-label="CLI authorization boundaries">
+        <div><b>GitHub-first</b><span>An existing `gh auth` session verifies in the terminal and skips this page.</span></div>
         <div><b>Session-bound</b><span>Approval requires the signed-in C0VIBE browser session.</span></div>
         <div><b>Token once</b><span>The CLI polls for the issued token and the server marks it claimed.</span></div>
         <div><b>Local-first</b><span>Usage records remain on disk until an explicit upload command.</span></div>

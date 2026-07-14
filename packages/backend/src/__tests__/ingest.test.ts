@@ -8,11 +8,19 @@ const rec = (over: Record<string, unknown> = {}) => ({
   source: "ledger", confidence: "high", verified: false, ...over,
 });
 
-test("tier is server-controlled: authed → attested, anon → self_reported, never verified", () => {
+test("tier is server-controlled: WorkOS or GitHub identity → attested, anon → self_reported", () => {
   // client tries to claim 'verified' in the payload — ignored either way.
   const authed = handleIngest({ handle: "cyrill", tier: "verified", records: [rec()] }, { userId: "u-123" });
   assert.equal(authed.tier, "attested");
   assert.equal(authed.userId, "u-123");
+
+  const github = handleIngest(
+    { handle: "github-user", tier: "verified", records: [rec()] },
+    { identityId: "identity-123" },
+  );
+  assert.equal(github.tier, "attested");
+  assert.equal(github.identityId, "identity-123");
+  assert.equal(github.userId, undefined);
 
   const anon = handleIngest({ handle: "cyrill", tier: "verified", records: [rec()] });
   assert.equal(anon.tier, "self_reported");

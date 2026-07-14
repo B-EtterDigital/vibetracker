@@ -10,6 +10,10 @@ export interface LeaderRow {
   total_credits: number;
   record_count: number;
   created_at?: string;
+  usage_tier?: "verified" | "attested" | "self_reported";
+  identity_provider?: "github" | "c0vibe" | string | null;
+  identity_verified?: boolean;
+  identity_id?: string | null;
 }
 
 export interface RankedRow extends LeaderRow {
@@ -267,13 +271,13 @@ export const TIER_LABEL: Record<Tier, string> = {
 };
 
 export const TIER_BLURB: Record<Tier, string> = {
-  verified: "Fetched from the provider by our backend — not user-supplied.",
-  self_reported: "Uploaded from the CLI, unverified. Shown separately, never ranked against Verified.",
+  verified: "GitHub or C0VIBE identity proven. Uploaded usage stays labelled attested unless a backend connector fetched it.",
+  self_reported: "Uploaded from the CLI with a handle only. Identity is not verified and ranks stay separate.",
 };
 
 export const TIER_SIGNAL: Record<Tier, string> = {
-  verified: "provider fetched",
-  self_reported: "cli uploaded",
+  verified: "github / c0vibe",
+  self_reported: "unverified handle",
 };
 
 export function medalFor(rank: number): string {

@@ -73,6 +73,7 @@ import { resolveUsageCompareCommand } from "./compare/usage-compare-command.ts";
 import { formatTable, money } from "./format.ts";
 import { renderUploadBlocked, renderUploadFailure, renderUploadPreview, renderUploadSuccess, type UploadResponseProof } from "./upload.ts";
 import { runLogin, createHttpAuthTransport } from "./login.ts";
+import { readGitHubCliToken } from "./github-identity.ts";
 import { filterRecords, parseSince, type RecordFilter } from "../../core/src/filter.ts";
 import { computeStats } from "../../core/src/stats.ts";
 import { computeUsageInsights } from "../../core/src/analytics/insights.ts";
@@ -120,7 +121,7 @@ const USAGE = [
   "usage: vibetracker <command>",
   "",
   "  init [--gui] | gui | wizard-gui",
-  "  login | logout",
+  "  login | logout                 reuse `gh auth` for a verified identity; C0VIBE is the fallback",
   "  oauth start <provider> --auth-url u --token-url u --client-id id [--scope s]",
   "  providers [--all] [--domain ai|dev|creative] [--category c]",
   "  providers check [--json]",
@@ -1495,10 +1496,11 @@ async function main() {
         open: openBrowser,
         sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
         log: (m) => console.log(m),
+        githubToken: readGitHubCliToken,
       });
-      cfg.token = token;
+      storeToken(cfg, token);
       saveConfig(cfg);
-      console.log(`✓ logged in — token stored in ${CONFIG_PATH} (mode 600). Uploads are now attested.`);
+      console.log(`✓ identity verified — VibeTRACKER token stored in the OS keyring when available. Uploads are now identity-attested.`);
     } catch (err) {
       console.error(`✗ login failed: ${(err as Error).message}`);
       process.exit(1);

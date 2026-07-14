@@ -207,6 +207,10 @@
 .home-board__runway a:hover b { color: var(--hb-accent); }
 .home-board__rank { color: var(--hb-self); font: 700 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
 .home-board__runway b { overflow: hidden; font: 650 12px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; text-overflow: ellipsis; white-space: nowrap; }
+.home-board__operator { display: inline-flex; min-width: 0; align-items: center; gap: 6px; }
+.home-board__operator > b, .home-board__operator > a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-board__identity-proof { display: inline-grid; flex: 0 0 16px; width: 16px; height: 16px; place-items: center; border: 1px solid #58a6ff; border-radius: 50%; background: rgba(88, 166, 255, 0.14); color: #79c0ff; font: 800 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.home-board__identity-proof--cli { display: inline-flex; flex-basis: auto; width: auto; min-width: 25px; padding: 0 4px; border-color: rgba(217, 255, 242, 0.22); border-radius: 3px; background: rgba(217, 255, 242, 0.06); color: var(--hb-muted); font-size: 8px; }
 .home-board__runway strong { color: #f3fff9; font: 650 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; }
 .home-board__bar { height: 6px; overflow: hidden; border-radius: 3px; background: rgba(217, 255, 242, 0.08); }
 .home-board__bar i { display: block; width: var(--bar); height: 100%; border-radius: inherit; background: var(--hb-accent); transform-origin: left; animation: home-board-grow 500ms ease-out both; }

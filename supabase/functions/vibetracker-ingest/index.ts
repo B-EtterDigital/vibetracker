@@ -56,23 +56,40 @@ async function sha256Hex(input: string): Promise<string> {
 
   const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
 
-  // Attested identity: validate the CLI bearer token (compared by hash) → user_id.
+  // Attested identity: validate the CLI bearer token (compared by hash) → WorkOS user and/or
+  // immutable GitHub identity. A later WorkOS link is resolved dynamically from the identity.
   let userId: string | undefined;
+  let identityId: string | undefined;
+  let identityHandle: string | undefined;
   const auth = req.headers.get("authorization");
   if (auth?.startsWith("Bearer ")) {
     const tokenHash = await sha256Hex(auth.slice(7));
     const { data: tok } = await admin.from("vibetracker_cli_tokens")
-      .select("user_id,expires_at,revoked").eq("token_hash", tokenHash).maybeSingle();
+      .select("user_id,identity_id,expires_at,revoked").eq("token_hash", tokenHash).maybeSingle();
     if (tok && !tok.revoked && new Date(tok.expires_at) > new Date()) {
-      userId = tok.user_id as string;
-      await admin.from("vibetracker_cli_tokens").update({ last_used_at: new Date().toISOString() }).eq("token_hash", tokenHash);
+      userId = typeof tok.user_id === "string" ? tok.user_id : undefined;
+      identityId = typeof tok.identity_id === "string" ? tok.identity_id : undefined;
+      if (identityId) {
+        const { data: identity } = await admin.from("vibetracker_identities")
+          .select("id,user_id,canonical_handle").eq("id", identityId).maybeSingle();
+        if (!identity) {
+          identityId = undefined;
+        } else {
+          userId = userId ?? (typeof identity.user_id === "string" ? identity.user_id : undefined);
+          identityHandle = typeof identity.canonical_handle === "string" ? identity.canonical_handle : undefined;
+        }
+      }
+      if (userId || identityId) {
+        await admin.from("vibetracker_cli_tokens").update({ last_used_at: new Date().toISOString() }).eq("token_hash", tokenHash);
+      }
     }
   }
 
   // aggregates only; tier from auth. handleIngest is also the shared handle guard:
   // it rejects the reserved "demo" handle (bundled sample profile) by defaulting it to
   // anonymous, so this write path can never insert a row that shadows /u/demo.
-  const result = handleIngest(payload, { userId });
+  const result = handleIngest(payload, { userId, identityId });
+  const publicHandle = identityHandle ?? result.handle;
 
   if (userId) {
     await admin.from("vibetracker_members").upsert({ user_id: userId }, { onConflict: "user_id" });
@@ -87,7 +104,8 @@ async function sha256Hex(input: string): Promise<string> {
 
   const { data: sub, error: sErr } = await admin.from("vibetracker_submissions").insert({
     user_id: userId ?? null,
-    handle: userId ? null : result.handle,   // authed rows use the account handle via the view
+    identity_id: identityId ?? null,
+    handle: userId ? null : publicHandle,    // WorkOS rows use account handles; GitHub-first keeps its stable handle
     tier: result.tier,                       // 'attested' | 'self_reported' — never client-supplied
     record_count: result.accepted,
     total_credits: result.totals.credits,
@@ -191,7 +209,9 @@ async function sha256Hex(input: string): Promise<string> {
   }
 
   return json({
-    ok: result.ok, handle: result.handle, tier: result.tier,
+    ok: result.ok, handle: publicHandle, tier: result.tier,
+    identityVerified: Boolean(userId || identityId),
+    identityProvider: identityId ? "github" : userId ? "c0vibe" : null,
     accepted: result.accepted, rejected: result.rejected,
     totals: result.totals, byProvider: result.byProvider,
     byDay: result.byDay,
@@ -207,6 +227,6 @@ async function sha256Hex(input: string): Promise<string> {
     trustSignals: result.trustSignals.length,
     trustSignalsPersisted,
     ...(trustSignalWarning ? { trustSignalWarning } : {}),
-    profileUrl: `/u/${result.handle}`,
+    profileUrl: `/u/${publicHandle}`,
   });
 });
