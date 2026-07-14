@@ -6,12 +6,15 @@ import { buildLeaderboardReadout } from "../../app/home/leaderboard-readout.ts";
 const source = readFileSync("packages/web/src/app/home/leaderboard-console.tsx", "utf8");
 const lens = readFileSync("packages/web/src/app/home/leaderboard-lens.ts", "utf8");
 const page = readFileSync("packages/web/src/app/page.tsx", "utf8");
+const homeCss = readFileSync("packages/web/src/app/home/home.css", "utf8");
 const brief = readFileSync("packages/web/src/app/home/leaderboard-brief.tsx", "utf8");
 const briefCss = readFileSync("packages/web/src/app/home/leaderboard-brief.css", "utf8");
 const uplink = readFileSync("packages/web/src/app/home/signal-uplink.tsx", "utf8");
 const uplinkCss = readFileSync("packages/web/src/app/home/signal-uplink.css", "utf8");
 const identityClaim = readFileSync("packages/web/src/app/home/identity-claim-rail.tsx", "utf8");
 const identityClaimCss = readFileSync("packages/web/src/app/home/identity-claim-rail.css", "utf8");
+const fieldInstrument = readFileSync("packages/web/src/app/home/leaderboard-field-instrument.tsx", "utf8");
+const fieldInstrumentCss = readFileSync("packages/web/src/app/home/leaderboard-field-instrument.css", "utf8");
 
 test("leaderboard tier changes reset transient search and expansion state", () => {
   assert.match(source, /function selectTier\(nextTier: HomeBoardTier\)/);
@@ -37,6 +40,24 @@ test("leaderboard runway switches display lenses without changing rank order", (
   assert.match(source, /lens\.rows\.map\(\(\{ row, barWidth, valueLabel \}\)/);
   assert.match(lens, /value <= 0 \? "0%"/);
   assert.doesNotMatch(lens, /\.sort\(/);
+});
+
+test("leaderboard runway exposes honest comparison readiness beside the unchanged rank", () => {
+  assert.match(source, /<LeaderboardFieldInstrument rows=\{active\.rows\} lens=\{lensId\}/);
+  assert.match(fieldInstrument, /FIELD STATE/);
+  assert.match(fieldInstrument, /Strongest share/);
+  assert.match(fieldInstrument, /comparisonReady \? "YES" : "NO"/);
+  assert.match(fieldInstrumentCss, /grid-template-columns: minmax\(260px, 0\.72fr\) minmax\(0, 2fr\)/);
+  assert.match(fieldInstrumentCss, /@media \(max-width: 900px\)/);
+  assert.match(fieldInstrumentCss, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(page, /\.\/home\/leaderboard-field-instrument\.css/);
+});
+
+test("mobile directory gives every metric a stable two-column span", () => {
+  assert.match(homeCss, /grid-template-columns: repeat\(6, minmax\(0, 1fr\)\)/);
+  assert.match(homeCss, /td\[data-label="Spend"\] \{ grid-column: 1 \/ 3; \}/);
+  assert.match(homeCss, /td\[data-label="Credits"\] \{ grid-column: 3 \/ 5; \}/);
+  assert.match(homeCss, /td\[data-label="Records"\] \{ grid-column: 5 \/ 7; \}/);
 });
 
 test("leaderboard degraded and waiting states do not invent usage", () => {

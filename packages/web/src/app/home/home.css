@@ -292,7 +292,7 @@
   .home-board__section-head input { width: 100%; }
   .home-board__table-shell table, .home-board__table-shell tbody, .home-board__table-shell tr, .home-board__table-shell td { display: block; width: 100%; }
   .home-board__table-shell thead { display: none; }
-  .home-board__table-shell tr { display: grid; grid-template-columns: 42px repeat(2, minmax(0, 1fr)); padding: 10px 0; border-bottom: 1px solid var(--hb-line); }
+  .home-board__table-shell tr { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); padding: 10px 0; border-bottom: 1px solid var(--hb-line); }
   .home-board__table-shell td, .home-board__table-shell td:nth-child(n) { display: flex; align-items: baseline; justify-content: space-between; width: auto; height: auto; padding: 5px 8px; border: 0; text-align: right; }
   .home-board__table-shell td::before { content: attr(data-label); color: var(--hb-muted); font-size: 9px; }
   .home-board__table-shell td[data-label="Rank"] { grid-column: 1; align-items: center; justify-content: center; padding-inline: 0; }
@@ -301,6 +301,9 @@
   .home-board__table-shell td[data-label="Operator"] .home-board__operator { min-width: 0; max-width: calc(100% - 58px); }
   .home-board__table-shell td[data-label="Operator"] a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .home-board__table-shell td:is([data-label="Spend"], [data-label="Credits"], [data-label="Records"]) { align-items: flex-start; flex-direction: column; gap: 5px; text-align: left; }
+  .home-board__table-shell td[data-label="Spend"] { grid-column: 1 / 3; }
+  .home-board__table-shell td[data-label="Credits"] { grid-column: 3 / 5; }
+  .home-board__table-shell td[data-label="Records"] { grid-column: 5 / 7; }
   .home-board__table-shell td:last-child { grid-column: 1 / -1; justify-content: flex-end; }
   .home-board__table-shell td:last-child::before { content: none; }
   .home-board__encore div { grid-template-columns: 1fr; }

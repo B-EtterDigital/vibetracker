@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type CSSProperties } from "react";
 import { LeaderboardBrief } from "./leaderboard-brief";
+import { LeaderboardFieldInstrument } from "./leaderboard-field-instrument";
 import { IdentityClaimRail } from "./identity-claim-rail";
 import { buildHomeBoardLens, HOME_BOARD_LENSES, type HomeBoardLensId } from "./leaderboard-lens";
 import { SignalUplink, type UplinkCopyState } from "./signal-uplink";
@@ -198,20 +199,23 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
               <span>The diagnostic is recorded; no fallback usage is invented.</span>
             </div>
           ) : lens.rows.length ? (
-            <ol className="home-board__runway">
-              {lens.rows.map(({ row, barWidth, valueLabel }) => (
-                <li key={row.handle}>
-                  <a href={`/u/${row.handle}`}>
-                    <span className="home-board__rank">{row.medal}</span>
-                    <span className="home-board__operator"><b>@{row.handle}</b><IdentityProof row={row} /></span>
-                    <span className="home-board__bar" aria-hidden="true">
-                      <i style={{ "--bar": barWidth } as CSSProperties} />
-                    </span>
-                    <strong>{valueLabel}</strong>
-                  </a>
-                </li>
-              ))}
-            </ol>
+            <div className="home-board__signal-stage">
+              <LeaderboardFieldInstrument rows={active.rows} lens={lensId} />
+              <ol className="home-board__runway">
+                {lens.rows.map(({ row, barWidth, valueLabel }) => (
+                  <li key={row.handle}>
+                    <a href={`/u/${row.handle}`}>
+                      <span className="home-board__rank">{row.medal}</span>
+                      <span className="home-board__operator"><b>@{row.handle}</b><IdentityProof row={row} /></span>
+                      <span className="home-board__bar" aria-hidden="true">
+                        <i style={{ "--bar": barWidth } as CSSProperties} />
+                      </span>
+                      <strong>{valueLabel}</strong>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </div>
           ) : null}
         </section>
       )}

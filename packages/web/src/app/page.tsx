@@ -12,6 +12,7 @@ import {
 import "./home/home.css";
 import "./home/identity-claim-rail.css";
 import "./home/leaderboard-brief.css";
+import "./home/leaderboard-field-instrument.css";
 import "./home/signal-uplink.css";
 
 export const revalidate = 60;
