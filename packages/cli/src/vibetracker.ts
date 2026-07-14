@@ -47,6 +47,7 @@ import { desktopActivitiesToRecords, renderDesktopActivity, scanDesktopActivity 
 import { buildOAuthUrl, exchangeOAuthCode, waitForOAuthCallback } from "./oauth.ts";
 import { ccusageToRecords, findCcJson, CCUSAGE_PROVIDERS } from "./import-ccusage.ts";
 import { collectCodingTelemetry } from "./coding-telemetry.ts";
+import { collectOrchestrationHours } from "./orchestration-hours.ts";
 import { fetchViberankProfile, decomposeViberank, VIBERANK_PROVIDER } from "./import-viberank.ts";
 import { commandCockpitPayload, renderCommandCockpit, renderCommandCockpitHtml } from "./command-cockpit.ts";
 import {
@@ -1671,6 +1672,10 @@ async function main() {
     const coding = argv.includes("--no-ccusage")
       ? null
       : collectCodingTelemetry({ telemetry: createConsoleTelemetry() });
+    // Recent, byte-budgeted local trace reconstructed from bounded session-event gaps.
+    const orchestration = argv.includes("--no-orchestration")
+      ? null
+      : collectOrchestrationHours({ telemetry: createConsoleTelemetry() });
     const bundle = {
       schema: "vibetracker.upload/0.1",
       handle,
@@ -1682,6 +1687,7 @@ async function main() {
       ...(cfg.bio ? { bio: cfg.bio } : {}),
       ...(cfg.parallelAgents || cfg.subs ? { selfReported: { parallelAgents: cfg.parallelAgents, subs: cfg.subs } } : {}),
       ...(coding ? { tokenBreakdown: coding.tokenBreakdown, agents: coding.agents, totalTokens: coding.totalTokens } : {}),
+      ...(orchestration ? { orchestration } : {}),
       integrity: audit.integrity,
     };
     const findings = scanSecrets(bundle);
@@ -1694,6 +1700,7 @@ async function main() {
       findings,
       site: SITE,
       coding,
+      orchestration,
     };
     if (argv.includes("--dry-run") || argv.includes("--preview")) {
       console.log(renderUploadPreview(uploadRender));

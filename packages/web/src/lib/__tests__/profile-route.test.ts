@@ -15,6 +15,7 @@ const telemetry = readFileSync("packages/web/src/app/u/[handle]/profile-telemetr
 const telemetryModel = readFileSync("packages/web/src/app/u/[handle]/profile-telemetry-model.ts", "utf8");
 const telemetryStyles = readFileSync("packages/web/src/app/u/[handle]/profile-telemetry.css", "utf8");
 const readout = readFileSync("packages/web/src/app/u/[handle]/profile-readout.tsx", "utf8");
+const orchestration = readFileSync("packages/web/src/app/u/[handle]/profile-orchestration.tsx", "utf8");
 const accessibilityStyles = readFileSync("packages/web/src/app/u/[handle]/profile-accessibility.css", "utf8");
 const layout = readFileSync("packages/web/src/app/u/[handle]/layout.tsx", "utf8");
 const nextConfig = readFileSync("packages/web/next.config.ts", "utf8");
@@ -140,6 +141,15 @@ test("token breakdown + measured multi-CLI activity render without inferred dele
   // total tokens is a stat headline in the breakdown panel; global rank rides the hero state rail
   assert.match(tokensSrc, /tokens total/);
   assert.match(page, /label: "global rank", value: `#\$\{profile\.rank\}`/);
+});
+
+test("orchestration trace explains its bounded local evidence without runtime or effort overclaims", () => {
+  assert.match(page, /<OrchestrationHours orch=\{profile\.orchestration\}/);
+  assert.match(orchestration, /local derived evidence/);
+  assert.match(orchestration, /gaps capped at 30 minutes/);
+  assert.match(orchestration, /not exact runtime, billing time, human effort, or server-verified concurrency/);
+  assert.match(orchestration, /coverage \{orch\.filesScanned\.toLocaleString/);
+  assert.doesNotMatch(orchestration, /your agents worked|hours reclaimed|while you slept|you did not sit through|measured, not estimated|actually running/i);
 });
 
 test("C0VIBE band offers claim + migrate without overclaiming verification", () => {

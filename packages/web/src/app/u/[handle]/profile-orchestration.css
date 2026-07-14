@@ -1,0 +1,50 @@
+/* Local orchestration trace reconstructed from bounded session-event gaps. */
+
+.vorch-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(14px, 2vw, 22px);
+}
+.vorch-lead { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.vorch-lead-eyebrow {
+  font: 700 9.5px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.2em;
+  color: rgba(217, 255, 242, 0.42);
+}
+.vorch-lead-value {
+  font: 800 4rem/0.92 var(--vp-mono);
+  letter-spacing: 0; color: #2ee8d6; font-variant-numeric: tabular-nums;
+}
+.vorch-lead-value em {
+  font-style: normal; font-size: 0.42em; font-weight: 700;
+  color: rgba(46, 232, 214, 0.55); margin-left: 0.12em; letter-spacing: 0;
+}
+.vorch-lead-note {
+  font: 400 13px/1.55 var(--vp-mono); color: rgba(217, 255, 242, 0.6); max-width: 58ch;
+}
+
+.vorch-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;
+  margin: 20px 0 0; border: 1px solid rgba(217, 255, 242, 0.08); border-radius: 6px;
+  background: rgba(217, 255, 242, 0.08); overflow: hidden;
+}
+.vorch-stat { display: flex; flex-direction: column; gap: 5px; padding: 14px 15px; background: #0b1216; }
+.vorch-stat-label {
+  font: 500 9.5px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.1em;
+  color: rgba(217, 255, 242, 0.4);
+}
+.vorch-stat-value { font: 800 22px/1 var(--vp-mono); color: #eafff8; font-variant-numeric: tabular-nums; }
+.vorch-stat-note { font: 400 10.5px/1.45 var(--vp-mono); color: rgba(217, 255, 242, 0.5); }
+
+.vorch-coverage {
+  display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 14px;
+  font: 500 10px/1.4 var(--vp-mono); color: rgba(46, 232, 214, 0.66);
+}
+
+.vorch-foot {
+  margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid rgba(217, 255, 242, 0.08);
+  font: 400 10.5px/1.55 var(--vp-mono); color: rgba(217, 255, 242, 0.38);
+}
+
+@media (max-width: 600px) {
+  .vorch-lead-value { font-size: 2.8rem; }
+}

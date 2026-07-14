@@ -1,6 +1,7 @@
 import type { UsageAudit } from "./audit.ts";
 import type { SecretFinding } from "../../core/src/security/secrets.ts";
 import { money } from "./format.ts";
+import type { OrchestrationTrace } from "./orchestration-hours.ts";
 
 export interface UploadResponseProof {
   profileUrl?: string;
@@ -24,6 +25,7 @@ export interface UploadRenderInput {
     totalTokens: number;
     agents: { crossProviderDays: number; activeDays: number; agents: Array<{ agent: string }> };
   } | null;
+  orchestration?: OrchestrationTrace | null;
 }
 
 export const DIRECT_INGEST_URL = "https://tnsaqsqajpjbvlpasojt.supabase.co/functions/v1/vibetracker-ingest";
@@ -89,6 +91,15 @@ function codingSnapshot(input: UploadRenderInput): string {
   return `coding snapshot ${input.coding.totalTokens.toLocaleString("en-US")} tokens // ${agents} active CLI${agents === 1 ? "" : "s"}`;
 }
 
+function orchestrationSnapshot(input: UploadRenderInput): string[] {
+  const trace = input.orchestration;
+  if (!trace) return [frameLine("local orchestration trace none")];
+  return [
+    frameLine(`local trace ${trace.activityHours.toFixed(1)}h span // ${trace.overlapRatio.toFixed(1)}x overlap`),
+    frameLine(`coverage ${trace.filesScanned}/${trace.filesAvailable} files // ${trace.sampledFiles} sampled // ${trace.limited ? "budget-limited" : "complete"}`),
+  ];
+}
+
 function commandHandle(handle: string): string {
   const cleaned = handle.replace(/^@/, "");
   return /^[a-zA-Z0-9._-]+$/.test(cleaned) ? cleaned : encodeURIComponent(cleaned);
@@ -142,6 +153,7 @@ export function renderUploadPreview(input: UploadRenderInput): string {
     frameLine(`trust signals ${a.trustSignals.length} // labelled NOT USAGE`),
     frameLine(trustSidecar(a)),
     frameLine(codingSnapshot(input)),
+    ...orchestrationSnapshot(input),
     frameLine(`bundle ${shortHash(a.integrity.bundleFingerprint)}`),
     frameLine(integritySeal(a)),
     frameLine(sourceSignal(a)),
@@ -152,7 +164,8 @@ export function renderUploadPreview(input: UploadRenderInput): string {
     "",
     "Leaves machine on upload:",
     "  - accepted normalized usage records",
-    "  - aggregate metadata, provider rollups, measured coding totals, trust signals, integrity hashes",
+    "  - aggregate metadata, provider rollups, measured coding totals, local derived activity trace",
+    "  - trust signals and integrity hashes",
     "  - no API keys, prompts, screenshots, raw provider payloads, or local files",
     "",
     renderSecretScan(input.findings),

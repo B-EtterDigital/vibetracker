@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 const rangeMigration = readFileSync("supabase/migrations/010_vibetracker_usage_counts_bigint.sql", "utf8");
 const quantityMigration = readFileSync("supabase/migrations/011_vibetracker_usage_counts_numeric.sql", "utf8");
 const selfReportedMigration = readFileSync("supabase/migrations/012_vibetracker_self_reported.sql", "utf8");
+const orchestrationMigration = readFileSync("supabase/migrations/013_vibetracker_orchestration.sql", "utf8");
 const edgeBytes = readFileSync("supabase/functions/vibetracker-ingest/index.ts");
 const edge = edgeBytes.toString("utf8");
 
@@ -38,4 +39,17 @@ test("self-reported profile truths stay bounded, sanitized, and source-safe", ()
   assert.match(selfReportedMigration, /constraint vibetracker_submissions_self_reported_subs_check/);
   assert.match(edge, /selfAgentsRaw > 0 && selfAgentsRaw <= 1000/);
   assert.match(edge, /rawSelf\.subs\.replace\(\/\[\\x00-\\x1f\\x7f\]\+\/g, " "\)/);
+});
+
+test("local orchestration evidence stays numeric-only, invariant-safe, and explicitly derived", () => {
+  assert.match(orchestrationMigration, /orchestration jsonb/);
+  assert.match(orchestrationMigration, /constraint vibetracker_submissions_orchestration_object_check/);
+  assert.match(orchestrationMigration, /jsonb_typeof\(orchestration\) = 'object'/);
+  assert.match(orchestrationMigration, /not exact process runtime, billing time, human effort, or verified concurrency/i);
+  assert.match(edge, /typeof value === "number" && Number\.isFinite\(value\) && value >= 0/);
+  assert.match(edge, /activityHours/);
+  assert.match(edge, /overlapRatio: wallHours > 0 \? Math\.round\(\(activityHours \/ wallHours\) \* 10\) \/ 10 : 0/);
+  assert.match(edge, /filesAvailable = Math\.max\(filesScanned/);
+  assert.match(edge, /limited: rawOrch\.limited === true \|\| filesScanned < filesAvailable/);
+  assert.doesNotMatch(edge, /computeHours|peakConcurrent|overnightSessions|longestRunHours/);
 });

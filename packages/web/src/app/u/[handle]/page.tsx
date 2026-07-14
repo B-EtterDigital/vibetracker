@@ -24,6 +24,7 @@ import { ProfileHero, type HeroDiscipline } from "./profile-hero";
 import { C0vibeBand } from "./profile-cta";
 import { SyncRhythm, GitHubContributions } from "./profile-heatmap";
 import { TokenBreakdown, Delegation } from "./profile-tokens";
+import { OrchestrationHours } from "./profile-orchestration";
 import { SkillSignals } from "./profile-signals";
 import { computeProfileSignals } from "../../../lib/profile-signals";
 import { UsageTelemetry } from "./profile-telemetry";
@@ -34,6 +35,7 @@ import "./profile-hero.css";
 import "./profile-heatmap.css";
 import "./profile-tokens.css";
 import "./profile-signals.css";
+import "./profile-orchestration.css";
 import "./profile-telemetry.css";
 import "./profile-accessibility.css";
 
@@ -397,6 +399,10 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // Money is the reference, not the headline — skill is what you see first.
   const signals = computeProfileSignals(profile);
   add("overview", "full", <SkillSignals signals={signals} apiCost={formatUsd(facts.usd)} key="signals" />);
+  // Local derived orchestration evidence, shown only when the upload carried a usable trace.
+  if (profile.orchestration && profile.orchestration.activityHours > 0) {
+    add("overview", "full", <OrchestrationHours orch={profile.orchestration} key="orchestration" />);
+  }
   add("overview", "full", <SignalProgress tier={read.tier} progress={read.progress} key="progress" />);
   add("overview", "full", <StatCards cards={cards} key="stats" />);
   if (reveal.chart) {

@@ -119,6 +119,42 @@ async function sha256Hex(input: string): Promise<string> {
   const selfReportedSubs = typeof rawSelf?.subs === "string"
     ? rawSelf.subs.replace(/[\x00-\x1f\x7f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 200) || null : null;
 
+  // Local derived orchestration evidence reconstructed by the CLI from bounded session-event
+  // gaps. This is not exact runtime, billing time, human effort, or verified concurrency.
+  // Accept JSON numbers only: strings and booleans must never be coerced into public metrics.
+  const boundedNumber = (value: unknown, max: number) =>
+    typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.min(value, max) : 0;
+  const boundedInt = (value: unknown, max: number) => Math.floor(boundedNumber(value, max));
+  const rawOrch = (payload as { orchestration?: Record<string, unknown> } | null)?.orchestration;
+  const orchestration = rawOrch && typeof rawOrch === "object" && !Array.isArray(rawOrch) ? (() => {
+    const activityHours = boundedNumber(rawOrch.activityHours, 1_000_000);
+    const wallHours = Math.min(boundedNumber(rawOrch.wallHours, 1_000_000), activityHours);
+    const filesScanned = boundedInt(rawOrch.filesScanned, 10_000_000);
+    const filesAvailable = Math.max(filesScanned, boundedInt(rawOrch.filesAvailable, 10_000_000));
+    const sessionFiles = Math.min(boundedInt(rawOrch.sessionFiles, 10_000_000), filesScanned);
+    const sampledFiles = Math.min(boundedInt(rawOrch.sampledFiles, 10_000_000), filesScanned);
+    return {
+      activityHours,
+      wallHours,
+      overlapRatio: wallHours > 0 ? Math.round((activityHours / wallHours) * 10) / 10 : 0,
+      peakOverlap: Math.min(boundedInt(rawOrch.peakOverlap, 100_000), Math.max(1, sessionFiles)),
+      nightStarts: boundedInt(rawOrch.nightStarts, 10_000_000),
+      longestSpanHours: Math.min(boundedNumber(rawOrch.longestSpanHours, 100_000), activityHours),
+      sessionFiles,
+      windowDays: Math.max(1, Math.min(31, boundedInt(rawOrch.windowDays, 31))),
+      filesAvailable,
+      filesScanned,
+      sampledFiles,
+      readBytes: boundedInt(rawOrch.readBytes, 10_737_418_240),
+      limited: rawOrch.limited === true || filesScanned < filesAvailable,
+    };
+  })() : null;
+  const hasOrch = orchestration
+    && orchestration.activityHours > 0
+    && orchestration.wallHours > 0
+    && orchestration.sessionFiles > 0
+    && orchestration.filesScanned > 0;
+
   const { data: sub, error: sErr } = await admin.from("vibetracker_submissions").insert({
     user_id: userId ?? null,
     identity_id: identityId ?? null,
@@ -131,6 +167,7 @@ async function sha256Hex(input: string): Promise<string> {
     cross_provider_days: crossProviderDays,
     self_reported_agents: selfReportedAgents,
     self_reported_subs: selfReportedSubs,
+    orchestration: hasOrch ? orchestration : null,
     bio,
   }).select("id").single();
   if (sErr) return json({ ok: false, error: `submission: ${sErr.message}` }, 500);

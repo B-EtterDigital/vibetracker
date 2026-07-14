@@ -2,6 +2,7 @@ import { supabaseServer } from "./supabase";
 import type { LeaderRow, Tier } from "./leaderboard";
 import { publicTrustSignals, type ProfileTrustSignal } from "./profile-trust";
 import { createConsoleTelemetry } from "../../../core/src/telemetry";
+import { normalizeOrchestration, type OrchestrationTrace } from "./profile-orchestration-data";
 
 const telemetry = createConsoleTelemetry();
 
@@ -50,6 +51,8 @@ export interface ProfileView {
   // Self-reported truths the usage data can't reveal (real parallel-agent count, real sub stack).
   selfReportedAgents?: number;
   selfReportedSubs?: string;
+  // Local derived orchestration trace from bounded gaps between session timestamps.
+  orchestration?: OrchestrationTrace;
   identityVerified?: boolean;
   identityProvider?: string;
   accountLinked?: boolean;
@@ -310,6 +313,7 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
       crossProviderDays: Number((latest as { cross_provider_days?: number } | null)?.cross_provider_days ?? 0),
       selfReportedAgents: (latest as { self_reported_agents?: number | null } | null)?.self_reported_agents ?? undefined,
       selfReportedSubs: (latest as { self_reported_subs?: string | null } | null)?.self_reported_subs ?? undefined,
+      orchestration: normalizeOrchestration((latest as { orchestration?: unknown } | null)?.orchestration),
       tokenBreakdown,
       agents,
       rank,
