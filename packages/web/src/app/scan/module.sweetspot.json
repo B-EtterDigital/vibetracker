@@ -20,7 +20,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "aa3b9e3",
+    "commit": "68636ac",
     "paths": [
       "packages/web/src/app/scan",
       "packages/web/src/lib/__tests__/scan-route.test.ts"
@@ -98,7 +98,7 @@
       "status": "passing",
       "score": 95,
       "notes": "Release gate, production builds, immutable Netlify preview, replay, mobile, desktop, 4K, and Lighthouse proof pass.",
-      "evidence": ["scripts/release-gate.mjs", "https://6a560c4e27a58362b0b5e006--vibetracker-betterdigital.netlify.app/scan"]
+      "evidence": ["scripts/release-gate.mjs", "Netlify deploy 6a560e1e5361878cc15a209e", "https://vibeusage.c0vibe.app/scan"]
     },
     "sas": {
       "status": "passing",
@@ -191,8 +191,8 @@
       {
         "command": "focused scan test + pnpm typecheck + pnpm sma:release-gate + pnpm audit --audit-level high + pnpm build + Netlify build and browser proof",
         "status": "pass",
-        "timestamp": "2026-07-14T10:18:14Z",
-        "notes": "2 focused route tests, 15 control-plane tests, 599 package tests, strict VTRS with 0 violations, TypeScript, dependency audit, CLI and Next builds, 390/1440/3840 browser proof, zero replay calls, and Lighthouse 100 accessibility/best-practices/agentic passed."
+        "timestamp": "2026-07-14T10:26:36Z",
+        "notes": "2 focused route tests, 15 control-plane tests, 599 package tests, strict VTRS with 0 violations, TypeScript, dependency audit, CLI and Next builds, 390/1440/3840 browser proof, zero replay calls, and stable-production Lighthouse 100 in all four categories passed."
       }
     ]
   },
@@ -232,7 +232,31 @@
       "context_event_ids": ["ctx-1783699087206-b6d85b50", "ctx-1783699034295-fd009b97", "ctx-1783699403240-ad1c215f"],
       "attestation": { "method": "git_commit", "reference": "aa3b9e3" }
     },
-    "touched_by": [],
+    "touched_by": [
+      {
+        "actor_kind": "ai_model",
+        "actor_id": "codex",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "files_touched": ["packages/web/src/app/scan/module.sweetspot.json"],
+        "verification": [
+          {
+            "command": "pnpm sma:release-gate + Netlify production deploy + Chrome DevTools runtime proof",
+            "status": "pass",
+            "timestamp": "2026-07-14T10:26:36Z",
+            "notes": "Release gate, exact receipt totals, mobile/desktop/4K layout, zero-call replay, and public-domain Lighthouse proof passed."
+          }
+        ],
+        "timestamp": "2026-07-14T10:26:36Z",
+        "summary": "Added the inspectable normalization receipt and deployed it to the public VibeUsage domain.",
+        "attestation": {
+          "method": "agent_runner",
+          "reference": "lease-1784023028029-b6e33e85"
+        }
+      }
+    ],
     "reviewed_by": [],
     "source_chain": [
       {
@@ -242,6 +266,14 @@
         "path": "packages/web/src/app/scan",
         "event": "created",
         "timestamp": "2026-07-10T16:03:44Z"
+      },
+      {
+        "project": "000-vibetracker",
+        "brick_id": "000-vibetracker.web.local-scan-demo",
+        "commit": "68636ac",
+        "path": "packages/web/src/app/scan",
+        "event": "updated",
+        "timestamp": "2026-07-14T10:26:36Z"
       }
     ]
   }
