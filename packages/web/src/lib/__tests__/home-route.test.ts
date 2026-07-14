@@ -38,6 +38,9 @@ test("home route-local styles stay responsive, stable, and motion-safe", () => {
   assert.match(styles, /\.home-board__table-shell table \{[^}]*table-layout: fixed/);
   assert.match(styles, /@media \(max-width: 900px\)/);
   assert.match(styles, /@media \(max-width: 680px\)/);
+  assert.match(styles, /grid-template-columns: 42px repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(styles, /td\[data-label="Operator"\] \{ grid-column: 2 \/ -1/);
+  assert.match(styles, /td:is\(\[data-label="Spend"\], \[data-label="Credits"\], \[data-label="Ops"\]\)/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(styles, /\.home-board :is\(a, button, input, summary\):focus-visible/);
   assert.doesNotMatch(styles, /linear-gradient|radial-gradient/);

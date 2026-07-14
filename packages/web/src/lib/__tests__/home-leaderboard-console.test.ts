@@ -4,6 +4,7 @@ import test from "node:test";
 import { buildLeaderboardReadout } from "../../app/home/leaderboard-readout.ts";
 
 const source = readFileSync("packages/web/src/app/home/leaderboard-console.tsx", "utf8");
+const lens = readFileSync("packages/web/src/app/home/leaderboard-lens.ts", "utf8");
 const page = readFileSync("packages/web/src/app/page.tsx", "utf8");
 const brief = readFileSync("packages/web/src/app/home/leaderboard-brief.tsx", "utf8");
 const briefCss = readFileSync("packages/web/src/app/home/leaderboard-brief.css", "utf8");
@@ -19,9 +20,21 @@ test("leaderboard tier changes reset transient search and expansion state", () =
 
 test("leaderboard search and paging never rewrite the ranked source rows", () => {
   assert.match(source, /active\.rows\.filter\(\(row\) => row\.handle\.toLowerCase\(\)\.includes\(normalized\)\)/);
-  assert.match(source, /const chartRows = active\.rows\.slice\(0, 10\)/);
+  assert.match(source, /buildHomeBoardLens\(active\.rows, lensId\)/);
+  assert.match(lens, /const visible = rows\.slice\(0, 10\)/);
   assert.match(source, /const visibleRows = expanded \? filteredRows : filteredRows\.slice\(0, PAGE_SIZE\)/);
   assert.doesNotMatch(source, /\.sort\(/);
+  assert.doesNotMatch(lens, /\.sort\(/);
+});
+
+test("leaderboard runway switches display lenses without changing rank order", () => {
+  assert.match(source, /buildHomeBoardLens\(active\.rows, lensId\)/);
+  assert.match(source, /role="group" aria-label="Runway display lens"/);
+  assert.match(source, /aria-pressed=\{lensId === item\.id\}/);
+  assert.match(source, /RANK ORDER UNCHANGED/);
+  assert.match(source, /lens\.rows\.map\(\(\{ row, barWidth, valueLabel \}\)/);
+  assert.match(lens, /value <= 0 \? "0%"/);
+  assert.doesNotMatch(lens, /\.sort\(/);
 });
 
 test("leaderboard degraded and waiting states do not invent usage", () => {

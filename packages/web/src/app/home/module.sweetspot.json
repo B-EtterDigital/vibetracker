@@ -5,7 +5,7 @@
     "name": "Home Leaderboard Console",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["leaderboard", "usage-analytics", "operator-console"]
@@ -13,9 +13,9 @@
   "hierarchy": {
     "level": "brick",
     "group_id": "000-vibetracker:packages/web/src/app",
-    "contains": ["route", "component", "style", "test"],
+    "contains": ["route", "component", "utility", "style", "test"],
     "component_policy": "internal_by_default",
-    "notes": "Primary repeated-use surface: one trust-separated public usage leaderboard instrument with an explicit derived field readout."
+    "notes": "Primary repeated-use surface: one trust-separated public usage leaderboard instrument with derived field readouts and a rank-preserving spend, credits, and operations lens."
   },
   "source": {
     "project": "000-vibetracker",
@@ -26,6 +26,7 @@
       "packages/web/src/app/home",
       "packages/web/src/lib/__tests__/home-route.test.ts",
       "packages/web/src/lib/__tests__/home-leaderboard-console.test.ts",
+      "packages/web/src/lib/__tests__/home-leaderboard-lens.test.ts",
       "packages/web/src/lib/__tests__/leaderboard.test.ts",
       "packages/web/src/lib/__tests__/app-shell-layout.test.ts",
       "packages/web/src/lib/__tests__/home-control-tower.test.ts",
@@ -43,6 +44,7 @@
       "packages/web/src/app/home",
       "packages/web/src/lib/__tests__/home-route.test.ts",
       "packages/web/src/lib/__tests__/home-leaderboard-console.test.ts",
+      "packages/web/src/lib/__tests__/home-leaderboard-lens.test.ts",
       "packages/web/src/lib/__tests__/leaderboard.test.ts",
       "packages/web/src/lib/__tests__/app-shell-layout.test.ts",
       "packages/web/src/lib/__tests__/home-control-tower.test.ts",
@@ -51,6 +53,7 @@
     "public_paths": [
       "packages/web/src/app/page.tsx",
       "packages/web/src/app/home/leaderboard-console.tsx",
+      "packages/web/src/app/home/leaderboard-lens.ts",
       "packages/web/src/app/home/leaderboard-readout.ts",
       "packages/web/src/app/home/leaderboard-brief.tsx",
       "packages/web/src/app/home/leaderboard-brief.css",
@@ -61,6 +64,7 @@
     "private_paths": [
       "packages/web/src/lib/__tests__/home-route.test.ts",
       "packages/web/src/lib/__tests__/home-leaderboard-console.test.ts",
+      "packages/web/src/lib/__tests__/home-leaderboard-lens.test.ts",
       "packages/web/src/lib/__tests__/leaderboard.test.ts",
       "packages/web/src/lib/__tests__/app-shell-layout.test.ts",
       "packages/web/src/lib/__tests__/home-control-tower.test.ts",
@@ -85,20 +89,20 @@
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Server orchestration, leaderboard interaction, pure field interpretation, empty-lane guidance, and route-local styling are separate and below 300 lines each.",
-      "evidence": ["packages/web/src/app/page.tsx", "packages/web/src/app/home/leaderboard-console.tsx", "packages/web/src/app/home/leaderboard-readout.ts", "packages/web/src/app/home/leaderboard-brief.tsx", "packages/web/src/app/home/home.css", "packages/web/src/app/home/leaderboard-brief.css", "packages/web/src/app/home/signal-uplink.tsx", "packages/web/src/app/home/signal-uplink.css"]
+      "notes": "Server orchestration, leaderboard interaction, pure metric-lens math, field interpretation, empty-lane guidance, and route-local styling are separate; the largest runtime source is 311 lines.",
+      "evidence": ["packages/web/src/app/page.tsx", "packages/web/src/app/home/leaderboard-console.tsx", "packages/web/src/app/home/leaderboard-lens.ts", "packages/web/src/app/home/leaderboard-readout.ts", "packages/web/src/app/home/leaderboard-brief.tsx", "packages/web/src/app/home/home.css", "packages/web/src/app/home/leaderboard-brief.css", "packages/web/src/app/home/signal-uplink.tsx", "packages/web/src/app/home/signal-uplink.css"]
     },
     "ssi": {
       "status": "passing",
-      "score": 90,
-      "notes": "Serializable board snapshots are the only server-to-client contract; the readout derives concentration, unit cost, active depth, and identity coverage from those same rows.",
-      "evidence": ["packages/web/src/app/home/leaderboard-console.tsx", "packages/web/src/app/home/leaderboard-readout.ts"]
+      "score": 95,
+      "notes": "Serializable board snapshots are the only server-to-client contract; the readout and metric lens derive every interpretation and bar from those same ordered rows.",
+      "evidence": ["packages/web/src/app/home/leaderboard-console.tsx", "packages/web/src/app/home/leaderboard-lens.ts", "packages/web/src/app/home/leaderboard-readout.ts"]
     },
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Focused interpretation, empty, and degraded-state contracts plus the complete 598-test package suite pass on the current tree.",
-      "evidence": ["packages/web/src/lib/__tests__/home-route.test.ts", "packages/web/src/lib/__tests__/home-leaderboard-console.test.ts"]
+      "notes": "Twenty-nine focused leaderboard tests and the complete 604-test package suite cover rank preservation, all three metric lenses, honest zero bars, mobile directory fit, empty lanes, and degraded states.",
+      "evidence": ["packages/web/src/lib/__tests__/home-route.test.ts", "packages/web/src/lib/__tests__/home-leaderboard-console.test.ts", "packages/web/src/lib/__tests__/home-leaderboard-lens.test.ts"]
     },
     "spe": {
       "status": "passing",
@@ -115,8 +119,8 @@
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Preview 6a560373e181c8564f57ded3 passed live-data interpretation, tier switching, waiting state, search/reset, copy, network, console, overflow, and visual checks at 390px, 1440px, and 3840px 4K fullscreen.",
-      "evidence": ["https://6a560373e181c8564f57ded3--vibetracker-betterdigital.netlify.app/", "packages/web/src/app/home/leaderboard-brief.css", "packages/web/src/lib/__tests__/home-leaderboard-console.test.ts"]
+      "notes": "Preview 6a562393cee52f3b129b3e01 passed live Spend, Credits, and Ops switching, immutable rank order, true zero-width bars, mobile directory fit, and 390px, 1440px, and 3840px 4K overflow and visual checks.",
+      "evidence": ["https://6a562393cee52f3b129b3e01--vibeusage.netlify.app/", "packages/web/src/app/home/leaderboard-lens.ts", "packages/web/src/lib/__tests__/home-leaderboard-lens.test.ts"]
     },
     "sas": {
       "status": "passing",
@@ -198,27 +202,27 @@
     "sbom_path": ""
   },
   "quality": {
-    "score": 92,
+    "score": 96,
     "line_count": {
-      "max_file_lines": 293,
+      "max_file_lines": 311,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1190,
-      "file_count": 8,
+      "feature_lines": 1283,
+      "file_count": 9,
       "dependency_count": 3,
-      "notes": "The former 3,409-line route remains a small server seam plus focused leaderboard, field-readout, and signal-uplink modules with no new dependency."
+      "notes": "The former 3,409-line route remains a small server seam plus focused leaderboard, pure metric-lens, field-readout, and signal-uplink modules with no new dependency."
     },
     "test_commands": [
-      "node --test packages/web/src/lib/__tests__/home-route.test.ts packages/web/src/lib/__tests__/home-leaderboard-console.test.ts packages/web/src/lib/__tests__/leaderboard.test.ts"
+      "node --test packages/web/src/lib/__tests__/home-route.test.ts packages/web/src/lib/__tests__/home-leaderboard-console.test.ts packages/web/src/lib/__tests__/home-leaderboard-lens.test.ts packages/web/src/lib/__tests__/leaderboard.test.ts"
     ],
     "verification": [
       {
         "command": "focused home tests + pnpm sma:release-gate + pnpm audit --audit-level high + pnpm build + pnpm --dir packages/web build + responsive browser proof",
         "status": "pass",
-        "timestamp": "2026-07-14T09:41:58Z",
-        "notes": "22 focused leaderboard tests, 15 control-plane tests, 598 package tests, strict VTRS with zero violations, TypeScript, dependency audit with no known vulnerabilities, CLI build, clean 27-route Next build, and preview proof at 390px, 1440px, and 3840px passed with no overflow, overlaps, console errors, or failed requests."
+        "timestamp": "2026-07-14T12:00:46Z",
+        "notes": "29 focused leaderboard tests, 15 control-plane tests, 604 package tests, strict VTRS with zero violations, TypeScript, dependency audit with no known vulnerabilities, CLI build, and 27-route Next build pass. Preview 6a562393cee52f3b129b3e01 proves Spend/Credits/Ops switching, unchanged ranks, zero-width zero rows, repaired mobile directory fit, and 390px, 1440px, and 3840px overflow and visual checks."
       }
     ]
   },

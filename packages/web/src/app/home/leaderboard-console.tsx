@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type CSSProperties } from "react";
 import { LeaderboardBrief } from "./leaderboard-brief";
+import { buildHomeBoardLens, HOME_BOARD_LENSES, type HomeBoardLensId } from "./leaderboard-lens";
 import { SignalUplink, type UplinkCopyState } from "./signal-uplink";
 
 export type HomeBoardTier = "verified" | "self_reported";
@@ -72,6 +73,7 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
   const [tier, setTier] = useState<HomeBoardTier>(firstLiveTier);
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
+  const [lensId, setLensId] = useState<HomeBoardLensId>("usd");
   const [copyState, setCopyState] = useState<UplinkCopyState>("idle");
 
   const active = boards.find((board) => board.tier === tier) ?? boards[0];
@@ -80,8 +82,7 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
     if (!normalized) return active.rows;
     return active.rows.filter((row) => row.handle.toLowerCase().includes(normalized));
   }, [active.rows, query]);
-  const chartRows = active.rows.slice(0, 10);
-  const maxUsd = Math.max(...chartRows.map((row) => row.usd), 1);
+  const lens = useMemo(() => buildHomeBoardLens(active.rows, lensId), [active.rows, lensId]);
   const visibleRows = expanded ? filteredRows : filteredRows.slice(0, PAGE_SIZE);
   const isWaitingEmpty = active.status === "waiting" && active.rows.length === 0;
 
@@ -166,29 +167,44 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
         <SignalUplink tier={active.tier} copyState={copyState} onCopy={copyCommand} />
       ) : (
         <section className="home-board__chart" aria-labelledby="home-chart-title">
-          <div className="home-board__section-head">
+          <div className="home-board__section-head home-board__section-head--chart">
             <div>
               <p>TOP SIGNAL</p>
-              <h2 id="home-chart-title">Spend runway</h2>
+              <h2 id="home-chart-title">{lens.title}</h2>
             </div>
-            <span>ESTIMATED USD // RANKED USAGE</span>
+            <div className="home-board__lens-panel">
+              <span>{lens.meta}</span>
+              <div className="home-board__lens" role="group" aria-label="Runway display lens">
+                {HOME_BOARD_LENSES.map((item) => (
+                  <button
+                    type="button"
+                    aria-pressed={lensId === item.id}
+                    onClick={() => setLensId(item.id)}
+                    key={item.id}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+              <small>RANK ORDER UNCHANGED</small>
+            </div>
           </div>
           {active.status === "error" ? (
             <div className="home-board__empty" role="status">
               <b>Board temporarily unavailable.</b>
               <span>The diagnostic is recorded; no fallback usage is invented.</span>
             </div>
-          ) : chartRows.length ? (
+          ) : lens.rows.length ? (
             <ol className="home-board__runway">
-              {chartRows.map((row) => (
+              {lens.rows.map(({ row, barWidth, valueLabel }) => (
                 <li key={row.handle}>
                   <a href={`/u/${row.handle}`}>
                     <span className="home-board__rank">{row.medal}</span>
                     <span className="home-board__operator"><b>@{row.handle}</b><IdentityProof row={row} /></span>
                     <span className="home-board__bar" aria-hidden="true">
-                      <i style={{ "--bar": `${Math.max((row.usd / maxUsd) * 100, 1.5)}%` } as CSSProperties} />
+                      <i style={{ "--bar": barWidth } as CSSProperties} />
                     </span>
-                    <strong>{row.usdLabel}</strong>
+                    <strong>{valueLabel}</strong>
                   </a>
                 </li>
               ))}
