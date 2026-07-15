@@ -7,7 +7,7 @@
   .score-gauge strong { font-size: 3.8rem; }
   .score-workspace {
     grid-template-columns: 280px minmax(0, 1.35fr) minmax(760px, 0.8fr);
-    min-height: 900px;
+    min-height: 880px;
   }
   .score-presets { padding: 30px 24px; }
   .score-presets > button { min-height: 128px; }

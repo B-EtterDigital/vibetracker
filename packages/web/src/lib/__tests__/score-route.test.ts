@@ -49,6 +49,7 @@ test("score route is a focused interactive production-formula instrument", () =>
   assert.match(responsive, /@media \(min-width: 2200px\)/);
   assert.match(responsive, /\.score-surface \{ width: min\(3200px, 94vw\); \}/);
   assert.match(responsive, /grid-template-columns: 280px minmax\(0, 1\.35fr\) minmax\(760px, 0\.8fr\)/);
+  assert.match(responsive, /min-height: 880px/);
   assert.match(responsive, /\.score-instrument h1 \{ font-size: 4rem; \}/);
   assert.match(responsive, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(brief, /READ THIS SCORE \/ LIVE INTERPRETATION/);
