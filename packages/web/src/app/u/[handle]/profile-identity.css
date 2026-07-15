@@ -104,9 +104,10 @@
 }
 .vident-level {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
-  width: 96px; cursor: help;
+  width: 112px; cursor: help;
 }
-.vident-level img { width: 72px; height: 72px; display: block; }
+/* screen-blend melts the medals' baked black square into the panel — only the glowing puck stays */
+.vident-level img { width: 90px; height: 90px; display: block; mix-blend-mode: screen; }
 .vident-level[data-locked="true"] img { filter: grayscale(1) brightness(0.55); opacity: 0.6; }
 .vident-level strong {
   font: 800 13px/1 var(--vp-mono); letter-spacing: 0.06em; color: #eafff8;
@@ -124,5 +125,5 @@
 .vident-level-track b { display: block; height: 100%; background: #f28c33; }
 @media (max-width: 700px) {
   .vident-levels { padding: 0 8px 20px; }
-  .vident-level { width: 84px; }
+  .vident-level { width: 100px; }
 }
