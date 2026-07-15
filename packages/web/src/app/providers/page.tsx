@@ -16,16 +16,6 @@ function fit(value: string | number, width: number): string {
   return String(value).padEnd(width).slice(0, width);
 }
 
-function metric(label: string, value: number, detail: string) {
-  return (
-    <div>
-      <b>{value}</b>
-      <span>{label}</span>
-      <small>{detail}</small>
-    </div>
-  );
-}
-
 export default function ProvidersPage() {
   const built = PROVIDERS.filter((provider) => provider.status === "built").length;
   const verified = PROVIDERS.filter((provider) => provider.status === "built" && provider.verified).length;
@@ -48,7 +38,7 @@ export default function ProvidersPage() {
   ].join("\n");
 
   return (
-    <>
+    <div className="providers-route">
       <section className="providers-hero">
         <div className="providers-copy">
           <p className="eyebrow">Adapter registry cockpit</p>
@@ -70,13 +60,6 @@ export default function ProvidersPage() {
 
       <ProvidersDirectory providers={PROVIDERS} />
 
-      <section className="provider-metrics" aria-label="Provider coverage summary">
-        {metric("services mapped", PROVIDERS.length, "Registry-backed coverage")}
-        {metric("built adapters", built, `${verified} endpoint-verified`)}
-        {metric("proxy/manual paths", proxy + manual, `${proxy} proxy · ${manual} manual`)}
-        {metric("planned adapters", planned, "Good first contributor tasks")}
-      </section>
-
       <details className="providers-theatre">
         <summary>&gt; show scan theatre (visual only, makes no calls)</summary>
         <ProviderSurpriseDirectorPanel director={surpriseDirector} />
@@ -95,6 +78,6 @@ export default function ProvidersPage() {
           </a>
         </div>
       </section>
-    </>
+    </div>
   );
 }

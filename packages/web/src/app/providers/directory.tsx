@@ -8,11 +8,13 @@ import {
   buildProviderDirectoryData,
   filterProviderRows,
   pageProviderRows,
+  PAGE_SIZE,
+  PAGE_SIZES,
   STATUS_KEYS,
   STATUS_LEGEND,
   STATUS_WORD,
 } from "./directory-data";
-import type { DomainFilter, StatusFilter, StatusKey } from "./directory-data";
+import type { DomainFilter, PageSize, StatusFilter, StatusKey } from "./directory-data";
 
 const GOOD_FIRST_ADAPTERS =
   "https://github.com/B-EtterDigital/vibetracker/blob/main/docs/GOOD_FIRST_ADAPTERS.md";
@@ -45,6 +47,7 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [domainFilter, setDomainFilter] = useState<DomainFilter>("all");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSize>(PAGE_SIZE);
   const [feedback, setFeedback] = useState<{ id: string; text: string } | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -59,7 +62,7 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
     }),
     [directory.rows, query, statusFilter, categoryFilter, domainFilter],
   );
-  const paged = pageProviderRows(results, page);
+  const paged = pageProviderRows(results, page, pageSize);
   const hasFilters = Boolean(query.trim()) || statusFilter !== "all" || categoryFilter !== "all" || domainFilter !== "all";
 
   useEffect(() => {
@@ -214,7 +217,25 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
         <p id="providers-result-count" aria-live="polite">
           {results.length === 0 ? "0 matches" : `${paged.start + 1}–${paged.end} of ${results.length} matches`}
         </p>
-        {hasFilters ? <button type="button" onClick={resetFilters}>reset filters</button> : <span>sorted by coverage confidence</span>}
+        <div className="providers-directory__result-tools">
+          {hasFilters ? <button type="button" onClick={resetFilters}>reset filters</button> : <span>coverage-first sort</span>}
+          <div className="providers-directory__density" role="group" aria-label="Rows per provider page">
+            <span>rows</span>
+            {PAGE_SIZES.map((size) => (
+              <button
+                type="button"
+                key={size}
+                aria-pressed={pageSize === size}
+                onClick={() => {
+                  setPageSize(size);
+                  setPage(1);
+                }}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {results.length === 0 ? (
@@ -283,7 +304,7 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
 
           <nav className="providers-directory__pagination" aria-label="Provider result pages">
             <button type="button" onClick={() => setPage(paged.page - 1)} disabled={paged.page === 1} aria-label="Previous provider page" title="Previous page">←</button>
-            <span>page <b>{paged.page}</b> / {paged.pageCount}</span>
+            <span>page <b>{paged.page}</b> / {paged.pageCount} · {pageSize} rows</span>
             <button type="button" onClick={() => setPage(paged.page + 1)} disabled={paged.page === paged.pageCount} aria-label="Next provider page" title="Next page">→</button>
           </nav>
         </>

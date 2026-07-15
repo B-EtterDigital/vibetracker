@@ -271,7 +271,13 @@ button.providers-chip { cursor: pointer; transition: background-color .16s ease,
   font: 600 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 .providers-directory__resultbar p { margin: 0; color: #d9fff2; }
-.providers-directory__resultbar button {
+.providers-directory__result-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.providers-directory__result-tools > button {
   padding: 0;
   border: 0;
   background: transparent;
@@ -279,3 +285,27 @@ button.providers-chip { cursor: pointer; transition: background-color .16s ease,
   cursor: pointer;
   font: inherit;
 }
+.providers-directory__density {
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line));
+  border-radius: 6px;
+}
+.providers-directory__density > span {
+  padding: 0 8px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.providers-directory__density button {
+  min-width: 34px;
+  min-height: 28px;
+  padding: 0 7px;
+  border: 0;
+  border-left: 1px solid color-mix(in srgb, var(--accent) 16%, var(--line));
+  background: #050708;
+  color: var(--muted);
+  cursor: pointer;
+  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.providers-directory__density button[aria-pressed="true"] { background: #d9fff2; color: #040607; }

@@ -4,7 +4,9 @@ export type StatusKey = "verified" | "built" | "proxy" | "manual" | "planned";
 export type StatusFilter = "all" | "ready" | StatusKey;
 export type DomainFilter = "all" | ProviderDescriptor["domain"];
 
-export const PAGE_SIZE = 24;
+export const PAGE_SIZES = [12, 24, 48] as const;
+export type PageSize = (typeof PAGE_SIZES)[number];
+export const PAGE_SIZE: PageSize = 12;
 export const STATUS_KEYS: StatusKey[] = ["verified", "built", "proxy", "manual", "planned"];
 
 export const STATUS_WORD: Record<StatusKey, string> = {
@@ -136,7 +138,7 @@ export function filterProviderRows(rows: ProviderRow[], filters: ProviderFilters
     .sort((a, b) => relevance(a, query) - relevance(b, query) || a.provider.label.localeCompare(b.provider.label));
 }
 
-export function pageProviderRows(rows: ProviderRow[], page: number, pageSize = PAGE_SIZE) {
+export function pageProviderRows(rows: ProviderRow[], page: number, pageSize: number = PAGE_SIZE) {
   const safePageSize = Math.max(1, Math.trunc(pageSize) || PAGE_SIZE);
   const pageCount = Math.max(1, Math.ceil(rows.length / safePageSize));
   const safePage = Math.min(Math.max(1, Math.trunc(page) || 1), pageCount);

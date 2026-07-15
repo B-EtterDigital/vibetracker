@@ -4,6 +4,8 @@ import type { ProviderDescriptor } from "../../../../../adapters/src/registry.ts
 import {
   buildProviderDirectoryData,
   filterProviderRows,
+  PAGE_SIZE,
+  PAGE_SIZES,
   pageProviderRows,
   statusKeyOf,
 } from "../directory-data.ts";
@@ -53,4 +55,16 @@ test("pagination clamps invalid pages and never renders an unbounded registry", 
   assert.equal(last.page, 3);
   assert.equal(last.rows.length, 1);
   assert.equal(last.end, 5);
+});
+
+test("the default result density stays bounded with deliberate larger options", () => {
+  assert.equal(PAGE_SIZE, 12);
+  assert.deepEqual(PAGE_SIZES, [12, 24, 48]);
+
+  const manyRows = Array.from({ length: 60 }, (_, index) => ({
+    ...buildProviderDirectoryData(providers).rows[index % providers.length]!,
+    id: `provider-${index}`,
+  }));
+  assert.equal(pageProviderRows(manyRows, 1).rows.length, 12);
+  assert.equal(pageProviderRows(manyRows, 1, 48).rows.length, 48);
 });

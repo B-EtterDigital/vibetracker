@@ -173,18 +173,15 @@ test("provider world coverage map highlights creator, Chinese, European, local, 
   assert.match(relay.frames.join("\n"), /c0vibe/i);
 });
 
-test("providers route opens with the provider directory before metric cards", () => {
+test("providers route opens with one focused provider directory", () => {
   const page = readFileSync("packages/web/src/app/providers/page.tsx", "utf8");
-  const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
   assert.match(page, /ProvidersDirectory/);
-  assert.match(page, /ProvidersDirectory providers=\{PROVIDERS\}[\s\S]+<section className="provider-metrics"/);
+  assert.match(page, /className="providers-route"/);
+  assert.doesNotMatch(page, /className="provider-metrics"/);
   assert.doesNotMatch(page, /ProviderWorldIgnitionPanel/);
   assert.match(page, /Vibers Unite/);
   assert.match(page, /c0vibe\.app/);
-
-  assert.match(styles, /prefers-reduced-motion: reduce/);
-  assert.match(styles, /@media \(max-width: 1040px\)/);
 });
 
 test("provider collection console sequences scan surprises across clear signal boundaries", () => {
@@ -452,7 +449,9 @@ test("providers route ships the theatre encore collapsed and drops the freshness
   assert.match(page, /import "\.\/directory\.css"/);
   assert.match(page, /import "\.\/directory-table\.css"/);
   assert.match(directory, /<colgroup className="providers-columns"/);
-  assert.match(directory, /pageProviderRows\(results, page\)/);
+  assert.match(directory, /pageProviderRows\(results, page, pageSize\)/);
+  assert.match(directory, /PAGE_SIZES\.map/);
+  assert.match(directory, /Rows per provider page/);
   assert.match(directoryCss, /providers-directory__brief/);
   assert.match(directoryTableCss, /table-layout: fixed/);
   assert.match(directoryTableCss, /providers-columns__action \{ width: 20%/);
@@ -460,6 +459,8 @@ test("providers route ships the theatre encore collapsed and drops the freshness
   assert.match(providersCss, /grid-area: cats/);
   assert.match(providersCss, /\.providers-hero \.registry-terminal \{ min-height: 210px; \}/);
   assert.match(providersCss, /@media \(max-width: 767px\)/);
+  assert.match(providersCss, /@media \(min-width: 2200px\)/);
+  assert.match(providersCss, /max-width: min\(2640px, 95vw\)/);
   assert.match(providersCss, /prefers-reduced-motion: reduce/);
   assert.match(providerScan, /ProviderFreshnessRadar/);
   assert.match(providerScan, /Provider freshness radar/);

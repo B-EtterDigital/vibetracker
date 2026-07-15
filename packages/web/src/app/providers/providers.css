@@ -64,6 +64,7 @@
 .providers-chip:focus-visible,
 .providers-directory__domains button:focus-visible,
 .providers-directory__resultbar button:focus-visible,
+.providers-directory__density button:focus-visible,
 .providers-row__cmd:focus-visible,
 .providers-directory__pagination button:focus-visible,
 .providers-directory__empty button:focus-visible,
@@ -102,7 +103,8 @@
   }
   .providers-directory__domains { width: 100%; }
   .providers-directory__domains button { flex: 1 1 0; padding: 0 5px; }
-  .providers-directory__resultbar { min-height: 38px; }
+  .providers-directory__resultbar { min-height: 38px; align-items: flex-start; flex-direction: column; padding: 8px 10px; }
+  .providers-directory__result-tools { width: 100%; justify-content: space-between; }
   .providers-table,
   .providers-table tbody { display: block; width: 100%; }
   .providers-columns { display: none; }
@@ -140,6 +142,26 @@
     border-left-color: var(--brand-from, var(--accent));
   }
   .providers-directory__pagination { justify-content: center; }
+}
+
+@media (min-width: 2200px) {
+  .wrap:has(> .providers-route) { max-width: min(2640px, 95vw); }
+  .providers-route .providers-hero { grid-template-columns: minmax(0, .82fr) minmax(760px, 1.18fr); }
+  .providers-route .providers-copy,
+  .providers-route .registry-terminal { min-height: 400px; }
+  .providers-route .providers-copy { padding: 56px; }
+  .providers-route .providers-copy h1 { font-size: 76px; }
+  .providers-route .providers-copy > p { max-width: 900px; font-size: 17px; }
+  .providers-route .registry-terminal pre { font-size: 15px; }
+  .providers-route .providers-directory { padding: 18px; }
+  .providers-route .providers-directory__brief strong { font-size: 30px; }
+  .providers-route .providers-directory__input { font-size: 15px; }
+  .providers-route .providers-row td { padding: 11px 14px; }
+  .providers-route .providers-row__name b { font-size: 15px; }
+  .providers-route .providers-row__name span,
+  .providers-route .providers-row__cats,
+  .providers-route .providers-row__method span { font-size: 13px; }
+  .providers-route .providers-row__cmd { font-size: 12px; }
 }
 
 /* ---- reduced motion: no mount sweep, no hover transitions ---- */
