@@ -46,10 +46,17 @@ test("scan route is the calm Make-your-scan page with a scripted local demo", ()
   assert.match(page, /"--panel-i": index/);
   assert.match(page, /vscan-hero/);
   assert.match(page, /Make your scan\./);
-  assert.match(page, /Everything runs and stays on your machine until you choose to upload\./);
-  assert.match(page, /command="npx vibetrack init"/);
-  assert.match(page, /command="vibetrack sync --demo"/);
-  assert.match(page, /try it with sample data, no accounts/);
+  assert.match(page, /Build the evidence trail on your machine\./);
+  assert.match(page, /local ledger/);
+  assert.match(page, /explicit connectors/);
+  assert.match(page, /zero automatic uploads/);
+  assert.match(page, /local scan runway/);
+  assert.match(page, /command: "npx vibetrack init --gui"/);
+  assert.match(page, /command: "npx vibetrack sync --receipt"/);
+  assert.match(page, /command: "npx vibetrack life"/);
+  assert.match(page, /command="npx vibetrack sync --demo --receipt"/);
+  assert.match(page, /No provider accounts required\./);
+  assert.doesNotMatch(page, /command="vibetrack/);
   assert.match(page, /<ScanDemo /);
   assert.match(page, /what the scan reads/);
   assert.match(page, /vscan-reads/);
@@ -60,7 +67,7 @@ test("scan route is the calm Make-your-scan page with a scripted local demo", ()
   assert.match(page, /vscan-privacy/);
   assert.match(page, /local-first, provable/);
   assert.match(page, /Nothing leaves your machine unless you run upload\./);
-  assert.match(page, /command="vibetracker privacy"/);
+  assert.match(page, /command="npx vibetrack privacy"/);
   assert.match(page, /read the trust model/);
   assert.match(page, /blob\/main\/docs\/compliance\/TRUST_MODEL\.md/);
 

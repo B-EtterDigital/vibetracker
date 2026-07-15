@@ -12,6 +12,30 @@ export const metadata = {
 const TRUST_MODEL_URL =
   "https://github.com/B-EtterDigital/vibetracker/blob/main/docs/compliance/TRUST_MODEL.md";
 
+const SCAN_RUNWAY = [
+  {
+    number: "01",
+    label: "map",
+    command: "npx vibetrack init --gui",
+    body: "Detect local agents and choose only the provider ledgers you want connected.",
+    signal: "writes local config",
+  },
+  {
+    number: "02",
+    label: "collect",
+    command: "npx vibetrack sync --receipt",
+    body: "Normalize your enabled sources into one local ledger and seal a private run receipt.",
+    signal: "zero automatic uploads",
+  },
+  {
+    number: "03",
+    label: "inspect",
+    command: "npx vibetrack life",
+    body: "Open the full local cockpit: usage, trust, integrity, provider mix, and ROI.",
+    signal: "your evidence only",
+  },
+] as const;
+
 // One honest sentence per surface the scan reads, written from the truth of how
 // each tier is collected.
 const READS: { title: string; body: string }[] = [
@@ -31,18 +55,47 @@ const READS: { title: string; body: string }[] = [
 
 export default function ScanPage() {
   const sections: ReactNode[] = [
-    <section className="vscan-panel vscan-hero" key="hero">
+    <section className="vscan-hero" key="hero">
+      <div className="vscan-hero-status" aria-label="Local scan operating boundaries">
+        <span>local ledger</span>
+        <span>explicit connectors</span>
+        <span>zero automatic uploads</span>
+      </div>
       <h1 className="vscan-hero-title">Make your scan.</h1>
       <p className="vscan-hero-lede">
-        Everything runs and stays on your machine until you choose to upload.
+        Build the evidence trail on your machine. Connect only what you use, inspect every
+        source, and decide if anything ever leaves.
       </p>
-      <div className="vscan-hero-cmds">
-        <CopyChip command="npx vibetrack init" variant="primary" />
-        <CopyChip
-          command="vibetrack sync --demo"
-          variant="secondary"
-          subLabel="try it with sample data, no accounts"
-        />
+
+      <div className="vscan-runway-head" aria-hidden="true">
+        <span>local scan runway</span>
+        <span>copy / run / inspect</span>
+      </div>
+      <ol className="vscan-runway">
+        {SCAN_RUNWAY.map((step) => (
+          <li className="vscan-runway-step" key={step.number}>
+            <div className="vscan-runway-index">
+              <span>{step.number}</span>
+              <strong>{step.label}</strong>
+            </div>
+            <div className="vscan-runway-command">
+              <CopyChip
+                command={step.command}
+                variant={step.number === "01" ? "primary" : "secondary"}
+              />
+            </div>
+            <p>{step.body}</p>
+            <span className="vscan-runway-signal">{step.signal}</span>
+          </li>
+        ))}
+      </ol>
+
+      <div className="vscan-demo-launch">
+        <div>
+          <strong>Want proof before setup?</strong>
+          <span>Local agent logs + bundled sample data. No provider accounts required.</span>
+        </div>
+        <CopyChip command="npx vibetrack sync --demo --receipt" variant="secondary" />
       </div>
     </section>,
 
@@ -76,7 +129,7 @@ export default function ScanPage() {
         confidence.
       </p>
       <div className="vscan-privacy-actions">
-        <CopyChip command="vibetracker privacy" variant="secondary" />
+        <CopyChip command="npx vibetrack privacy" variant="secondary" />
         <a className="vscan-link" href={TRUST_MODEL_URL}>
           read the trust model →
         </a>
