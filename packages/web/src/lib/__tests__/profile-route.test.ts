@@ -20,6 +20,8 @@ const orchestration = readFileSync("packages/web/src/app/u/[handle]/profile-orch
 const orchestrationStyles = readFileSync("packages/web/src/app/u/[handle]/profile-orchestration.css", "utf8");
 const identity = readFileSync("packages/web/src/app/u/[handle]/profile-identity.tsx", "utf8");
 const identityStyles = readFileSync("packages/web/src/app/u/[handle]/profile-identity.css", "utf8");
+const infographic = readFileSync("packages/web/src/app/u/[handle]/profile-infographic.tsx", "utf8");
+const infographicStyles = readFileSync("packages/web/src/app/u/[handle]/profile-infographic.css", "utf8");
 const accessibilityStyles = readFileSync("packages/web/src/app/u/[handle]/profile-accessibility.css", "utf8");
 const layout = readFileSync("packages/web/src/app/u/[handle]/layout.tsx", "utf8");
 const nextConfig = readFileSync("packages/web/next.config.ts", "utf8");
@@ -76,8 +78,9 @@ test("profile hero carries the identity surface, the full discipline set, and th
   assert.match(hero, /\{signalTier\} signal/);
   // Every discipline gets a pill: an all-rounder is shown as the FULL set, never collapsed.
   assert.match(hero, /disciplines\.map/);
-  assert.match(hero, /Join C0VIBE/);
-  assert.match(hero, /Migrate this profile/);
+  assert.match(hero, /C0VIBE join\/migrate doors live ONLY in the band/);
+  assert.match(cta, /Join C0VIBE/);
+  assert.match(cta, /Migrate this profile/);
   // The hero wash takes the viber's own discipline colour — a signal, not decoration.
   assert.match(hero, /"--vhero-accent": accent/);
   assert.match(heroStyles, /--vhero-accent/);
@@ -93,7 +96,7 @@ test("profile first read compresses lifetime scale and puts current evidence bef
   assert.match(hero, /export function ProfileHeroEvidence/);
   assert.match(hero, /What sits behind this profile/);
   assert.match(page, /<ProfileHero[\s\S]*<ProfileReadout[\s\S]*<ProfileHeroEvidence/);
-  assert.match(heroStyles, /\.vhero-banner \{[\s\S]*min-height: 260px/);
+  assert.match(heroStyles, /\.vhero-banner \{[\s\S]*min-height: clamp\(420px, 62vh, 780px\)/);
   assert.match(heroStyles, /\.vhero-metrics \{[\s\S]*repeat\(4/);
   assert.match(heroStyles, /@media \(max-width: 760px\) \{[\s\S]*min-height: 200px/);
   assert.match(heroStyles, /@media \(max-width: 620px\) \{[\s\S]*grid-template-columns: repeat\(2/);
@@ -151,12 +154,16 @@ test("skill signals lead the profile and reframe money as API-equivalent referen
   assert.doesNotMatch(page, /label: "total spent"/);
 });
 
-test("viber identity poster renders measured disciplines and honestly earned archetype badges", () => {
+test("profile infographic owns measured traits while identity owns honestly earned archetype badges", () => {
   assert.match(page, /import \{ ViberIdentity \} from "\.\/profile-identity"/);
+  assert.match(page, /import \{ InfographicBoard, SourceToolbar, INFO_RAMP/);
   assert.match(page, /import "\.\/profile-identity\.css"/);
-  assert.match(page, /<ViberIdentity signals=\{signals\} disciplines=\{disciplines\} opsValue=\{opsCompact\}/);
-  assert.match(identity, /function DisciplineRings/);
-  assert.match(identity, /aria-label=\{`Discipline mix:/);
+  assert.match(page, /<InfographicBoard[\s\S]*traits=\{traits\}[\s\S]*cliSpiral=\{cliSpiral\}/);
+  assert.match(page, /<ViberIdentity signals=\{signals\} opsValue=\{opsCompact\}/);
+  assert.match(infographic, /export function TraitPies/);
+  assert.match(infographic, /aria-label=\{`Trait mix:/);
+  assert.match(infographic, /only appears when you have real usage in that discipline/);
+  assert.doesNotMatch(identity, /function DisciplineRings/);
   assert.match(identity, /signals\.archetypes/);
   assert.match(identity, /badges\.length >= 2/);
   assert.match(identity, /3\+ active CLIs · 8\+ cross-provider days · under 18% input \+ output share/);
@@ -164,8 +171,10 @@ test("viber identity poster renders measured disciplines and honestly earned arc
   assert.match(identity, /400\+ creative operations across image, video or music/);
   assert.doesNotMatch(identity, /typed and read by a human|images, videos and tracks generated/);
   assert.match(identity, /aria-label=\{`\$\{badges\.length\} badges earned`\}/);
-  assert.match(identityStyles, /grid-template-columns: minmax\(0, 1\.05fr\) minmax\(0, 1fr\)/);
+  assert.match(identityStyles, /grid-template-columns: repeat\(auto-fit, minmax\(180px, 1fr\)\)/);
   assert.match(identityStyles, /@media \(max-width: 680px\)/);
+  assert.match(infographicStyles, /grid-template-columns: minmax\(0, 1\.35fr\) minmax\(0, 1fr\)/);
+  assert.match(infographicStyles, /\.vboard \{ grid-template-columns: 1fr; \}/);
 });
 
 test("token breakdown + measured multi-CLI activity render without inferred delegation", () => {
