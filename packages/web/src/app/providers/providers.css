@@ -193,7 +193,7 @@
   }
 
   .providers-route .providers-copy,
-  .providers-route .registry-terminal { min-height: 330px; }
+  .providers-route .registry-terminal { min-height: 310px; }
 
   .providers-route .providers-copy { padding: 48px; }
   .providers-route .providers-copy h1 { font-size: 64px; }
