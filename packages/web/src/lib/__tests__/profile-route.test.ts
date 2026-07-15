@@ -187,8 +187,12 @@ test("profile infographic owns measured traits while identity owns honestly earn
   assert.match(identityStyles, /grid-template-columns: repeat\(auto-fit, minmax\(180px, 1fr\)\)/);
   assert.match(identityStyles, /@media \(max-width: 680px\)/);
   assert.match(infographicStyles, /grid-template-columns: minmax\(0, 1\.3fr\) minmax\(0, 1fr\)/);
-  assert.match(infographicStyles, /\.vboard \{ grid-template-columns: 1fr; \}/);
+  assert.match(infographicStyles, /\.vboard \{ grid-template-columns: minmax\(0, 1fr\); min-width: 0; \}/);
   assert.match(infographicStyles, /\.vboard \{ width: auto; margin-inline: -14px; \}/);
+  assert.match(infographicStyles, /\.vboard \.vboard-bio \{[\s\S]*min-width: 0;[\s\S]*max-width: 100%;[\s\S]*overflow-wrap: anywhere;/);
+  assert.match(infographicStyles, /\.vboard \.vboard-bars-mount \{[\s\S]*min-width: 0;[\s\S]*max-width: 100%;[\s\S]*box-sizing: border-box;/);
+  assert.match(infographicStyles, /\.vboard \.vboard-bars-mount \{ justify-content: flex-start; overflow-x: auto;/);
+  assert.match(infographicStyles, /\.vinfo-stack \{ min-width: 640px; max-width: none; \}/);
   assert.doesNotMatch(infographicStyles, /\.vboard[^}]*100vw/);
 });
 
