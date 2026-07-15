@@ -226,21 +226,23 @@ export function MotionSequencer({ lab }: MotionSequencerProps) {
           </aside>
         </div>
 
-        <section className="seq-sources" aria-labelledby="seq-sources-title">
-          <header>
+        <details className="seq-sources">
+          <summary>
             <div><p>ATTRIBUTION BUS / SOURCE TRUTH</p><h2 id="seq-sources-title">Every borrowed motion cue stays credited</h2></div>
             <code>{lab.references.length} references / no bundled GPL code</code>
-          </header>
-          <div className="seq-sources__head"><span>project</span><span>license</span><span>design cue</span><span>guardrail</span></div>
-          {lab.references.map((reference) => (
-            <a className="seq-source" href={reference.url} key={reference.id} rel="noreferrer" target="_blank">
-              <b>{reference.project}</b>
-              <strong>{reference.license}</strong>
-              <span>{reference.cue}</span>
-              <em>{reference.guardrail}</em>
-            </a>
-          ))}
-        </section>
+          </summary>
+          <div className="seq-sources__ledger" aria-labelledby="seq-sources-title">
+            <div className="seq-sources__head"><span>project</span><span>license</span><span>design cue</span><span>guardrail</span></div>
+            {lab.references.map((reference) => (
+              <a className="seq-source" href={reference.url} key={reference.id} rel="noreferrer" target="_blank">
+                <b>{reference.project}</b>
+                <strong>{reference.license}</strong>
+                <span>{reference.cue}</span>
+                <em>{reference.guardrail}</em>
+              </a>
+            ))}
+          </div>
+        </details>
 
         <footer className="seq-foot">
           <span><i aria-hidden="true" /> credited visual feedback</span>

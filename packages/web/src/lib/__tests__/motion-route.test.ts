@@ -36,6 +36,9 @@ test("motion route is a route-local interactive credited sequencer", () => {
   assert.match(sequencer, /outputReads: 0/);
   assert.match(sequencer, /publishWrites: 0/);
   assert.match(sequencer, /lab\.references\.length/);
+  assert.match(sequencer, /<details className="seq-sources">/);
+  assert.match(sequencer, /<summary>/);
+  assert.match(sequencer, /className="seq-sources__ledger"/);
   assert.match(styles, /\.seq-console/);
   assert.match(styles, /\.seq-timeline/);
   assert.match(styles, /\.seq-timeline button i[\s\S]*color: var\(--seq-ink\)/);
@@ -45,6 +48,9 @@ test("motion route is a route-local interactive credited sequencer", () => {
   assert.match(controls, /\.seq-tempo/);
   assert.match(responsive, /\.seq-sources/);
   assert.match(responsive, /@media \(max-width: 760px\)/);
+  assert.match(responsive, /@media \(min-width: 2200px\)/);
+  assert.match(responsive, /max-width: min\(2640px, 95vw\)/);
+  assert.match(responsive, /\.seq-sources\[open\] > summary/);
   assert.match(responsive, /\.seq-cue-copy button \{ min-height: 44px; \}/);
   assert.match(responsive, /prefers-reduced-motion/);
   assert.match(manifest, /000-vibetracker\.web\.motion-sequencer/);
