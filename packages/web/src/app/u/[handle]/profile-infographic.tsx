@@ -102,7 +102,7 @@ export function PolygonSpiral({ items, sides = 6, ariaContext }: { items: Spiral
   const rMax = base + (shown.length - 1) * step;
   const cx = rMax + 8;
   const cy = rMax + 8;
-  const W = 880;
+  const W = 970;
   const H = cy + rMax + 30;
   const angleStep = 360 / sides;
   const endAngle = sides === 6 ? 90 : 54; // hexagons end at the bottom vertex

@@ -7,6 +7,7 @@ import {
   type InsightsRunwaySource,
 } from "../../lib/insights-runway.ts";
 import { InsightBrief } from "./insight-brief";
+import { InsightEvidenceScope } from "./insight-evidence-scope";
 import { InsightMethodology, type InsightCopyState } from "./insight-methodology";
 import { buildPlanScale } from "./plan-scale";
 
@@ -171,6 +172,7 @@ export function RunwayDecisionConsole({
             <strong>{currency.format(snapshot.adjustedUsd)}</strong>
             <small>of a {currency.format(monthlyCapUsd)} monthly limit</small>
             <b>{snapshot.varianceUsd >= 0 ? `${currency.format(snapshot.varianceUsd)} left` : `${currency.format(Math.abs(snapshot.varianceUsd))} over`}</b>
+            <InsightEvidenceScope source={source} />
           </div>
         </header>
 

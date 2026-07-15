@@ -35,6 +35,17 @@ export interface InsightsRunwaySource {
   providerBasis: "recent_30d" | "profile_totals";
 }
 
+export type InsightsEvidenceConfidence = "provisional" | "thin" | "partial" | "broad";
+
+export interface InsightsEvidenceScope {
+  confidence: InsightsEvidenceConfidence;
+  coveragePercent: number;
+  localSensitivityUsd: number;
+  projectionMultiplier: number | null;
+  scenarioFloorUsd: number;
+  unobservedDays: number;
+}
+
 const LOCAL_PROVIDERS = new Set(["ollama", "lmstudio", "comfyui", "vllm", "localai", "jan"]);
 
 function clamp(value: number, min: number, max: number): number {
@@ -154,5 +165,25 @@ export function buildInsightsRunwaySnapshot(input: InsightsRunwayInput): Insight
     state,
     stateLabel,
     command: `vibetracker insights --budget ${monthlyCapUsd} --local-shift ${localShiftPercent} --dry-run`,
+  };
+}
+
+export function buildInsightsEvidenceScope(source: InsightsRunwaySource): InsightsEvidenceScope {
+  const observedDays = clamp(Math.round(source.observedDays), 0, 30);
+  const confidence: InsightsEvidenceConfidence = source.evidenceBasis === "upload_total_fallback"
+    ? "provisional"
+    : observedDays >= 21
+      ? "broad"
+      : observedDays >= 7
+        ? "partial"
+        : "thin";
+
+  return {
+    confidence,
+    coveragePercent: Math.round((observedDays / 30) * 100),
+    localSensitivityUsd: money(Math.max(0, source.localShadowUsd) * 0.1),
+    projectionMultiplier: observedDays > 0 ? Math.round((30 / observedDays) * 10) / 10 : null,
+    scenarioFloorUsd: money(Math.max(0, source.forecastUsd - source.localShadowUsd)),
+    unobservedDays: 30 - observedDays,
   };
 }

@@ -500,7 +500,8 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     }
     const total = [...byModel.values()].reduce((s, v) => s + v, 0);
     return [...byModel.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([model, ops], i) => ({
-      label: model.length > 16 ? `${model.slice(0, 15)}…` : model,
+      // keep the END of long model ids — "…nano-banana" and "…nano-banana-pro" must stay distinct
+      label: model.length > 18 ? `…${model.slice(-17)}` : model,
       pct: total > 0 && (ops / total) * 100 >= 1 ? `${Math.round((ops / total) * 100)}%` : "<1%",
       color: INFO_RAMP[i % INFO_RAMP.length],
     }));
@@ -530,6 +531,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     const spiral = spiralForCat(c.id);
     const sourceNames = provs ? [...provs].map((p) => providerLabel(p)) : [];
     const topModelNames = spiral.slice(0, 3).map((s) => s.label);
+    const raw = categorySource.find((s) => s.id === c.id);
     specs[c.id] = {
       id: c.id,
       label: c.label,
@@ -539,7 +541,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       story: {
         title: c.label.toLowerCase(),
         bullets: [
-          `${c.share >= 1 ? Math.round(c.share) : "<1"}% of all operations — ${c.amount}`,
+          `${c.share >= 1 ? Math.round(c.share) : "<1"}% of all operations — ${formatInt(Math.round(raw?.ops ?? 0))} ops · ${formatUsd(raw?.usd ?? 0)}`,
           ...(topModelNames.length ? [`top models: ${topModelNames.join(" · ")}`] : []),
           ...(sourceNames.length ? [`sources: ${sourceNames.join(" · ")}`] : []),
         ],

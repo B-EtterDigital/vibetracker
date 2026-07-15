@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import type { ProfileView } from "../data.ts";
-import { buildInsightsRunwaySnapshot, buildInsightsRunwaySource } from "../insights-runway.ts";
+import { buildInsightsEvidenceScope, buildInsightsRunwaySnapshot, buildInsightsRunwaySource } from "../insights-runway.ts";
 
 const profile: ProfileView = {
   handle: "insights-lab",
@@ -84,6 +84,33 @@ test("runway source keeps upload totals provisional when daily evidence is unava
   assert.equal(source.observedDays, 0);
   assert.equal(source.windowStart, null);
   assert.equal(source.evidenceBasis, "upload_total_fallback");
+  assert.deepEqual(buildInsightsEvidenceScope(source), {
+    confidence: "provisional",
+    coveragePercent: 0,
+    localSensitivityUsd: 1.16,
+    projectionMultiplier: null,
+    scenarioFloorUsd: 52.9,
+    unobservedDays: 30,
+  });
+});
+
+test("evidence scope distinguishes broad coverage from extrapolation and local sensitivity", () => {
+  const source = buildInsightsRunwaySource({
+    ...profile,
+    usageDays: [
+      { date: "2025-01-01", ops: 1, credits: 0, usd: 1 },
+      ...profile.usageDays,
+    ],
+  });
+
+  assert.deepEqual(buildInsightsEvidenceScope(source), {
+    confidence: "broad",
+    coveragePercent: 100,
+    localSensitivityUsd: 1.16,
+    projectionMultiplier: 1,
+    scenarioFloorUsd: 52.9,
+    unobservedDays: 0,
+  });
 });
 
 test("runway planner derives an estimate-only over-cap state", () => {

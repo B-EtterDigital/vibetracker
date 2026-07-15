@@ -3,16 +3,18 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { INSIGHTS_SAMPLE_PROFILE } from "../../app/insights/sample-profile.ts";
 import { buildPlanScale } from "../../app/insights/plan-scale.ts";
-import { buildInsightsRunwaySnapshot, buildInsightsRunwaySource } from "../insights-runway.ts";
+import { buildInsightsEvidenceScope, buildInsightsRunwaySnapshot, buildInsightsRunwaySource } from "../insights-runway.ts";
 
 test("insights route is a route-local explained cost plan", () => {
   const page = readFileSync("packages/web/src/app/insights/page.tsx", "utf8");
   const consoleSource = readFileSync("packages/web/src/app/insights/runway-decision-console.tsx", "utf8");
   const methodologySource = readFileSync("packages/web/src/app/insights/insight-methodology.tsx", "utf8");
   const briefSource = readFileSync("packages/web/src/app/insights/insight-brief.tsx", "utf8");
+  const evidenceSource = readFileSync("packages/web/src/app/insights/insight-evidence-scope.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/insights/insights.css", "utf8");
   const briefStyles = readFileSync("packages/web/src/app/insights/insights-brief.css", "utf8");
   const controls = readFileSync("packages/web/src/app/insights/insights-controls.css", "utf8");
+  const scopeStyles = readFileSync("packages/web/src/app/insights/insights-scope.css", "utf8");
   const ledger = readFileSync("packages/web/src/app/insights/insights-ledger.css", "utf8");
   const responsive = readFileSync("packages/web/src/app/insights/insights-responsive.css", "utf8");
   const manifest = readFileSync("packages/web/src/app/insights/module.sweetspot.json", "utf8");
@@ -29,6 +31,7 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(page, /\.\/insights\.css/);
   assert.match(page, /\.\/insights-brief\.css/);
   assert.match(page, /\.\/insights-controls\.css/);
+  assert.match(page, /\.\/insights-scope\.css/);
   assert.match(page, /\.\/insights-ledger\.css/);
   assert.match(page, /\.\/insights-responsive\.css/);
   assert.match(consoleSource, /^"use client";/);
@@ -49,6 +52,7 @@ test("insights route is a route-local explained cost plan", () => {
   assert.doesNotMatch(consoleSource, /intel-sample-flag/);
   assert.match(consoleSource, /data-source=/);
   assert.match(consoleSource, /<InsightBrief/);
+  assert.match(consoleSource, /<InsightEvidenceScope source=\{source\}/);
   assert.match(consoleSource, /<InsightMethodology/);
   assert.match(consoleSource, /type="range"/);
   assert.match(consoleSource, /aria-pressed=/);
@@ -70,6 +74,10 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(briefSource, /Most of this buffer comes from the higher limit, not from local savings/);
   assert.match(briefStyles, /\.intel-brief__signals/);
   assert.match(briefStyles, /@media \(max-width: 760px\)/);
+  assert.match(evidenceSource, /EVIDENCE APERTURE/);
+  assert.match(evidenceSource, /Aggregate coverage slots, not calendar order/);
+  assert.match(evidenceSource, /scenario floor is/);
+  assert.match(scopeStyles, /grid-template-columns: repeat\(15, minmax\(0, 1fr\)\)/);
   assert.match(controls, /\.intel-presets/);
   assert.match(ledger, /\.intel-math/);
   assert.match(ledger, /\.intel-methodology:not\(\[open\]\) > \.intel-methodology__body \{ display: none; \}/);
@@ -157,4 +165,13 @@ test("insights console derives every planning state from the production runway m
   assert.equal(target.varianceUsd, 9.06);
   assert.equal(target.stateLabel, "close to the limit");
   assert.match(target.command, /--budget 650 --local-shift 35 --dry-run/);
+
+  assert.deepEqual(buildInsightsEvidenceScope(source), {
+    confidence: "thin",
+    coveragePercent: 10,
+    localSensitivityUsd: 1.16,
+    projectionMultiplier: 10,
+    scenarioFloorUsd: 633.4,
+    unobservedDays: 27,
+  });
 });
