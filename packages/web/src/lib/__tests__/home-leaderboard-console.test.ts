@@ -44,9 +44,14 @@ test("leaderboard runway switches display lenses without changing rank order", (
 
 test("leaderboard runway exposes honest comparison readiness beside the unchanged rank", () => {
   assert.match(source, /<LeaderboardFieldInstrument rows=\{active\.rows\} lens=\{lensId\}/);
-  assert.match(fieldInstrument, /FIELD STATE/);
+  assert.match(fieldInstrument, /OPERATOR FIELD/);
   assert.match(fieldInstrument, /Strongest share/);
   assert.match(fieldInstrument, /comparisonReady \? "YES" : "NO"/);
+  assert.match(fieldInstrument, /DISTRIBUTION TOPOLOGY/);
+  assert.match(fieldInstrument, /NORMALIZED DISPLAY \/\/ ZERO RANK WEIGHT/);
+  assert.match(fieldInstrument, /field\.points\.map/);
+  assert.match(fieldInstrumentCss, /\.home-field__scope/);
+  assert.match(fieldInstrumentCss, /\.home-field__beacon/);
   assert.match(fieldInstrumentCss, /grid-template-columns: minmax\(260px, 0\.72fr\) minmax\(0, 2fr\)/);
   assert.match(fieldInstrumentCss, /@media \(max-width: 900px\)/);
   assert.match(fieldInstrumentCss, /@media \(prefers-reduced-motion: reduce\)/);

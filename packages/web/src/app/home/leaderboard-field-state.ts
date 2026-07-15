@@ -15,7 +15,18 @@ export interface HomeBoardFieldState {
   activeCount: number;
   strongestShare: string;
   comparisonReady: boolean;
+  points: HomeBoardFieldPoint[];
 }
+
+export interface HomeBoardFieldPoint {
+  label: string;
+  active: boolean;
+  share: string;
+  x: string;
+  y: string;
+}
+
+type FieldRow = HomeBoardLensRow & { handle?: string };
 
 function valueFor(row: HomeBoardLensRow, lens: HomeBoardLensId): number {
   if (lens === "credits") return row.credits;
@@ -28,7 +39,7 @@ function share(value: number): string {
 }
 
 export function buildHomeBoardFieldState(
-  rows: HomeBoardLensRow[],
+  rows: FieldRow[],
   lens: HomeBoardLensId,
 ): HomeBoardFieldState {
   const lensLabel = LENS_LABELS[lens];
@@ -37,6 +48,20 @@ export function buildHomeBoardFieldState(
   const activeCount = values.filter((value) => value > 0).length;
   const strongestShare = total > 0 ? Math.max(...values) / total : 0;
   const comparisonReady = activeCount >= 2;
+  const visibleRows = rows.slice(0, 10);
+  const points = visibleRows.map((row, index) => {
+    const value = values[index] ?? 0;
+    const laneShare = total > 0 ? value / total : 0;
+    const x = visibleRows.length === 1 ? 50 : 6 + (index / Math.max(visibleRows.length - 1, 1)) * 88;
+    const y = value > 0 ? 10 + laneShare * 76 : 4;
+    return {
+      label: row.handle ? `@${row.handle}` : `#${index + 1}`,
+      active: value > 0,
+      share: share(laneShare),
+      x: `${x.toFixed(2)}%`,
+      y: `${y.toFixed(2)}%`,
+    };
+  });
 
   if (activeCount === 0) {
     return {
@@ -48,6 +73,7 @@ export function buildHomeBoardFieldState(
       activeCount,
       strongestShare: "0%",
       comparisonReady,
+      points,
     };
   }
 
@@ -61,6 +87,7 @@ export function buildHomeBoardFieldState(
       activeCount,
       strongestShare: share(strongestShare),
       comparisonReady,
+      points,
     };
   }
 
@@ -73,5 +100,6 @@ export function buildHomeBoardFieldState(
     activeCount,
     strongestShare: share(strongestShare),
     comparisonReady,
+    points,
   };
 }
