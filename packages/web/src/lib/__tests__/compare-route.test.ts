@@ -5,6 +5,8 @@ import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import {
   buildCompareParticipant,
   buildPublicComparison,
+  formatCompareExactNumber,
+  formatCompareOperations,
   sanitizeCompareHandle,
 } from "../../app/compare/compare-model.ts";
 import type { ProfileView } from "../data.ts";
@@ -78,6 +80,21 @@ test("comparison participant uses authoritative provider operations instead of r
   assert.equal(participant.evidenceTier, "ATTESTED");
   assert.equal(participant.rankLabel, "#1 ON ATTESTED BOARD");
   assert.match(participant.fingerprint, /^[A-F0-9]{8}$/);
+});
+
+test("comparison operation readouts stay compact while retaining exact values", () => {
+  assert.equal(formatCompareOperations(999_999), "999,999");
+  assert.equal(formatCompareOperations(10_226_977_651.95), "10.23B");
+  assert.equal(formatCompareExactNumber(10_226_977_651.95), "10,226,977,651.95");
+
+  const snapshot = buildPublicComparison({
+    ...leftProfile,
+    providers: [{ provider: "codex", ops: 10_226_977_651.95, credits: 50, usd: 12 }],
+  }, rightProfile);
+
+  assert.equal(snapshot.metricRows[0].leftLabel, "10.23B");
+  assert.equal(snapshot.metricRows[0].leftExactLabel, "10,226,977,651.95");
+  assert.equal(snapshot.metricRows[0].deltaExactLabel, "LEFT +10,226,977,151.95");
 });
 
 test("public comparison separates comparable usage from cross-tier rank", () => {
@@ -171,11 +188,15 @@ test("compare route is real, discoverable, interactive, responsive, and honest w
   assert.match(lab, /SIGNAL VECTOR/);
   assert.match(lab, /STRONGEST DIFFERENTIATOR/);
   assert.match(lab, /snapshot\.brief\.nextView/);
+  assert.match(lab, /formatCompareOperations\(profile\.operations\)/);
+  assert.match(lab, /aria-label=\{`\$\{metric\.label\}: \$\{metric\.leftExactLabel\}`\}/);
   assert.match(styles, /\.compare-overview/);
   assert.match(styles, /\.compare-brief/);
   assert.match(styles, /\.compare-provider-row/);
   assert.match(styles, /\.compare-evidence/);
   assert.match(responsive, /@media \(max-width: 640px\)/);
+  assert.match(responsive, /\.compare-picker \{ grid-template-columns: minmax\(0, 1fr\) 38px minmax\(0, 1fr\)/);
+  assert.match(responsive, /\.compare-participant a \{ grid-column: 3; grid-row: 1;/);
   assert.match(responsive, /@media \(min-width: 2200px\)/);
   assert.match(responsive, /@media \(prefers-reduced-motion: reduce\)/);
   assert.doesNotMatch(styles + responsive, /gradient\(/);

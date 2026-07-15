@@ -34,10 +34,13 @@ export interface CompareMetric {
   rightValue: number;
   leftLabel: string;
   rightLabel: string;
+  leftExactLabel: string;
+  rightExactLabel: string;
   leftMeter: number;
   rightMeter: number;
   leader: CompareSide;
   deltaLabel: string;
+  deltaExactLabel: string;
   note: string;
 }
 
@@ -152,9 +155,19 @@ function buildCompareBrief(
   };
 }
 
-function int(value: number): string {
+export function formatCompareExactNumber(value: number): string {
   return Number(value).toLocaleString("en-US");
 }
+
+export function formatCompareOperations(value: number): string {
+  if (Math.abs(value) < 1_000_000) return formatCompareExactNumber(value);
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+const int = formatCompareExactNumber;
 
 function usd(value: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -213,6 +226,7 @@ function metric(
   rightValue: number,
   format: (value: number) => string,
   note: string,
+  exactFormat: (value: number) => string = format,
 ): CompareMetric {
   const [leftMeter, rightMeter] = meters(leftValue, rightValue);
   const metricLeader = leader(leftValue, rightValue);
@@ -224,10 +238,13 @@ function metric(
     rightValue,
     leftLabel: format(leftValue),
     rightLabel: format(rightValue),
+    leftExactLabel: exactFormat(leftValue),
+    rightExactLabel: exactFormat(rightValue),
     leftMeter,
     rightMeter,
     leader: metricLeader,
     deltaLabel: metricLeader === "tie" ? "EVEN" : `${metricLeader.toUpperCase()} +${format(difference)}`,
+    deltaExactLabel: metricLeader === "tie" ? "EVEN" : `${metricLeader.toUpperCase()} +${exactFormat(difference)}`,
     note,
   };
 }
@@ -269,7 +286,7 @@ export function buildPublicComparison(leftProfile: ProfileView, rightProfile: Pr
   const crossTier = left.evidenceTier !== right.evidenceTier;
   const fingerprint = stableFingerprint([left.handle, left.fingerprint, right.handle, right.fingerprint]);
   const metricRows: CompareMetric[] = [
-    metric("operations", "Counted operations", left.operations, right.operations, int, "Authoritative provider operation totals; submission row count is fallback only."),
+    metric("operations", "Counted operations", left.operations, right.operations, formatCompareOperations, "Authoritative provider operation totals; submission row count is fallback only.", formatCompareExactNumber),
     metric("spend", "Estimated spend", left.spendUsd, right.spendUsd, usd, "Public estimated spend from each latest accepted aggregate."),
     metric("score", "Vibe Score", left.score, right.score, (value) => `${int(value)}/100`, "Same public formula: usage mass, rhythm, breadth, and freshness. Trust adds +0."),
     metric("providers", "Provider breadth", left.providers, right.providers, int, "Number of public provider rollups in the latest receipt."),

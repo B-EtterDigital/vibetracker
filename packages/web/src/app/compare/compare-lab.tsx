@@ -2,7 +2,12 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
-import type { CompareParticipant, PublicComparisonSnapshot } from "./compare-model";
+import {
+  formatCompareExactNumber,
+  formatCompareOperations,
+  type CompareParticipant,
+  type PublicComparisonSnapshot,
+} from "./compare-model";
 
 export interface CompareProfileState {
   requestedHandle: string;
@@ -39,7 +44,15 @@ function ParticipantCard({ side, profileState }: { side: "L" | "R"; profileState
             <small>{profile.evidenceTier} // {profile.publishedLabel}</small>
           </div>
           <dl>
-            <div><dt>OPS</dt><dd>{profile.operations.toLocaleString("en-US")}</dd></div>
+            <div>
+              <dt>OPS</dt>
+              <dd
+                aria-label={`${formatCompareExactNumber(profile.operations)} operations`}
+                title={`Exact: ${formatCompareExactNumber(profile.operations)} operations`}
+              >
+                {formatCompareOperations(profile.operations)}
+              </dd>
+            </div>
             <div><dt>SCORE</dt><dd>{profile.score}/100</dd></div>
             <div><dt>PROVIDERS</dt><dd>{profile.providers}</dd></div>
           </dl>
@@ -220,9 +233,19 @@ export function CompareLab({ leftState, rightState, snapshot }: CompareLabProps)
               <header><span>LEFT // @{snapshot.left.handle}</span><b>PUBLIC SIGNAL DELTA</b><span>RIGHT // @{snapshot.right.handle}</span></header>
               {snapshot.metricRows.map((metric) => (
                 <article data-leader={metric.leader} key={metric.id}>
-                  <div className="compare-metric__value compare-metric__value--left"><strong>{metric.leftLabel}</strong><i style={{ "--meter": `${metric.leftMeter}%` } as CSSProperties} /></div>
-                  <div className="compare-metric__center"><span>{metric.label}</span><b>{metric.deltaLabel}</b><small>{metric.note}</small></div>
-                  <div className="compare-metric__value compare-metric__value--right"><strong>{metric.rightLabel}</strong><i style={{ "--meter": `${metric.rightMeter}%` } as CSSProperties} /></div>
+                  <div className="compare-metric__value compare-metric__value--left">
+                    <strong aria-label={`${metric.label}: ${metric.leftExactLabel}`} title={`Exact: ${metric.leftExactLabel}`}>{metric.leftLabel}</strong>
+                    <i style={{ "--meter": `${metric.leftMeter}%` } as CSSProperties} />
+                  </div>
+                  <div className="compare-metric__center">
+                    <span>{metric.label}</span>
+                    <b aria-label={metric.deltaExactLabel} title={metric.deltaExactLabel === metric.deltaLabel ? undefined : `Exact: ${metric.deltaExactLabel}`}>{metric.deltaLabel}</b>
+                    <small>{metric.note}</small>
+                  </div>
+                  <div className="compare-metric__value compare-metric__value--right">
+                    <strong aria-label={`${metric.label}: ${metric.rightExactLabel}`} title={`Exact: ${metric.rightExactLabel}`}>{metric.rightLabel}</strong>
+                    <i style={{ "--meter": `${metric.rightMeter}%` } as CSSProperties} />
+                  </div>
                 </article>
               ))}
             </div>
