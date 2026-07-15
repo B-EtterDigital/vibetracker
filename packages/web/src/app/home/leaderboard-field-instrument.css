@@ -191,7 +191,20 @@
 .home-field__threshold-labels { display: flex; justify-content: space-between; padding: 6px 11px 10px; color: #69817d; font: 600 7px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
 
 @media (min-width: 2200px) {
-  .home-board__signal-stage { grid-template-columns: 420px minmax(0, 1fr); }
+  .home-board__signal-stage { grid-template-columns: 540px minmax(0, 1fr); gap: 26px; }
+  .home-field > header { padding: 12px 14px; font-size: 10px; }
+  .home-field__scope { height: 220px; }
+  .home-field__axis { font-size: 9px; }
+  .home-field__beacon { width: 28px; }
+  .home-field__scope-meta { padding: 10px 12px; font-size: 9px; }
+  .home-field__legend > span { grid-template-columns: 28px minmax(0, 1fr) auto; min-height: 32px; padding-inline: 12px; }
+  .home-field__legend :is(b, code, em) { font-size: 9px; }
+  .home-field > p { min-height: 78px; padding: 16px 14px; font-size: 13px; }
+  .home-field dl > div { padding: 13px 11px; }
+  .home-field dt { font-size: 9px; }
+  .home-field dd { font-size: 16px; }
+  .home-field__threshold { padding-top: 16px; }
+  .home-field__threshold-labels { padding-bottom: 13px; font-size: 9px; }
 }
 
 @media (max-width: 900px) {

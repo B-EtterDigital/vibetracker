@@ -106,6 +106,21 @@
   .identity-claim__action { grid-column: 1 / -1; border-top: 1px solid rgba(255, 255, 255, .09); border-left: 0; }
 }
 
+@media (min-width: 2200px) {
+  .identity-claim { margin-top: 18px; }
+  .identity-claim__legend,
+  .identity-claim__copy,
+  .identity-claim__action { padding: 26px 28px; }
+  .identity-claim__legend > span,
+  .identity-claim__copy > span { font-size: 10px; }
+  .identity-claim__legend b { font-size: 12px; }
+  .identity-claim__copy h2 { font-size: 1.55rem; }
+  .identity-claim__copy p { font-size: 14px; }
+  .identity-claim__action { min-width: 250px; }
+  .identity-claim__action a { min-height: 48px; font-size: 11px; }
+  .identity-claim__action small { font-size: 9px; }
+}
+
 @media (max-width: 620px) {
   .identity-claim { grid-template-columns: 1fr; }
   .identity-claim__legend { border-right: 0; border-bottom: 1px solid rgba(255, 255, 255, .09); }

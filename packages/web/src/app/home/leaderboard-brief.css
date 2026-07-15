@@ -84,7 +84,19 @@
 .home-readout__signals [data-signal="identity"] strong { color: #46bbef; }
 
 @media (min-width: 2200px) {
-  .home-surface { width: min(2640px, 95vw); }
+  .home-surface { width: min(3200px, 94vw); }
+  .home-readout { padding: 40px 38px 44px; }
+  .home-readout > header { margin-bottom: 24px; }
+  .home-readout > header p { font-size: 11px; }
+  .home-readout h2 { font-size: 1.55rem; }
+  .home-readout > header code { padding: 9px 11px; font-size: 10px; }
+  .home-readout__summary { padding: 16px 18px; }
+  .home-readout__summary p { font-size: 14px; }
+  .home-readout__summary small { font-size: 10px; }
+  .home-readout__signals article { min-height: 132px; padding: 24px 20px; }
+  .home-readout__signals small { font-size: 10px; }
+  .home-readout__signals strong { font-size: 1.65rem; }
+  .home-readout__signals p { font-size: 12px; }
 }
 
 @media (max-width: 880px) {

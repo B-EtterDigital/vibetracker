@@ -404,11 +404,62 @@
   .home-board__metrics,
   .home-board__chart,
   .home-board__directory,
-  .home-board__encore { padding-inline: 30px; }
+  .home-board__encore { padding-inline: 40px; }
+
+  .home-board__mast { padding-block: 34px; }
+  .home-board__controls { padding-block: 26px; }
+  .home-board__leader-lock { padding-block: 27px; }
+  .home-board__boundary { padding-block: 24px; }
+  .home-board__metrics { padding-block: 28px; }
+  .home-board__chart { padding-block: 40px; }
+  .home-board__directory { padding-block: 30px; }
+  .home-board__encore { padding-block: 22px; }
+
+  .home-board h1 { font-size: 4rem; }
+  .home-board__eyebrow, .home-board__section-head p { font-size: 12px; }
+  .home-board__dek { max-width: 920px; font-size: 18px; }
+  .home-board__status { font-size: 13px; }
+  .home-board__status code { font-size: 11px; }
+  .home-board__tiers button { min-height: 64px; padding-inline: 18px; }
+  .home-board__tiers span { font-size: 15px; }
+  .home-board__tiers small { font-size: 10px; }
+  .home-board__copy { min-width: 380px; padding: 12px 15px; }
+  .home-board__copy code { font-size: 13px; }
+
+  .home-board__leader-lock { grid-template-columns: 110px minmax(260px, 1fr) auto auto; gap: 26px; }
+  .home-board__leader-rank strong { font-size: 34px; }
+  .home-board__leader-rank span,
+  .home-board__leader-identity > span,
+  .home-board__leader-identity small,
+  .home-board__leader-metrics dt { font-size: 10px; }
+  .home-board__leader-identity .home-board__operator { font-size: 24px; }
+  .home-board__leader-metrics { min-width: 360px; gap: 24px; }
+  .home-board__leader-metrics dd { font-size: 16px; }
+  .home-board__leader-open { min-height: 44px; padding-inline: 16px; font-size: 11px; }
+
+  .home-board__boundary { grid-template-columns: 190px minmax(0, 1fr) auto; gap: 28px; }
+  .home-board__boundary span { font-size: 10px; }
+  .home-board__boundary b { font-size: 18px; }
+  .home-board__boundary p { font-size: 15px; }
+  .home-board__boundary strong { font-size: 11px; }
+  .home-board__metrics dt { font-size: 11px; }
+  .home-board__metrics dd { font-size: 2rem; }
+  .home-board__section-head { margin-bottom: 24px; }
+  .home-board__section-head h2 { font-size: 1.5rem; }
+  .home-board__lens button { min-height: 36px; font-size: 10px; }
+  .home-board__runway { gap: 10px; }
+  .home-board__runway a { grid-template-columns: 46px minmax(160px, 0.55fr) minmax(220px, 2fr) 120px; min-height: 46px; }
+  .home-board__rank, .home-board__runway b { font-size: 14px; }
+  .home-board__runway strong { font-size: 13px; }
+  .home-board__bar { height: 8px; }
+  .home-board__section-head label { font-size: 11px; }
+  .home-board__section-head input { min-width: 300px; height: 40px; font-size: 14px; }
+  .home-board__table-shell th { padding-block: 12px; font-size: 10px; }
+  .home-board__table-shell td { height: 52px; font-size: 14px; }
+  .home-board__more { min-height: 44px; font-size: 11px; }
 
   .home-board > .home-readout { grid-column: 1; border-right: 1px solid var(--hb-line); }
   .home-board > .home-board__chart { grid-column: 2; min-width: 0; }
-  .home-board__directory { padding-block: 24px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

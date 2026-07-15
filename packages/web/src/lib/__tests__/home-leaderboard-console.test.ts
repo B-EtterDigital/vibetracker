@@ -144,7 +144,7 @@ test("leaderboard explains concentration, unit cost, active depth, and identity 
   assert.match(page, /\.\/home\/leaderboard-brief\.css/);
   assert.match(briefCss, /@media \(max-width: 560px\)/);
   assert.match(briefCss, /@media \(min-width: 2200px\)/);
-  assert.match(briefCss, /width: min\(2640px, 95vw\)/);
+  assert.match(briefCss, /width: min\(3200px, 94vw\)/);
   assert.match(briefCss, /var\(--hb-line\)/);
   assert.doesNotMatch(briefCss, /var\(--home-/);
 });
@@ -157,9 +157,15 @@ test("leaderboard readout has an honest waiting state", () => {
 
 test("4K leaderboard becomes a two-channel broadcast wall without changing mobile rules", () => {
   assert.match(briefCss, /@media \(min-width: 2200px\)/);
-  assert.match(briefCss, /width: min\(2640px, 95vw\)/);
+  assert.match(briefCss, /width: min\(3200px, 94vw\)/);
   assert.match(homeCss, /@media \(min-width: 2200px\)/);
   assert.match(homeCss, /grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/);
+  assert.match(homeCss, /\.home-board h1 \{ font-size: 4rem; \}/);
+  assert.match(homeCss, /\.home-board__leader-identity \.home-board__operator \{ font-size: 24px; \}/);
+  assert.match(homeCss, /\.home-board__metrics dd \{ font-size: 2rem; \}/);
+  assert.match(briefCss, /\.home-readout__signals article \{ min-height: 132px;/);
+  assert.match(fieldInstrumentCss, /\.home-board__signal-stage \{ grid-template-columns: 540px minmax\(0, 1fr\); gap: 26px; \}/);
+  assert.match(fieldInstrumentCss, /\.home-field__scope \{ height: 220px; \}/);
   assert.match(homeCss, /\.home-board > \.home-readout \{ grid-column: 1; border-right: 1px solid var\(--hb-line\); \}/);
   assert.match(homeCss, /\.home-board > \.home-board__chart \{ grid-column: 2; min-width: 0; \}/);
   assert.match(homeCss, /\.home-board__leader-lock,[\s\S]*\.home-board__boundary,[\s\S]*grid-column: 1 \/ -1/);
