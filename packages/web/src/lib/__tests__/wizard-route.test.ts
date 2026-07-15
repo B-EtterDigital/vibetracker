@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import {
   buildWizardRunbook,
   DEFAULT_WIZARD_OPTIONS,
@@ -15,9 +16,8 @@ test("wizard route is a focused interactive command deck", () => {
   const controlStyles = readFileSync("packages/web/src/app/wizard/wizard-controls.css", "utf8");
   const layoutStyles = readFileSync("packages/web/src/app/wizard/wizard-layout.css", "utf8");
   const manifest = readFileSync("packages/web/src/app/wizard/module.sweetspot.json", "utf8");
-  const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 
-  assert.match(layout, /href="\/wizard"/);   // reachable from the header
+  assert.ok(operatorRouteFor("/wizard"));
   assert.match(page, /buildInstallRunway/);
   assert.match(page, /buildLaunchSequence/);
   assert.match(page, /buildWizardFlightRecorder/);

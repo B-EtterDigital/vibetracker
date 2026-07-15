@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import {
   buildScoreLabSnapshot,
   SCORE_LAB_PRESETS,
@@ -14,9 +15,8 @@ test("score route is a focused interactive production-formula instrument", () =>
   const controls = readFileSync("packages/web/src/app/score/score-controls.css", "utf8");
   const responsive = readFileSync("packages/web/src/app/score/score-responsive.css", "utf8");
   const manifest = readFileSync("packages/web/src/app/score/module.sweetspot.json", "utf8");
-  const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 
-  assert.match(layout, /href="\/score"/);   // reachable from the header
+  assert.ok(operatorRouteFor("/score"));
   assert.match(page, /<ScoreLab \/>/);
   assert.match(page, /\.\/score\.css/);
   assert.match(page, /\.\/score-controls\.css/);

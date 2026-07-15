@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import { readFileSync } from "node:fs";
 import { buildPasskeyCeremonyControl, buildPasskeyProofConsole, buildPasskeyRecoveryRelay } from "../passkey-proof-console.ts";
 
@@ -199,11 +200,10 @@ test("passkeys route leads with GitHub-first identity truth and collapses the te
   const page = readFileSync("packages/web/src/app/passkeys/page.tsx", "utf8");
   const client = readFileSync("packages/web/src/app/passkeys/passkey-local-console.tsx", "utf8");
   const reference = readFileSync("packages/web/src/app/passkeys/passkey-technical-reference.tsx", "utf8");
-  const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const css = readFileSync("packages/web/src/app/globals.css", "utf8");
   const localCss = readFileSync("packages/web/src/app/passkeys/passkey-local.css", "utf8");
 
-  assert.match(layout, /href="\/passkeys"/);
+  assert.ok(operatorRouteFor("/passkeys"));
   assert.match(page, /<PasskeyLocalConsole/);
   assert.match(client, /GitHub proves the account\. This key stays local\./);
   assert.match(client, /NOT AN ACCOUNT LOGIN/);

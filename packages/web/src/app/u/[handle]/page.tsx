@@ -494,7 +494,8 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // discipline put video/music/3D models under "image" and left those specs falling back to the
   // CLI hex. The model name decides its trait; unmatched models ride the source's primary.
   const MODEL_TRAIT_HINTS: Array<[RegExp, string]> = [
-    [/kling|veo|sora|runway|hailuo|minimax|luma|pixverse|wan[-_ ]?2|hunyuan.?video|ltx|mochi|seedance|dream.?machine|video/i, "video"],
+    // NOTE: bare "minimax" is their LLM family (m2.5 etc.) — only Hailuo/video-01 are video
+    [/kling|veo|sora|runway|hailuo|minimax.?video|video-0\d|luma|pixverse|wan[-_ ]?2|hunyuan.?video|ltx|mochi|seedance|dream.?machine|video/i, "video"],
     [/hunyuan.?3d|trellis|tripo|meshy|rodin|3d/i, "threed"],
     [/suno|udio|lyria|riffusion|music/i, "music"],
     [/eleven|tts|voice|speech|chatterbox|dubbing|whisper|audio/i, "voice"],

@@ -38,3 +38,7 @@ export function operatorRouteIsActive(pathname: string, href: string): boolean {
   if (href === "/u/demo") return pathname.startsWith("/u/");
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+
+export function operatorRouteFor(href: string): OperatorRoute | undefined {
+  return OPERATOR_ROUTES.find((route) => route.href === href);
+}

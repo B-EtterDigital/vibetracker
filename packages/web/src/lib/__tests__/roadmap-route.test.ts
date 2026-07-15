@@ -1,16 +1,16 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 
 test("roadmap route leads with an honest interactive navigator and preserves the marked-list appendix", () => {
   const page = readFileSync("packages/web/src/app/roadmap/page.tsx", "utf8");
   const client = readFileSync("packages/web/src/app/roadmap/roadmap-navigator.tsx", "utf8");
   const blueprint = readFileSync("packages/web/src/app/roadmap/roadmap-blueprint.tsx", "utf8");
   const routeStyles = readFileSync("packages/web/src/app/roadmap/roadmap-navigator.css", "utf8");
-  const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
-  assert.match(layout, /href="\/roadmap"/);
+  assert.ok(operatorRouteFor("/roadmap"));
   assert.match(page, /buildRoadmapReleaseNavigator/);
   assert.match(page, /<RoadmapNavigator/);
   assert.match(page, /<details className="roadmap-blueprint">/);

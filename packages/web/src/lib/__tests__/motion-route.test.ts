@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
@@ -9,9 +10,8 @@ test("motion route is a route-local interactive credited sequencer", () => {
   const controls = readFileSync("packages/web/src/app/motion/motion-controls.css", "utf8");
   const responsive = readFileSync("packages/web/src/app/motion/motion-responsive.css", "utf8");
   const manifest = readFileSync("packages/web/src/app/motion/module.sweetspot.json", "utf8");
-  const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 
-  assert.match(layout, /href="\/motion"/);   // reachable from the header
+  assert.ok(operatorRouteFor("/motion"));
   assert.match(page, /buildAsciiMotionLab/);
   assert.match(page, /<MotionSequencer lab=/);
   assert.match(page, /\.\/motion\.css/);

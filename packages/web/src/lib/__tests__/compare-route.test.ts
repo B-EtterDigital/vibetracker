@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import {
   buildCompareParticipant,
   buildPublicComparison,
@@ -140,9 +141,11 @@ test("compare route is real, discoverable, interactive, responsive, and honest w
   const styles = readFileSync("packages/web/src/app/compare/compare.css", "utf8");
   const responsive = readFileSync("packages/web/src/app/compare/compare-responsive.css", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
+  const compareRoute = operatorRouteFor("/compare");
 
   assert.match(layout, /href="\/compare" title="Compare two real public usage receipts/);
-  assert.match(layout, /Compare lab<small>two public receipts on one scope/);
+  assert.equal(compareRoute?.label, "Compare lab");
+  assert.equal(compareRoute?.description, "two public receipts on one scope");
   assert.match(page, /Promise\.allSettled/);
   assert.match(page, /getProfile\(leftHandle\)/);
   assert.match(page, /getProfile\(rightHandle\)/);

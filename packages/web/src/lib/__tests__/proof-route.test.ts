@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import { buildEvidenceCockpit } from "../evidence-cockpit.ts";
 import { buildLiveProofSnapshot, sanitizeProofHandle } from "../../app/proof/live-proof-snapshot.ts";
 import { buildProofVerdict } from "../../app/proof/proof-verdict.ts";
@@ -92,11 +93,10 @@ test("proof center is exposed as a first-class local-first evidence route", () =
   const liveStyles = readFileSync("packages/web/src/app/proof/live-proof-workbench.css", "utf8");
   const verdictPanel = readFileSync("packages/web/src/app/proof/proof-verdict-panel.tsx", "utf8");
   const verdictStyles = readFileSync("packages/web/src/app/proof/proof-verdict.css", "utf8");
-  const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
   const evidence = readFileSync("packages/web/src/lib/evidence-cockpit.ts", "utf8");
 
-  assert.match(layout, /href="\/proof"/);   // reachable from the header
+  assert.ok(operatorRouteFor("/proof"));
   assert.match(page, /buildEvidenceCockpit/);
   assert.match(page, /getProfile\(requestedHandle\)/);
   assert.match(page, /buildLiveProofSnapshot/);

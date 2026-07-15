@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
@@ -10,10 +11,9 @@ const data = readFileSync("packages/web/src/app/life/local-cockpit-data.ts", "ut
 const css = readFileSync("packages/web/src/app/life/life.css", "utf8");
 const observatoryCss = readFileSync("packages/web/src/app/life/life-observatory.css", "utf8");
 const guideCss = readFileSync("packages/web/src/app/life/life-guide.css", "utf8");
-const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 
 test("AI Life is a real consent-driven local usage cockpit", () => {
-  assert.match(layout, /href="\/life"/);
+  assert.ok(operatorRouteFor("/life"));
   assert.match(page, /import \{ LocalCockpit \} from "\.\/local-cockpit"/);
   assert.match(page, /return <LocalCockpit \/>/);
   assert.match(cockpit, /^"use client"/);

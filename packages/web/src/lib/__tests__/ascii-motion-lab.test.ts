@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import { readFileSync } from "node:fs";
 import { buildAsciiMotionLab } from "../ascii-motion-lab.ts";
 
@@ -106,12 +107,11 @@ test("ASCII motion lab credits researched terminal-art references separately", (
 test("ASCII motion lab is exposed as a first-class credited route", () => {
   const page = readFileSync("packages/web/src/app/motion/page.tsx", "utf8");
   const sequencer = readFileSync("packages/web/src/app/motion/motion-sequencer.tsx", "utf8");
-  const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/motion/motion.css", "utf8");
   const controls = readFileSync("packages/web/src/app/motion/motion-controls.css", "utf8");
   const responsive = readFileSync("packages/web/src/app/motion/motion-responsive.css", "utf8");
 
-  assert.match(layout, /href="\/motion"/);   // reachable from the header
+  assert.ok(operatorRouteFor("/motion"));
   assert.match(page, /buildAsciiMotionLab/);
   assert.match(page, /<MotionSequencer lab=/);
   assert.match(sequencer, /^"use client";/);

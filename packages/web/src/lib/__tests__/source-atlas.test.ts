@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import { readFileSync } from "node:fs";
 import { buildSourceAtlas, buildSourceCoverageConstellation, buildSourceIntakeStack } from "../source-atlas.ts";
 
@@ -174,9 +175,8 @@ test("source composer turns the registry into a bounded local setup runbook", ()
   const data = readFileSync("packages/web/src/app/sources/stack-composer-data.ts", "utf8");
   const routeCss = readFileSync("packages/web/src/app/sources/sources.css", "utf8");
   const composerCss = readFileSync("packages/web/src/app/sources/stack-composer.css", "utf8");
-  const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 
-  assert.match(layout, /href="\/sources"/);
+  assert.ok(operatorRouteFor("/sources"));
   assert.match(page, /import \{ PROVIDERS \} from/);
   assert.match(page, /SourceStackComposer/);
   assert.match(page, /Compose your source stack\./);

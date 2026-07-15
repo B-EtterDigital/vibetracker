@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import { readFileSync } from "node:fs";
 
 const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
@@ -49,7 +50,13 @@ test("header names the leaderboard and explains every primary destination", () =
   assert.match(primary, />Sources</);
   assert.match(primary, />Insights</);
   assert.doesNotMatch(primary, />Profile</);
-  assert.match(layout, /href="\/u\/demo"><span>01<\/span><b>Profile/);
+  assert.deepEqual(operatorRouteFor("/u/demo"), {
+    index: "01",
+    href: "/u/demo",
+    label: "Profile",
+    description: "usage, disciplines, models, rhythm",
+    lane: "read",
+  });
 
   // no unexplained item: every primary link says what it does on hover
   const links = primary.match(/<a href="[^"]+"[^>]*>/g) ?? [];

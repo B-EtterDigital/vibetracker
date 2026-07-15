@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import {
   buildScanReceipt,
   SAMPLE_SCAN_FINDINGS,
@@ -26,11 +27,9 @@ test("scan route is the calm Make-your-scan page with a scripted local demo", ()
   const receiptPanel = readFileSync("packages/web/src/app/scan/scan-receipt-panel.tsx", "utf8");
   const receiptStyles = readFileSync("packages/web/src/app/scan/scan-receipt.css", "utf8");
   const scan = readFileSync("packages/web/src/app/scan/scan.css", "utf8");
-  const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
-  // ---- nav (layout) still links the scan route ----
-  assert.match(layout, /href="\/scan"/);   // reachable from the header
+  assert.ok(operatorRouteFor("/scan"));
 
   // ---- new page composition: calm "Make your scan" ----
   assert.match(page, /title: "Make your scan — VibeUsage"/);

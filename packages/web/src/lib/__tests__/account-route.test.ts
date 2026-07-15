@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import {
   accountCallbackOrigin,
   accountIdentityFromSession,
@@ -91,7 +92,7 @@ test("C0VIBE migration uses a bounded one-time claim and fixed WorkOS entrypoint
 
 test("global shell exposes an obvious GitHub sign-in control without requiring C0VIBE", () => {
   assert.match(layout, /<AccountControl \/>/);
-  assert.match(layout, /href="\/account"/);
+  assert.ok(operatorRouteFor("/account"));
   assert.match(control, /api\/identity\/github\/status/);
   assert.match(control, /\? "Sign in with GitHub"/);
   assert.match(control, /\? "Finish setup"/);
