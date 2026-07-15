@@ -5,7 +5,7 @@
     "name": "Inspectable Score Lab",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["usage-scoring", "formula-inspection", "local-simulation"]
@@ -81,7 +81,7 @@
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Focused formula tests and the complete clean release gate pass on the implementation commit.",
+      "notes": "Focused formula and layout contracts plus the complete 662-test clean release gate pass on the current implementation.",
       "evidence": ["packages/web/src/lib/__tests__/score-route.test.ts"]
     },
     "spe": {
@@ -102,11 +102,10 @@
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Clean production build, Netlify preview and production deploys, desktop/mobile interactions, network, console, layout, and Lighthouse proof pass.",
+      "notes": "Clean production build, preview and production deploys, mobile/desktop/4K layout, real slider and clipboard interactions, network, console, and zero-write proof pass.",
       "evidence": [
-        "Netlify deploy 6a530271dba887f0e32a9e57",
-        "/home/bdd-main/.playwright-mcp/vibetracker-score-instrument-desktop.png",
-        "/home/bdd-main/.playwright-mcp/vibetracker-score-instrument-mobile.png"
+        "Netlify preview 6a5708a9bb4e157bfef5575c",
+        "Netlify deploy 6a570a661e54f47fbb88f84f"
       ]
     },
     "sas": {
@@ -217,7 +216,7 @@
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 906,
+      "feature_lines": 933,
       "file_count": 7,
       "dependency_count": 2,
       "notes": "The former 700-line static route is now a 13-line server surface with a production-formula model, focused client instrument, split route-local CSS, and contract test."
@@ -232,6 +231,12 @@
         "status": "pass",
         "timestamp": "2026-07-12T02:59:34Z",
         "notes": "9 focused formula tests, 15 control-plane tests, 490 package tests, strict VTRS, TypeScript, dependency audit, clean 21-route Next build, Netlify interactions, and Lighthouse proof passed."
+      },
+      {
+        "command": "focused Score/Wizard tests + pnpm sma:release-gate + pnpm --filter @vibetracker/web build + preview/production Playwright",
+        "status": "pass",
+        "timestamp": "2026-07-15T04:22:28Z",
+        "notes": "4 focused route/formula tests, 15 control-plane tests, 662 package tests, strict VTRS, TypeScript, and the 30-route Next build passed in an isolated clean worktree. Preview 6a5708a9bb4e157bfef5575c and production 6a570a661e54f47fbb88f84f prove unchanged mobile/desktop behavior and a centered 2640px 4K Score command center with 240px, 1499px, and 899px channels. A real input transition moved the score from 79 to 0 while trust remained +0, the receipt reached copied, and the page emitted zero write requests."
       }
     ]
   },

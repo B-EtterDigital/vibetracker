@@ -38,6 +38,9 @@ test("score route is a focused interactive production-formula instrument", () =>
   assert.match(styles, /\.wrap:has\(\.score-surface\)::before/);
   assert.match(controls, /input\[type="range"\]/);
   assert.match(controls, /:focus-visible/);
+  assert.match(responsive, /@media \(min-width: 2200px\)/);
+  assert.match(responsive, /\.score-surface \{ width: min\(2640px, 95vw\); \}/);
+  assert.match(responsive, /grid-template-columns: 240px minmax\(0, 1\.25fr\) minmax\(620px, 0\.75fr\)/);
   assert.match(responsive, /@media \(max-width: 760px\)/);
   assert.match(responsive, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(manifest, /000-vibetracker\.web\.inspectable-score-lab/);

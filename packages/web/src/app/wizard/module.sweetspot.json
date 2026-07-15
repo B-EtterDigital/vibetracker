@@ -5,7 +5,7 @@
     "name": "First Run Command Deck",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["onboarding", "local-first", "command-planning"]
@@ -81,7 +81,7 @@
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "The focused route and runbook contracts plus the complete package suite pass on the clean current head.",
+      "notes": "The focused route, runbook, and layout contracts plus the complete 662-test package suite pass on the clean current head.",
       "evidence": ["packages/web/src/lib/__tests__/wizard-route.test.ts"]
     },
     "spe": {
@@ -98,11 +98,12 @@
     },
     "ssra": {
       "status": "passing",
-      "score": 90,
-      "notes": "Release gate, clean production build, Netlify preview, desktop/mobile layout, interaction, network, and console proof pass.",
+      "score": 95,
+      "notes": "Release gate, clean production build, preview and production deploys, mobile/desktop/4K layout, real command-deck interactions, network, console, and zero-write proof pass.",
       "evidence": [
         "scripts/release-gate.mjs",
-        "Netlify deploy 6a52f39d9c9d89b3f712dfe5"
+        "Netlify preview 6a5708a9bb4e157bfef5575c",
+        "Netlify deploy 6a570a661e54f47fbb88f84f"
       ]
     },
     "sas": {
@@ -209,7 +210,7 @@
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1051,
+      "feature_lines": 1067,
       "file_count": 7,
       "dependency_count": 2,
       "notes": "The former 1,236-line static route is now a 35-line server surface with deterministic command logic, a focused client tool, split route-local CSS, and one contract test; no owned implementation file exceeds 400 lines."
@@ -223,6 +224,12 @@
         "status": "pass",
         "timestamp": "2026-07-12T01:58:09Z",
         "notes": "2 focused tests, 15 control-plane tests, 489 package tests, strict VTRS, TypeScript, dependency audit, clean Next build, and Netlify desktop/mobile interaction proof passed."
+      },
+      {
+        "command": "focused Score/Wizard tests + pnpm sma:release-gate + pnpm --filter @vibetracker/web build + preview/production Playwright",
+        "status": "pass",
+        "timestamp": "2026-07-15T04:22:28Z",
+        "notes": "4 focused route/runbook tests, 15 control-plane tests, 662 package tests, strict VTRS, TypeScript, and the 30-route Next build passed in an isolated clean worktree. Preview 6a5708a9bb4e157bfef5575c and production 6a570a661e54f47fbb88f84f prove unchanged mobile/desktop behavior and a centered 2640px 4K Wizard command center with 240px, 1439px, and 959px channels. Real mode, source, and guard changes reduced the reviewed runbook from 8 to 6 commands, copied successfully, retained provider/upload/ledger counts at zero, and emitted no write requests."
       }
     ]
   },
