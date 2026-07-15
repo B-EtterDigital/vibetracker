@@ -7,9 +7,10 @@
   /* A contained editorial width reads as designed, not stretched; the grid inside carries the
      structure. Heatmaps and the chart still get the full width of this column. */
   display: flex; flex-direction: column; gap: 16px;
-  max-width: 1440px; margin: 0 auto; padding: 24px 20px 104px;
+  /* board-wide poster column (user order 2026-07-15): every element runs at the same wide
+     measure the infographic board established */
+  max-width: 1780px; margin: 0 auto; padding: 24px clamp(14px, 2vw, 32px) 104px;
 }
-@media (min-width: 2040px) { .vprofile { max-width: 1560px; } }
 
 /* The bento: 12 columns. Most panels span the full width (they were built with viewport media
    queries); the two that read cleanly narrow — specialization, trust — pair 2-up. */

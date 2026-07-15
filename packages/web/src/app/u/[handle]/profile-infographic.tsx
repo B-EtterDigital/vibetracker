@@ -95,15 +95,24 @@ export interface SpiralItem { label: string; pct: string; color?: string }
 // on the dark surface — those switch to a readable royal-blue ink.
 const readableInk = (color: string) => (color === "#1d4e89" ? "#7da4f0" : color);
 
+// Up to TEN coils (user order): the outer radius stays fixed and the coil pitch tightens as the
+// tool count grows; type steps down with the pitch, and the leader dots cascade diagonally —
+// each row lands noticeably further right than the one above.
 export function PolygonSpiral({ items, sides = 6, ariaContext }: { items: SpiralItem[]; sides?: number; ariaContext?: string }) {
-  const shown = items.slice(0, 5);
-  const base = 57;
-  const step = 44;
-  const rMax = base + (shown.length - 1) * step;
+  const shown = items.slice(0, 10);
+  const n = shown.length;
+  const base = 40;
+  const rMax = 280;
+  const step = n > 1 ? (rMax - base) / (n - 1) : 0;
   const cx = rMax + 8;
   const cy = rMax + 8;
-  const W = 970;
-  const H = cy + rMax + 30;
+  const stroke = n > 7 ? 5 : n > 5 ? 6 : 7;
+  const pctSize = n > 7 ? 18 : n > 5 ? 21 : 24;
+  const labelSize = n > 7 ? 12 : n > 5 ? 13 : 14.5;
+  const diag = 44; // the diagonal cascade: every row's dot lands this much further right
+  const lastDot = cx + rMax + 36 + (n - 1) * diag;
+  const W = lastDot + 118 + 150;
+  const H = cy + rMax + 34;
   const angleStep = 360 / sides;
   const endAngle = sides === 6 ? 90 : 54; // hexagons end at the bottom vertex
   const angles = Array.from({ length: sides }, (_, k) => endAngle - (sides - 1 - k) * angleStep);
@@ -117,7 +126,7 @@ export function PolygonSpiral({ items, sides = 6, ariaContext }: { items: Spiral
         const ink = readableInk(color);
         const pts = angles.map((deg) => polar(cx, cy, r, deg));
         const end = pts[pts.length - 1];
-        const dotX = cx + rMax + 36 + i * 32; // the staircase: each row's dot lands further right
+        const dotX = cx + rMax + 36 + i * diag;
         const path = `M ${pts.map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" L ")}`;
         const tip = `${item.label} — ${item.pct} of ${ariaContext ?? "this distribution"}. Bigger coil = bigger share.`;
         return (
@@ -125,12 +134,12 @@ export function PolygonSpiral({ items, sides = 6, ariaContext }: { items: Spiral
             <title>{tip}</title>
             {/* staged sequence per row: coil draws → stripe sweeps left→right → dot pops →
                 percentage fades in → tool name last (timing lives in the CSS classes) */}
-            <path className="vinfo-coil" pathLength={1} d={path} fill="none" stroke={color} strokeWidth="7" strokeLinejoin="miter" />
+            <path className="vinfo-coil" pathLength={1} d={path} fill="none" stroke={color} strokeWidth={stroke} strokeLinejoin="miter" />
             <line className="vinfo-lead" pathLength={1} x1={end[0]} y1={end[1]} x2={dotX} y2={end[1]} stroke={ink} strokeWidth="2.5" />
-            <circle className="vinfo-lead-dot" cx={dotX} cy={end[1]} r="5.5" fill={ink} />
-            <text className="vinfo-spiral-pct" x={dotX + 16} y={end[1] + 1} dominantBaseline="middle">{item.pct}</text>
-            <circle className="vinfo-label-dot" cx={dotX + 84} cy={end[1]} r="3" fill={ink} />
-            <text className="vinfo-spiral-label" x={dotX + 97} y={end[1] + 1} dominantBaseline="middle" fill={ink}>{item.label}</text>
+            <circle className="vinfo-lead-dot" cx={dotX} cy={end[1]} r={n > 7 ? 4.5 : 5.5} fill={ink} />
+            <text className="vinfo-spiral-pct" style={{ fontSize: `${pctSize}px` }} x={dotX + 15} y={end[1] + 1} dominantBaseline="middle">{item.pct}</text>
+            <circle className="vinfo-label-dot" cx={dotX + pctSize * 3.4} cy={end[1]} r="3" fill={ink} />
+            <text className="vinfo-spiral-label" style={{ fontSize: `${labelSize}px` }} x={dotX + pctSize * 3.4 + 12} y={end[1] + 1} dominantBaseline="middle" fill={ink}>{item.label}</text>
           </g>
         );
       })}
@@ -221,7 +230,7 @@ export function SourceToolbar({ brands }: { brands: ToolbarBrand[] }) {
   if (!brands.length) return null;
   return (
     <div className="vtoolbar" role="list" aria-label="AI toolset — every source tracked on this profile">
-      <b className="vtoolbar-title" aria-hidden="true">AI Toolset:</b>
+      <b className="vtoolbar-title" aria-hidden="true">My Tools:</b>
       {brands.map((b, i) => (
         <span
           className="vtoolbar-item"

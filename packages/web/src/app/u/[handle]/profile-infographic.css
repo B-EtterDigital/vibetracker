@@ -27,13 +27,11 @@
 }
 .vtoolbar-item:hover i { transform: translateY(-3px) scale(1.06); }
 
-/* ---- the board: breaks out of the page column — much wider on big screens, full-bleed on small */
+/* ---- the board: the page column itself is board-wide now — no breakout needed ---- */
 .vboard {
   --vspd: 1;
   display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   gap: 0 clamp(8px, 1.5vw, 28px); padding: 0; overflow: hidden;
-  width: min(96vw, 1780px);
-  margin-left: calc((100% - min(96vw, 1780px)) / 2);
 }
 .vboard--fast { --vspd: 0.45; } /* after the first interaction, switches run snappier */
 
@@ -221,7 +219,7 @@
    The two desktop wrappers dissolve (display: contents) so their children interleave as direct
    grid items and take explicit order. ---- */
 @media (max-width: 980px) {
-  .vboard { grid-template-columns: 1fr; width: 100%; margin-left: 0; }
+  .vboard { grid-template-columns: 1fr; }
   .vboard-left, .vboard-right { display: contents; }
   .vboard .vinfo-pies { order: 1; margin: 16px 12px 0; justify-content: flex-start; }
   .vboard .vinfo-spiral { order: 2; margin: 8px 10px 0; }

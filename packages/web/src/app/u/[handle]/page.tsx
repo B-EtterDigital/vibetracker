@@ -443,7 +443,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const agentRows = (profile.agents ?? []).filter((a) => a.activeDays > 0);
   const agentDaysTotal = agentRows.reduce((s, a) => s + a.activeDays, 0);
   const cliSpiral = agentRows
-    .slice().sort((a, b) => b.activeDays - a.activeDays).slice(0, 5)
+    .slice().sort((a, b) => b.activeDays - a.activeDays).slice(0, 10)
     .map((a, i) => {
       const share = agentDaysTotal > 0 ? (a.activeDays / agentDaysTotal) * 100 : 0;
       return {
@@ -499,7 +499,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       byModel.set(name, (byModel.get(name) ?? 0) + m.ops);
     }
     const total = [...byModel.values()].reduce((s, v) => s + v, 0);
-    return [...byModel.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([model, ops], i) => ({
+    return [...byModel.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([model, ops], i) => ({
       // keep the END of long model ids — "…nano-banana" and "…nano-banana-pro" must stay distinct
       label: model.length > 18 ? `…${model.slice(-17)}` : model,
       pct: total > 0 && (ops / total) * 100 >= 1 ? `${Math.round((ops / total) * 100)}%` : "<1%",
@@ -571,6 +571,18 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // (pies=traits · bio · spiral=CLI distribution · columns=monthly spend) — the reference, 1:1.
   add("hero", "full", <SourceToolbar brands={brands} key="toolbar" />);
   add("hero", "full", <InfographicBoard traits={traits} specs={specs} key="board" />);
+  // User-ordered flow (2026-07-15): identity plate (archetype + badges) directly under the board,
+  // then the two activity heatmaps — the poster's "who is this + how steady" chapter, up top.
+  const signals = computeProfileSignals(profile);
+  add("hero", "full",
+    <ViberIdentity signals={signals} opsValue={opsCompact} key="identity" />);
+  if (reveal.rhythm) {
+    add("hero", "full", <SyncRhythm days={profile.usageDays.map((d) => ({ date: d.date, ops: d.ops, usd: d.usd }))} key="rhythm" />);
+  }
+  if (githubSignal) {
+    add("hero", "full",
+      <GitHubContributions handle={githubSignal.handle} total={githubSignal.totalContributions} days={githubSignal.days ?? []} key="github" />);
+  }
   add("hero", "full",
     <ProfileReadout
       handle={profile.handle}
@@ -594,13 +606,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       userBio={userBio}
       key="hero-evidence"
     />);
-  // The Signal read leads: archetype + measured skill signals + the reframed API-equivalent cost.
-  // Money is the reference, not the headline — skill is what you see first.
-  const signals = computeProfileSignals(profile);
-  // The identity plate: archetype masthead + the earned-badge wall (hybrids stack badges; 2+
-  // archetypes earns the all-rounder crest). The trait pies live in the infographic board above.
-  add("overview", "full",
-    <ViberIdentity signals={signals} opsValue={opsCompact} key="identity" />);
+  // The Signal read: measured skill signals + the reframed API-equivalent cost.
   add("overview", "full", <SkillSignals signals={signals} apiCost={formatUsd(facts.usd)} key="signals" />);
   // Local derived orchestration evidence, shown only when the upload carried a usable trace.
   if (profile.orchestration && profile.orchestration.activityHours > 0) {
@@ -627,13 +633,8 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   if (agents.length > 0) {
     add("usage", "half", <Delegation agents={agents} crossProviderDays={profile.crossProviderDays ?? 0} activeDays={facts.days} key="delegation" />);
   }
-  if (reveal.rhythm) {
-    add("activity", "full", <SyncRhythm days={profile.usageDays.map((d) => ({ date: d.date, ops: d.ops, usd: d.usd }))} key="rhythm" />);
-  }
-  if (githubSignal) {
-    add("activity", "full",
-      <GitHubContributions handle={githubSignal.handle} total={githubSignal.totalContributions} days={githubSignal.days ?? []} key="github" />);
-  }
+  // (Sync rhythm + GitHub contributions moved to the top chapter, directly under the identity
+  // plate — user order 2026-07-15.)
   // Specialization ranks by operations, which are reconstructed from token volume (logs are pruned)
   // — flag it so the ops numbers read as estimates, not exact counts.
   if (reveal.categoryMix) add("who", "half", <CategoryMix rows={categories} sub={`${read.identity.label} · ops est.`} key="categories" />);
