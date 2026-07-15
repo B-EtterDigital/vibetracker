@@ -26,6 +26,17 @@ export interface ScoreLabSnapshot {
   trustContextPoints: number;
 }
 
+export interface ScoreSignalBrief {
+  headline: string;
+  explanation: string;
+  equation: string;
+  currentLabel: string;
+  ceilingLabel: string;
+  trustLabel: string;
+  strongest: { label: string; value: string; note: string };
+  opportunity: { label: string; value: string; note: string };
+}
+
 export const SCORE_LAB_PRESETS: readonly ScoreLabPreset[] = [
   {
     id: "starter",
@@ -159,5 +170,51 @@ export function buildScoreLabSnapshot(input: ScoreLabInput, nowMs = Date.now()):
     scoringPoints: scoringFactors.reduce((sum, factor) => sum + factor.points, 0),
     scoringMax: scoringFactors.reduce((sum, factor) => sum + factor.max, 0),
     trustContextPoints: trustFactor?.points ?? 0,
+  };
+}
+
+const FACTOR_ACTION: Record<string, string> = {
+  usage: "More accepted records or attached spend can fill this rail.",
+  rhythm: "More distinct active days can fill this rail.",
+  coverage: "More providers with accepted usage can fill this rail.",
+  freshness: "A newer reviewed upload can recover this rail.",
+};
+
+export function buildScoreSignalBrief(snapshot: ScoreLabSnapshot): ScoreSignalBrief {
+  const scoringFactors = snapshot.receipt.factors.filter((factor) => factor.impact === "score");
+  const strongest = [...scoringFactors].sort((left, right) =>
+    right.points - left.points || right.max - left.max || left.label.localeCompare(right.label)
+  )[0];
+  const opportunity = [...scoringFactors].sort((left, right) =>
+    (right.max - right.points) - (left.max - left.points) ||
+    right.max - left.max ||
+    left.label.localeCompare(right.label)
+  )[0];
+  const trustReserve = Math.max(0, 100 - snapshot.scoringMax);
+  const openPoints = opportunity ? Math.max(0, opportunity.max - opportunity.points) : 0;
+
+  return {
+    headline: snapshot.receipt.score > 0
+      ? `${snapshot.receipt.score} comes from usage. Trust adds zero.`
+      : "No reviewed usage means no score yet.",
+    explanation:
+      `${snapshot.receipt.score}/100 is the raw sum of four accepted-usage rails. ` +
+      `Those rails top out at ${snapshot.scoringMax}; the separate ${trustReserve}-point trust lane stays visible but is excluded from scoring.`,
+    equation: `${scoringFactors.map((factor) => `${factor.label.toLowerCase()} ${factor.points}`).join(" + ")} = ${snapshot.scoringPoints}`,
+    currentLabel: `${snapshot.scoringPoints} usage points`,
+    ceilingLabel: `${snapshot.scoringMax} honest ceiling`,
+    trustLabel: `${trustReserve} outside score`,
+    strongest: {
+      label: strongest?.label ?? "Usage rails",
+      value: strongest ? `+${strongest.points} / ${strongest.max}` : "+0",
+      note: strongest?.note ?? "A reviewed upload starts the formula.",
+    },
+    opportunity: {
+      label: opportunity?.label ?? "Usage rails",
+      value: openPoints > 0 ? `${openPoints} points open` : "ceiling reached",
+      note: openPoints > 0
+        ? FACTOR_ACTION[opportunity?.id ?? ""] ?? "Change the accepted-usage input to inspect this rail."
+        : "All accepted-usage rails are saturated; trust still remains +0.",
+    },
   };
 }

@@ -39,8 +39,10 @@
     "public_paths": [
       "packages/web/src/app/score/page.tsx",
       "packages/web/src/app/score/score-lab.tsx",
+      "packages/web/src/app/score/score-signal-brief.tsx",
       "packages/web/src/app/score/score-model.ts",
       "packages/web/src/app/score/score.css",
+      "packages/web/src/app/score/score-brief.css",
       "packages/web/src/app/score/score-controls.css",
       "packages/web/src/app/score/score-responsive.css"
     ],

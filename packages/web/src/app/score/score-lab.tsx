@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   buildScoreLabSnapshot,
+  buildScoreSignalBrief,
   SCORE_LAB_PRESETS,
   type ScoreLabInput,
 } from "./score-model";
+import { ScoreSignalBrief } from "./score-signal-brief";
 
 type CopyState = "idle" | "copied" | "blocked";
 
@@ -35,6 +37,7 @@ export function ScoreLab() {
   const [copyState, setCopyState] = useState<CopyState>("idle");
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const snapshot = useMemo(() => buildScoreLabSnapshot(input), [input]);
+  const brief = useMemo(() => buildScoreSignalBrief(snapshot), [snapshot]);
   const score = snapshot.receipt.score;
 
   useEffect(() => () => {
@@ -74,12 +77,7 @@ export function ScoreLab() {
           </div>
         </header>
 
-        <div className="score-instrument__contract" aria-label="Score formula contract">
-          <span><b>{snapshot.scoringPoints}</b> scoring points</span>
-          <span><b>{snapshot.scoringMax}</b> formula maximum</span>
-          <span><b>+0</b> trust score delta</span>
-          <span><b>0</b> page writes</span>
-        </div>
+        <ScoreSignalBrief brief={brief} />
 
         <div className="score-workspace">
           <nav className="score-presets" aria-label="Score Lab presets">
@@ -114,8 +112,10 @@ export function ScoreLab() {
                     <span><b>{control.label}</b><small>{control.detail}</small></span>
                     <input
                       aria-label={control.label}
+                      id={`score-${control.key}`}
                       max={control.max}
                       min={control.min}
+                      name={`score-${control.key}`}
                       onChange={(event) => update(control.key, Number(event.target.value))}
                       step={control.step}
                       style={{ "--value": `${pct}%` } as CSSProperties}
@@ -131,8 +131,10 @@ export function ScoreLab() {
               <span><b>Trust side rail</b><small>GitHub, MCP, and public proof context</small></span>
               <input
                 aria-label="Trust side rail signals"
+                id="score-trust-signals"
                 max="5"
                 min="0"
+                name="score-trust-signals"
                 onChange={(event) => update("trustSignals", Number(event.target.value))}
                 style={{ "--value": `${input.trustSignals * 20}%` } as CSSProperties}
                 type="range"

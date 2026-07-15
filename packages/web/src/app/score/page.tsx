@@ -1,5 +1,6 @@
 import { ScoreLab } from "./score-lab";
 import "./score.css";
+import "./score-brief.css";
 import "./score-controls.css";
 import "./score-responsive.css";
 

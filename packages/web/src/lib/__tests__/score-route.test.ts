@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { operatorRouteFor } from "../../components/operator-menu-model.ts";
 import {
   buildScoreLabSnapshot,
+  buildScoreSignalBrief,
   SCORE_LAB_PRESETS,
 } from "../../app/score/score-model.ts";
 
@@ -14,15 +15,22 @@ test("score route is a focused interactive production-formula instrument", () =>
   const styles = readFileSync("packages/web/src/app/score/score.css", "utf8");
   const controls = readFileSync("packages/web/src/app/score/score-controls.css", "utf8");
   const responsive = readFileSync("packages/web/src/app/score/score-responsive.css", "utf8");
+  const brief = readFileSync("packages/web/src/app/score/score-signal-brief.tsx", "utf8");
+  const briefStyles = readFileSync("packages/web/src/app/score/score-brief.css", "utf8");
   const manifest = readFileSync("packages/web/src/app/score/module.sweetspot.json", "utf8");
 
   assert.ok(operatorRouteFor("/score"));
   assert.match(page, /<ScoreLab \/>/);
+  assert.match(page, /\.\/score-brief\.css/);
   assert.match(page, /\.\/score\.css/);
   assert.match(page, /\.\/score-controls\.css/);
   assert.match(page, /\.\/score-responsive\.css/);
   assert.match(lab, /^"use client";/);
   assert.match(lab, /buildScoreLabSnapshot/);
+  assert.match(lab, /buildScoreSignalBrief/);
+  assert.match(lab, /<ScoreSignalBrief brief=\{brief\}/);
+  assert.match(lab, /id=\{\`score-\$\{control\.key\}\`\}/);
+  assert.match(lab, /name=\{\`score-\$\{control\.key\}\`\}/);
   assert.match(lab, /type="range"/);
   assert.match(lab, /aria-pressed=/);
   assert.match(lab, /navigator\.clipboard\.writeText/);
@@ -39,8 +47,15 @@ test("score route is a focused interactive production-formula instrument", () =>
   assert.match(controls, /input\[type="range"\]/);
   assert.match(controls, /:focus-visible/);
   assert.match(responsive, /@media \(min-width: 2200px\)/);
-  assert.match(responsive, /\.score-surface \{ width: min\(2640px, 95vw\); \}/);
-  assert.match(responsive, /grid-template-columns: 240px minmax\(0, 1\.25fr\) minmax\(620px, 0\.75fr\)/);
+  assert.match(responsive, /\.score-surface \{ width: min\(3200px, 94vw\); \}/);
+  assert.match(responsive, /grid-template-columns: 280px minmax\(0, 1\.35fr\) minmax\(760px, 0\.8fr\)/);
+  assert.match(responsive, /\.score-instrument h1 \{ font-size: 4rem; \}/);
+  assert.match(responsive, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(brief, /READ THIS SCORE \/ LIVE INTERPRETATION/);
+  assert.match(brief, /STRONGEST DRIVER/);
+  assert.match(brief, /LARGEST OPEN GAIN/);
+  assert.match(briefStyles, /\.score-signal-brief__equation/);
+  assert.match(briefStyles, /@media \(min-width: 2200px\)/);
   assert.match(responsive, /@media \(max-width: 760px\)/);
   assert.match(responsive, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(manifest, /000-vibetracker\.web\.inspectable-score-lab/);
@@ -58,6 +73,15 @@ test("score lab uses the production formula and quarantines trust context", () =
     assert.equal(studio.scoringMax, 92);
     assert.equal(studio.profile.providers.length, 3);
     assert.equal(studio.profile.usageDays.length, 3);
+    const brief = buildScoreSignalBrief(studio);
+    assert.equal(brief.headline, "79 comes from usage. Trust adds zero.");
+    assert.equal(brief.currentLabel, "79 usage points");
+    assert.equal(brief.ceilingLabel, "92 honest ceiling");
+    assert.equal(brief.trustLabel, "8 outside score");
+    assert.match(brief.explanation, /separate 8-point trust lane stays visible but is excluded/);
+    assert.equal(brief.strongest.label, "Usage mass");
+    assert.equal(brief.opportunity.label, "Daily rhythm");
+    assert.equal(brief.opportunity.value, "10 points open");
 
     const noTrust = buildScoreLabSnapshot({ ...SCORE_LAB_PRESETS[1].input, trustSignals: 0 });
     const highTrust = buildScoreLabSnapshot({ ...SCORE_LAB_PRESETS[1].input, trustSignals: 5 });
