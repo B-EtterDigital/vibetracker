@@ -74,6 +74,9 @@ test("local cockpit layout is stable on desktop mobile and reduced motion", () =
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(observatoryCss, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
   assert.match(observatoryCss, /@media \(min-width: 2200px\)/);
+  assert.match(observatoryCss, /\.vlife \{[\s\S]*width: min\(2640px, 95vw\);[\s\S]*margin-left: 50%;[\s\S]*transform: translateX\(-50%\);/);
+  assert.match(observatoryCss, /\.vlife-disconnected \{/);
+  assert.match(observatoryCss, /grid-template-columns: minmax\(0, 0\.9fr\) minmax\(0, 1\.1fr\)/);
   assert.match(observatoryCss, /@media \(max-width: 680px\)/);
   assert.match(observatoryCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(guideCss, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);

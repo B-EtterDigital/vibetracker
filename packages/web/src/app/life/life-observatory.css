@@ -91,7 +91,19 @@
 .vlife-contract b { color: var(--vl-green); }
 
 @media (min-width: 2200px) {
-  .vlife { width: min(1800px, calc(100% - 64px)); }
+  .vlife {
+    width: min(2640px, 95vw);
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+  .vlife-disconnected {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 18px;
+    align-items: start;
+  }
+  .vlife-linker,
+  .vlife-guide { margin-top: 28px; }
   .vlife-workbench { grid-template-columns: minmax(0, 1.35fr) minmax(520px, 0.65fr); }
   .vlife-bars { height: 220px; }
 }

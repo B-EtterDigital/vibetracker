@@ -5,7 +5,7 @@
     "name": "AI Life Practice",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["usage-analytics", "practice-map", "local-first"]
@@ -40,8 +40,10 @@
       "packages/web/src/app/life/page.tsx",
       "packages/web/src/app/life/local-cockpit.tsx",
       "packages/web/src/app/life/local-cockpit-guide.tsx",
+      "packages/web/src/app/life/local-usage-observatory.tsx",
       "packages/web/src/app/life/life.css",
-      "packages/web/src/app/life/life-guide.css"
+      "packages/web/src/app/life/life-guide.css",
+      "packages/web/src/app/life/life-observatory.css"
     ],
     "private_paths": [
       "packages/web/src/app/life/local-cockpit-data.ts",
@@ -80,7 +82,7 @@
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Focused route, dormant guidance, payload, token, origin, and adjacent local-tool contracts plus the complete 635-test package suite pass on the current tree.",
+      "notes": "Focused route, dormant guidance, payload, token, origin, layout, and adjacent local-tool contracts plus the complete 662-test package suite pass on the current tree.",
       "evidence": ["packages/web/src/app/life/__tests__/local-cockpit-data.test.ts", "packages/web/src/lib/__tests__/life-route.test.ts", "packages/cli/src/__tests__/api-server.test.ts"]
     },
     "spe": {
@@ -98,8 +100,8 @@
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Release gate, production build, production deploy, and exact-deploy Playwright passes cover dormant guidance at mobile, desktop, and 4K plus the previously proven real tokenized local-ledger connection.",
-      "evidence": ["scripts/release-gate.mjs", "Netlify deploy 6a569427623071e7f8ec56de", "Netlify deploy 6a55c088bc2a11226db4088f"]
+      "notes": "Release gate, production build, preview and production deploys, and exact-deploy Playwright passes cover unchanged mobile and desktop guidance plus a centered 2640px two-channel command center at 4K; the previously proven real tokenized local-ledger connection remains intact.",
+      "evidence": ["scripts/release-gate.mjs", "Netlify preview 6a57041f67a1ecc88217be07", "Netlify deploy 6a57051d69d3dda5b2308827"]
     },
     "sas": {
       "status": "passing",
@@ -180,10 +182,10 @@
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1175,
-      "file_count": 8,
+      "feature_lines": 1474,
+      "file_count": 10,
       "dependency_count": 2,
-      "notes": "The route is a 12-line server surface plus isolated transport/view-model, connected cockpit, dormant-state guide, two responsive stylesheets, and focused tests with no new dependency."
+      "notes": "The route is a 13-line server surface plus isolated transport/view-model, connected cockpit, dormant-state guide, three responsive stylesheets, and focused tests with no new dependency."
     },
     "test_commands": [
       "node --test packages/web/src/app/life/__tests__/local-cockpit-data.test.ts packages/web/src/lib/__tests__/life-route.test.ts packages/cli/src/__tests__/api-server.test.ts"
@@ -200,6 +202,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T19:56:36Z",
         "notes": "6 focused and adjacent tests, 15 control-plane tests, 635 package tests, strict VTRS, TypeScript, the 29-route Next build, and Netlify deploy 6a569427623071e7f8ec56de passed. Exact-deploy views at 390x844, 1440x900, and 3840x2160 returned HTTP 200 with zero overflow or browser errors; Scan, Sources, Insights, and Profile destinations also returned 200."
+      },
+      {
+        "command": "focused Life tests + pnpm sma:release-gate + pnpm --filter @vibetracker/web build + preview/production Playwright",
+        "status": "pass",
+        "timestamp": "2026-07-15T03:59:20Z",
+        "notes": "7 focused Life tests, 15 control-plane tests, 662 package tests, strict VTRS, TypeScript, and the 30-route Next build passed in an isolated clean worktree. Preview 6a57041f67a1ecc88217be07 and production 6a57051d69d3dda5b2308827 prove unchanged 390px mobile and 1440px desktop layouts plus a centered 2640px 4K command center with aligned 1180px and 1442px channels, zero horizontal overflow, zero console errors, zero failed requests, and intact aggregate-only loopback messaging."
       }
     ]
   },
