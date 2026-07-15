@@ -42,8 +42,9 @@
   padding: 26px 26px 22px 8px;
 }
 /* the trait circles slide LEFT into the empty air right of the hexagon's top; packed to the
-   column's content edge so the RIGHT-most circle aligns with the RIGHT-most bar */
-.vboard-right .vinfo-pies { margin-left: -48%; justify-content: flex-end; }
+   column's content edge so the RIGHT-most circle aligns with the RIGHT-most bar. The slide is
+   gentle enough that the first circle never clips under the hexagon column. */
+.vboard-right .vinfo-pies { margin-left: -30%; justify-content: flex-end; overflow: visible; }
 
 /* ---- the story block (adapts per specialization) ---- */
 .vboard-bio { padding: 12px 24px 0 4px; max-width: 72ch; }
