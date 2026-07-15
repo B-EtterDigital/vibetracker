@@ -106,8 +106,8 @@
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   width: 112px; cursor: help;
 }
-/* screen-blend melts the medals' baked black square into the panel — only the glowing puck stays */
-.vident-level img { width: 90px; height: 90px; display: block; mix-blend-mode: screen; }
+/* medals ship as true transparent cutouts (Higgsfield background remover) — no blend tricks */
+.vident-level img { width: 90px; height: 90px; display: block; }
 .vident-level[data-locked="true"] img { filter: grayscale(1) brightness(0.55); opacity: 0.6; }
 .vident-level strong {
   font: 800 13px/1 var(--vp-mono); letter-spacing: 0.06em; color: #eafff8;
