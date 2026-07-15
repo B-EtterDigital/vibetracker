@@ -20,7 +20,8 @@
   isolation: isolate;
   display: flex;
   align-items: flex-end;
-  min-height: 260px;
+  /* 3× the original 260px on desktop (user order 2026-07-15); phones keep a usable share */
+  min-height: clamp(420px, 62vh, 780px);
   padding: clamp(20px, 3vw, 34px);
   overflow: hidden;
 }
@@ -32,6 +33,34 @@
   background-size: cover;
   background-position: center;
   opacity: 0.55;
+}
+/* a viber-chosen banner replaces the starfield at full strength */
+.vhero-banner-art--custom { opacity: 1; }
+
+/* ---- pre-login customizer: quiet buttons top-right of the banner ---- */
+.vhero-custom {
+  position: absolute; top: 14px; right: 14px; z-index: 2;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end;
+}
+.vhero-custom-btn {
+  cursor: pointer; display: inline-flex; align-items: center;
+  padding: 7px 12px; border: 2px solid rgba(217, 255, 242, 0.25);
+  background: rgba(4, 6, 7, 0.72);
+  font: 700 10.5px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.1em;
+  color: rgba(217, 255, 242, 0.8);
+  transition: border-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+.vhero-custom-btn:hover { border-color: #f28c33; color: #eafff8; transform: translateY(-1px); }
+.vhero-custom-btn input { display: none; }
+.vhero-custom-note {
+  flex-basis: 100%; margin: 0; padding: 8px 12px; max-width: 42ch;
+  border: 2px solid rgba(242, 140, 51, 0.5); background: rgba(4, 6, 7, 0.88);
+  font: 500 10.5px/1.5 var(--vp-mono); color: #ffd9ad; text-align: right;
+}
+/* a viber-chosen avatar image fills the square, under the ring + tier chip */
+.vhero-avatar-img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; border-radius: 8px; z-index: 1;
 }
 /* discipline wash — the viber's own colour bleeding up from the avatar corner, plus a bottom
    scrim so the name and identity keep full contrast over the banner */

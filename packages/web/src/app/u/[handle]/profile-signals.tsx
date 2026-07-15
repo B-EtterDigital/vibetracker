@@ -2,6 +2,7 @@
 // not "who spent the most". Money is reframed as API-equivalent reference cost, never the flex.
 
 import type { ProfileSignals } from "../../../lib/profile-signals";
+import { Donut, INFO_RAMP } from "./profile-infographic";
 
 function pct(n: number): string {
   if (n >= 0.1) return `${Math.round(n * 100)}%`;
@@ -18,17 +19,23 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
 
   // Three tiers of honesty per read: `self` = the viber declared it (a truth the data can't reveal),
   // `est` = reconstructed from partial data (logs get pruned), and unmarked = measured directly.
-  const reads: Array<{ label: string; value: string; note: string; est?: boolean; self?: boolean }> = [];
+  // `gauge` (0..100) fills the read's % donut; gauge-less reads wear a plain medallion ring with
+  // the value centred — a ring sweep is never faked for a non-percentage metric.
+  const reads: Array<{ label: string; value: string; note: string; gauge: number | null; center: string; est?: boolean; self?: boolean }> = [];
   if (signals.hasTokens) {
     reads.push({
       label: "Work style",
       value: humanRatio < 0.18 ? "Agentic" : humanRatio < 0.35 ? "Mixed" : "Hands-on",
       note: `${pct(humanRatio)} of tokens are typed prompts + replies · the rest is agents re-reading context`,
+      gauge: humanRatio * 100,
+      center: pct(humanRatio),
     });
     reads.push({
       label: "Context efficiency",
       value: pct(cacheReuse),
       note: "share of input served from cache instead of re-sent — higher is leaner spend",
+      gauge: cacheReuse * 100,
+      center: pct(cacheReuse),
     });
   }
   if (signals.declaredAgents) {
@@ -37,6 +44,8 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
       label: "Orchestration",
       value: `${signals.declaredAgents} agents`,
       note: `run in parallel · ${agentCount} distinct CLIs · ${crossProviderDays} cross-provider days`,
+      gauge: null,
+      center: String(signals.declaredAgents),
       self: true,
     });
   } else if (agentCount >= 2) {
@@ -44,6 +53,8 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
       label: "Orchestration",
       value: `~${signals.peakAgentLoad} agents`,
       note: `peak parallel from the busiest day's throughput — not observed concurrency · ${agentCount} distinct CLIs · ${crossProviderDays} cross-provider days`,
+      gauge: null,
+      center: `~${signals.peakAgentLoad}`,
       est: true,
     });
   }
@@ -52,6 +63,8 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
       label: "Ship rate",
       value: `${Math.round(shipRate)}/B`,
       note: `git commits per billion tokens — ${signals.commits.toLocaleString("en-US")} commits shipped`,
+      gauge: null,
+      center: `${Math.round(shipRate)}`,
     });
   }
   if (mediaGenerations >= 400) {
@@ -59,6 +72,8 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
       label: "Media output",
       value: mediaGenerations >= 1000 ? `${(mediaGenerations / 1000).toFixed(1)}k` : String(mediaGenerations),
       note: "images, video and music generated — creative output, not just code",
+      gauge: null,
+      center: mediaGenerations >= 1000 ? `${(mediaGenerations / 1000).toFixed(1)}k` : String(mediaGenerations),
     });
   }
   const showEstFootprint = footprint.length > 0 && !signals.declaredSubs;
@@ -84,15 +99,18 @@ export function SkillSignals({ signals, apiCost }: { signals: ProfileSignals; ap
 
       {reads.length ? (
         <div className="vsignals-grid">
-          {reads.map((r) => (
+          {reads.map((r, i) => (
             <div className="vsignals-read" key={r.label}>
-              <span className="vsignals-read-label">
-                {r.label}
-                {r.self ? <em className="vsignals-self" title="Self-reported by the viber — the data can't reveal this">you</em> : null}
-                {r.est ? <em className="vsignals-est" title="Estimated — reconstructed from partial data">est</em> : null}
-              </span>
-              <strong className="vsignals-read-value">{r.value}</strong>
-              <span className="vsignals-read-note">{r.note}</span>
+              <Donut pct={r.gauge} center={r.center} color={INFO_RAMP[i % INFO_RAMP.length]} />
+              <div className="vsignals-read-text">
+                <span className="vsignals-read-label">
+                  {r.label}
+                  {r.self ? <em className="vsignals-self" title="Self-reported by the viber — the data can't reveal this">you</em> : null}
+                  {r.est ? <em className="vsignals-est" title="Estimated — reconstructed from partial data">est</em> : null}
+                </span>
+                {r.value !== r.center ? <strong className="vsignals-read-value">{r.value}</strong> : null}
+                <span className="vsignals-read-note">{r.note}</span>
+              </div>
             </div>
           ))}
         </div>

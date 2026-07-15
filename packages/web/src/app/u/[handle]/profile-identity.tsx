@@ -1,75 +1,18 @@
-// Viber identity plate — the brutalist infographic poster that opens the profile (user order
-// 2026-07-15: "not a boring dashboard · bold, cool, brutalist"). Two instruments on one plate:
+// Viber identity plate — the flat-infographic poster that opens the profile (user order
+// 2026-07-15: instruments exactly like the reference infographic). Two reads on one plate:
 //
-//  · DISCIPLINE RINGS — concentric arcs, one ring per discipline, sweep = share of operations,
-//    with oversized % callouts and dashed leader rows (the reference-poster read).
+//  · TRAIT PIES — one % pie per discipline the viber actually uses (coding, image, video,
+//    music…), only rendered with real usage. The FIRST SIGHT that says specialist or
+//    all-rounder: one dominant pie vs a full row.
 //  · BADGE WALL — every archetype held is an earned stamp with its criterion printed on it.
 //    Hybrids stack badges; holding 2+ archetypes additionally earns the ALL-ROUNDER crest
 //    (3+ reads MULTIHYBRID). Every viber type is a special — including the specialist.
 //
 // Data honesty is inherited: archetypes come from computeProfileSignals (measured thresholds,
-// documented in lib/profile-signals.ts); shares are the same ops-weighted category mix as
+// documented in lib/profile-signals.ts); trait shares are the same ops-weighted category mix as
 // Specialization. This plate re-presents, it never re-derives.
 
 import type { ProfileSignals } from "../../../lib/profile-signals";
-
-export interface RingDiscipline {
-  id: string;
-  label: string;
-  color: string;
-  share: number; // 0..100
-}
-
-function pct(n: number): string {
-  return n >= 1 ? `${Math.round(n)}%` : "<1%";
-}
-
-// One concentric arc. Sweep is proportional to share, floored so tiny disciplines stay visible
-// and capped short of 360 so an arc never swallows its own start.
-function arcPath(cx: number, cy: number, r: number, sweepDeg: number): string {
-  const start = -90;
-  const a0 = (start * Math.PI) / 180;
-  const a1 = ((start + sweepDeg) * Math.PI) / 180;
-  const x0 = cx + r * Math.cos(a0);
-  const y0 = cy + r * Math.sin(a0);
-  const x1 = cx + r * Math.cos(a1);
-  const y1 = cy + r * Math.sin(a1);
-  const large = sweepDeg > 180 ? 1 : 0;
-  return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
-}
-
-function DisciplineRings({ rings, centerValue, centerLabel }: { rings: RingDiscipline[]; centerValue: string; centerLabel: string }) {
-  const SIZE = 340;
-  const C = SIZE / 2;
-  const STROKE = 17;
-  const GAP = 7;
-  const outer = 150;
-  const summary = rings.map((r) => `${r.label} ${pct(r.share)}`).join(", ");
-
-  return (
-    <svg
-      className="vident-rings"
-      viewBox={`0 0 ${SIZE} ${SIZE}`}
-      role="img"
-      aria-label={`Discipline mix: ${summary}`}
-    >
-      {rings.map((ring, i) => {
-        const r = outer - i * (STROKE + GAP);
-        // Sweep is share-proportional with a deliberate floor: a <1% discipline still reads as a
-        // designed arc, never a glitch stub. The callouts carry the exact numbers.
-        const sweep = Math.min(352, Math.max(42, ring.share * 3.52));
-        return (
-          <g key={ring.id}>
-            <circle cx={C} cy={C} r={r} fill="none" stroke="rgba(217,255,242,0.07)" strokeWidth={STROKE} />
-            <path d={arcPath(C, C, r, sweep)} fill="none" stroke={ring.color} strokeWidth={STROKE} strokeLinecap="butt" />
-          </g>
-        );
-      })}
-      <text x={C} y={C - 4} textAnchor="middle" className="vident-rings-value">{centerValue}</text>
-      <text x={C} y={C + 18} textAnchor="middle" className="vident-rings-label">{centerLabel}</text>
-    </svg>
-  );
-}
 
 // ---- badge sigils — one geometric mark per archetype, drawn, never emoji ----------------------
 
@@ -202,18 +145,12 @@ export function buildBadges(signals: ProfileSignals): BadgeSpec[] {
 
 export function ViberIdentity({
   signals,
-  disciplines,
   opsValue,
 }: {
   signals: ProfileSignals;
-  disciplines: RingDiscipline[];
   opsValue: string;
 }) {
-  // Poster keys: strip the "AI " prefix every discipline shares — "02 IMAGE CREATION" reads
-  // cleaner than five keys all opening with the same word.
-  const rings = disciplines.slice(0, 5).map((d) => ({ ...d, label: d.label.replace(/^AI\s+/i, "") }));
   const badges = buildBadges(signals);
-  const ranked = rings.slice().sort((a, b) => b.share - a.share);
 
   return (
     <section className="vprofile-panel vident">
@@ -221,7 +158,7 @@ export function ViberIdentity({
         <div className="vident-mast-left">
           <span className="vident-eyebrow">viber identity</span>
           <h2 className="vident-archetype">{signals.archetypeLabel}</h2>
-          <p className="vident-blurb">{signals.archetypeBlurb}</p>
+          <p className="vident-blurb">{signals.archetypeBlurb} · {opsValue} operations</p>
         </div>
         <div className="vident-mast-count" aria-label={`${badges.length} badges earned`}>
           <b>{String(badges.length).padStart(2, "0")}</b>
@@ -229,39 +166,20 @@ export function ViberIdentity({
         </div>
       </header>
 
-      <div className="vident-body">
-        <div className="vident-chart">
-          <div className="vident-callouts">
-            {ranked.map((ring, i) => (
-              <div className="vident-callout" key={ring.id} title={ring.label}>
-                <strong style={{ color: ring.color }}>{pct(ring.share)}</strong>
-                <i className="vident-leader" aria-hidden="true" />
-                <span className="vident-callout-key">
-                  <em aria-hidden="true">{String(i + 1).padStart(2, "0")}</em>
-                  {/* single-word poster key — the full label rides in the tooltip + aria summary */}
-                  {ring.label.split(" ")[0]}
-                </span>
-              </div>
-            ))}
-          </div>
-          <DisciplineRings rings={rings} centerValue={opsValue} centerLabel="operations" />
-        </div>
-
-        <div className="vident-badges">
-          <span className="vident-badges-head">badges — every archetype is a special · hybrids stack</span>
-          <div className="vident-badge-wall">
-            {badges.map((badge) => (
-              <div
-                className={`vident-badge${badge.crest ? " vident-badge--crest" : ""}`}
-                style={{ "--badge-c": badge.color } as React.CSSProperties}
-                key={badge.key}
-              >
-                <span className="vident-badge-sigil">{badge.sigil}</span>
-                <strong className="vident-badge-title">{badge.title}</strong>
-                <span className="vident-badge-crit">{badge.criterion}</span>
-              </div>
-            ))}
-          </div>
+      <div className="vident-badges vident-badges--band">
+        <span className="vident-badges-head">badges — every archetype is a special · hybrids stack</span>
+        <div className="vident-badge-wall">
+          {badges.map((badge) => (
+            <div
+              className={`vident-badge${badge.crest ? " vident-badge--crest" : ""}`}
+              style={{ "--badge-c": badge.color } as React.CSSProperties}
+              key={badge.key}
+            >
+              <span className="vident-badge-sigil">{badge.sigil}</span>
+              <strong className="vident-badge-title">{badge.title}</strong>
+              <span className="vident-badge-crit">{badge.criterion}</span>
+            </div>
+          ))}
         </div>
       </div>
     </section>

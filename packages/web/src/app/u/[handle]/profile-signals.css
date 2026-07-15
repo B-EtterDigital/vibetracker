@@ -42,9 +42,11 @@
   margin: 18px 0 0; border: 2px solid rgba(217, 255, 242, 0.12); border-radius: 0;
   background: rgba(217, 255, 242, 0.12); overflow: hidden;
 }
-.vsignals-read { display: flex; flex-direction: column; gap: 5px; padding: 13px 14px; background: #0b1216; }
-.vsignals-read-label { font: 500 9.5px/1 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.1em; color: rgba(217, 255, 242, 0.4); }
-.vsignals-read-value { font: 800 20px/1 var(--vp-mono); color: #2ee8d6; font-variant-numeric: tabular-nums; }
+/* donut + text rows — the reference poster's %-circle list */
+.vsignals-read { display: flex; align-items: center; gap: 14px; padding: 14px 15px; background: #0b1216; min-width: 0; }
+.vsignals-read-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.vsignals-read-label { font: 700 9.5px/1.3 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.1em; color: rgba(217, 255, 242, 0.45); }
+.vsignals-read-value { font: 800 17px/1 var(--vp-mono); color: #eafff8; font-variant-numeric: tabular-nums; }
 .vsignals-read-note { font: 400 10.5px/1.45 var(--vp-mono); color: rgba(217, 255, 242, 0.5); }
 
 /* the honesty marker — a small dashed "est" tag on any reconstructed number */

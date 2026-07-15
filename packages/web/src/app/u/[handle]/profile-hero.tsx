@@ -10,6 +10,7 @@
 
 import type { CSSProperties } from "react";
 import type { BrandChip } from "./panels";
+import { HeroCustomize } from "./profile-hero-custom";
 
 // The five signal tiers, low → high. "Signal" measures how complete/deep a tracked profile is
 // (sources, disciplines, history, spend, activity) — not a ranking of who spends most.
@@ -51,8 +52,6 @@ export interface ProfileHeroProps {
   signalHint: string;
   tierChip: string;
   metrics: HeroMetric[];
-  joinHref: string;
-  migrateHref: string;
 }
 
 export interface ProfileHeroEvidenceProps {
@@ -99,8 +98,6 @@ export function ProfileHero({
   signalHint,
   tierChip,
   metrics,
-  joinHref,
-  migrateHref,
 }: ProfileHeroProps) {
   const proofLabel = identityVerified
     ? identityProvider === "github" ? "GitHub verified" : "C0VIBE verified"
@@ -116,6 +113,9 @@ export function ProfileHero({
         <span className="vhero-banner-art" aria-hidden="true" />
         <span className="vhero-banner-wash" aria-hidden="true" />
         <span className="vhero-banner-grid" aria-hidden="true" />
+
+        {/* pre-login customization: banner + avatar preview instantly; saving needs sign-in */}
+        <HeroCustomize />
 
         <div className="vhero-banner-foot">
           <div className="vhero-avatar" aria-hidden="true">
@@ -166,14 +166,7 @@ export function ProfileHero({
             </div>
           ))}
         </dl>
-
-        <div className="vhero-actions">
-          <a className="vhero-cta vhero-cta--primary" href={joinHref}>
-            Join C0VIBE — free
-            <i aria-hidden="true">&#8599;</i>
-          </a>
-          <a className="vhero-cta" href={migrateHref}>Migrate this profile</a>
-        </div>
+        {/* The C0VIBE join/migrate doors live ONLY in the band at the very end of the page. */}
       </div>
     </section>
   );

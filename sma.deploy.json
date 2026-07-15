@@ -1,0 +1,10 @@
+{
+  "project": "vibeusage-web",
+  "canonicalRoot": "/home/bdd-main/DEV/Projects/000_VibeTRACKER",
+  "build": "rm -rf packages/web/.next packages/web/.netlify/deploy",
+  "deploy": "netlify deploy --prod --build --site 4c8f274c-f633-4806-9741-bf081773668c --message sma-deploy-guard",
+  "stampPath": "packages/web/public/deploy-stamp.json",
+  "liveStampUrl": "https://vibeusage.c0vibe.app/deploy-stamp.json",
+  "verify": { "attempts": 15, "delaySeconds": 6 },
+  "lock": { "ttlSeconds": 1800 }
+}

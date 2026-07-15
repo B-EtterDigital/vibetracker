@@ -23,6 +23,7 @@
     "telemetry:audit": "node scripts/telemetry-audit.mjs",
     "telemetry:audit:strict": "node scripts/telemetry-audit.mjs --strict",
     "typecheck": "node scripts/typecheck.mjs",
+    "deploy:web": "node tools/sma-deploy-guard.mjs --why",
     "test:scripts": "node --test \"scripts/__tests__/**/*.test.mjs\"",
     "test:unit": "node --test \"packages/**/__tests__/**/*.test.ts\"",
     "test": "pnpm test:scripts && pnpm test:unit",

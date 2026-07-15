@@ -30,6 +30,13 @@ runtime proof or a stated blocker → clean or classified dirty-tree handoff.
 Backend is Supabase (Viberank-derived). Per global rules, run `supabase db push` for
 migrations and `supabase functions deploy` for edge functions as part of the task — do
 not leave deploy/migrate for the user. Enable RLS on all tables; never commit secrets.
+The ingest edge MUST be deployed with `--no-verify-jwt` (public ingest; large anonymous
+CLI bundles hit it directly).
+
+**Web deploys: ONLY `pnpm deploy:web -- "<message>"`** — never raw `netlify deploy`
+(stale-overwrite incident 2026-07-15; see AGENTS.md "Web deploys — guarded protocol").
+Canonical tree `~/DEV/Projects/000_VibeTRACKER`; the guard stamps the build and verifies
+production serves that exact stamp.
 
 ## Cost policy
 Free-local-first. Paid runners/caches are manual-only; never enable without an explicit ask.

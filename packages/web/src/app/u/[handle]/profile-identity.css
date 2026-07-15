@@ -35,48 +35,17 @@
   color: rgba(217, 255, 242, 0.5);
 }
 
-/* ---- body: rings + callouts left, badge wall right ---- */
-.vident-body {
-  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: 0;
+/* ---- trait pies band — the first-sight specialization read ---- */
+.vident-traits {
+  padding: 22px 28px 6px;
+  border-bottom: 2px solid rgba(217, 255, 242, 0.14);
 }
-
-.vident-chart {
-  display: flex; align-items: center; gap: clamp(16px, 3vw, 34px);
-  padding: 26px 24px 28px 28px;
-  border-right: 2px solid rgba(217, 255, 242, 0.14);
-  min-width: 0;
-}
-
-.vident-rings { width: clamp(220px, 22vw, 320px); height: auto; flex: none; }
-.vident-rings-value { font: 800 34px var(--vp-mono); fill: #eafff8; letter-spacing: -0.02em; }
-.vident-rings-label { font: 700 11px var(--vp-mono); fill: rgba(217, 255, 242, 0.45); text-transform: uppercase; letter-spacing: 0.22em; }
-
-/* % callouts with dashed leaders — the reference-poster read. Biggest first. */
-.vident-callouts { display: flex; flex-direction: column; gap: 16px; flex: 1 1 auto; min-width: 0; }
-.vident-callout { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.vident-callout strong {
-  flex: none; width: 2.7em; text-align: right;
-  font: 800 clamp(1.4rem, 2.4vw, 1.9rem) / 1 var(--vp-mono);
-  font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
-}
-.vident-leader {
-  flex: 1 1 12px; height: 0; min-width: 12px;
-  border-top: 2px dashed rgba(217, 255, 242, 0.22);
-}
-.vident-callout-key {
-  flex: 0 1 auto; display: inline-flex; align-items: baseline; gap: 8px; min-width: 0;
-  font: 700 11.5px/1.2 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.1em;
-  color: rgba(217, 255, 242, 0.78); white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
-}
-.vident-callout-key em {
-  font-style: normal; font-weight: 800; font-size: 10px;
-  color: rgba(217, 255, 242, 0.35);
-}
+.vident-traits .vinfo-pies { border-bottom: 0; padding-bottom: 16px; }
 
 /* ---- badge wall — earned stamps ---- */
 .vident-badges { display: flex; flex-direction: column; padding: 22px 28px 28px 24px; min-width: 0; }
+.vident-badges--band { padding: 22px 28px 28px; }
+.vident-badges--band .vident-badge-wall { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 .vident-badges-head {
   font: 800 10px/1.4 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.2em;
   color: rgba(217, 255, 242, 0.45); margin: 0 0 16px;
@@ -121,14 +90,8 @@
 }
 .vident-badge--crest .vident-badge-title { color: #eafff8; }
 
-/* ---- responsive: poster stacks, rings stay centred ---- */
-@media (max-width: 1060px) {
-  .vident-body { grid-template-columns: 1fr; }
-  .vident-chart { border-right: 0; border-bottom: 2px solid rgba(217, 255, 242, 0.14); }
-}
+/* ---- responsive ---- */
 @media (max-width: 680px) {
   .vident-mast { flex-direction: column; }
   .vident-mast-count { border-left: 0; padding-left: 0; }
-  .vident-chart { flex-direction: column-reverse; align-items: stretch; }
-  .vident-rings { align-self: center; width: min(300px, 78vw); }
 }

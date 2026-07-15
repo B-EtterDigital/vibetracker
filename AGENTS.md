@@ -90,3 +90,39 @@ a `packages/viberank-mcp-server`, and a `002_multi_tool.sql` migration);
 maintainers hold the reference checkout. Reuse it; do not rebuild the
 leaderboard from scratch. The hard new problem is **verified, multi-platform**
 ingestion.
+
+## Web deploys — guarded protocol only (CRITICAL, incident 2026-07-15)
+
+A second agent session once deployed a stale checkout over fresh production work (five untitled
+`netlify deploy` runs, no branch/commit metadata) and silently reverted the live profile. Standing
+rules for EVERY agent, local or remote:
+
+- **Deploy ONLY via `pnpm deploy:web -- "<message>"`** (`scripts/deploy-web.mjs`). Raw
+  `netlify deploy` against the vibeusage site (`4c8f274c-…`) is FORBIDDEN.
+- The guard: refuses while another deploy runs, takes an atomic lock, stamps the build
+  (`public/deploy-stamp.json`), always builds fresh, and after deploy VERIFIES production serves
+  this exact stamp — a stale overwrite fails loudly instead of pretending success.
+- **Canonical tree: `~/DEV/Projects/000_VibeTRACKER`.** Never deploy the web app from a copy,
+  scratchpad, or worktree; sync your changes into the canonical tree first.
+- Before deploying, check `curl -s https://vibeusage.c0vibe.app/deploy-stamp.json` — if the live
+  stamp is one you don't recognise, someone shipped after you; re-read their changes before you
+  overwrite them.
+
+### Production is LOCKED (2026-07-15, after a second overwrite)
+The overwriting deploys were traced to an ephemeral repo snapshot (`/tmp/vibeusage-account-custody/`,
+self-deleting after each run) that redeployed an hours-old tree. Production is now **pinned with a
+Netlify deploy lock**: stale deploys still build but can never publish. `pnpm deploy:web` handles the
+cycle automatically (unlock → deploy → verify stamp → re-lock). NEVER `netlify api unlockDeploy`
+manually and walk away — an unlocked site is an unprotected site. If your tree is a copy/snapshot,
+your profile-UI files are probably stale: sync from the canonical tree before shipping anything.
+
+### Deploy guard v2 — SMARCH engine adopted (2026-07-15, supersedes the paragraphs above)
+The repo is now git (`feat/c0vibe-integration`) and the deploy path is the vendored SMARCH deploy
+guard: **`pnpm deploy:web -- "why"`** → `tools/sma-deploy-guard.mjs` + `sma.deploy.json` (spec:
+`~/DEV/SMARCH/docs/SMA_DEPLOY_GUARD.md`). It mechanically REFUSES: non-canonical trees (snapshots
+can never pass — the config names the absolute canonical path), dirty trees, unpushed HEADs, and
+non-fast-forward deploys (production serving work your tree lacks → integrate first). Stamps
+record the exact commit. The Netlify platform lock is retired — the fast-forward rule supersedes
+it. `scripts/deploy-web.mjs` is BREAK-GLASS for the cron watchdog only (auto-restore on stale
+production; works on dirty trees, still refuses snapshot trees). Raw `netlify deploy` remains
+forbidden.

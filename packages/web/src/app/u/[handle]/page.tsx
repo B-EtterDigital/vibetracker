@@ -32,6 +32,7 @@ import { SyncRhythm, GitHubContributions } from "./profile-heatmap";
 import { TokenBreakdown, Delegation } from "./profile-tokens";
 import { OrchestrationHours } from "./profile-orchestration";
 import { ViberIdentity } from "./profile-identity";
+import { InfographicBoard, SourceToolbar, INFO_RAMP, type StackMonth } from "./profile-infographic";
 import { SkillSignals } from "./profile-signals";
 import { computeProfileSignals } from "../../../lib/profile-signals";
 import { UsageTelemetry } from "./profile-telemetry";
@@ -44,6 +45,7 @@ import "./profile-heatmap.css";
 import "./profile-tokens.css";
 import "./profile-signals.css";
 import "./profile-identity.css";
+import "./profile-infographic.css";
 import "./profile-orchestration.css";
 import "./profile-telemetry.css";
 import "./profile-accessibility.css";
@@ -346,27 +348,40 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     { label: "disciplines", value: String(facts.categories) },
     { label: "top source", value: topSource },
   ];
+  // Hero metric order is user-specified (2026-07-15): days first, then tokens (billions), then
+  // disciplines/sources, then the API-equivalent cost estimate last — money is never the lead.
+  const tokensB = (profile.totalTokens ?? 0) / 1e9;
   const heroMetrics: HeroMetric[] = [
-    {
-      label: "API-equivalent cost",
-      value: compactUsd(facts.usd),
-      note: `${formatUsd(facts.usd)} reference value, not a bill`,
-    },
-    {
-      label: "Estimated operations",
-      value: compactNumber(facts.ops),
-      note: "reconstructed from usage records",
-      title: `${exactOps} reconstructed operations`,
-    },
     {
       label: "Active days",
       value: formatInt(facts.days),
       note: "days with tracked usage",
+      title: `${formatInt(facts.days)} days with at least one tracked AI operation`,
+    },
+    tokensB >= 0.1
+      ? {
+          label: "Tokens processed",
+          value: tokensB >= 100 ? `${Math.round(tokensB)}B` : `${tokensB.toFixed(1)}B`,
+          note: "measured coding tokens, all types",
+          title: `${formatInt(Math.round(profile.totalTokens ?? 0))} tokens — input, output, cache read and cache creation, measured at source`,
+        }
+      : {
+          label: "Estimated operations",
+          value: compactNumber(facts.ops),
+          note: "reconstructed from usage records",
+          title: `${exactOps} reconstructed operations`,
+        },
+    {
+      label: "Disciplines / sources",
+      value: `${facts.categories} / ${facts.providers}`,
+      note: "creative range × toolset breadth",
+      title: `${facts.categories} disciplines (coding, image, video, …) across ${facts.providers} tracked sources`,
     },
     {
-      label: "Source coverage",
-      value: formatInt(facts.providers),
-      note: `sources across ${facts.categories} disciplines`,
+      label: "API-equivalent cost",
+      value: compactUsd(facts.usd),
+      note: `${formatUsd(facts.usd)} reference value, not a bill`,
+      title: "What this usage would cost at published API list prices without a subscription — an estimate for scale, not money spent",
     },
   ];
   // A viber's own bio (set with `vibetracker profile --bio`), shown below the sources. Empty for
@@ -408,6 +423,62 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     panels.push({ key: (node as { key?: string }).key ?? group, group, span, node });
   };
 
+  // ---- Infographic board data (user reference 2026-07-15: hero → logo toolbar → the composed
+  // board). Traits = disciplines with real usage; spiral = CLI distribution by active days;
+  // columns = monthly spend stacked by source. Reference palette via INFO_RAMP. ----------------
+  const traits = categories.map((c, i) => ({
+    id: c.id,
+    label: c.label.replace(/^AI\s+/i, ""),
+    color: INFO_RAMP[i % INFO_RAMP.length],
+    pct: c.share,
+  }));
+  const opsCompact = facts.ops >= 1e9 ? `${(facts.ops / 1e9).toFixed(1)}B`
+    : facts.ops >= 1e6 ? `${Math.round(facts.ops / 1e6)}M`
+      : formatInt(Math.round(facts.ops));
+  const AGENT_NAME: Record<string, string> = {
+    codex: "Codex", claude: "Claude", "claude-code": "Claude", hermes: "Hermes",
+    openclaw: "OpenClaw", gemini: "Gemini", "gemini-cli": "Gemini", opencode: "OpenCode",
+  };
+  const agentRows = (profile.agents ?? []).filter((a) => a.activeDays > 0);
+  const agentDaysTotal = agentRows.reduce((s, a) => s + a.activeDays, 0);
+  const cliSpiral = agentRows
+    .slice().sort((a, b) => b.activeDays - a.activeDays).slice(0, 5)
+    .map((a, i) => {
+      const share = agentDaysTotal > 0 ? (a.activeDays / agentDaysTotal) * 100 : 0;
+      return {
+        label: AGENT_NAME[a.agent] ?? a.agent,
+        pct: share >= 1 ? `${Math.round(share)}%` : "<1%",
+        color: INFO_RAMP[i % INFO_RAMP.length],
+      };
+    });
+  // monthly spend stacked by source — last 5 months from the same providerDays series the chart uses
+  const monthAgg = new Map<string, Map<string, number>>();
+  for (const d of profile.providerDays) {
+    const ym = d.date.slice(0, 7);
+    const per = monthAgg.get(ym) ?? new Map<string, number>();
+    per.set(d.provider, (per.get(d.provider) ?? 0) + d.usd);
+    monthAgg.set(ym, per);
+  }
+  const yms = [...monthAgg.keys()].sort().slice(-5);
+  const monthTotals = yms.map((ym) => [...monthAgg.get(ym)!.values()].reduce((s, v) => s + v, 0));
+  const windowSum = monthTotals.reduce((s, v) => s + v, 0);
+  const provWindow = new Map<string, number>();
+  for (const ym of yms) for (const [p, v] of monthAgg.get(ym)!) provWindow.set(p, (provWindow.get(p) ?? 0) + v);
+  const topProv = [...provWindow.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([p]) => p);
+  const months: StackMonth[] = yms.map((ym, i) => {
+    const per = monthAgg.get(ym)!;
+    const segments = topProv
+      .filter((p) => (per.get(p) ?? 0) > 0)
+      .map((p) => ({ id: p, label: providerLabel(p), value: per.get(p)!, color: INFO_RAMP[topProv.indexOf(p) % INFO_RAMP.length] }));
+    const other = [...per.entries()].filter(([p]) => !topProv.includes(p)).reduce((s, [, v]) => s + v, 0);
+    if (other > 0) segments.push({ id: "other", label: "Other sources", value: other, color: "rgba(217,255,242,0.25)" });
+    return {
+      label: MONTHS[Number(ym.slice(5)) - 1] ?? ym,
+      sharePct: windowSum > 0 ? (monthTotals[i] / windowSum) * 100 : 0,
+      segments,
+    };
+  });
+
   if (isDemo) add("hero", "full", <DemoBanner key="demo" />);
   add("hero", "full",
     <ProfileHero
@@ -421,9 +492,19 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       signalHint={read.hint}
       tierChip={tierRaw}
       metrics={heroMetrics}
-      joinHref={C0VIBE_JOIN_HREF}
-      migrateHref={C0VIBE_MIGRATE_HREF}
       key="hero"
+    />);
+  // Directly under the hero: the flat logo toolbar, then the composed infographic board
+  // (pies=traits · bio · spiral=CLI distribution · columns=monthly spend) — the reference, 1:1.
+  add("hero", "full", <SourceToolbar brands={brands} key="toolbar" />);
+  add("hero", "full",
+    <InfographicBoard
+      traits={traits}
+      bioTitle={`@${profile.handle}`}
+      bioText={userBio || `${opsCompact} operations across ${facts.providers} sources and ${facts.categories} disciplines — ${formatUsd(facts.usd)} tracked over ${facts.days} active days. Set your own bio with vibetracker profile --bio.`}
+      cliSpiral={cliSpiral}
+      months={months}
+      key="board"
     />);
   add("hero", "full",
     <ProfileReadout
@@ -451,13 +532,10 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // The Signal read leads: archetype + measured skill signals + the reframed API-equivalent cost.
   // Money is the reference, not the headline — skill is what you see first.
   const signals = computeProfileSignals(profile);
-  // The identity plate leads: the brutalist infographic poster — discipline rings with % callouts
-  // and the earned-badge wall (hybrids stack badges; 2+ archetypes earns the all-rounder crest).
-  const opsCompact = facts.ops >= 1e9 ? `${(facts.ops / 1e9).toFixed(1)}B`
-    : facts.ops >= 1e6 ? `${Math.round(facts.ops / 1e6)}M`
-      : formatInt(facts.ops);
+  // The identity plate: archetype masthead + the earned-badge wall (hybrids stack badges; 2+
+  // archetypes earns the all-rounder crest). The trait pies live in the infographic board above.
   add("overview", "full",
-    <ViberIdentity signals={signals} disciplines={disciplines} opsValue={opsCompact} key="identity" />);
+    <ViberIdentity signals={signals} opsValue={opsCompact} key="identity" />);
   add("overview", "full", <SkillSignals signals={signals} apiCost={formatUsd(facts.usd)} key="signals" />);
   // Local derived orchestration evidence, shown only when the upload carried a usable trace.
   if (profile.orchestration && profile.orchestration.activityHours > 0) {

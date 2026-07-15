@@ -82,6 +82,24 @@
   border-radius: 0; padding: 20px 22px; min-width: 0;
 }
 
+/* Mobile un-boxing (user order 2026-07-15: no "all in a box" feeling): panels shed their frames
+   and become flowing poster sections — one hairline rule between sections, full-bleed content.
+   The hero band (own classes, not .vprofile-panel) sheds its card frame too — the banner art
+   carries the identity; the box never did. */
+@media (max-width: 700px) {
+  .vprofile { padding-inline: 14px; }
+  .vprofile-panel {
+    background: transparent; border: 0; padding: 22px 2px;
+    border-top: 1px solid rgba(217, 255, 242, 0.12);
+  }
+  .vprofile-grid { gap: 4px; }
+  .vprofile .vhero,
+  .vprofile .vprofile-readout,
+  .vprofile .vhero-evidence {
+    border: 0; border-radius: 0; background: transparent;
+  }
+}
+
 .vprofile-panel-head {
   display: flex; align-items: baseline; justify-content: space-between;
   gap: 12px; margin: 0 0 16px; padding-bottom: 10px;
