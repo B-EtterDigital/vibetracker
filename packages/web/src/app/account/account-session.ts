@@ -13,6 +13,16 @@ interface SessionLike {
   } | null;
 }
 
+const CANONICAL_ACCOUNT_ORIGIN = "https://vibeusage.c0vibe.app";
+
+function firstForwardedValue(value: string | null): string {
+  return value?.split(",", 1)[0]?.trim().toLowerCase() ?? "";
+}
+
+function isVibeUsagePreview(hostname: string): boolean {
+  return hostname === "vibeusage.netlify.app" || hostname.endsWith("--vibeusage.netlify.app");
+}
+
 function cleanText(value: unknown, max: number): string {
   return typeof value === "string" ? value.trim().replace(/[\u0000-\u001f\u007f]/g, "").slice(0, max) : "";
 }
@@ -60,6 +70,18 @@ export function safeNextPath(value: string | null | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+export function accountCallbackOrigin(request: Request): string {
+  const requestUrl = new URL(request.url);
+  const forwardedHost = firstForwardedValue(request.headers.get("x-forwarded-host"));
+  const host = forwardedHost || firstForwardedValue(request.headers.get("host"));
+
+  if (host === "vibeusage.c0vibe.app") return CANONICAL_ACCOUNT_ORIGIN;
+  if (host && isVibeUsagePreview(host)) return `https://${host}`;
+  if (requestUrl.hostname === "localhost" || requestUrl.hostname === "127.0.0.1") return requestUrl.origin;
+  if (requestUrl.hostname === "vibeusage.c0vibe.app") return CANONICAL_ACCOUNT_ORIGIN;
+  return CANONICAL_ACCOUNT_ORIGIN;
 }
 
 export function accountRedirectUrl(origin: string, next?: string | null): string {

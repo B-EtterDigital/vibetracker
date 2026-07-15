@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createConsoleTelemetry } from "../../../../../core/src/telemetry";
-import { safeNextPath } from "../../account/account-session";
+import { accountCallbackOrigin, safeNextPath } from "../../account/account-session";
 import { GitHubAccountLinkError, linkGitHubAccount } from "../../../lib/github-account-link";
 import { supabaseServer } from "../../../lib/supabase-server";
 
@@ -23,11 +23,12 @@ function redirect(origin: string, next: string | null, oauth: "success" | "denie
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  const origin = accountCallbackOrigin(request);
   const next = safeNextPath(url.searchParams.get("next"));
-  if (url.searchParams.has("error")) return redirect(url.origin, next, "denied");
+  if (url.searchParams.has("error")) return redirect(origin, next, "denied");
 
   const code = url.searchParams.get("code");
-  if (!code) return redirect(url.origin, next, "error");
+  if (!code) return redirect(origin, next, "error");
 
   try {
     const client = await supabaseServer();
@@ -37,13 +38,13 @@ export async function GET(request: Request) {
     }
 
     await linkGitHubAccount(data.user.id, data.session.provider_token);
-    return redirect(url.origin, next, "success");
+    return redirect(origin, next, "success");
   } catch (error) {
     telemetry.captureError(error, {
       area: "web.auth.github-callback",
       severity: error instanceof GitHubAccountLinkError && error.status < 500 ? "warn" : "error",
       code: error instanceof GitHubAccountLinkError ? error.code : "github_callback_failed",
     });
-    return redirect(url.origin, next, "error");
+    return redirect(origin, next, "error");
   }
 }

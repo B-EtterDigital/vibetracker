@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { accountIdentityFromSession, accountRedirectUrl, safeNextPath } from "../../app/account/account-session.ts";
+import {
+  accountCallbackOrigin,
+  accountIdentityFromSession,
+  accountRedirectUrl,
+  safeNextPath,
+} from "../../app/account/account-session.ts";
 import { c0vibeAuthorizationUrl, c0vibeBridgeMessage } from "../c0vibe-account-bridge.ts";
 
 const page = readFileSync("packages/web/src/app/account/page.tsx", "utf8");
@@ -44,6 +49,30 @@ test("account return paths stay same-origin and avoid account loops", () => {
   assert.equal(safeNextPath("//evil.example/path"), null);
   assert.equal(safeNextPath("/account"), null);
   assert.equal(accountRedirectUrl("https://vibeusage.c0vibe.app", "/proof"), "https://vibeusage.c0vibe.app/auth/callback?next=%2Fproof");
+});
+
+test("OAuth callbacks prefer the canonical public host over Netlify's deploy URL", () => {
+  const production = new Request("https://6a574a33eabc1336f651c7d4--vibeusage.netlify.app/auth/callback", {
+    headers: { host: "vibeusage.c0vibe.app" },
+  });
+  const forwarded = new Request("https://6a574a33eabc1336f651c7d4--vibeusage.netlify.app/auth/callback", {
+    headers: { "x-forwarded-host": "vibeusage.c0vibe.app, internal.netlify" },
+  });
+  const preview = new Request("https://deploy-preview-42--vibeusage.netlify.app/auth/callback", {
+    headers: { host: "deploy-preview-42--vibeusage.netlify.app" },
+  });
+  const spoofed = new Request("https://internal.example/auth/callback", {
+    headers: { host: "evil.example" },
+  });
+  const local = new Request("http://localhost:3000/auth/callback");
+
+  assert.equal(accountCallbackOrigin(production), "https://vibeusage.c0vibe.app");
+  assert.equal(accountCallbackOrigin(forwarded), "https://vibeusage.c0vibe.app");
+  assert.equal(accountCallbackOrigin(preview), "https://deploy-preview-42--vibeusage.netlify.app");
+  assert.equal(accountCallbackOrigin(spoofed), "https://vibeusage.c0vibe.app");
+  assert.equal(accountCallbackOrigin(local), "http://localhost:3000");
+  assert.match(callback, /const origin = accountCallbackOrigin\(request\)/);
+  assert.doesNotMatch(callback, /redirect\(url\.origin/);
 });
 
 test("C0VIBE migration uses a bounded one-time claim and fixed WorkOS entrypoint", () => {
