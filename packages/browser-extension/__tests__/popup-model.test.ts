@@ -56,8 +56,13 @@ test("browser extension manifest and popup load the module cockpit", () => {
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.background.type, "module");
   assert.equal(manifest.action.default_popup, "popup.html");
+  // cookies permission + the connectable hosts must be declared for one-click connect
+  assert.ok(manifest.permissions.includes("cookies"));
+  assert.ok(manifest.host_permissions.includes("https://suno.com/*"));
+  assert.ok(manifest.host_permissions.includes("https://udio.com/*"));
   assert.match(popup, /popup\.css/);
   assert.match(popup, /type="module" src="popup\.js"/);
-  assert.match(popup, /No prompt text, no page scraping, no upload/);
+  assert.match(popup, /Nothing leaves your machine/);
+  assert.match(popup, /Connect this site/);
   assert.match(popup, /Vibers Unite/);
 });

@@ -38,6 +38,10 @@ function optionalProviderModelStorageError(message: string): boolean {
   return /vibetracker_submission_provider_models|schema cache|does not exist|relation .* not found/i.test(message);
 }
 
+function optionalNativeMetricStorageError(message: string): boolean {
+  return /vibetracker_submission_native_metrics|schema cache|does not exist|relation .* not found/i.test(message);
+}
+
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -251,6 +255,27 @@ async function sha256Hex(input: string): Promise<string> {
     }
   }
 
+  let nativeMetricsPersisted = 0;
+  let nativeMetricWarning: string | undefined;
+  if (result.byNativeMetric.length) {
+    const rows = result.byNativeMetric.map((r) => ({
+      submission_id: sub.id,
+      provider: r.provider,
+      category: r.category,
+      output_unit: r.outputUnit,
+      outputs: r.outputs,
+      duration_seconds: r.durationSeconds,
+    }));
+    const { error: nmErr } = await admin.from("vibetracker_submission_native_metrics").insert(rows);
+    if (nmErr) {
+      nativeMetricWarning = optionalNativeMetricStorageError(nmErr.message)
+        ? "native media aggregate table not deployed yet; profile shows operations without output count or duration"
+        : `native metrics: ${nmErr.message}`;
+    } else {
+      nativeMetricsPersisted = rows.length;
+    }
+  }
+
   let trustSignalsPersisted = 0;
   let trustSignalWarning: string | undefined;
   if (result.trustSignals.length) {
@@ -325,6 +350,8 @@ async function sha256Hex(input: string): Promise<string> {
     ...(providerDailyWarning ? { providerDailyWarning } : {}),
     providerModelsPersisted,
     ...(providerModelWarning ? { providerModelWarning } : {}),
+    nativeMetricsPersisted,
+    ...(nativeMetricWarning ? { nativeMetricWarning } : {}),
     trustSignals: result.trustSignals.length,
     trustSignalsPersisted,
     ...(trustSignalWarning ? { trustSignalWarning } : {}),

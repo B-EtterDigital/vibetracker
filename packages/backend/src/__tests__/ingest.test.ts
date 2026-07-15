@@ -194,6 +194,28 @@ test("totals + byProvider computed server-side from sanitized data", () => {
   assert.equal(res.byDay[1]?.ops, 1);
 });
 
+test("native media outputs aggregate separately without inflating operations", () => {
+  const res = handleIngest({
+    handle: "musicmation",
+    records: [
+      rec({ provider: "cynaps3", category: "music", operation: "generate", outputQuantity: 2, outputUnit: "track", durationSeconds: 241.2, rawAmount: 10 }),
+      rec({ provider: "cynaps3", category: "music", operation: "extend", outputQuantity: 2, outputUnit: "track", durationSeconds: 241.3, rawAmount: 8 }),
+      rec({ provider: "cynaps3", category: "music", operation: "generate", outputQuantity: 0, outputUnit: "track", durationSeconds: 0, rawAmount: 0 }),
+    ],
+  });
+
+  assert.equal(res.accepted, 3);
+  assert.equal(res.totals.count, 3);
+  assert.equal(res.byCategory[0]?.ops, 3);
+  assert.deepEqual(res.byNativeMetric, [{
+    provider: "cynaps3",
+    category: "music",
+    outputUnit: "track",
+    outputs: 4,
+    durationSeconds: 482.5,
+  }]);
+});
+
 test("non-object / missing records payloads fail safe", () => {
   assert.equal(handleIngest(null).accepted, 0);
   assert.equal(handleIngest({ handle: "x" }).accepted, 0);

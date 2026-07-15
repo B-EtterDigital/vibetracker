@@ -7,6 +7,10 @@ export type Category =
 export type Unit =
   | "token" | "image" | "clip" | "second" | "character" | "credit" | "request";
 
+// A provider-native creation count kept separate from quantity. `quantity` remains the
+// operation/billing unit used by every existing rollup; this field answers what was made.
+export type NativeOutputUnit = "track" | "image" | "clip" | "file";
+
 /** How the record was obtained — drives the trust/confidence UI. */
 export type Source =
   | "ledger"        // real per-op transaction history (best)
@@ -29,6 +33,9 @@ export interface NormalizedRecord {
   unit: Unit;
   rawAmount: number;     // native cost (credits / tokens / seconds)
   rawUnit: string;       // "credits" | "tokens" | ...
+  outputQuantity?: number; // provider-native outputs created by this operation
+  outputUnit?: NativeOutputUnit;
+  durationSeconds?: number; // duration of those outputs, when the provider reports it
   usdEst?: number;       // derived, best-effort — NEVER the source of truth
   source: Source;
   confidence: Confidence;

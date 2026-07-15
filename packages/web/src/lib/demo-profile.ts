@@ -175,7 +175,11 @@ export function buildDemoProfile(): ProfileView {
     usageDays: usdCents.map((cents, i) => ({ date: dayDate(i), ops: ops[i], credits: credits[i], usd: cents / 100 })),
     categories: CATEGORY_ROWS.map((row) => ({ ...row })),
     providerDays: demoProviderDays(),
-    providerModels: [], trustSignals: structuredClone(TRUST_SIGNALS),
+    providerModels: [],
+    nativeMetrics: [
+      { provider: "suno", category: "music", outputUnit: "track", outputs: 1840, durationSeconds: 496_800 },
+    ],
+    trustSignals: structuredClone(TRUST_SIGNALS),
     // Sample token-breakdown + cross-provider delegation so /u/demo showcases those panels. Whole
     // numbers, cache-read dominant (the honest agentic-coding signature), a two-agent orchestration.
     totalTokens: 61_400_000_000,

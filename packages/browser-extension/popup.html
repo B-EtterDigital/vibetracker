@@ -7,11 +7,11 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <main class="capture-shell" aria-label="VibeTRACKER browser capture cockpit">
+  <main class="capture-shell" aria-label="VibeTRACKER browser cockpit">
     <header>
-      <span>VTK://BROWSER-CAPTURE</span>
-      <h1>Vibe Capture</h1>
-      <p>Explicitly mark an AI web tab as local usage evidence. No prompt text, no page scraping, no upload.</p>
+      <span>VTK://BROWSER-BRIDGE</span>
+      <h1>Vibe Bridge</h1>
+      <p>Connect cookie-only AI sources in one click, or mark any AI tab as local usage. Nothing leaves your machine.</p>
     </header>
 
     <section class="provider-card" aria-label="Active provider preview">
@@ -23,20 +23,35 @@
       </div>
     </section>
 
-    <pre id="terminal" aria-label="Capture terminal">VTRK://BROWSER-CAPTURE
+    <!-- Connect card — appears when the active tab is a supported cookie-only source -->
+    <section class="connect-card" id="connect-card" hidden aria-label="One-click connect">
+      <div class="connect-head">
+        <b id="connect-label">Suno</b>
+        <small>logged-in session · one click · straight to your OS keyring</small>
+      </div>
+      <button id="connect" type="button" class="primary">
+        <span id="connect-cta">Connect this site</span>
+        <i aria-hidden="true">→</i>
+      </button>
+    </section>
+
+    <pre id="terminal" aria-label="Bridge terminal">VTRK://BROWSER-BRIDGE
 waiting for active tab
 run local API first</pre>
 
-    <div class="rails" aria-label="Capture boundaries">
-      <div><b>Local</b><span>POST /capture on 127.0.0.1:8765</span></div>
-      <div><b>Low confidence</b><span>Manual browser signal, never verified by itself</span></div>
-      <div><b>Private</b><span>URL, title, category only; no content capture</span></div>
+    <div class="rails" aria-label="Boundaries">
+      <div><b>Local</b><span>127.0.0.1:8765 only — never the internet</span></div>
+      <div><b>Keyring</b><span>Session cookie → your OS keyring, never shown</span></div>
+      <div><b>Explicit</b><span>Only the site you're on, only its session cookie</span></div>
     </div>
 
-    <button id="capture" type="button">
-      <span>Capture active tab</span>
-      <i aria-hidden="true">↵</i>
-    </button>
+    <details class="capture-fold">
+      <summary>Mark this tab as usage (manual)</summary>
+      <button id="capture" type="button">
+        <span>Capture active tab</span>
+        <i aria-hidden="true">↵</i>
+      </button>
+    </details>
 
     <output id="status" role="status">Run: vibetracker api serve --port 8765</output>
     <footer>Vibers Unite · c0vibe.app</footer>

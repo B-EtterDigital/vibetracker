@@ -37,6 +37,7 @@ import { InfographicBoard, type BoardSpec } from "./profile-board";
 import { SkillSignals } from "./profile-signals";
 import { computeProfileSignals } from "../../../lib/profile-signals";
 import { levelFor, fmtMeasure } from "../../../lib/viber-levels";
+import { nativeUsageLine } from "../../../lib/native-usage-metrics";
 import { FlipToC0vibe } from "./profile-flip";
 import { UsageTelemetry } from "./profile-telemetry";
 import { buildTelemetryModel } from "./profile-telemetry-model";
@@ -281,16 +282,23 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // Older submissions predate that aggregate: fall back to the provider-primary rollup so
   // their profiles still render.
   const categorySource = profile.categories.length > 0
-    ? profile.categories.map((c) => ({ id: c.category, ops: c.ops, usd: c.usd }))
+    ? profile.categories.map((c) => ({ id: c.category, ops: c.ops, credits: c.credits, usd: c.usd }))
     : (() => {
         const ops = new Map<string, number>();
+        const credits = new Map<string, number>();
         const usd = new Map<string, number>();
         for (const p of profile.providers) {
           const category = primaryCategory(p.provider);
           ops.set(category, (ops.get(category) ?? 0) + p.ops);
+          credits.set(category, (credits.get(category) ?? 0) + p.credits);
           usd.set(category, (usd.get(category) ?? 0) + p.usd);
         }
-        return [...ops.entries()].map(([id, o]) => ({ id, ops: o, usd: usd.get(id) ?? 0 }));
+        return [...ops.entries()].map(([id, o]) => ({
+          id,
+          ops: o,
+          credits: credits.get(id) ?? 0,
+          usd: usd.get(id) ?? 0,
+        }));
       })();
   const opsTotal = categorySource.reduce((sum, c) => sum + c.ops, 0);
   const categories = categorySource
@@ -299,7 +307,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     .map((c): MixBar => ({
       id: c.id,
       label: vibeLabel(c.id),
-      amount: `${formatInt(c.ops)} ops · ${formatUsd(c.usd)} · ${shareLabel(c.ops, opsTotal)}%`,
+      amount: `${formatInt(c.ops)} ops · ${formatInt(c.credits)} cr · ${formatUsd(c.usd)} · ${shareLabel(c.ops, opsTotal)}%`,
       share: opsTotal > 0 ? (c.ops / opsTotal) * 100 : 0,
     }));
 
@@ -556,6 +564,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     const sourceNames = provs ? [...provs].map((p) => providerLabel(p)) : [];
     const topModelNames = spiral.slice(0, 3).map((s) => s.label);
     const raw = categorySource.find((s) => s.id === c.id);
+    const nativeLine = nativeUsageLine(profile.nativeMetrics, c.id);
     specs[c.id] = {
       id: c.id,
       label: c.label,
@@ -567,7 +576,8 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       story: {
         title: c.label.toLowerCase(),
         bullets: [
-          `${c.share >= 1 ? Math.round(c.share) : "<1"}% of all operations — ${formatInt(Math.round(raw?.ops ?? 0))} ops · ${formatUsd(raw?.usd ?? 0)}`,
+          `${c.share >= 1 ? Math.round(c.share) : "<1"}% of all operations — ${formatInt(Math.round(raw?.ops ?? 0))} ops · ${formatInt(raw?.credits ?? 0)} credits · ${formatUsd(raw?.usd ?? 0)} API-equivalent`,
+          ...(nativeLine ? [nativeLine] : []),
           ...(topModelNames.length ? [`top models: ${topModelNames.join(" · ")}`] : []),
           ...(sourceNames.length ? [`sources: ${sourceNames.join(" · ")}`] : []),
         ],

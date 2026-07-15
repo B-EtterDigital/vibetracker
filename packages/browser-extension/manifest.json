@@ -1,10 +1,28 @@
 {
   "manifest_version": 3,
   "name": "VibeTRACKER Capture",
-  "version": "0.1.0",
-  "description": "Capture explicit AI web activity into the local VibeTRACKER ledger.",
-  "permissions": ["activeTab", "scripting"],
-  "host_permissions": ["http://127.0.0.1:8765/*", "http://localhost:8765/*"],
+  "version": "0.2.0",
+  "description": "Capture explicit AI web activity and one-click connect cookie-only AI sources into your local VibeTRACKER ledger.",
+  "permissions": ["activeTab", "scripting", "cookies"],
+  "host_permissions": [
+    "http://127.0.0.1:8765/*",
+    "http://localhost:8765/*",
+    "https://suno.com/*",
+    "https://www.suno.com/*",
+    "https://udio.com/*",
+    "https://www.udio.com/*",
+    "https://seaart.ai/*",
+    "https://www.seaart.ai/*",
+    "https://tensor.art/*",
+    "https://www.tensor.art/*",
+    "https://pixverse.ai/*",
+    "https://app.pixverse.ai/*",
+    "https://vidu.com/*",
+    "https://www.vidu.com/*",
+    "https://vidu.studio/*",
+    "https://haiper.ai/*",
+    "https://app.haiper.ai/*"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Capture AI activity"

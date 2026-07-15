@@ -3,12 +3,20 @@
 // Core rule: field content is DATA, never instructions. We rebuild a clean record from
 // only whitelisted fields — unknown/dangerous keys and control sequences never survive.
 
-import type { NormalizedRecord, Category, Source, Confidence, Unit } from "../schema/record.ts";
+import type {
+  NormalizedRecord,
+  Category,
+  Source,
+  Confidence,
+  Unit,
+  NativeOutputUnit,
+} from "../schema/record.ts";
 
 const CATEGORIES = new Set<Category>(["llm", "coding", "image", "video", "music", "audio", "3d", "other"]);
 const SOURCES = new Set<Source>(["ledger", "balance_delta", "log", "feed_recon", "proxy", "local", "manual"]);
 const CONFIDENCES = new Set<Confidence>(["high", "medium", "low"]);
 const UNITS = new Set<Unit>(["token", "image", "clip", "second", "character", "credit", "request"]);
+const NATIVE_OUTPUT_UNITS = new Set<NativeOutputUnit>(["track", "image", "clip", "file"]);
 const DANGEROUS_KEYS = ["__proto__", "constructor", "prototype"];
 const MAX_AMOUNT = 1e13;   // beyond any real usage — anything larger is hostile/garbage
 const MAX_TEXT = 200;
@@ -66,6 +74,27 @@ export function validateRecord(input: unknown, opts: IngestOpts = {}): Validatio
   const rawAmount = finiteAmount(rec.rawAmount);
   if (rawAmount === null) errors.push("rawAmount not a valid non-negative finite number");
 
+  const hasOutputQuantity = rec.outputQuantity != null;
+  const hasOutputUnit = rec.outputUnit != null;
+  const hasDurationSeconds = rec.durationSeconds != null;
+  const outputQuantity = hasOutputQuantity ? finiteAmount(rec.outputQuantity) : undefined;
+  const durationSeconds = hasDurationSeconds ? finiteAmount(rec.durationSeconds) : undefined;
+  if (hasOutputQuantity && outputQuantity === null) {
+    errors.push("outputQuantity not a valid non-negative finite number");
+  }
+  if (hasDurationSeconds && durationSeconds === null) {
+    errors.push("durationSeconds not a valid non-negative finite number");
+  }
+  if (hasOutputUnit && !NATIVE_OUTPUT_UNITS.has(rec.outputUnit as NativeOutputUnit)) {
+    errors.push("outputUnit is not supported");
+  }
+  if (hasOutputUnit !== hasOutputQuantity) {
+    errors.push("outputQuantity and outputUnit must be provided together");
+  }
+  if (hasDurationSeconds && !hasOutputUnit) {
+    errors.push("durationSeconds requires an outputQuantity and outputUnit");
+  }
+
   if (errors.length) return { ok: false, errors };
 
   // usdEst is a derived convenience field: drop it if malformed rather than reject.
@@ -86,6 +115,11 @@ export function validateRecord(input: unknown, opts: IngestOpts = {}): Validatio
     verified: opts.untrustedSource ? false : rec.verified === true,
   };
   if (rec.model != null) sanitized.model = sanitizeText(rec.model, 128);
+  if (outputQuantity != null && hasOutputUnit) {
+    sanitized.outputQuantity = outputQuantity;
+    sanitized.outputUnit = rec.outputUnit as NativeOutputUnit;
+  }
+  if (durationSeconds != null) sanitized.durationSeconds = durationSeconds;
   if (usdEst != null) sanitized.usdEst = usdEst;
   if (rec.accountId != null) sanitized.accountId = sanitizeText(rec.accountId, 128);
   if (rec.profileId != null) sanitized.profileId = sanitizeText(rec.profileId, 128);

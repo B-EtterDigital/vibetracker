@@ -62,6 +62,7 @@ export interface ProfileView {
   categories: Array<{ category: string; ops: number; credits: number; usd: number }>;
   providerDays: Array<{ provider: string; date: string; ops: number; credits: number; usd: number }>;
   providerModels: Array<{ provider: string; model: string; ops: number; credits: number; usd: number }>;
+  nativeMetrics?: Array<{ provider: string; category: string; outputUnit: string; outputs: number; durationSeconds: number }>;
   trustSignals: ProfileTrustSignal[];
   // Additive aggregates — optional so demo/fixture ProfileView constructors need not supply them.
   totalTokens?: number;
@@ -252,6 +253,34 @@ async function providerModelsFor(submissionId: string): Promise<ProfileView["pro
   }).filter((row) => row.provider.length > 0 && row.model.length > 0);
 }
 
+async function nativeMetricsFor(submissionId: string): Promise<NonNullable<ProfileView["nativeMetrics"]>> {
+  const { data, error } = await supabaseServer()
+    .from("vibetracker_submission_native_metrics")
+    .select("provider,category,output_unit,outputs,duration_seconds")
+    .eq("submission_id", submissionId)
+    .limit(2000);
+  if (error) {
+    reportOptionalFallback("profile.native-metrics.fallback", error);
+    return [];
+  }
+  return (data ?? []).map((row) => {
+    const r = row as {
+      provider?: string;
+      category?: string;
+      output_unit?: string;
+      outputs?: number;
+      duration_seconds?: number;
+    };
+    return {
+      provider: String(r.provider ?? ""),
+      category: String(r.category ?? ""),
+      outputUnit: String(r.output_unit ?? ""),
+      outputs: Number(r.outputs ?? 0),
+      durationSeconds: Number(r.duration_seconds ?? 0),
+    };
+  }).filter((row) => row.provider.length > 0 && row.category.length > 0 && row.outputUnit.length > 0);
+}
+
 export async function getProfile(handle: string): Promise<ProfileView | null> {
   try {
     const sb = supabaseServer();
@@ -287,6 +316,7 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
     const categories = latest ? await categoriesFor(latest.id) : [];
     const providerDays = latest ? await providerDaysFor(latest.id) : [];
     const providerModels = latest ? await providerModelsFor(latest.id) : [];
+    const nativeMetrics = latest ? await nativeMetricsFor(latest.id) : [];
     const trustSignals = latest ? await trustSignalsFor(latest.id) : [];
     const tokenBreakdown = latest ? await tokenBreakdownFor(latest.id) : [];
     const agents = latest ? await agentsFor(latest.id) : [];
@@ -308,6 +338,7 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
       categories,
       providerDays,
       providerModels,
+      nativeMetrics,
       trustSignals,
       totalTokens: Number((latest as { total_tokens?: number } | null)?.total_tokens ?? 0),
       crossProviderDays: Number((latest as { cross_provider_days?: number } | null)?.cross_provider_days ?? 0),

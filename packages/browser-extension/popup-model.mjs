@@ -1,4 +1,25 @@
 export const CAPTURE_ENDPOINT = "http://127.0.0.1:8765/capture";
+export const CONNECT_ENDPOINT = "http://127.0.0.1:8765/connect";
+
+// A human line describing what a successful connect did — no credential value, names only.
+export function statusForConnect(response) {
+  if (response?.ok) {
+    const fields = Array.isArray(response.captured) ? response.captured.length : 0;
+    return {
+      state: "ok",
+      label: `${response.label || response.provider || "source"} connected`,
+      detail: response.pending
+        ? `Session saved to your OS keyring. This source's importer is still landing — it will sync once ready.`
+        : `Session saved to your OS keyring (${fields} secret${fields === 1 ? "" : "s"}). Run \`vibetracker sync\` to pull it.`,
+    };
+  }
+  const status = response?.status || "offline";
+  return {
+    state: "error",
+    label: `connect failed${response?.status ? ` (${status})` : ""}`,
+    detail: response?.error || "Run: vibetracker api serve --port 8765",
+  };
+}
 
 const PROVIDERS = [
   { id: "openai-web", label: "ChatGPT", mark: "OA", category: "llm", from: "#10a37f", to: "#6ee7c8", hosts: /chatgpt|openai/ },

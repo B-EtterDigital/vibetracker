@@ -24,7 +24,23 @@ export interface LocalApiDeps {
   readRecords: () => NormalizedRecord[];
   appendRecords: (records: NormalizedRecord[]) => void;
   log: (line: string) => void;
+  // Store cookie-only credentials handed over by the browser extension's one-click connect.
+  // Returns the credential FIELD NAMES stored (never values) so the response can confirm without
+  // exposing the secret. Absent → the /connect route is disabled.
+  connectProvider?: (provider: string, fields: Record<string, string>) => { stored: string[]; keyring: boolean };
 }
+
+// The cookie-only sources the extension may connect. Kept here (not from the adapter registry) so
+// the local API has an explicit allowlist — a rogue POST can never store creds for an arbitrary id.
+const CONNECTABLE_PROVIDERS: Record<string, string[]> = {
+  suno: ["sessionCookie"],
+  udio: ["sessionToken"],
+  seaart: ["sessionToken"],
+  tensorart: ["sessionToken"],
+  pixverse: ["sessionToken"],
+  vidu: ["sessionToken"],
+  haiper: ["sessionToken"],
+};
 
 export interface LocalApiSession {
   server: Server;
@@ -62,7 +78,27 @@ function requestOrigin(req: IncomingMessage): string | undefined {
 function originAllowed(origin: string | undefined, pathname: string): boolean {
   if (!origin) return true;
   if (isDashboardOrigin(origin)) return true;
-  return pathname === "/capture" && origin.startsWith("chrome-extension://");
+  // the extension talks to /capture and /connect from its chrome-extension:// origin
+  return (pathname === "/capture" || pathname === "/connect") && origin.startsWith("chrome-extension://");
+}
+
+// Validate a /connect body: known provider, and only its allowlisted fields, each a non-empty
+// string of sane length. Returns the sanitized creds or an error reason — never logs a value.
+function validateConnect(body: unknown): { provider: string; fields: Record<string, string> } | { error: string } {
+  if (!body || typeof body !== "object") return { error: "invalid body" };
+  const provider = (body as { provider?: unknown }).provider;
+  if (typeof provider !== "string" || !CONNECTABLE_PROVIDERS[provider]) return { error: "unknown or non-connectable provider" };
+  const allowed = CONNECTABLE_PROVIDERS[provider];
+  const raw = (body as { fields?: unknown }).fields;
+  if (!raw || typeof raw !== "object") return { error: "missing fields" };
+  const fields: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (!allowed.includes(key)) return { error: `field not allowed for ${provider}: ${key}` };
+    if (typeof value !== "string" || !value.trim() || value.length > 8192) return { error: `invalid value for ${key}` };
+    fields[key] = value.trim();
+  }
+  if (!Object.keys(fields).length) return { error: "no credential fields supplied" };
+  return { provider, fields };
 }
 
 function corsHeaders(req: IncomingMessage, pathname: string): Record<string, string> {
@@ -158,8 +194,9 @@ export async function startLocalApiServer(opts: StartLocalApiOptions): Promise<L
       return;
     }
 
-    const extensionCapture = url.pathname === "/capture" && origin?.startsWith("chrome-extension://");
-    if (!extensionCapture && !bearerMatches(req, token)) {
+    const extensionWrite = (url.pathname === "/capture" || url.pathname === "/connect")
+      && origin?.startsWith("chrome-extension://");
+    if (!extensionWrite && !bearerMatches(req, token)) {
       json(req, res, 401, { error: "session token required" }, url.pathname);
       return;
     }
@@ -186,6 +223,23 @@ export async function startLocalApiServer(opts: StartLocalApiOptions): Promise<L
         const { accepted, rejected } = ingestRecords([captureEventToRecord(payload)], { untrustedSource: true });
         if (accepted.length) opts.deps.appendRecords(accepted);
         json(req, res, rejected.length ? 400 : 200, { accepted: accepted.length, rejected }, url.pathname);
+        return;
+      }
+      if (req.method === "POST" && url.pathname === "/connect") {
+        if (!opts.deps.connectProvider) {
+          json(req, res, 501, { error: "connect not enabled on this local API" }, url.pathname);
+          return;
+        }
+        const validated = validateConnect(JSON.parse(await readBody(req)));
+        if ("error" in validated) {
+          // log the REASON only — never the body/value
+          opts.deps.log(`[vibetracker-api] /connect rejected: ${validated.error}`);
+          json(req, res, 400, { error: validated.error }, url.pathname);
+          return;
+        }
+        const { stored, keyring } = opts.deps.connectProvider(validated.provider, validated.fields);
+        opts.deps.log(`[vibetracker-api] connected ${validated.provider} — ${stored.length} secret(s) → ${keyring ? "keyring" : "config (mode 600)"}`);
+        json(req, res, 200, { ok: true, provider: validated.provider, stored, keyring }, url.pathname);
         return;
       }
       json(req, res, 404, { error: "not found" }, url.pathname);

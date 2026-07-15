@@ -84,3 +84,79 @@ test("local API protects usage reads and issues a fragment-only dashboard sessio
     await new Promise<void>((resolve, reject) => session.server.close((error) => error ? reject(error) : resolve()));
   }
 });
+
+test("local API /connect stores allowlisted cookie creds without leaking values", async () => {
+  const stored: Array<{ provider: string; fields: string[] }> = [];
+  const logs: string[] = [];
+  const session = await startLocalApiServer({
+    port: 0,
+    token: "test-session-token",
+    deps: {
+      readRecords: () => [],
+      appendRecords: () => {},
+      log: (line) => logs.push(line),
+      connectProvider: (provider, fields) => {
+        stored.push({ provider, fields: Object.keys(fields) });
+        return { stored: Object.keys(fields), keyring: true };
+      },
+    },
+  });
+  const base = `http://127.0.0.1:${session.port}`;
+  const ext = "chrome-extension://vibetracker-test";
+  try {
+    // happy path: known provider, allowlisted field, from the extension origin
+    const ok = await fetch(`${base}/connect`, {
+      method: "POST",
+      headers: { origin: ext, "content-type": "application/json" },
+      body: JSON.stringify({ provider: "suno", fields: { sessionCookie: "SECRET_VALUE" } }),
+    });
+    assert.equal(ok.status, 200);
+    const okBody = await ok.json() as { provider: string; stored: string[] };
+    assert.equal(okBody.provider, "suno");
+    assert.deepEqual(okBody.stored, ["sessionCookie"]);
+    assert.equal(stored[0].provider, "suno");
+    // the secret value must never appear in any server log line
+    assert.equal(logs.some((l) => l.includes("SECRET_VALUE")), false);
+
+    // unknown provider is refused
+    const badProvider = await fetch(`${base}/connect`, {
+      method: "POST", headers: { origin: ext, "content-type": "application/json" },
+      body: JSON.stringify({ provider: "evil", fields: { sessionCookie: "x" } }),
+    });
+    assert.equal(badProvider.status, 400);
+
+    // a field not on the provider's allowlist is refused
+    const badField = await fetch(`${base}/connect`, {
+      method: "POST", headers: { origin: ext, "content-type": "application/json" },
+      body: JSON.stringify({ provider: "suno", fields: { apiKey: "x" } }),
+    });
+    assert.equal(badField.status, 400);
+
+    // a non-extension origin cannot reach /connect at all
+    const hostile = await fetch(`${base}/connect`, {
+      method: "POST", headers: { origin: "https://hostile.example", "content-type": "application/json" },
+      body: JSON.stringify({ provider: "suno", fields: { sessionCookie: "x" } }),
+    });
+    assert.equal(hostile.status, 403);
+  } finally {
+    await new Promise<void>((resolve, reject) => session.server.close((error) => error ? reject(error) : resolve()));
+  }
+});
+
+test("local API /connect is disabled when the CLI does not provide connectProvider", async () => {
+  const session = await startLocalApiServer({
+    port: 0, token: "t",
+    deps: { readRecords: () => [], appendRecords: () => {}, log: () => {} },
+  });
+  const base = `http://127.0.0.1:${session.port}`;
+  try {
+    const res = await fetch(`${base}/connect`, {
+      method: "POST",
+      headers: { origin: "chrome-extension://x", "content-type": "application/json" },
+      body: JSON.stringify({ provider: "suno", fields: { sessionCookie: "x" } }),
+    });
+    assert.equal(res.status, 501);
+  } finally {
+    await new Promise<void>((resolve, reject) => session.server.close((error) => error ? reject(error) : resolve()));
+  }
+});

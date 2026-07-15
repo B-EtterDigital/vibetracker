@@ -1382,6 +1382,15 @@ async function main() {
         readRecords: () => readRecords(STORE),
         appendRecords: (records) => appendRecords(STORE, records),
         log: (line) => console.log(line),
+        // One-click connect from the browser extension: store the cookie in the keyring exactly as
+        // `vibetracker connect` would. The value is written straight to the keyring and never logged.
+        connectProvider: (provider, fields) => {
+          const cfg = loadConfig();
+          const keyring = storeProviderCreds(cfg, provider, fields);
+          if (!cfg.enabled.includes(provider)) cfg.enabled.push(provider);
+          saveConfig(cfg);
+          return { stored: Object.keys(fields), keyring };
+        },
       },
     });
     return;

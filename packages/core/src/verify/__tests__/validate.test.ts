@@ -52,6 +52,35 @@ test("unknown category/source/unit are coerced to safe defaults", () => {
   assert.equal(res.sanitized!.unit, "request");
 });
 
+test("native media metrics survive the whitelist without changing operation quantity", () => {
+  const res = validateRecord({
+    ...good,
+    quantity: 1,
+    outputQuantity: 2,
+    outputUnit: "track",
+    durationSeconds: 241.25,
+  });
+  assert.equal(res.ok, true);
+  assert.equal(res.sanitized!.quantity, 1);
+  assert.equal(res.sanitized!.outputQuantity, 2);
+  assert.equal(res.sanitized!.outputUnit, "track");
+  assert.equal(res.sanitized!.durationSeconds, 241.25);
+});
+
+test("malformed or partial native media metrics fail closed", () => {
+  for (const candidate of [
+    { outputQuantity: -1, outputUnit: "track" },
+    { outputQuantity: Infinity, outputUnit: "track" },
+    { outputQuantity: 1 },
+    { outputUnit: "track" },
+    { outputQuantity: 1, outputUnit: "song" },
+    { durationSeconds: 30 },
+    { outputQuantity: 1, outputUnit: "track", durationSeconds: -1 },
+  ]) {
+    assert.equal(validateRecord({ ...good, ...candidate }).ok, false, JSON.stringify(candidate));
+  }
+});
+
 test("ingestRecords separates accepted from rejected without dropping silently", () => {
   const { accepted, rejected } = ingestRecords([good, { ...good, rawAmount: -1 }, "not-an-object"]);
   assert.equal(accepted.length, 1);

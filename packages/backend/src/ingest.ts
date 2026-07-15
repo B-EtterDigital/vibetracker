@@ -12,6 +12,7 @@
 
 import { ingestRecords } from "../../core/src/verify/validate.ts";
 import { aggregate, totals } from "../../core/src/aggregate.ts";
+import type { NativeOutputUnit, NormalizedRecord } from "../../core/src/schema/record.ts";
 import type { CreatorPlatform, GitHubContributionDay, TrustSignal } from "../../core/src/schema/trust-signal.ts";
 
 export interface UploadBundle {
@@ -28,6 +29,13 @@ export interface DailyRollup { date: string; ops: number; credits: number; usd?:
 export interface CategoryRollup { category: string; ops: number; credits: number; usd?: number }
 export interface ProviderDailyRollup { provider: string; date: string; ops: number; credits: number; usd?: number }
 export interface ProviderModelRollup { provider: string; model: string; ops: number; credits: number; usd?: number }
+export interface NativeMetricRollup {
+  provider: string;
+  category: string;
+  outputUnit: NativeOutputUnit;
+  outputs: number;
+  durationSeconds: number;
+}
 
 export interface IngestResult {
   ok: boolean;
@@ -48,11 +56,13 @@ export interface IngestResult {
                                              // click-a-provider-into-the-chart + all-together overlay
   byProviderModel: ProviderModelRollup[];    // per-provider model breakdown — "click a source, see
                                              // which models you used" (opus/fable vs gpt vs Kling…)
+  byNativeMetric: NativeMetricRollup[];      // what media operations produced, kept separate from ops
   trustSignals: TrustSignal[];               // labelled evidence only; never counted in totals
 }
 
 const MAX_PROVIDER_DAY_ROWS = 8_000;         // 10 providers × ~2 years of days — a hard abuse ceiling
 const MAX_PROVIDER_MODEL_ROWS = 2_000;       // far above any real per-provider model count
+const MAX_NATIVE_METRIC_ROWS = 2_000;
 
 const MAX_RECORDS = 200_000;
 const MAX_TRUST_SIGNALS = 8;
@@ -238,6 +248,27 @@ export function handleIngest(payload: unknown, opts: { userId?: string; identity
     .sort((a, b) => (a.provider < b.provider ? -1 : a.provider > b.provider ? 1 : (b.usd ?? 0) - (a.usd ?? 0) || b.ops - a.ops))
     .slice(0, MAX_PROVIDER_MODEL_ROWS);
 
+  // Native outputs are an additive answer to "what did this operation create?". They never
+  // enter aggregate()/totals(), so two tracks from one generation remain one operation.
+  const nativeMetricMap = new Map<string, NativeMetricRollup>();
+  for (const r of accepted) {
+    if (r.outputQuantity == null || r.outputUnit == null) continue;
+    const key = `${r.provider}\t${r.category}\t${r.outputUnit}`;
+    const row = nativeMetricMap.get(key) ?? {
+      provider: r.provider,
+      category: r.category,
+      outputUnit: r.outputUnit,
+      outputs: 0,
+      durationSeconds: 0,
+    };
+    row.outputs = Number((row.outputs + r.outputQuantity).toFixed(4));
+    row.durationSeconds = Number((row.durationSeconds + (r.durationSeconds ?? 0)).toFixed(4));
+    nativeMetricMap.set(key, row);
+  }
+  const byNativeMetric = [...nativeMetricMap.values()]
+    .sort((a, b) => a.provider.localeCompare(b.provider) || a.category.localeCompare(b.category) || a.outputUnit.localeCompare(b.outputUnit))
+    .slice(0, MAX_NATIVE_METRIC_ROWS);
+
   const trustSignals = sanitizeTrustSignals(bundle.trustSignals);
 
   // Individual records are intentionally NOT returned — only aggregates leave here.
@@ -256,6 +287,7 @@ export function handleIngest(payload: unknown, opts: { userId?: string; identity
     byCategory,
     byProviderDay,
     byProviderModel,
+    byNativeMetric,
     trustSignals,
   };
 }
