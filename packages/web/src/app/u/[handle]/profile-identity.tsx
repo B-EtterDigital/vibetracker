@@ -143,12 +143,22 @@ export function buildBadges(signals: ProfileSignals): BadgeSpec[] {
   return badges;
 }
 
+export interface TraitLevelRead {
+  id: string;
+  label: string;
+  level: number;     // 0..10
+  progress: number;  // 0..1 toward the next level
+  detail: string;    // "12.4k credits · next level at 25k credits"
+}
+
 export function ViberIdentity({
   signals,
   opsValue,
+  traitLevels = [],
 }: {
   signals: ProfileSignals;
   opsValue: string;
+  traitLevels?: TraitLevelRead[];
 }) {
   const badges = buildBadges(signals);
 
@@ -182,6 +192,35 @@ export function ViberIdentity({
           ))}
         </div>
       </div>
+
+      {/* Trait levels — ten medals per discipline (C0VIBE achievement design language: pure-energy
+          pucks, deliberately static). Level 1 is easy; every level after it is earned. A trait a
+          viber uses but hasn't levelled shows its first medal locked. */}
+      {traitLevels.length ? (
+        <div className="vident-levels">
+          <span className="vident-badges-head">trait levels — L1 comes fast · L10 takes years</span>
+          <div className="vident-level-row">
+            {traitLevels.map((trait) => {
+              const medal = String(Math.max(trait.level, 1)).padStart(2, "0");
+              return (
+                <div
+                  className="vident-level"
+                  data-locked={trait.level === 0 ? "true" : undefined}
+                  key={trait.id}
+                  title={`${trait.label} — ${trait.level === 0 ? "level 1 not reached yet" : `level ${trait.level} of 10`} · ${trait.detail}. Creative traits level on credits burned, coding on operations — thresholds are the same for every viber.`}
+                >
+                  <img src={`/badges/lvl-${medal}.webp`} alt="" width={72} height={72} loading="lazy" />
+                  <strong>{trait.level === 0 ? "—" : `LVL ${trait.level}`}</strong>
+                  <span>{trait.label}</span>
+                  <i className="vident-level-track" aria-hidden="true">
+                    <b style={{ width: `${Math.round(trait.progress * 100)}%` }} />
+                  </i>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

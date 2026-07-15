@@ -95,3 +95,34 @@
   .vident-mast { flex-direction: column; }
   .vident-mast-count { border-left: 0; padding-left: 0; }
 }
+
+/* ---- trait levels — the ten-medal ladder (C0VIBE achievement language, static by design) ---- */
+.vident-levels { padding: 0 28px 28px; border-top: 2px solid rgba(217, 255, 242, 0.14); }
+.vident-levels .vident-badges-head { display: block; margin: 20px 0 14px; }
+.vident-level-row {
+  display: flex; flex-wrap: wrap; gap: 18px 26px; align-items: flex-start;
+}
+.vident-level {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: 96px; cursor: help;
+}
+.vident-level img { width: 72px; height: 72px; display: block; }
+.vident-level[data-locked="true"] img { filter: grayscale(1) brightness(0.55); opacity: 0.6; }
+.vident-level strong {
+  font: 800 13px/1 var(--vp-mono); letter-spacing: 0.06em; color: #eafff8;
+  font-variant-numeric: tabular-nums;
+}
+.vident-level[data-locked="true"] strong { color: rgba(217, 255, 242, 0.4); }
+.vident-level span {
+  font: 700 8.5px/1.2 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.1em;
+  color: rgba(217, 255, 242, 0.5); text-align: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+}
+.vident-level-track {
+  width: 100%; height: 4px; background: rgba(217, 255, 242, 0.1); display: block;
+}
+.vident-level-track b { display: block; height: 100%; background: #f28c33; }
+@media (max-width: 700px) {
+  .vident-levels { padding: 0 8px 20px; }
+  .vident-level { width: 84px; }
+}

@@ -36,6 +36,7 @@ import { SourceToolbar, INFO_RAMP, type StackMonth } from "./profile-infographic
 import { InfographicBoard, type BoardSpec } from "./profile-board";
 import { SkillSignals } from "./profile-signals";
 import { computeProfileSignals } from "../../../lib/profile-signals";
+import { levelFor, fmtMeasure } from "../../../lib/viber-levels";
 import { UsageTelemetry } from "./profile-telemetry";
 import { buildTelemetryModel } from "./profile-telemetry-model";
 import { ProfileReadout } from "./profile-readout";
@@ -600,8 +601,26 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // User-ordered flow (2026-07-15): identity plate (archetype + badges) directly under the board,
   // then the two activity heatmaps — the poster's "who is this + how steady" chapter, up top.
   const signals = computeProfileSignals(profile);
+  // Trait LEVELS — ten per discipline, L1 easy, L10 earned over years (lib/viber-levels.ts).
+  // Creative traits level on credits burned, coding on operations; the medal artwork shares the
+  // C0VIBE achievement design language (pure-energy pucks, no animation).
+  const traitLevels = profile.categories
+    .filter((c) => c.ops > 0 || c.credits > 0)
+    .map((c) => {
+      const read = levelFor(c.category, c.credits, c.ops);
+      return {
+        id: c.category,
+        label: vibeLabel(c.category).replace(/^AI\s+/i, ""),
+        level: read.level,
+        progress: read.progress,
+        detail: read.next === null
+          ? `MAX — ${fmtMeasure(read.value, read.measure)} banked`
+          : `${fmtMeasure(read.value, read.measure)} · next level at ${fmtMeasure(read.next, read.measure)}`,
+      };
+    })
+    .sort((a, b) => b.level - a.level || b.progress - a.progress);
   add("hero", "full",
-    <ViberIdentity signals={signals} opsValue={opsCompact} key="identity" />);
+    <ViberIdentity signals={signals} opsValue={opsCompact} traitLevels={traitLevels} key="identity" />);
   if (reveal.rhythm) {
     add("hero", "full", <SyncRhythm days={profile.usageDays.map((d) => ({ date: d.date, ops: d.ops, usd: d.usd }))} key="rhythm" />);
   }
