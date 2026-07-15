@@ -230,8 +230,9 @@
   .vinfo-stack { align-self: auto; max-width: 620px; }
 }
 @media (max-width: 700px) {
-  /* small screens: the board goes truly full-bleed; bars keep big type and scroll sideways */
-  .vboard { width: 100vw; margin-left: calc((100% - 100vw) / 2); }
+  /* small screens: the board goes truly full-bleed — via the page's own 14px gutters, never 100vw
+     (100vw includes the scrollbar and causes phantom horizontal scroll) */
+  .vboard { width: auto; margin-inline: -14px; }
   .vboard .vboard-bars-mount { justify-content: flex-start; overflow-x: auto; scrollbar-width: thin; }
   .vinfo-stack { min-width: 640px; }
   .vinfo-spiral-pct { font-size: 26px; }

@@ -156,13 +156,15 @@ test("skill signals lead the profile and reframe money as API-equivalent referen
 
 test("profile infographic owns measured traits while identity owns honestly earned archetype badges", () => {
   assert.match(page, /import \{ ViberIdentity \} from "\.\/profile-identity"/);
-  assert.match(page, /import \{ InfographicBoard, SourceToolbar, INFO_RAMP/);
+  assert.match(page, /import \{ SourceToolbar, INFO_RAMP, type StackMonth \} from "\.\/profile-infographic"/);
+  assert.match(page, /import \{ InfographicBoard, type BoardSpec \} from "\.\/profile-board"/);
   assert.match(page, /import "\.\/profile-identity\.css"/);
-  assert.match(page, /<InfographicBoard[\s\S]*traits=\{traits\}[\s\S]*cliSpiral=\{cliSpiral\}/);
+  assert.match(page, /<InfographicBoard traits=\{traits\} specs=\{specs\}/);
+  assert.match(page, /all: \{[\s\S]*spiral: cliSpiral/);
   assert.match(page, /<ViberIdentity signals=\{signals\} opsValue=\{opsCompact\}/);
   assert.match(infographic, /export function TraitPies/);
   assert.match(infographic, /aria-label=\{`Trait mix:/);
-  assert.match(infographic, /only appears when you have real usage in that discipline/);
+  assert.match(infographic, /a pie only exists where usage exists/);
   assert.doesNotMatch(identity, /function DisciplineRings/);
   assert.match(identity, /signals\.archetypes/);
   assert.match(identity, /badges\.length >= 2/);
@@ -173,7 +175,7 @@ test("profile infographic owns measured traits while identity owns honestly earn
   assert.match(identity, /aria-label=\{`\$\{badges\.length\} badges earned`\}/);
   assert.match(identityStyles, /grid-template-columns: repeat\(auto-fit, minmax\(180px, 1fr\)\)/);
   assert.match(identityStyles, /@media \(max-width: 680px\)/);
-  assert.match(infographicStyles, /grid-template-columns: minmax\(0, 1\.35fr\) minmax\(0, 1fr\)/);
+  assert.match(infographicStyles, /grid-template-columns: minmax\(0, 1\.3fr\) minmax\(0, 1fr\)/);
   assert.match(infographicStyles, /\.vboard \{ grid-template-columns: 1fr; \}/);
 });
 
