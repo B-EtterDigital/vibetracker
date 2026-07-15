@@ -124,7 +124,7 @@ test("leaderboard explains concentration, unit cost, active depth, and identity 
   assert.match(page, /\.\/home\/leaderboard-brief\.css/);
   assert.match(briefCss, /@media \(max-width: 560px\)/);
   assert.match(briefCss, /@media \(min-width: 2200px\)/);
-  assert.match(briefCss, /width: min\(1760px, calc\(100vw - 120px\)\)/);
+  assert.match(briefCss, /width: min\(2640px, 95vw\)/);
   assert.match(briefCss, /var\(--hb-line\)/);
   assert.doesNotMatch(briefCss, /var\(--home-/);
 });
@@ -133,4 +133,15 @@ test("leaderboard readout has an honest waiting state", () => {
   const readout = buildLeaderboardReadout([]);
   assert.match(readout.summary, /No ranked signal yet/);
   assert.deepEqual(readout.signals.map((signal) => signal.value), ["—", "—", "0 / 0", "0 / 0"]);
+});
+
+test("4K leaderboard becomes a two-channel broadcast wall without changing mobile rules", () => {
+  assert.match(briefCss, /@media \(min-width: 2200px\)/);
+  assert.match(briefCss, /width: min\(2640px, 95vw\)/);
+  assert.match(homeCss, /@media \(min-width: 2200px\)/);
+  assert.match(homeCss, /grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/);
+  assert.match(homeCss, /\.home-board > \.home-readout \{ grid-column: 1; border-right: 1px solid var\(--hb-line\); \}/);
+  assert.match(homeCss, /\.home-board > \.home-board__chart \{ grid-column: 2; min-width: 0; \}/);
+  assert.match(homeCss, /\.home-board__directory,[\s\S]*\.home-board__encore[\s\S]*grid-column: 1 \/ -1/);
+  assert.match(homeCss, /@media \(max-width: 680px\)[\s\S]*\.home-surface \{ width: calc\(100vw - 20px\); \}/);
 });

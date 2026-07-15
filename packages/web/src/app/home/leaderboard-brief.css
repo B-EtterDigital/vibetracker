@@ -84,7 +84,7 @@
 .home-readout__signals [data-signal="identity"] strong { color: #46bbef; }
 
 @media (min-width: 2200px) {
-  .home-surface { width: min(1760px, calc(100vw - 120px)); }
+  .home-surface { width: min(2640px, 95vw); }
 }
 
 @media (max-width: 880px) {

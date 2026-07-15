@@ -5,7 +5,7 @@
     "name": "Home Leaderboard Console",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.3.1",
+    "version": "0.4.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["leaderboard", "usage-analytics", "operator-console"]
@@ -89,7 +89,7 @@
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Server orchestration, leaderboard interaction, pure metric-lens math, field interpretation, empty-lane guidance, and route-local styling are separate; the largest runtime source is 311 lines.",
+      "notes": "Server orchestration, leaderboard interaction, pure metric-lens math, field interpretation, empty-lane guidance, and route-local styling are separate; the largest runtime source is 344 lines.",
       "evidence": ["packages/web/src/app/page.tsx", "packages/web/src/app/home/leaderboard-console.tsx", "packages/web/src/app/home/leaderboard-lens.ts", "packages/web/src/app/home/leaderboard-readout.ts", "packages/web/src/app/home/leaderboard-brief.tsx", "packages/web/src/app/home/home.css", "packages/web/src/app/home/leaderboard-brief.css", "packages/web/src/app/home/signal-uplink.tsx", "packages/web/src/app/home/signal-uplink.css"]
     },
     "ssi": {
@@ -101,7 +101,7 @@
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Focused leaderboard tests and the complete 615-test package suite cover rank preservation, accepted-record labels, verified identity semantics, metric lenses, mobile fit, empty lanes, and degraded states.",
+      "notes": "Focused leaderboard tests and the complete 662-test package suite cover rank preservation, accepted-record labels, verified identity semantics, metric lenses, mobile fit, the 4K two-channel broadcast wall, empty lanes, and degraded states.",
       "evidence": ["packages/web/src/lib/__tests__/home-route.test.ts", "packages/web/src/lib/__tests__/home-leaderboard-console.test.ts", "packages/web/src/lib/__tests__/home-leaderboard-lens.test.ts"]
     },
     "spe": {
@@ -119,8 +119,8 @@
     "ssra": {
       "status": "passing",
       "score": 98,
-      "notes": "Production deploy 6a565a003e99d225b51cd153 passes live verified-row, accepted-record, mobile, and 3840px 4K checks with no overflow or console errors; Lighthouse scores 100 across all four audited categories.",
-      "evidence": ["https://vibeusage.c0vibe.app/", "Netlify production deploy 6a565a003e99d225b51cd153", "packages/web/src/app/home/leaderboard-lens.ts", "packages/web/src/lib/__tests__/home-leaderboard-lens.test.ts"]
+      "notes": "Production deploy 6a56fe41c587b657e5ca3840 passes live verified-row, accepted-record, mobile, desktop, and 3840px 4K checks with no overflow, failed requests, or console errors. At 4K the primary surface expands from 1680px to 2640px and aligns the derived readout and rank-preserving runway as equal 1319px channels.",
+      "evidence": ["https://vibeusage.c0vibe.app/", "Netlify production deploy 6a56fe41c587b657e5ca3840", "packages/web/src/app/home/home.css", "packages/web/src/lib/__tests__/home-leaderboard-console.test.ts"]
     },
     "sas": {
       "status": "passing",
@@ -204,12 +204,12 @@
   "quality": {
     "score": 96,
     "line_count": {
-      "max_file_lines": 311,
+      "max_file_lines": 344,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1283,
+      "feature_lines": 1324,
       "file_count": 9,
       "dependency_count": 3,
       "notes": "The former 3,409-line route remains a small server seam plus focused leaderboard, pure metric-lens, field-readout, and signal-uplink modules with no new dependency."
@@ -223,6 +223,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T15:56:00Z",
         "notes": "615 package tests, 15 control-plane tests, strict VTRS with zero violations, TypeScript, dependency audit with no known vulnerabilities, CLI build, and the production Next build pass. Deploy 6a565a003e99d225b51cd153 proves the real verified @b-etterdigital row, honest accepted-record labels, overflow-free mobile and 3840px layouts, zero console errors, and Lighthouse 100/100/100/100."
+      },
+      {
+        "command": "11 focused leaderboard tests + pnpm sma:release-gate + Next production build + isolated Netlify preview and production deploy + Playwright mobile, desktop, and 4K proof",
+        "status": "pass",
+        "timestamp": "2026-07-15T03:30:08Z",
+        "notes": "The isolated clean worktree passed 662 package tests, 15 control-plane tests, strict telemetry, typecheck, and the production build. Preview 6a56fd65a61708a2f4f2e115 and production deploy 6a56fe41c587b657e5ca3840 prove unchanged 370px mobile and 1320px desktop behavior, an interactive Credits lens, and a 2640px 4K broadcast wall with equal 1319px readout and runway channels, zero horizontal overflow, zero console errors, and zero failed requests."
       }
     ]
   },

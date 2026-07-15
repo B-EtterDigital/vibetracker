@@ -309,6 +309,36 @@
   .home-board__encore div { grid-template-columns: 1fr; }
 }
 
+@media (min-width: 2200px) {
+  .home-board {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .home-board > :is(
+    .home-board__mast,
+    .home-board__controls,
+    .home-board__boundary,
+    .identity-claim,
+    .home-board__metrics,
+    .signal-uplink,
+    .home-board__directory,
+    .home-board__encore
+  ) { grid-column: 1 / -1; }
+
+  .home-board__mast,
+  .home-board__controls,
+  .home-board__boundary,
+  .home-board__metrics,
+  .home-board__chart,
+  .home-board__directory,
+  .home-board__encore { padding-inline: 30px; }
+
+  .home-board > .home-readout { grid-column: 1; border-right: 1px solid var(--hb-line); }
+  .home-board > .home-board__chart { grid-column: 2; min-width: 0; }
+  .home-board__directory { padding-block: 24px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-board::after, .home-board__bar i { animation: none; }
 }
