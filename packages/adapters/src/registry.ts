@@ -42,6 +42,7 @@ export const PROVIDERS: ProviderDescriptor[] = [
   ai({ id: "kling", label: "Kling", categories: ["video"], tier: "feed_recon", auth: "apiKey", status: "built", verified: false, method: "task list (JWT) ⚠" }),
   ai({ id: "suno", label: "Suno", categories: ["music"], tier: "feed_recon", auth: "cookie", status: "built", verified: false, method: "clip feed × credits ⚠" }),
   ai({ id: "udio", label: "Udio", categories: ["music"], tier: "feed_recon", auth: "cookie", status: "built", verified: false, method: "feed × credits ⚠" }),
+  ai({ id: "cynaps3", label: "Cynaps3 Musicmation", categories: ["music"], tier: "ledger", auth: "oauth", status: "built", verified: false, method: "v1 usage ledger (awaiting live proof) ⚠" }),
   ai({ id: "openrouter", label: "OpenRouter", categories: ["llm"], tier: "balance", auth: "apiKey", status: "built", verified: false, method: "/api/v1/credits (BYOK) ⚠" }),
   ai({ id: "comfyui", label: "ComfyUI", categories: ["image", "video"], tier: "local", auth: "localLogs", status: "built", verified: false, method: "local /history; $0 (GPU-time)" }),
 

@@ -101,6 +101,7 @@ const BRANDS: Record<string, ProviderBrand> = {
   "stability": { mark: "ST", from: "#111827", to: "#f5f5f5", ink: "#ffffff" },
   "ideogram": { mark: "ID", from: "#111827", to: "#f472b6", ink: "#ffffff" },
   "leonardo": { mark: "LD", from: "#111827", to: "#14b8a6", ink: "#ffffff" },
+  "cynaps3": { mark: "C3", from: "#ff6b00", to: "#00e5ff", ink: "#ffffff" },
   "recraft": { mark: "RF", from: "#111827", to: "#f97316", ink: "#ffffff" },
   "pika": { mark: "PK", from: "#ffeb3b", to: "#ff4fd8", ink: "#111111" },
   "minimax": { mark: "MX", from: "#ff4d4f", to: "#1677ff", ink: "#ffffff" },

@@ -18,6 +18,7 @@ npx vibetracker upload              # opt-in push to the VibeTRACKER leaderboard
 npx vibetracker login               # reuse an existing `gh auth` session; browser/C0VIBE fallback
 npx vibetracker import midjourney --images 12345 # official /info lifetime total
 npx vibetracker connect leonardo    # official Production API key; no cookie/user ID
+npx vibetracker connect cynaps3     # scoped Musicmation usage:read token
 ```
 
 - Local store: SQLite at `~/.vibetracker/db.sqlite` (git-ignored).
@@ -48,3 +49,11 @@ account ID through the official `/me` endpoint, walks the paginated generation f
 completed image outputs, and reads the current API-token balance. The key remains in the OS
 keyring. Leonardo's generation-history response does not expose historical per-generation
 cost, so VibeTRACKER records exact image counts without fabricating USD or credit spend.
+
+## Cynaps3 Musicmation ledger
+
+Connect Cynaps3 with `vibetracker connect cynaps3` and authorize the read-only
+`usage:read` scope. The adapter reads versioned, per-user Musicmation operations and native
+credits from Cynaps3's authoritative ledger. It never receives prompts, lyrics, media URLs,
+browser cookies, or a service-role key. The provider remains marked as awaiting live proof until
+the producer endpoint is deployed and its OAuth, pagination, and populated-range probes pass.

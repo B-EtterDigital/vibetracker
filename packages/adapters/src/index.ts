@@ -52,6 +52,7 @@ import { createAntigravityAdapter } from "./antigravity/index.ts";
 import { createAugmentAdapter } from "./augment/index.ts";
 import { createRooCodeAdapter } from "./roo-code/index.ts";
 import { createLeonardoAdapter, createHttpClient as leonardoHttp } from "./leonardo/index.ts";
+import { createCynaps3Adapter, createHttpClient as cynaps3Http } from "./cynaps3/index.ts";
 
 export * from "./registry.ts";
 
@@ -111,6 +112,7 @@ export function createAdapterFromConfig(id: string, creds: ProviderCreds = {}, o
     case "augment":     return createAugmentAdapter(opts as { dir?: string; maxFiles?: number });
     case "roo-code":    return createRooCodeAdapter(opts as { dir?: string; maxFiles?: number });
     case "leonardo":    return createLeonardoAdapter(leonardoHttp({ apiKey: apiToken(creds, id) }), opts);
+    case "cynaps3":     return createCynaps3Adapter(cynaps3Http({ accessToken: req(creds.token, id, "token") }), opts);
     default: throw new Error(`unknown provider: ${id}`);
   }
 }

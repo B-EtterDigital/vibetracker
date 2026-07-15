@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "provider": "cynaps3",
+  "account": {
+    "id": "acct_musicmation_fixture",
+    "product": "musicmation"
+  },
+  "generatedAt": "2026-07-15T12:00:00.000Z",
+  "summary": {
+    "operations": 3,
+    "successfulOperations": 2,
+    "failedOperations": 1,
+    "tracksCreated": 4,
+    "audioSeconds": 482.5,
+    "creditsConsumed": 18
+  },
+  "events": [
+    {
+      "id": "op_fixture_001",
+      "occurredAt": "2026-07-14T09:00:00.000Z",
+      "operation": "generate",
+      "status": "completed",
+      "model": "suno-v4.5",
+      "tracksCreated": 2,
+      "audioSeconds": 241.2,
+      "creditsConsumed": 10
+    },
+    {
+      "id": "op_fixture_002",
+      "occurredAt": "2026-07-14T10:00:00.000Z",
+      "operation": "extend",
+      "status": "completed",
+      "model": "suno-v4.5",
+      "tracksCreated": 2,
+      "audioSeconds": 241.3,
+      "creditsConsumed": 8
+    },
+    {
+      "id": "op_fixture_003",
+      "occurredAt": "2026-07-14T11:00:00.000Z",
+      "operation": "generate",
+      "status": "failed",
+      "tracksCreated": 0,
+      "audioSeconds": 0,
+      "creditsConsumed": 0
+    }
+  ],
+  "page": {
+    "nextCursor": null,
+    "hasMore": false
+  }
+}

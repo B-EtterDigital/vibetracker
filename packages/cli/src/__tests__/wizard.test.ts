@@ -87,3 +87,21 @@ test("Leonardo.ai onboarding uses one official API key and no browser credential
   assert.match(GUIDE.leonardo.why ?? "", /official API key/);
   assert.match((GUIDE.leonardo.steps ?? []).join(" "), /no cookie/i);
 });
+
+test("Cynaps3 onboarding uses a scoped OAuth token and maps into the music ledger", () => {
+  const provider = getProvider("cynaps3");
+  assert.ok(provider);
+  const plan = planSetup({
+    providers: [provider],
+    hasEnvCreds: () => false,
+    localLogsPresent: () => false,
+    credFields: (id) => CRED_FIELDS[id] ?? [],
+  });
+  assert.deepEqual(provider.categories, ["music"]);
+  assert.equal(provider.tier, "ledger");
+  assert.deepEqual(CRED_FIELDS.cynaps3, ["token"]);
+  assert.deepEqual(plan.needsKey.map((item) => item.id), ["cynaps3"]);
+  assert.match(GUIDE.cynaps3.why ?? "", /usage:read/);
+  assert.match((GUIDE.cynaps3.steps ?? []).join(" "), /no browser cookie/i);
+  assert.equal(CRED_FIELDS.cynaps3.includes("sessionCookie"), false);
+});
