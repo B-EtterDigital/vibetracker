@@ -107,7 +107,7 @@
     "spe": {
       "status": "passing",
       "score": 96,
-      "notes": "Search renders at most 12 source candidates while selected tools remain visible independently. The mobile route is substantially shorter than the former 155-source static atlas and has zero horizontal overflow.",
+      "notes": "Search renders at most 12 source candidates while selected tools remain visible independently. Mobile puts the generated runbook before the catalog, and 4K expands to a 2640px rail with a two-column evidence index and zero horizontal overflow.",
       "evidence": [
         "packages/web/src/app/sources/stack-composer-data.ts",
         "packages/web/src/app/sources/stack-composer.tsx"
@@ -116,7 +116,7 @@
     "srs": {
       "status": "passing",
       "score": 94,
-      "notes": "Selection limits, no-result recovery, clipboard success or failure, path counts, placeholders, dry-run behavior, and opt-in publication are visible; no operation fails silently.",
+      "notes": "Collection-path meanings, selected provider methods, domain taxonomy, selection limits, no-result recovery, clipboard success or failure, dry-run behavior, and opt-in publication are visible; no operation fails silently.",
       "evidence": [
         "packages/web/src/app/sources/stack-composer.tsx",
         "packages/web/src/app/sources/__tests__/stack-composer-data.test.ts"
@@ -125,10 +125,10 @@
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Release gate, root and Next builds, production deployment, and browser interaction proofs pass at mobile, desktop, and 3840x2160 viewports.",
+      "notes": "Release gate, Next build, production deployment, preset, filter, selection, live path-count, clipboard, and browser proofs pass at mobile, desktop, and 3840x2160 viewports.",
       "evidence": [
         "scripts/release-gate.mjs",
-        "Netlify deploy 6a55d09b89f2d908f5b5facb"
+        "Netlify deploy 6a56eeba17daf52a919a1c1b"
       ]
     },
     "sas": {
@@ -226,12 +226,12 @@
   "quality": {
     "score": 95,
     "line_count": {
-      "max_file_lines": 206,
+      "max_file_lines": 216,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 752,
+      "feature_lines": 806,
       "file_count": 6,
       "dependency_count": 2,
       "notes": "The route is split into server composition, a pure tested data model, one client workbench, two focused stylesheets, and tests with no new dependency."
@@ -241,10 +241,39 @@
     ],
     "verification": [
       {
-        "command": "focused source tests + pnpm sma:release-gate + pnpm build + pnpm --dir packages/web build",
+        "command": "focused source tests + pnpm typecheck + pnpm sma:release-gate + netlify deploy --prod --build + Playwright production proof",
         "status": "pass",
-        "timestamp": "2026-07-14T06:04:00Z",
-        "notes": "10 focused source tests, 15 control-plane tests, 582 package tests, strict VTRS with zero violations, TypeScript, root and Next builds, and production deploy 6a55d09b89f2d908f5b5facb pass. Live composer interaction and viewport evidence is recorded in the SMA receipt."
+        "timestamp": "2026-07-15T02:25:33Z",
+        "notes": "5 focused source tests, 15 control-plane tests, 661 package tests, strict VTRS with zero violations, TypeScript, Next production build, and deploy 6a56eeba17daf52a919a1c1b pass. Playwright proved presets, explicit domain filters, source selection, path-count changes, exact clipboard output, zero browser errors, zero failed requests, zero horizontal overflow, selected-first mobile flow, and the 2640px two-column 4K workbench at 390x844, 1440x1000, and 3840x2160."
+      },
+      {
+        "actor_kind": "ai_model",
+        "actor_id": "codex",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementation",
+        "session_id": "web.sources-evidence-index",
+        "files_touched": [
+          "packages/web/src/app/sources/stack-composer.tsx",
+          "packages/web/src/app/sources/stack-composer.css",
+          "packages/web/src/app/sources/sources.css",
+          "packages/web/src/app/sources/__tests__/stack-composer-data.test.ts",
+          "packages/web/src/app/sources/module.sweetspot.json"
+        ],
+        "verification": [
+          {
+            "command": "pnpm sma:release-gate + production Playwright proof",
+            "status": "pass",
+            "timestamp": "2026-07-15T02:25:33Z",
+            "notes": "Current-tree release and deploy evidence is recorded in quality.verification."
+          }
+        ],
+        "timestamp": "2026-07-15T02:25:33Z",
+        "summary": "Made the source workbench evidence-first on mobile, explicit about collection taxonomy, and purposeful at 4K.",
+        "attestation": {
+          "method": "sma-gen3",
+          "reference": "lease-1784081430612-7c9b8aac"
+        }
       }
     ]
   },

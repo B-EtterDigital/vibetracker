@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import type { ProviderDescriptor } from "../../../../../adapters/src/registry.ts";
 import {
@@ -43,4 +44,24 @@ test("runbook deduplicates detect and keeps planned sources as comments", () => 
 test("presets resolve only registry-backed IDs", () => {
   const candidates = buildSourceCandidates(providers);
   assert.deepEqual(resolvePreset(candidates, "coding").map((item) => item.provider.id), ["codex", "cursor"]);
+});
+
+test("sources workbench explains selected evidence and scales from mobile to 4K", () => {
+  const composer = readFileSync("packages/web/src/app/sources/stack-composer.tsx", "utf8");
+  const composerStyles = readFileSync("packages/web/src/app/sources/stack-composer.css", "utf8");
+  const routeStyles = readFileSync("packages/web/src/app/sources/sources.css", "utf8");
+
+  assert.match(composer, /Selected evidence · source → collection path/);
+  assert.match(composer, /setup command/);
+  assert.match(composer, /local discovery/);
+  assert.match(composer, /review \/ import/);
+  assert.match(composer, /mapped only/);
+  assert.match(composer, /AI usage/);
+  assert.match(composer, /dev costs/);
+  assert.match(composer, /creative subs/);
+  assert.match(composer, /candidate\.provider\.method/);
+  assert.match(composer, /stack-path--\$\{candidate\.path\}/);
+  assert.match(composerStyles, /@media \(max-width: 980px\)[\s\S]*\.stack-runbook \{ order: -1; \}/);
+  assert.match(composerStyles, /@media \(min-width: 2200px\)[\s\S]*\.stack-picker__results \{ display: grid; grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
+  assert.match(routeStyles, /@media \(min-width: 2200px\)[\s\S]*max-width: min\(2640px, 95vw\)/);
 });

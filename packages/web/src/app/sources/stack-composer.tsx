@@ -16,6 +16,12 @@ import type { PresetKey, SourceDomain } from "./stack-composer-data";
 
 const COPIED = "runbook copied";
 const COPY_BLOCKED = "clipboard blocked";
+const DOMAIN_LABELS: Record<SourceDomain, string> = {
+  all: "all sources",
+  ai: "AI usage",
+  dev: "dev costs",
+  creative: "creative subs",
+};
 
 export function SourceStackComposer({ providers }: { providers: ProviderDescriptor[] }) {
   const candidates = useMemo(() => buildSourceCandidates(providers), [providers]);
@@ -119,7 +125,7 @@ export function SourceStackComposer({ providers }: { providers: ProviderDescript
           <div className="stack-picker__domains" role="group" aria-label="Filter source domain">
             {(["all", "ai", "dev", "creative"] as SourceDomain[]).map((value) => (
               <button key={value} type="button" aria-pressed={domain === value} onClick={() => setDomain(value)}>
-                {value === "all" ? "all domains" : value}
+                {DOMAIN_LABELS[value]}
               </button>
             ))}
           </div>
@@ -168,18 +174,22 @@ export function SourceStackComposer({ providers }: { providers: ProviderDescript
         <div className="stack-runbook" aria-label="Generated local setup runbook">
           <div className="console-top"><span>runbook@local</span><b>ZERO EXECUTION</b></div>
           <div className="stack-runbook__summary" aria-label="Selected stack collection paths">
-            <div><b>{runbook.counts.connect}</b><span>adapters</span></div>
-            <div><b>{runbook.counts.detect}</b><span>detect</span></div>
-            <div><b>{runbook.counts.manual}</b><span>manual</span></div>
-            <div><b>{runbook.counts.planned}</b><span>planned</span></div>
+            <div><b>{runbook.counts.connect}</b><span>connect</span><small>setup command</small></div>
+            <div><b>{runbook.counts.detect}</b><span>detect</span><small>local discovery</small></div>
+            <div><b>{runbook.counts.manual}</b><span>manual</span><small>review / import</small></div>
+            <div><b>{runbook.counts.planned}</b><span>planned</span><small>mapped only</small></div>
           </div>
 
           <div className="stack-runbook__selected">
-            <div><span>Selected stack</span><button type="button" onClick={() => { setSelectedIds([]); setActivePreset(null); }}>clear</button></div>
+            <div><span>Selected evidence · source → collection path</span><button type="button" onClick={() => { setSelectedIds([]); setActivePreset(null); }}>clear</button></div>
             <ul>
               {selected.map((candidate) => (
                 <li key={candidate.provider.id}>
-                  <span>{candidate.provider.label}</span>
+                  <span>
+                    <b>{candidate.provider.label}</b>
+                    <small title={candidate.provider.method}>{candidate.provider.method}</small>
+                  </span>
+                  <em className={`stack-path stack-path--${candidate.path}`}>{candidate.pathLabel}</em>
                   <button type="button" onClick={() => toggleSource(candidate.provider.id)} aria-label={`Remove ${candidate.provider.label}`} title={`Remove ${candidate.provider.label}`}>×</button>
                 </li>
               ))}
