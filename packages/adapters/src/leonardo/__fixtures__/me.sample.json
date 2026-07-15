@@ -1,0 +1,13 @@
+{
+  "user_details": [
+    {
+      "apiPaidTokens": 250,
+      "apiSubscriptionTokens": 750,
+      "subscriptionTokens": 4200,
+      "user": {
+        "id": "8b96c4f9-8f62-4b18-8e9f-4bf0d37f2c65",
+        "username": "fixture-user"
+      }
+    }
+  ]
+}

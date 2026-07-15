@@ -122,6 +122,7 @@ const ENV_MAP: Record<string, (e: Record<string, string | undefined>) => Provide
   falai:      (e) => ({ key: e.VT_FAL_KEY }),
   runway:     (e) => ({ apiKey: e.VT_RUNWAY_API_KEY }),
   luma:       (e) => ({ apiKey: e.VT_LUMA_API_KEY }),
+  leonardo:   (e) => ({ apiKey: e.VT_LEONARDO_API_KEY }),
   kling:      (e) => ({ accessKey: e.VT_KLING_ACCESS_KEY, secretKey: e.VT_KLING_SECRET_KEY }),
   suno:       (e) => ({ sessionCookie: e.VT_SUNO_COOKIE }),
   udio:       (e) => ({ sessionToken: e.VT_UDIO_TOKEN }),
@@ -146,7 +147,7 @@ const ENV_MAP: Record<string, (e: Record<string, string | undefined>) => Provide
 // Cred fields each provider expects — used by `connect` and to report what's missing.
 export const CRED_FIELDS: Record<string, string[]> = {
   openai: ["adminKey"], anthropic: ["adminKey"], elevenlabs: ["apiKey"],
-  replicate: ["token"], falai: ["key"], runway: ["apiKey"], luma: ["apiKey"],
+  replicate: ["token"], falai: ["key"], runway: ["apiKey"], luma: ["apiKey"], leonardo: ["apiKey"],
   kling: ["accessKey", "secretKey"], suno: ["sessionCookie"], udio: ["sessionToken"],
   openrouter: ["apiKey"], comfyui: [], "claude-code": [], higgsfield: [],
   huggingface: ["apiKey"], runpod: ["apiKey"], browserbase: ["apiKey"], devin: ["apiKey"],

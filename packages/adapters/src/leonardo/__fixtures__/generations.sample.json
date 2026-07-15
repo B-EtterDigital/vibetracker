@@ -1,0 +1,40 @@
+{
+  "generations": [
+    {
+      "id": "gen-1",
+      "createdAt": "2026-06-01T10:00:00.000Z",
+      "modelId": "phoenix-1.0",
+      "status": "COMPLETE",
+      "generated_images": [
+        { "id": "img-1", "url": "https://example.invalid/1.png" },
+        { "id": "img-2", "url": "https://example.invalid/2.png" },
+        { "id": "img-3", "url": "https://example.invalid/3.png" },
+        { "id": "img-4", "url": "https://example.invalid/4.png" }
+      ]
+    },
+    {
+      "id": "gen-2",
+      "createdAt": "2026-06-02T11:30:00.000Z",
+      "modelId": "flux-dev",
+      "status": "COMPLETE",
+      "generated_images": [
+        { "id": "img-5", "url": "https://example.invalid/5.png" },
+        { "id": "img-6", "url": "https://example.invalid/6.png" }
+      ]
+    },
+    {
+      "id": "gen-pending",
+      "createdAt": "2026-06-03T12:00:00.000Z",
+      "modelId": "phoenix-1.0",
+      "status": "PENDING",
+      "generated_images": []
+    },
+    {
+      "id": "gen-failed",
+      "createdAt": "2026-06-04T12:00:00.000Z",
+      "modelId": "phoenix-1.0",
+      "status": "FAILED",
+      "generated_images": []
+    }
+  ]
+}

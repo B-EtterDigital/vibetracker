@@ -86,7 +86,7 @@ export const PROVIDERS: ProviderDescriptor[] = [
   ai({ id: "sunoapi", label: "sunoapi.org", categories: ["music"], tier: "balance", auth: "apiKey", status: "built", verified: true, method: "/api/v1/generate/credit balance (USD via creditUsd)" }),
   ai({ id: "stability", label: "Stability AI", categories: ["image", "video"], tier: "ledger", auth: "apiKey", status: "planned", verified: false, method: "balance/credits" }),
   ai({ id: "ideogram", label: "Ideogram", categories: ["image"], tier: "feed_recon", auth: "apiKey", status: "planned", verified: false, method: "feed" }),
-  ai({ id: "leonardo", label: "Leonardo.ai", categories: ["image"], tier: "ledger", auth: "apiKey", status: "planned", verified: false, method: "token/credit usage" }),
+  ai({ id: "leonardo", label: "Leonardo.ai", categories: ["image"], tier: "feed_recon", auth: "apiKey", status: "built", verified: false, method: "official generation feed + API token balance" }),
   ai({ id: "recraft", label: "Recraft", categories: ["image"], tier: "ledger", auth: "apiKey", status: "planned", verified: false, method: "usage" }),
   ai({ id: "pika", label: "Pika", categories: ["video"], tier: "feed_recon", auth: "apiKey", status: "planned", verified: false, method: "feed" }),
   ai({ id: "minimax", label: "Hailuo / MiniMax", categories: ["video", "audio"], tier: "ledger", auth: "apiKey", status: "planned", verified: false, method: "billing" }),

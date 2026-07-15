@@ -10,10 +10,25 @@ import { createPortal } from "react-dom";
 
 const FLIP_MS = 760;
 
+function resetFlip() {
+  document.documentElement.classList.remove("vflip-stage");
+  document.body.classList.remove("vflip-out");
+}
+
 export function FlipToC0vibe({ handle }: { handle: string }) {
   const [mounted, setMounted] = useState(false);
   const [flipping, setFlipping] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    // Coming BACK from C0VIBE restores this page from the back/forward cache exactly as it left —
+    // mid-flip, rotated and scroll-locked. Un-flip on every pageshow so return is always clean.
+    const restore = () => {
+      resetFlip();
+      setFlipping(false);
+    };
+    window.addEventListener("pageshow", restore);
+    return () => window.removeEventListener("pageshow", restore);
+  }, []);
   const target = `https://c0vibe.app/u/${handle.toLowerCase()}`;
 
   const go = () => {
@@ -26,6 +41,14 @@ export function FlipToC0vibe({ handle }: { handle: string }) {
     document.documentElement.classList.add("vflip-stage");
     document.body.classList.add("vflip-out");
     window.setTimeout(() => window.location.assign(target), FLIP_MS);
+    // failsafe: if navigation is blocked or slow (offline, popup shield), never leave the page
+    // stranded mid-rotation — restore it
+    window.setTimeout(() => {
+      if (document.visibilityState === "visible") {
+        resetFlip();
+        setFlipping(false);
+      }
+    }, FLIP_MS + 2600);
   };
 
   if (!mounted) return null;

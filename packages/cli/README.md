@@ -17,6 +17,7 @@ npx vibetracker export --json|csv
 npx vibetracker upload              # opt-in push to the VibeTRACKER leaderboard
 npx vibetracker login               # reuse an existing `gh auth` session; browser/C0VIBE fallback
 npx vibetracker import midjourney --images 12345 # official /info lifetime total
+npx vibetracker connect leonardo    # official Production API key; no cookie/user ID
 ```
 
 - Local store: SQLite at `~/.vibetracker/db.sqlite` (git-ignored).
@@ -38,3 +39,12 @@ then import its Lifetime Usage image count with `vibetracker import midjourney -
 The count is stored locally as manual, low-confidence image usage. Re-importing replaces the
 previous lifetime snapshot, so the total never stacks or double-counts. For copied `/info` text,
 use `--info path/to/midjourney-info.txt` (or `--info -` for stdin).
+
+## Leonardo.ai image history
+
+Connect Leonardo.ai with `vibetracker connect leonardo`, paste a Production API key from
+`https://app.leonardo.ai/api-access`, then run `vibetracker sync`. VibeTRACKER resolves the
+account ID through the official `/me` endpoint, walks the paginated generation feed, counts
+completed image outputs, and reads the current API-token balance. The key remains in the OS
+keyring. Leonardo's generation-history response does not expose historical per-generation
+cost, so VibeTRACKER records exact image counts without fabricating USD or credit spend.

@@ -51,6 +51,7 @@ import { createAdobeFireflyAdapter, createHttpClient as fireflyHttp } from "./ad
 import { createAntigravityAdapter } from "./antigravity/index.ts";
 import { createAugmentAdapter } from "./augment/index.ts";
 import { createRooCodeAdapter } from "./roo-code/index.ts";
+import { createLeonardoAdapter, createHttpClient as leonardoHttp } from "./leonardo/index.ts";
 
 export * from "./registry.ts";
 
@@ -109,6 +110,7 @@ export function createAdapterFromConfig(id: string, creds: ProviderCreds = {}, o
     case "antigravity": return createAntigravityAdapter(opts as { dir?: string; maxFiles?: number });
     case "augment":     return createAugmentAdapter(opts as { dir?: string; maxFiles?: number });
     case "roo-code":    return createRooCodeAdapter(opts as { dir?: string; maxFiles?: number });
+    case "leonardo":    return createLeonardoAdapter(leonardoHttp({ apiKey: apiToken(creds, id) }), opts);
     default: throw new Error(`unknown provider: ${id}`);
   }
 }

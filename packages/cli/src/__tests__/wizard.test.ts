@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { planSetup, runWizard, setupPlanSurpriseTargets } from "../wizard.ts";
+import { GUIDE, planSetup, runWizard, setupPlanSurpriseTargets } from "../wizard.ts";
+import { CRED_FIELDS } from "../config.ts";
+import { getProvider } from "../../../adapters/src/registry.ts";
 
 const providers: any[] = [
   { id: "claude-code", label: "Claude Code", tier: "log", domain: "ai", status: "built" },
@@ -68,4 +70,20 @@ test("runWizard auto-connects env+local and enables a prompted key", async () =>
   assert.ok(saved.enabled.includes("openai"));    // prompted
   assert.equal(saved.creds.replicate.apiKey, "r8_env");
   assert.equal(saved.creds.openai.apiKey, "sk-openai-pasted");
+});
+
+test("Leonardo.ai onboarding uses one official API key and no browser credential", () => {
+  const provider = getProvider("leonardo");
+  assert.ok(provider);
+  const plan = planSetup({
+    providers: [provider],
+    hasEnvCreds: () => false,
+    localLogsPresent: () => false,
+    credFields: (id) => CRED_FIELDS[id] ?? [],
+  });
+  assert.deepEqual(CRED_FIELDS.leonardo, ["apiKey"]);
+  assert.deepEqual(plan.needsKey.map((item) => item.id), ["leonardo"]);
+  assert.match(GUIDE.leonardo.url ?? "", /api-access/);
+  assert.match(GUIDE.leonardo.why ?? "", /official API key/);
+  assert.doesNotMatch(JSON.stringify(GUIDE.leonardo), /cookie|session token/i);
 });
