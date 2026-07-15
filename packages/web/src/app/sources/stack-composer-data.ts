@@ -3,6 +3,7 @@ import type { ProviderDescriptor } from "../../../../adapters/src/registry";
 export type CollectionPath = "connect" | "detect" | "manual" | "planned";
 export type SourceDomain = "all" | ProviderDescriptor["domain"];
 export type PresetKey = "coding" | "creator" | "local" | "agent-team";
+export type StackReadinessState = "empty" | "ready" | "review" | "partial" | "blocked";
 
 export interface SourceCandidate {
   provider: ProviderDescriptor;
@@ -23,6 +24,23 @@ export interface Runbook {
   lines: string[];
   counts: Record<CollectionPath, number>;
   executableCount: number;
+  diagnosis: StackDiagnosis;
+}
+
+export interface StackDiagnosis {
+  state: StackReadinessState;
+  label: string;
+  headline: string;
+  explanation: string;
+  nextAction: string;
+  selectedCount: number;
+  trackableCount: number;
+  automaticCount: number;
+  verifiedCount: number;
+  trackablePercent: number;
+  automaticPercent: number;
+  manualPercent: number;
+  visibilityOnly: string[];
 }
 
 export const MAX_STACK_SIZE = 12;
@@ -132,12 +150,90 @@ export function resolvePreset(candidates: SourceCandidate[], key: PresetKey): So
   return preset.ids.map((id) => byId.get(id)).filter((candidate): candidate is SourceCandidate => Boolean(candidate));
 }
 
+export function buildStackDiagnosis(selected: SourceCandidate[]): StackDiagnosis {
+  const selectedCount = selected.length;
+  const automatic = selected.filter((candidate) => candidate.path === "connect" || candidate.path === "detect");
+  const manual = selected.filter((candidate) => candidate.path === "manual");
+  const planned = selected.filter((candidate) => candidate.path === "planned");
+  const automaticCount = automatic.length;
+  const trackableCount = automaticCount + manual.length;
+  const verifiedCount = selected.filter(
+    (candidate) => candidate.provider.status === "built" && candidate.provider.verified,
+  ).length;
+  const percent = (count: number) => selectedCount ? Math.round((count / selectedCount) * 100) : 0;
+  const common = {
+    selectedCount,
+    trackableCount,
+    automaticCount,
+    verifiedCount,
+    trackablePercent: percent(trackableCount),
+    automaticPercent: percent(automaticCount),
+    manualPercent: percent(manual.length),
+    visibilityOnly: planned.map((candidate) => candidate.provider.label),
+  };
+
+  if (selectedCount === 0) {
+    return {
+      ...common,
+      state: "empty",
+      label: "NO STACK",
+      headline: "Select sources to calculate a setup path.",
+      explanation: "Nothing is counted until a registry-backed source is selected.",
+      nextAction: `Load a preset or select up to ${MAX_STACK_SIZE} sources.`,
+    };
+  }
+
+  if (planned.length === selectedCount) {
+    return {
+      ...common,
+      state: "blocked",
+      label: "NO CURRENT PATH",
+      headline: "None of the selected sources can produce usage yet.",
+      explanation: "Every selection is mapped for visibility, but no adapter, local detection, or manual path exists today.",
+      nextAction: "Choose at least one source labeled adapter, local detect, or manual.",
+    };
+  }
+
+  if (planned.length > 0) {
+    const noun = planned.length === 1 ? "source remains" : "sources remain";
+    return {
+      ...common,
+      state: "partial",
+      label: "PARTIAL COVERAGE",
+      headline: `${trackableCount} of ${selectedCount} selected sources can enter a dry-run today.`,
+      explanation: `${automaticCount} automatic and ${manual.length} manual. ${planned.length} ${noun} visibility-only and never inflates coverage.`,
+      nextAction: `Keep ${planned.map((candidate) => candidate.provider.label).join(", ")} as planned notes, or remove the gap for a clean runnable stack.`,
+    };
+  }
+
+  if (manual.length > 0) {
+    return {
+      ...common,
+      state: "review",
+      label: "MANUAL REVIEW",
+      headline: `${trackableCount} of ${selectedCount} selected sources can enter a dry-run today.`,
+      explanation: `${automaticCount} automatic and ${manual.length} manual. Manual values remain explicit and are never upgraded to verified usage.`,
+      nextAction: "Replace every <monthly-usd> placeholder before running the dry-run.",
+    };
+  }
+
+  return {
+    ...common,
+    state: "ready",
+    label: "RUNBOOK READY",
+    headline: `All ${selectedCount} selected sources have an automatic collection path.`,
+    explanation: `${verifiedCount} are endpoint-verified in the public registry. A local dry-run still precedes every publish step.`,
+    nextAction: "Copy the runbook, run it locally, and inspect sync --dry-run before publishing.",
+  };
+}
+
 export function buildRunbook(selected: SourceCandidate[]): Runbook {
   const ordered = [...selected].sort(
     (a, b) => PATH_ORDER[a.path] - PATH_ORDER[b.path] || a.provider.label.localeCompare(b.provider.label),
   );
   const counts: Record<CollectionPath, number> = { connect: 0, detect: 0, manual: 0, planned: 0 };
   for (const candidate of ordered) counts[candidate.path] += 1;
+  const diagnosis = buildStackDiagnosis(ordered);
 
   const lines = [
     "# VibeUsage local setup — review before running",
@@ -173,5 +269,6 @@ export function buildRunbook(selected: SourceCandidate[]): Runbook {
     text: lines.join("\n"),
     counts,
     executableCount: 2 + connect.length + (detect.length ? 1 : 0) + manual.length,
+    diagnosis,
   };
 }

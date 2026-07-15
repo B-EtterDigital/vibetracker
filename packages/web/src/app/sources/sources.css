@@ -71,8 +71,12 @@
 .stack-route-footer a:hover { color: var(--accent); }
 
 @media (min-width: 2200px) {
-  .wrap:has(> .stack-page-hero) { max-width: min(2640px, 95vw); }
+  .wrap:has(> .stack-page-hero) { max-width: min(3000px, 95vw); }
   .stack-page-hero { grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); }
+  .stack-page-hero__copy { padding: 50px; }
+  .stack-page-hero__copy h1 { max-width: 760px; font-size: 64px; }
+  .stack-page-hero__copy > p:not(.eyebrow) { max-width: 760px; font-size: 17px; }
+  .stack-page-hero__rail span { font-size: 11px; }
   .stack-page-hero__terminal pre { padding: 54px 48px; }
 }
 

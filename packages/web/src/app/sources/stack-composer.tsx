@@ -44,6 +44,9 @@ export function SourceStackComposer({ providers }: { providers: ProviderDescript
     [candidates, query, domain],
   );
   const runbook = useMemo(() => buildRunbook(selected), [selected]);
+  const visibilityPercent = runbook.diagnosis.selectedCount
+    ? 100 - runbook.diagnosis.trackablePercent
+    : 0;
 
   useEffect(() => () => {
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
@@ -81,6 +84,15 @@ export function SourceStackComposer({ providers }: { providers: ProviderDescript
     } catch {
       flash(COPY_BLOCKED);
     }
+  }
+
+  function removePlannedSources() {
+    const plannedIds = new Set(
+      selected.filter((candidate) => candidate.path === "planned").map((candidate) => candidate.provider.id),
+    );
+    setSelectedIds((current) => current.filter((id) => !plannedIds.has(id)));
+    setActivePreset(null);
+    flash(`${plannedIds.size} planned ${plannedIds.size === 1 ? "source" : "sources"} removed`);
   }
 
   return (
@@ -179,6 +191,38 @@ export function SourceStackComposer({ providers }: { providers: ProviderDescript
             <div><b>{runbook.counts.manual}</b><span>manual</span><small>review / import</small></div>
             <div><b>{runbook.counts.planned}</b><span>planned</span><small>mapped only</small></div>
           </div>
+
+          <section className={`stack-diagnosis stack-diagnosis--${runbook.diagnosis.state}`} aria-labelledby="stack-diagnosis-title">
+            <div className="stack-diagnosis__status">
+              <span>STACK READINESS</span>
+              <b>{runbook.diagnosis.label}</b>
+            </div>
+            <div className="stack-diagnosis__message">
+              <h3 id="stack-diagnosis-title">{runbook.diagnosis.headline}</h3>
+              <p>{runbook.diagnosis.explanation}</p>
+            </div>
+            <div
+              className="stack-diagnosis__meter"
+              role="img"
+              aria-label={`${runbook.diagnosis.automaticPercent}% automatic, ${runbook.diagnosis.manualPercent}% manual, ${visibilityPercent}% visibility-only`}
+            >
+              <span className="stack-diagnosis__meter-auto" style={{ width: `${runbook.diagnosis.automaticPercent}%` }} />
+              <span className="stack-diagnosis__meter-manual" style={{ width: `${runbook.diagnosis.manualPercent}%` }} />
+              <span className="stack-diagnosis__meter-gap" style={{ width: `${visibilityPercent}%` }} />
+            </div>
+            <dl className="stack-diagnosis__metrics">
+              <div><dt>trackable now</dt><dd>{runbook.diagnosis.selectedCount ? `${runbook.diagnosis.trackableCount}/${runbook.diagnosis.selectedCount}` : "—"}</dd></div>
+              <div><dt>automatic</dt><dd>{runbook.diagnosis.automaticCount}</dd></div>
+              <div><dt>endpoint verified</dt><dd>{runbook.diagnosis.verifiedCount}</dd></div>
+              <div><dt>visibility only</dt><dd>{runbook.diagnosis.visibilityOnly.length}</dd></div>
+            </dl>
+            <div className="stack-diagnosis__next">
+              <p><b>NEXT //</b> {runbook.diagnosis.nextAction}</p>
+              {runbook.diagnosis.visibilityOnly.length ? (
+                <button type="button" onClick={removePlannedSources}>remove planned ({runbook.diagnosis.visibilityOnly.length})</button>
+              ) : null}
+            </div>
+          </section>
 
           <div className="stack-runbook__selected">
             <div><span>Selected evidence · source → collection path</span><button type="button" onClick={() => { setSelectedIds([]); setActivePreset(null); }}>clear</button></div>

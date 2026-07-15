@@ -5,6 +5,7 @@ import type { ProviderDescriptor } from "../../../../../adapters/src/registry.ts
 import {
   buildRunbook,
   buildSourceCandidates,
+  buildStackDiagnosis,
   resolvePreset,
   searchSourceCandidates,
   sourceCollectionPath,
@@ -39,6 +40,40 @@ test("runbook deduplicates detect and keeps planned sources as comments", () => 
   assert.doesNotMatch(runbook.text, /vibetracker connect cursor/);
   assert.match(runbook.text, /vibetracker sync --dry-run/);
   assert.match(runbook.text, /# publish stays opt-in/);
+  assert.deepEqual(runbook.diagnosis, buildStackDiagnosis(candidates));
+});
+
+test("stack diagnosis fails closed and names visibility-only coverage gaps", () => {
+  const candidates = buildSourceCandidates(providers);
+  const diagnosis = buildStackDiagnosis(candidates);
+
+  assert.equal(diagnosis.state, "partial");
+  assert.equal(diagnosis.selectedCount, 4);
+  assert.equal(diagnosis.trackableCount, 3);
+  assert.equal(diagnosis.automaticCount, 2);
+  assert.equal(diagnosis.trackablePercent, 75);
+  assert.equal(diagnosis.automaticPercent, 50);
+  assert.deepEqual(diagnosis.visibilityOnly, ["Cursor"]);
+  assert.match(diagnosis.headline, /3 of 4/);
+  assert.match(diagnosis.explanation, /never inflates coverage/);
+  assert.match(diagnosis.nextAction, /Cursor/);
+});
+
+test("stack diagnosis distinguishes empty, blocked, manual-review, and ready states", () => {
+  const candidates = buildSourceCandidates(providers);
+  const byId = new Map(candidates.map((candidate) => [candidate.provider.id, candidate]));
+  const get = (id: string) => {
+    const candidate = byId.get(id);
+    assert.ok(candidate);
+    return candidate;
+  };
+
+  assert.equal(buildStackDiagnosis([]).state, "empty");
+  assert.equal(buildStackDiagnosis([get("cursor")]).state, "blocked");
+  assert.equal(buildStackDiagnosis([get("codex"), get("midjourney")]).state, "review");
+  assert.equal(buildStackDiagnosis([get("codex"), get("ollama")]).state, "ready");
+  assert.match(buildStackDiagnosis([get("cursor")]).headline, /None/);
+  assert.match(buildStackDiagnosis([get("midjourney")]).nextAction, /monthly-usd/);
 });
 
 test("presets resolve only registry-backed IDs", () => {
@@ -52,6 +87,10 @@ test("sources workbench explains selected evidence and scales from mobile to 4K"
   const routeStyles = readFileSync("packages/web/src/app/sources/sources.css", "utf8");
 
   assert.match(composer, /Selected evidence · source → collection path/);
+  assert.match(composer, /STACK READINESS/);
+  assert.match(composer, /trackable now/);
+  assert.match(composer, /endpoint verified/);
+  assert.match(composer, /remove planned/);
   assert.match(composer, /setup command/);
   assert.match(composer, /local discovery/);
   assert.match(composer, /review \/ import/);
@@ -63,5 +102,5 @@ test("sources workbench explains selected evidence and scales from mobile to 4K"
   assert.match(composer, /stack-path--\$\{candidate\.path\}/);
   assert.match(composerStyles, /@media \(max-width: 980px\)[\s\S]*\.stack-runbook \{ order: -1; \}/);
   assert.match(composerStyles, /@media \(min-width: 2200px\)[\s\S]*\.stack-picker__results \{ display: grid; grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
-  assert.match(routeStyles, /@media \(min-width: 2200px\)[\s\S]*max-width: min\(2640px, 95vw\)/);
+  assert.match(routeStyles, /@media \(min-width: 2200px\)[\s\S]*max-width: min\(3000px, 95vw\)/);
 });
