@@ -118,7 +118,7 @@ your profile-UI files are probably stale: sync from the canonical tree before sh
 
 ### Deploy guard v2 — SMARCH engine adopted (2026-07-15, supersedes the paragraphs above)
 The repo is now git (`feat/c0vibe-integration`) and the deploy path is the vendored SMARCH deploy
-guard: **`pnpm deploy:web -- "why"`** → `tools/sma-deploy-guard.mjs` + `sma.deploy.json` (spec:
+guard: **`node tools/sma-deploy-guard.mjs --why "why"`** (pnpms injected `--` breaks the strict arg parser) → `tools/sma-deploy-guard.mjs` + `sma.deploy.json` (spec:
 `~/DEV/SMARCH/docs/SMA_DEPLOY_GUARD.md`). It mechanically REFUSES: non-canonical trees (snapshots
 can never pass — the config names the absolute canonical path), dirty trees, unpushed HEADs, and
 non-fast-forward deploys (production serving work your tree lacks → integrate first). Stamps
