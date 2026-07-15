@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { accountIdentityFromSession, accountRedirectUrl } from "../app/account/account-session";
 import { supabaseBrowser, supabaseBrowserConfigured } from "../lib/supabase-browser";
+import { createConsoleTelemetry } from "../../../core/src/telemetry";
 import styles from "./account-control.module.css";
 
 type ControlState = "loading" | "signed-out" | "session" | "linked" | "unavailable";
+const telemetry = createConsoleTelemetry();
 
 export function AccountControl() {
   const [state, setState] = useState<ControlState>(supabaseBrowserConfigured() ? "loading" : "signed-out");
@@ -89,14 +91,25 @@ export function AccountControl() {
   // One click, straight to GitHub (user order 2026-07-15): a signed-out click starts the OAuth
   // dance immediately instead of detouring through /account. The OAuth callback returns to the
   // page the viber was on. Signed-in states keep linking to the account console.
+  async function startDirectSignIn(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    try {
+      const { error } = await supabaseBrowser().auth.signInWithOAuth({
+        provider: "github",
+        options: {
+          redirectTo: accountRedirectUrl(window.location.origin, pathname || "/"),
+          scopes: "read:user user:email",
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      telemetry.captureError(error, { area: "web.auth.header-oauth", severity: "warn" });
+      setState("unavailable");
+    }
+  }
+
   const directSignIn = state === "signed-out" && supabaseBrowserConfigured()
-    ? (event: MouseEvent<HTMLAnchorElement>) => {
-        event.preventDefault();
-        void supabaseBrowser().auth.signInWithOAuth({
-          provider: "github",
-          options: { redirectTo: accountRedirectUrl(window.location.origin, pathname || "/") },
-        });
-      }
+    ? startDirectSignIn
     : undefined;
 
   // Once signed in, the viber's own board profile is one click away in the header.

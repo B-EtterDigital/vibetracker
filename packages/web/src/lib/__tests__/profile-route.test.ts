@@ -81,7 +81,7 @@ test("profile hero carries the identity surface, the full discipline set, and th
   assert.match(hero, /disciplines\.map/);
   assert.match(hero, /C0VIBE join\/migrate doors live ONLY in the band/);
   assert.match(cta, /Join C0VIBE/);
-  assert.match(cta, /Migrate this profile/);
+  assert.match(cta, /Powerup your VibeTools \(free\)/);
   // The hero wash takes the viber's own discipline colour — a signal, not decoration.
   assert.match(hero, /"--vhero-accent": accent/);
   assert.match(heroStyles, /--vhero-accent/);

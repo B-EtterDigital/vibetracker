@@ -20,6 +20,8 @@ const callback = readFileSync("packages/web/src/app/auth/callback/route.ts", "ut
 const browserClient = readFileSync("packages/web/src/lib/supabase-browser.ts", "utf8");
 const serverClient = readFileSync("packages/web/src/lib/supabase-server.ts", "utf8");
 const bridgeRoute = readFileSync("packages/web/src/app/api/account-bridge/route.ts", "utf8");
+const ticker = readFileSync("packages/web/src/components/site-ticker.tsx", "utf8");
+const globalStyles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
 test("account identity derives only bounded GitHub display fields", () => {
   const identity = accountIdentityFromSession({ user: {
@@ -103,11 +105,29 @@ test("global shell exposes an obvious GitHub sign-in control without requiring C
   assert.match(control, /state === "linked" && avatarUrl \? <i>✓<\/i>/);
   assert.match(control, /data-short-label=\{shortLabel\}/);
   assert.match(control, /state === "linked" \? "✓"/);
+  assert.match(control, /signInWithOAuth\(\{/);
+  assert.match(control, /provider: "github"/);
+  assert.match(control, /accountRedirectUrl\(window\.location\.origin, pathname \|\| "\/"\)/);
+  assert.match(control, /scopes: "read:user user:email"/);
+  assert.match(control, /telemetry\.captureError\(error, \{ area: "web\.auth\.header-oauth", severity: "warn" \}\)/);
+  assert.match(control, /setState\("unavailable"\)/);
   assert.match(controlCss, /min-width: 136px/);
   assert.match(controlCss, /\.mark img/);
   assert.match(controlCss, /\.mark i/);
   assert.match(controlCss, /content: attr\(data-short-label\)/);
-  assert.doesNotMatch(control, /signInWithOAuth|provider_token|localStorage|sessionStorage/);
+  assert.doesNotMatch(control, /provider_token|localStorage|sessionStorage/);
+});
+
+test("global shell ticker uses live board data and remains motion-safe", () => {
+  assert.match(layout, /import \{ SiteTicker \}/);
+  assert.match(layout, /<SiteTicker \/>/);
+  assert.match(ticker, /vibetracker_leaderboard_self_reported/);
+  assert.match(ticker, /vibetracker_submissions/);
+  assert.match(ticker, /telemetry\.captureError/);
+  assert.match(ticker, /aria-label="Live board stats"/);
+  assert.match(ticker, /aria-hidden=\{hidden \|\| undefined\}/);
+  assert.match(globalStyles, /@keyframes vticker-roll/);
+  assert.match(globalStyles, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
 test("account console uses real GitHub OAuth when available and the verified CLI path otherwise", () => {
