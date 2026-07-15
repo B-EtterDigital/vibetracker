@@ -5,7 +5,7 @@
     "name": "Source Stack Composer",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "language": [
       "tsx",
       "ts",
@@ -18,7 +18,9 @@
     "domain": [
       "source_stack",
       "local_setup",
-      "runbook"
+      "runbook",
+      "source_readiness",
+      "coverage_explanation"
     ]
   },
   "hierarchy": {
@@ -31,12 +33,12 @@
       "file"
     ],
     "component_policy": "internal_by_default",
-    "notes": "Route-local stack composition with a pure tested runbook model and explicit local-first trust boundary."
+    "notes": "Route-local stack composition with a pure tested runbook and fail-closed readiness model, explicit local-first trust boundary, and actionable coverage repair."
   },
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "c5fad90d4d6e2534fc2596ba07a6b42ce50f29cb",
+    "commit": "c11dd40a168eac60cfb4d0b434cada24c07b35c2",
     "paths": [
       "packages/web/src/app/sources"
     ]
@@ -76,7 +78,7 @@
     "ssa_v2": {
       "status": "passing",
       "score": 96,
-      "notes": "Server composition, pure candidate/runbook logic, client interaction, and responsive styling are isolated; every owned source file stays below 300 lines.",
+      "notes": "Server composition, pure candidate/runbook/readiness logic, client interaction, and responsive styling are isolated; every owned source file stays below 300 lines.",
       "evidence": [
         "packages/web/src/app/sources/page.tsx",
         "packages/web/src/app/sources/stack-composer-data.ts",
@@ -88,7 +90,7 @@
     "ssi": {
       "status": "passing",
       "score": 95,
-      "notes": "The server route maps the registry once, the pure module owns honest collection-path precedence and runbook generation, and one client component owns selection and clipboard state.",
+      "notes": "The server route maps the registry once, the pure module owns collection-path precedence, runbook generation, and readiness diagnosis, and one client component owns selection and clipboard state.",
       "evidence": [
         "packages/web/src/app/sources/page.tsx",
         "packages/web/src/app/sources/stack-composer-data.ts",
@@ -98,7 +100,7 @@
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Pure composer tests and the source route contract cover collection-path truth, multi-field search, registry-backed presets, dry-run defaults, deduplicated detection, planned comments, and forbidden client behavior.",
+      "notes": "Thirteen focused source tests cover collection-path truth, multi-field search, registry-backed presets, every readiness state, fail-closed planned coverage, dry-run defaults, deduplicated detection, and forbidden client behavior.",
       "evidence": [
         "packages/web/src/app/sources/__tests__/stack-composer-data.test.ts",
         "packages/web/src/lib/__tests__/source-atlas.test.ts"
@@ -107,7 +109,7 @@
     "spe": {
       "status": "passing",
       "score": 96,
-      "notes": "Search renders at most 12 source candidates while selected tools remain visible independently. Mobile puts the generated runbook before the catalog, and 4K expands to a 2640px rail with a two-column evidence index and zero horizontal overflow.",
+      "notes": "Search renders at most 12 source candidates while selected tools remain visible independently. Mobile puts diagnosis and runbook before the catalog; 4K expands to a 3000px rail and measured 2952px workbench with legible fixed-size type and zero horizontal overflow.",
       "evidence": [
         "packages/web/src/app/sources/stack-composer-data.ts",
         "packages/web/src/app/sources/stack-composer.tsx"
@@ -116,7 +118,7 @@
     "srs": {
       "status": "passing",
       "score": 94,
-      "notes": "Collection-path meanings, selected provider methods, domain taxonomy, selection limits, no-result recovery, clipboard success or failure, dry-run behavior, and opt-in publication are visible; no operation fails silently.",
+      "notes": "Collection-path meanings become a decisive readiness state, trackable/automatic/verified/visibility metrics, explicit consequence, and one next action. Empty, blocked, partial, manual-review, and ready states all fail visibly without inflating usage.",
       "evidence": [
         "packages/web/src/app/sources/stack-composer.tsx",
         "packages/web/src/app/sources/__tests__/stack-composer-data.test.ts"
@@ -125,10 +127,10 @@
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Release gate, Next build, production deployment, preset, filter, selection, live path-count, clipboard, and browser proofs pass at mobile, desktop, and 3840x2160 viewports.",
+      "notes": "The committed source release passes its full gate and Next build. Canonical deploy 6a5736b626defad5dde0daa0 contains this source release plus the concurrent profile polish, and browser proofs cover all five diagnosis states, removal recovery, mobile, desktop, and 3840x2160. The current integrated worktree separately has one pending profile-route contract mismatch outside this module.",
       "evidence": [
         "scripts/release-gate.mjs",
-        "Netlify deploy 6a56eeba17daf52a919a1c1b"
+        "Netlify deploy 6a5736b626defad5dde0daa0"
       ]
     },
     "sas": {
@@ -224,14 +226,14 @@
     "sbom_path": ""
   },
   "quality": {
-    "score": 95,
+    "score": 96,
     "line_count": {
-      "max_file_lines": 216,
+      "max_file_lines": 276,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 806,
+      "feature_lines": 1078,
       "file_count": 6,
       "dependency_count": 2,
       "notes": "The route is split into server composition, a pure tested data model, one client workbench, two focused stylesheets, and tests with no new dependency."
@@ -240,6 +242,48 @@
       "node --test packages/web/src/app/sources/__tests__/stack-composer-data.test.ts packages/web/src/lib/__tests__/source-atlas.test.ts"
     ],
     "verification": [
+      {
+        "command": "commit c11dd40: 13 focused source tests + pnpm typecheck + pnpm sma:release-gate + pnpm --filter @vibetracker/web build; canonical production browser proof",
+        "status": "pass",
+        "timestamp": "2026-07-15T07:44:00Z",
+        "notes": "The committed source tree passed 13 focused tests, 15 control-plane tests, 668 package tests, strict VTRS with zero violations, TypeScript, and the 30-route Next build. Canonical locked deploy 6a5736b626defad5dde0daa0 serves the source readiness console and concurrent profile UI together; stable checks prove PARTIAL COVERAGE, the 3-of-4 headline, removal action, and responsive source rendering."
+      },
+      {
+        "command": "pnpm sma:release-gate on the canonical integrated worktree",
+        "status": "fail",
+        "timestamp": "2026-07-15T07:45:00Z",
+        "notes": "Source-focused tests and TypeScript pass, but the broader gate is blocked by one concurrent profile-route assertion that still expects the former ViberIdentity disciplines prop after the live infographic refactor. No source assertion failed; this remains an explicit integration blocker before the next deploy."
+      },
+      {
+        "actor_kind": "ai_model",
+        "actor_id": "codex",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementation",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "files_touched": [
+          "packages/web/src/app/sources/stack-composer-data.ts",
+          "packages/web/src/app/sources/stack-composer.tsx",
+          "packages/web/src/app/sources/stack-composer.css",
+          "packages/web/src/app/sources/sources.css",
+          "packages/web/src/app/sources/__tests__/stack-composer-data.test.ts",
+          "packages/web/src/app/sources/module.sweetspot.json"
+        ],
+        "verification": [
+          {
+            "command": "committed source release gate + canonical production proof",
+            "status": "pass",
+            "timestamp": "2026-07-15T07:44:00Z",
+            "notes": "The committed source release and canonical production proof pass; the current integrated worktree's separate profile-route mismatch is recorded in quality.verification and blocks another deploy."
+          }
+        ],
+        "timestamp": "2026-07-15T07:44:00Z",
+        "summary": "Turned raw source path labels into a fail-closed readiness diagnosis with coverage metrics, concrete repair actions, and responsive operator hierarchy.",
+        "attestation": {
+          "method": "sma-gen3",
+          "reference": "lease-1784101473010-4b072cfe"
+        }
+      },
       {
         "command": "focused source tests + pnpm typecheck + pnpm sma:release-gate + netlify deploy --prod --build + Playwright production proof",
         "status": "pass",
