@@ -55,7 +55,9 @@ test("score route is a focused interactive production-formula instrument", () =>
   assert.match(brief, /READ THIS SCORE \/ LIVE INTERPRETATION/);
   assert.match(brief, /STRONGEST DRIVER/);
   assert.match(brief, /LARGEST OPEN GAIN/);
+  assert.match(brief, /SCALE CONTRACT/);
   assert.match(briefStyles, /\.score-signal-brief__equation/);
+  assert.match(briefStyles, /article\[data-tone="scale"\]/);
   assert.match(briefStyles, /@media \(min-width: 2200px\)/);
   assert.match(responsive, /@media \(max-width: 760px\)/);
   assert.match(responsive, /@media \(prefers-reduced-motion: reduce\)/);
@@ -79,7 +81,10 @@ test("score lab uses the production formula and quarantines trust context", () =
     assert.equal(brief.currentLabel, "79 usage points");
     assert.equal(brief.ceilingLabel, "92 honest ceiling");
     assert.equal(brief.trustLabel, "8 outside score");
-    assert.match(brief.explanation, /separate 8-point trust lane stays visible but is excluded/);
+    assert.equal(brief.scale.label, "/100 fixed display");
+    assert.equal(brief.scale.value, "92 scoreable max");
+    assert.match(brief.scale.note, /8 reserved trust points stay visible at \+0/);
+    assert.match(brief.explanation, /fixed display scale/);
     assert.equal(brief.strongest.label, "Usage mass");
     assert.equal(brief.opportunity.label, "Daily rhythm");
     assert.equal(brief.opportunity.value, "10 points open");
@@ -94,6 +99,7 @@ test("score lab uses the production formula and quarantines trust context", () =
     const power = buildScoreLabSnapshot(SCORE_LAB_PRESETS[2].input);
     assert.equal(power.receipt.score, 92);
     assert.equal(power.receipt.tier, "legend");
+    assert.match(buildScoreSignalBrief(power).explanation, /scoreable formula ceiling, not a missing 8 points/);
 
     const offline = buildScoreLabSnapshot({
       records: 0,

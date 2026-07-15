@@ -35,6 +35,7 @@ export interface ScoreSignalBrief {
   trustLabel: string;
   strongest: { label: string; value: string; note: string };
   opportunity: { label: string; value: string; note: string };
+  scale: { label: string; value: string; note: string };
 }
 
 export const SCORE_LAB_PRESETS: readonly ScoreLabPreset[] = [
@@ -192,14 +193,17 @@ export function buildScoreSignalBrief(snapshot: ScoreLabSnapshot): ScoreSignalBr
   )[0];
   const trustReserve = Math.max(0, 100 - snapshot.scoringMax);
   const openPoints = opportunity ? Math.max(0, opportunity.max - opportunity.points) : 0;
+  const atCeiling = snapshot.receipt.score >= snapshot.scoringMax;
 
   return {
     headline: snapshot.receipt.score > 0
       ? `${snapshot.receipt.score} comes from usage. Trust adds zero.`
       : "No reviewed usage means no score yet.",
-    explanation:
-      `${snapshot.receipt.score}/100 is the raw sum of four accepted-usage rails. ` +
-      `Those rails top out at ${snapshot.scoringMax}; the separate ${trustReserve}-point trust lane stays visible but is excluded from scoring.`,
+    explanation: atCeiling
+      ? `${snapshot.receipt.score}/100 is the scoreable formula ceiling, not a missing ${trustReserve} points. ` +
+        "Every accepted-usage rail is full; the reserved trust lane stays visible at +0."
+      : `${snapshot.receipt.score}/100 uses a fixed display scale. Four accepted-usage rails can contribute up to ${snapshot.scoringMax}; ` +
+        `the reserved ${trustReserve}-point trust lane stays visible but is excluded from scoring.`,
     equation: `${scoringFactors.map((factor) => `${factor.label.toLowerCase()} ${factor.points}`).join(" + ")} = ${snapshot.scoringPoints}`,
     currentLabel: `${snapshot.scoringPoints} usage points`,
     ceilingLabel: `${snapshot.scoringMax} honest ceiling`,
@@ -215,6 +219,11 @@ export function buildScoreSignalBrief(snapshot: ScoreLabSnapshot): ScoreSignalBr
       note: openPoints > 0
         ? FACTOR_ACTION[opportunity?.id ?? ""] ?? "Change the accepted-usage input to inspect this rail."
         : "All accepted-usage rails are saturated; trust still remains +0.",
+    },
+    scale: {
+      label: "/100 fixed display",
+      value: `${snapshot.scoringMax} scoreable max`,
+      note: `${trustReserve} reserved trust points stay visible at +0. Reaching ${snapshot.scoringMax} means every usage rail is full.`,
     },
   };
 }

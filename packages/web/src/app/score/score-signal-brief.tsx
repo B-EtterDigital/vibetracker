@@ -27,6 +27,12 @@ export function ScoreSignalBrief({ brief }: { brief: ScoreSignalBriefModel }) {
           <strong>{brief.opportunity.value}</strong>
           <small>{brief.opportunity.note}</small>
         </article>
+        <article data-tone="scale">
+          <span>SCALE CONTRACT</span>
+          <b>{brief.scale.label}</b>
+          <strong>{brief.scale.value}</strong>
+          <small>{brief.scale.note}</small>
+        </article>
       </div>
       <div className="score-signal-brief__equation">
         <span>RAW EQUATION</span>
