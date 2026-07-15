@@ -20,7 +20,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "3eddab0",
+    "commit": "c537c8c",
     "paths": [
       "packages/web/src/app/compare",
       "packages/web/src/lib/__tests__/compare-route.test.ts"
@@ -96,10 +96,10 @@
       "evidence": ["packages/web/src/app/compare/compare-model.ts", "packages/web/src/app/compare/compare-lab.tsx"]
     },
     "ssra": {
-      "status": "pending",
-      "score": 0,
-      "notes": "Guarded production deployment and mobile, desktop, and 4K browser verification are required before release closeout.",
-      "evidence": ["packages/web/src/lib/__tests__/compare-route.test.ts"]
+      "status": "passing",
+      "score": 96,
+      "notes": "Guarded deploy 6a57289d151189e3a60aea91 with stamp mrlp8he0-35gat83h passed the full release gate, 30-route production build, stable and immutable browser proof, and zero-overflow checks at 390x844, 1440x1000, and 3840x2160; production was re-locked after verification.",
+      "evidence": ["packages/web/src/lib/__tests__/compare-route.test.ts", "https://vibeusage.c0vibe.app/compare", "https://6a57289d151189e3a60aea91--vibeusage.netlify.app/compare"]
     },
     "sas": {
       "status": "passing",
@@ -201,6 +201,12 @@
         "status": "pass",
         "timestamp": "2026-07-15T06:25:00Z",
         "notes": "Six focused comparison contracts passed, including the explicit indistinguishable state and derived signal vector."
+      },
+      {
+        "command": "pnpm sma:release-gate + pnpm --filter @vibetracker/web build + guarded canonical deployment + Playwright stable and immutable proof",
+        "status": "pass",
+        "timestamp": "2026-07-15T06:34:00Z",
+        "notes": "15 control-plane tests, 663 package tests, strict telemetry, typecheck, and the 30-route build passed. The live operator brief, evidence jump, provider filters, clipboard receipt, profile swap, and profile link were exercised; all target widths have zero horizontal overflow and zero console errors. The swap completes with Next.js cancelling one superseded RSC request."
       }
     ]
   },
@@ -222,7 +228,7 @@
       "model": "gpt-5-codex",
       "role": "implementer",
       "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
-      "commit": "3eddab0",
+      "commit": "c537c8c",
       "files_touched": ["packages/web/src/app/compare/module.sweetspot.json"],
       "verification": [
         {
@@ -240,6 +246,32 @@
       "context_event_ids": [],
       "attestation": { "method": "agent_runner", "reference": "lease-1784096338812-b2b33fdb" }
     },
-    "touched_by": []
+    "touched_by": [
+      {
+        "actor_kind": "ai_model",
+        "actor_id": "codex",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "verifier",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "commit": "c537c8c",
+        "files_touched": ["packages/web/src/app/compare/module.sweetspot.json"],
+        "verification": [
+          {
+            "command": "guarded production deployment and stable plus immutable Playwright proof",
+            "status": "pass",
+            "timestamp": "2026-07-15T06:34:00Z",
+            "notes": "Deploy 6a57289d151189e3a60aea91 is live and locked; stamp mrlp8he0-35gat83h and mobile, desktop, and 4K comparison geometry were verified."
+          }
+        ],
+        "timestamp": "2026-07-15T06:34:00Z",
+        "summary": "Promoted and verified the public comparison operator brief on the stable VibeUsage domain.",
+        "intent": "Close the comparison brick with real release and responsive interaction evidence.",
+        "decision_rationale": "The immutable deploy and stable alias render the same derived brief without overflow or console errors.",
+        "lease_id": "lease-1784096338812-b2b33fdb",
+        "context_event_ids": [],
+        "attestation": { "method": "agent_runner", "reference": "6a57289d151189e3a60aea91" }
+      }
+    ]
   }
 }
