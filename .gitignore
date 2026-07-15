@@ -34,3 +34,4 @@ PLAN.md
 # SMARCH deploy guard: per-deploy stamp + lock state (a tracked stamp would dirty the tree it certifies)
 .sma/
 packages/web/public/deploy-stamp.json
+.deploy-guard-test-dirty-*
