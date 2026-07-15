@@ -85,6 +85,12 @@ test("account console uses real GitHub OAuth when available and the verified CLI
   assert.match(page, /Both resolve to one GitHub identity, not a full C0VIBE account/);
   assert.match(page, /browser session or existing CLI/);
   assert.match(page, /blue check.*identity only, NOT usage truth/i);
+  assert.match(page, /aria-label="Account migration custody receipt"/);
+  assert.match(page, /1 IDENTITY \/ 0 CREDENTIAL COPIES/);
+  assert.match(page, /The raw GitHub token is checked once and never stored/);
+  assert.match(page, /Provider credentials remain local and are never copied into settings/);
+  assert.match(page, /<dt>profile forks<\/dt><dd>0<\/dd>/);
+  assert.match(page, /<dt>migration claim<\/dt><dd>10 min<\/dd>/);
   assert.match(consoleSource, /signInWithOAuth\(\{/);
   assert.match(consoleSource, /provider: "github"/);
   assert.match(consoleSource, /scopes: "read:user user:email"/);
@@ -127,7 +133,10 @@ test("account layout remains bounded, responsive, and motion-safe", () => {
   assert.match(styles, /@media \(max-width: 920px\)/);
   assert.match(styles, /@media \(max-width: 620px\)/);
   assert.match(styles, /@media \(min-width: 2200px\)/);
-  assert.match(styles, /width: min\(1680px, calc\(100% - 64px\)\)/);
+  assert.match(styles, /width: min\(2640px, 95vw\)/);
+  assert.match(styles, /margin-left: 50%/);
+  assert.match(styles, /transform: translateX\(-50%\)/);
+  assert.match(styles, /\.account-custody__route \{ display: grid; grid-template-columns: repeat\(4, minmax\(0, 1fr\)\); \}/);
   assert.match(styles, /account-console__oauth li > span \{ color: #5ba9ff/);
   assert.match(styles, /account-console__entry-actions/);
   assert.match(styles, /account-identity__primary-link/);

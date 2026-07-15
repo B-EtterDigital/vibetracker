@@ -95,6 +95,26 @@
 .account-console__migration span { color: #7f9296; font-size: 11px; line-height: 1.5; }
 .account-console__migration a { color: #b9d9ff; font: 600 10px/1 var(--font-data), monospace; }
 
+.account-custody { margin-top: 18px; overflow: hidden; border: 1px solid rgba(159, 124, 255, .3); border-radius: 7px; background: #06090d; }
+.account-custody > header { display: flex; justify-content: space-between; gap: 18px; padding: 13px 18px; border-bottom: 1px solid rgba(159, 124, 255, .24); color: #7d9296; font: 700 9px/1 var(--font-data), monospace; }
+.account-custody > header span { color: #b89cff; }
+.account-custody > header b { color: #ffd46f; }
+.account-custody__route { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.account-custody__route article { min-width: 0; padding: 24px; background: rgba(7, 16, 19, .72); }
+.account-custody__route article + article { border-left: 1px solid rgba(255, 255, 255, .08); }
+.account-custody__route small { color: #718589; font: 700 8px/1 var(--font-data), monospace; text-transform: uppercase; }
+.account-custody__route h2 { margin-top: 12px; color: #f4fffb; font-size: 18px; letter-spacing: 0; }
+.account-custody__route p { min-height: 86px; margin-top: 9px; color: #819599; font-size: 10px; line-height: 1.6; }
+.account-custody__route strong { display: block; margin-top: 14px; color: #9ff8e9; font: 700 9px/1 var(--font-data), monospace; text-transform: uppercase; }
+.account-custody__route article[data-tone="terminal"] strong { color: #b9d9ff; }
+.account-custody__route article[data-tone="ledger"] strong { color: #ffd46f; }
+.account-custody__route article[data-tone="c0vibe"] strong { color: #d9b7ff; }
+.account-custody dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border-top: 1px solid rgba(159, 124, 255, .24); background: #030506; }
+.account-custody dl div { min-width: 0; padding: 16px 18px; }
+.account-custody dl div + div { border-left: 1px solid rgba(255, 255, 255, .08); }
+.account-custody dt { color: #657a7f; font: 700 8px/1 var(--font-data), monospace; text-transform: uppercase; }
+.account-custody dd { margin: 7px 0 0; color: #ffd46f; font: 800 17px/1 var(--font-data), monospace; }
+
 .account-boundary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; border: 1px solid rgba(255, 255, 255, .11); border-radius: 7px; overflow: hidden; }
 .account-boundary article { min-width: 0; padding: 18px; background: rgba(7, 16, 19, .82); }
 .account-boundary article + article { border-left: 1px solid rgba(255, 255, 255, .08); }
@@ -128,12 +148,42 @@
   .account-identity__ledger span:nth-child(3) { border-left: 0; }
   .account-identity__ledger span:nth-child(n + 3) { border-top: 1px solid rgba(255, 255, 255, .08); }
   .account-console__migration { grid-template-columns: 1fr; padding: 18px 22px; }
+  .account-custody > header { align-items: flex-start; flex-direction: column; }
+  .account-custody__route { grid-template-columns: 1fr; }
+  .account-custody__route article + article { border-left: 0; border-top: 1px solid rgba(255, 255, 255, .08); }
+  .account-custody__route p { min-height: 0; }
+  .account-custody dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .account-custody dl div:nth-child(3) { border-left: 0; }
+  .account-custody dl div:nth-child(n + 3) { border-top: 1px solid rgba(255, 255, 255, .08); }
   .account-boundary { grid-template-columns: 1fr; }
   .account-boundary article + article { border-left: 0; border-top: 1px solid rgba(255, 255, 255, .08); }
 }
 
 @media (min-width: 2200px) {
-  .account-page { width: min(1680px, calc(100% - 64px)); }
+  .account-page {
+    width: min(2640px, 95vw);
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .account-hero {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
+    min-height: 560px;
+  }
+
+  .account-hero__copy { padding: 72px; }
+  .account-hero h1 { font-size: 76px; }
+  .account-hero__terminal pre { padding: 64px; font-size: 13px; }
+  .account-console__head { padding: 34px 42px; }
+  .account-console__head h2 { font-size: 34px; }
+  .account-console__body { grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); }
+  .account-console__identity { padding: 48px; }
+  .account-console__proof-tabs { margin: 30px 36px 0; }
+  .account-console__oauth > h3 { margin: 30px 36px 0; }
+  .account-console__oauth ol { margin: 22px 36px 34px; }
+  .account-console__migration { padding: 24px 42px; }
+  .account-custody__route article { padding: 32px; }
+  .account-boundary article { padding: 26px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

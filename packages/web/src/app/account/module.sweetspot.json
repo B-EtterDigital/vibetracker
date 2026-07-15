@@ -5,7 +5,7 @@
     "name": "GitHub-first Account Console",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "language": ["tsx", "ts", "css"],
     "frameworks": ["next", "react", "supabase"],
     "domain": ["identity", "authentication", "github_verification", "cli_migration"]
@@ -15,18 +15,20 @@
     "group_id": "000-vibetracker:packages/web/src/app",
     "contains": ["module", "component", "utility", "api_route", "file"],
     "component_policy": "internal_by_default",
-    "notes": "An adaptive GitHub-first identity surface: browser OAuth when configured, proven GitHub CLI verification otherwise, with one immutable subject and identity proof kept separate from usage truth."
+    "notes": "An adaptive GitHub-first identity surface: browser OAuth when configured, proven GitHub CLI verification otherwise, one immutable subject, explicit credential custody, and a one-time path into a later C0VIBE account without moving usage truth."
   },
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "d896cf3",
+    "commit": "efcae67",
     "paths": [
       "packages/web/src/app/account",
+      "packages/web/src/app/api/account-bridge",
       "packages/web/src/app/api/identity/github/status",
       "packages/web/src/components/account-control.tsx",
       "packages/web/src/components/account-control.module.css",
-      "packages/web/src/lib/supabase-browser.ts"
+      "packages/web/src/lib/supabase-browser.ts",
+      "packages/web/src/lib/c0vibe-account-bridge.ts"
     ]
   },
   "owner": {
@@ -37,10 +39,12 @@
   "boundaries": {
     "owned_paths": [
       "packages/web/src/app/account",
+      "packages/web/src/app/api/account-bridge",
       "packages/web/src/app/api/identity/github/status",
       "packages/web/src/components/account-control.tsx",
       "packages/web/src/components/account-control.module.css",
-      "packages/web/src/lib/supabase-browser.ts"
+      "packages/web/src/lib/supabase-browser.ts",
+      "packages/web/src/lib/c0vibe-account-bridge.ts"
     ],
     "public_paths": [
       "packages/web/src/app/account",
@@ -48,6 +52,7 @@
     ],
     "private_paths": [
       "packages/web/src/app/api/identity/github/status",
+      "packages/web/src/app/api/account-bridge",
       "packages/web/src/app/account/account-session.ts"
     ],
     "forbidden_imports": [
@@ -61,6 +66,8 @@
       "same-origin authenticated identity-status request",
       "user-initiated GitHub OAuth redirect",
       "one-time same-origin GitHub identity-link request",
+      "one-time same-origin C0VIBE account-link claim request",
+      "user-initiated C0VIBE WorkOS redirect",
       "user-initiated local session sign-out",
       "user-initiated clipboard write"
     ]
@@ -86,7 +93,7 @@
     "sstf": {
       "status": "passing",
       "score": 96,
-      "notes": "Eight focused account contracts and the full 661-test suite cover sanitization, redirect safety, status authorization, one-time linking, local sign-out, adaptive CLI fallback, responsive layout, and motion safety.",
+      "notes": "Thirteen focused identity contracts and the full 662-test suite cover sanitization, redirect safety, status authorization, one-time linking, local sign-out, adaptive CLI fallback, the migration custody receipt, responsive layout, and motion safety.",
       "evidence": ["packages/web/src/lib/__tests__/account-route.test.ts", "packages/web/src/lib/__tests__/github-identity-route.test.ts"]
     },
     "spe": {
@@ -98,14 +105,14 @@
     "srs": {
       "status": "passing",
       "score": 96,
-      "notes": "Signed-out, checking, OAuth-ready, CLI-ready, unavailable, session-only, linked, migration, avatar, route-return, identity-ledger, copy-success, and copy-failure states are visible without upgrading identity into usage proof.",
+      "notes": "Signed-out, checking, OAuth-ready, CLI-ready, unavailable, session-only, linked, migration, avatar, route-return, identity-ledger, copy-success, copy-failure, credential custody, and later C0VIBE settings states are visible without upgrading identity into usage proof.",
       "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/components/account-control.tsx"]
     },
     "ssra": {
       "status": "passing",
       "score": 98,
-      "notes": "Exact deploy 6a56f77e6bb82d2ca60427e4 passed enabled browser OAuth, route-return from Insights, a real github.com login redirect, all network requests, zero console errors, and zero horizontal overflow at 390x844, 1440x1000, and 3840x2160. The earlier real GitHub CLI identity exchange remains the machine-verification proof.",
-      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/__tests__/account-route.test.ts", "https://vibeusage.c0vibe.app/account", "Netlify production deploy 6a56f77e6bb82d2ca60427e4"]
+      "notes": "Exact deploy 6a571905c587b6aa69ca396a and the stable domain passed enabled browser OAuth, a real github.com login redirect, CLI copy and proof-channel controls, all network requests, zero console errors, and zero horizontal overflow at 390x844, 1440x1000, and 3840x2160. The 4K surface is centered at 2640px; the earlier real GitHub CLI identity exchange remains the machine-verification proof.",
+      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/app/account/page.tsx", "packages/web/src/lib/__tests__/account-route.test.ts", "https://vibeusage.c0vibe.app/account", "Netlify production deploy 6a571905c587b6aa69ca396a"]
     },
     "sas": {
       "status": "passing",
@@ -148,8 +155,8 @@
     }
   },
   "interfaces": {
-    "public_api": ["GET /account", "<AccountControl />", "GET /api/identity/github/status"],
-    "adapters": ["Supabase browser auth", "Supabase admin auth validation", "existing GitHub identity-link endpoint"],
+    "public_api": ["GET /account", "<AccountControl />", "GET /api/identity/github/status", "POST /api/account-bridge"],
+    "adapters": ["Supabase browser auth", "Supabase admin auth validation", "existing GitHub identity-link endpoint", "C0VIBE WorkOS account bridge"],
     "required_dependencies": ["next", "react", "@supabase/supabase-js"],
     "forbidden_dependencies": ["direct client service-role access", "persistent browser credential storage", "hidden usage writes"]
   },
@@ -205,7 +212,7 @@
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 908,
+      "feature_lines": 1006,
       "file_count": 10,
       "dependency_count": 3,
       "notes": "The implementation is split across the route, pure session helper, global control, server status endpoint, styles, and focused contracts."
@@ -234,6 +241,12 @@
         "status": "pass",
         "timestamp": "2026-07-15T03:03:16Z",
         "notes": "661 package tests, 15 control-plane tests, strict telemetry, typecheck, and the production build passed. Exact deploy 6a56f77e6bb82d2ca60427e4 exposes the full GitHub sign-in label, preserves the source route, redirects through the real github.com login, and renders without browser errors, failed requests, or horizontal overflow at mobile, desktop, and 4K. Authenticated source contracts cover the verified avatar, public-profile action, migration control, and identity ledger while keeping usage proof separate."
+      },
+      {
+        "command": "13 focused identity tests + pnpm sma:release-gate + pnpm --filter @vibetracker/web build + preview/production Playwright proof",
+        "status": "pass",
+        "timestamp": "2026-07-15T05:25:00Z",
+        "notes": "662 package tests, 15 control-plane tests, strict telemetry, typecheck, and the 30-route Next production build passed. Preview 6a5717e74db301ab8441473a and production 6a571905c587b6aa69ca396a expose explicit GitHub, keyring, usage-ledger, and later C0VIBE custody; stored raw GitHub credentials, hidden usage moves, and profile forks all remain zero. Exact and stable production pass real GitHub redirect, CLI clipboard, proof-channel interaction, zero failed requests, zero console errors, and zero overflow at 390x844, 1440x1000, and centered 2640px-wide 3840x2160. The shared C0VIBE bridge migration is present remotely and its deployed edge consumer rejects requests without a WorkOS session."
       }
     ]
   },
