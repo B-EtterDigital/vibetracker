@@ -176,7 +176,9 @@ test("profile infographic owns measured traits while identity owns honestly earn
   assert.match(identityStyles, /grid-template-columns: repeat\(auto-fit, minmax\(180px, 1fr\)\)/);
   assert.match(identityStyles, /@media \(max-width: 680px\)/);
   assert.match(infographicStyles, /grid-template-columns: minmax\(0, 1\.3fr\) minmax\(0, 1fr\)/);
-  assert.match(infographicStyles, /\.vboard \{ grid-template-columns: 1fr; width: 100%; margin-left: 0; \}/);
+  assert.match(infographicStyles, /\.vboard \{ grid-template-columns: 1fr; \}/);
+  assert.match(infographicStyles, /\.vboard \{ width: auto; margin-inline: -14px; \}/);
+  assert.doesNotMatch(infographicStyles, /\.vboard[^}]*100vw/);
 });
 
 test("token breakdown + measured multi-CLI activity render without inferred delegation", () => {
