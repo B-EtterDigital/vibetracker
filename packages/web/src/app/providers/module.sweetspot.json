@@ -34,7 +34,7 @@
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "1123dc1",
+    "commit": "d3933de",
     "paths": [
       "packages/web/src/app/providers"
     ]
@@ -122,12 +122,14 @@
       ]
     },
     "ssra": {
-      "status": "pending",
-      "score": 0,
-      "notes": "The coverage-intelligence update requires the full release gate, guarded production deploy, and stable plus immutable browser proof before release closeout.",
+      "status": "passing",
+      "score": 96,
+      "notes": "Guarded deploy 6a5730398589be5015916660 with stamp mrlqeaz3-70zvxvrt passed the full release gate, 30-route build, stable and immutable interaction proof, and zero-overflow browser checks at 390x844, 1440x1000, and 3840x2160; production was re-locked after verification.",
       "evidence": [
         "packages/web/src/app/providers/__tests__/provider-directory.test.ts",
-        "packages/web/src/lib/__tests__/provider-scan.test.ts"
+        "packages/web/src/lib/__tests__/provider-scan.test.ts",
+        "https://vibeusage.c0vibe.app/providers",
+        "https://6a5730398589be5015916660--vibeusage.netlify.app/providers"
       ]
     },
     "sas": {
@@ -249,6 +251,12 @@
         "status": "pass",
         "timestamp": "2026-07-15T06:52:00Z",
         "notes": "22 focused provider contracts and TypeScript passed for the derived coverage vector, fail-closed states, direct filter actions, and legacy route-hook continuity."
+      },
+      {
+        "command": "pnpm sma:release-gate + pnpm --filter @vibetracker/web build + guarded canonical deployment + Playwright stable and immutable proof",
+        "status": "pass",
+        "timestamp": "2026-07-15T07:05:00Z",
+        "notes": "15 control-plane tests, 666 package tests, strict telemetry, typecheck, and the 30-route build passed. Verified, ready, and planned brief actions returned 6, 74, and 81 records; clipboard, stable and immutable rendering, home/profile smoke, zero browser errors, zero failed requests, and zero horizontal overflow passed at mobile, desktop, and 4K."
       }
     ]
   },
@@ -302,6 +310,37 @@
         "attestation": {
           "method": "scanner",
           "reference": "sma-bootstrap-manifests"
+        }
+      },
+      {
+        "actor_kind": "ai_model",
+        "actor_id": "codex",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer_verifier",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "commit": "d3933de",
+        "files_touched": [
+          "packages/web/src/app/providers/directory-data.ts",
+          "packages/web/src/app/providers/directory.tsx",
+          "packages/web/src/app/providers/directory.css",
+          "packages/web/src/app/providers/providers.css",
+          "packages/web/src/app/providers/__tests__/provider-directory.test.ts",
+          "packages/web/src/app/providers/module.sweetspot.json"
+        ],
+        "verification": [
+          {
+            "command": "full release gate, guarded production deploy, and stable plus immutable Playwright proof",
+            "status": "pass",
+            "timestamp": "2026-07-15T07:05:00Z",
+            "notes": "Deploy 6a5730398589be5015916660 is live and locked with stamp mrlqeaz3-70zvxvrt; coverage intelligence and all direct filters passed at 390px, 1440px, and 4K."
+          }
+        ],
+        "timestamp": "2026-07-15T07:05:00Z",
+        "summary": "Turned the provider directory's raw status counts into an evidence-first coverage intelligence brief.",
+        "attestation": {
+          "method": "agent_runner",
+          "reference": "lease-1784097979143-21c79eac"
         }
       }
     ],
