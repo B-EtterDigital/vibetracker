@@ -143,12 +143,12 @@ export function CompareLab({ leftState, rightState, snapshot }: CompareLabProps)
       <form className="compare-picker" action="/compare" method="get">
         <label>
           <span>LEFT PUBLIC HANDLE</span>
-          <div><b aria-hidden="true">@</b><input aria-label="Left public handle" maxLength={64} name="left" pattern="[a-zA-Z0-9_.-]{1,64}" required value={leftHandle} onChange={(event) => setLeftHandle(event.target.value)} /></div>
+          <div><b aria-hidden="true">@</b><input aria-label="Left public handle" maxLength={64} name="left" pattern={"[a-zA-Z0-9_.\\-]{1,64}"} required value={leftHandle} onChange={(event) => setLeftHandle(event.target.value)} /></div>
         </label>
         <button className="compare-picker__swap" aria-label="Swap public profiles" onClick={swapProfiles} type="button">L/R</button>
         <label>
           <span>RIGHT PUBLIC HANDLE</span>
-          <div><b aria-hidden="true">@</b><input aria-label="Right public handle" maxLength={64} name="right" pattern="[a-zA-Z0-9_.-]{1,64}" required value={rightHandle} onChange={(event) => setRightHandle(event.target.value)} /></div>
+          <div><b aria-hidden="true">@</b><input aria-label="Right public handle" maxLength={64} name="right" pattern={"[a-zA-Z0-9_.\\-]{1,64}"} required value={rightHandle} onChange={(event) => setRightHandle(event.target.value)} /></div>
         </label>
         <button className="compare-picker__run" type="submit">RUN COMPARISON</button>
       </form>

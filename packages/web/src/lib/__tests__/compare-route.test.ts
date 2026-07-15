@@ -190,6 +190,8 @@ test("compare route is real, discoverable, interactive, responsive, and honest w
   assert.match(lab, /snapshot\.brief\.nextView/);
   assert.match(lab, /formatCompareOperations\(profile\.operations\)/);
   assert.match(lab, /aria-label=\{`\$\{metric\.label\}: \$\{metric\.leftExactLabel\}`\}/);
+  assert.equal(lab.match(/pattern=\{\"\[a-zA-Z0-9_\.\\\\-\]\{1,64\}\"\}/g)?.length, 2);
+  assert.doesNotMatch(lab, /pattern="\[a-zA-Z0-9_\.-\]\{1,64\}"/);
   assert.match(styles, /\.compare-overview/);
   assert.match(styles, /\.compare-brief/);
   assert.match(styles, /\.compare-provider-row/);
