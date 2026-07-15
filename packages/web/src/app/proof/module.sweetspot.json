@@ -5,7 +5,7 @@
     "name": "Proof Contract Console",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["usage-proof", "evidence-boundaries", "local-first"]
@@ -15,12 +15,12 @@
     "group_id": "000-vibetracker:packages/web/src/app",
     "contains": ["route", "model", "component", "style", "test"],
     "component_policy": "internal_by_default",
-    "notes": "A proof cockpit that explains bundled contract fixtures without presenting them as live machine, account, or publish evidence."
+    "notes": "A live public-receipt inspector with claim-by-claim evidence decoding plus a collapsed bundled contract that never presents fixtures as machine, account, or publish evidence."
   },
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "d0332d8",
+    "commit": "1fbfcb1",
     "paths": [
       "packages/web/src/app/proof",
       "packages/web/src/lib/__tests__/proof-route.test.ts"
@@ -40,7 +40,10 @@
       "packages/web/src/app/proof/page.tsx",
       "packages/web/src/app/proof/proof-verdict.ts",
       "packages/web/src/app/proof/proof-verdict-panel.tsx",
-      "packages/web/src/app/proof/proof-verdict.css"
+      "packages/web/src/app/proof/proof-verdict.css",
+      "packages/web/src/app/proof/live-proof-snapshot.ts",
+      "packages/web/src/app/proof/live-proof-workbench.tsx",
+      "packages/web/src/app/proof/live-proof-workbench.css"
     ],
     "private_paths": [
       "packages/web/src/lib/__tests__/proof-route.test.ts"
@@ -51,67 +54,71 @@
       "real provider credentials",
       "undocumented cross-brick private imports"
     ],
-    "allowed_side_effects": []
+    "allowed_side_effects": [
+      "server-side lookup of a sanitized public profile handle",
+      "user-initiated public receipt clipboard write",
+      "user-initiated navigation to a public profile"
+    ]
   },
   "classification": {
     "data_classes": ["public"],
     "risk": "low",
-    "notes": "The route renders bundled deterministic evidence fixtures and performs no scan, account lookup, network request, or upload."
+    "notes": "The route may read one published aggregate through the existing public profile adapter. It never scans a machine, reads provider credentials, mutates usage, or uploads data."
   },
   "sweetspot": {
     "ssa_v2": {
       "status": "passing",
       "score": 92,
-      "notes": "The verdict model, view, and responsive style are route-local; the inherited cockpit remains below the project file ceiling.",
-      "evidence": ["packages/web/src/app/proof/page.tsx", "packages/web/src/app/proof/proof-verdict.ts", "packages/web/src/app/proof/proof-verdict-panel.tsx", "packages/web/src/app/proof/proof-verdict.css"]
+      "notes": "The live snapshot model, interactive workbench, verdict model, views, and responsive styles are route-local; every source file remains below the project file ceiling.",
+      "evidence": ["packages/web/src/app/proof/page.tsx", "packages/web/src/app/proof/live-proof-snapshot.ts", "packages/web/src/app/proof/live-proof-workbench.tsx", "packages/web/src/app/proof/proof-verdict.ts"]
     },
     "ssi": {
       "status": "passing",
       "score": 95,
-      "notes": "The pure verdict consumes the declared public evidence model and passes immutable data to a server-rendered component.",
-      "evidence": ["packages/web/src/app/proof/proof-verdict.ts", "packages/web/src/app/proof/proof-verdict-panel.tsx"]
+      "notes": "Pure snapshot and verdict builders normalize public data before the client workbench decodes claims or renders replay stages.",
+      "evidence": ["packages/web/src/app/proof/live-proof-snapshot.ts", "packages/web/src/app/proof/proof-verdict.ts", "packages/web/src/app/proof/live-proof-workbench.tsx"]
     },
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "The focused contract checks model output, fixture/live boundaries, semantic progress meters, responsive CSS, route composition, and surviving cockpit invariants.",
+      "notes": "Five focused proof contracts and the full 662-test release suite cover handle sanitization, public snapshot output, empty states, fixture/live boundaries, the verifier matrix, semantic controls, responsive CSS, and cockpit invariants.",
       "evidence": ["packages/web/src/lib/__tests__/proof-route.test.ts"]
     },
     "spe": {
       "status": "passing",
-      "score": 100,
-      "notes": "The brick is deterministic and side-effect free.",
-      "evidence": ["packages/web/src/app/proof/proof-verdict.ts"]
+      "score": 96,
+      "notes": "Pure builders are deterministic; the only runtime read is one bounded public-profile lookup and all interactions remain local or navigational.",
+      "evidence": ["packages/web/src/app/proof/live-proof-snapshot.ts", "packages/web/src/app/proof/page.tsx"]
     },
     "srs": {
       "status": "passing",
       "score": 95,
-      "notes": "The first proof panel explicitly identifies bundled fixtures, excluded live evidence, and the commands required to prove a user run.",
-      "evidence": ["packages/web/src/app/proof/proof-verdict-panel.tsx"]
+      "notes": "Each live metric now exposes what it proves, where it was read from, and what it explicitly cannot prove; the bundled fixture contract remains separately labelled and collapsed.",
+      "evidence": ["packages/web/src/app/proof/live-proof-workbench.tsx", "packages/web/src/app/proof/proof-verdict-panel.tsx"]
     },
     "ssra": {
       "status": "passing",
       "score": 96,
-      "notes": "The full release gate, vulnerability audit, CLI and web production builds, immutable preview deploy, mobile and 4K geometry checks, and browser accessibility proof pass.",
-      "evidence": ["packages/web/src/lib/__tests__/proof-route.test.ts", "https://vibeusage.c0vibe.app/proof", "https://6a561648e30ad41a89ca1a88--vibeusage.netlify.app/proof"]
+      "notes": "Guarded production deploy 6a5720faf6e008d04a942b20 with stamp mrlo2lse-lvrzlu3m passed the full release gate, 30-route build, exact/stable interaction proof, and zero-overflow browser checks at 390x844, 1440x1000, and 3840x2160; production was re-locked after verification.",
+      "evidence": ["packages/web/src/lib/__tests__/proof-route.test.ts", "https://vibeusage.c0vibe.app/proof", "https://6a5720faf6e008d04a942b20--vibeusage.netlify.app/proof"]
     },
     "sas": {
       "status": "passing",
       "score": 95,
-      "notes": "The route has explicit ownership, public seams, forbidden imports, and zero allowed runtime side effects.",
+      "notes": "The route has explicit ownership, public seams, forbidden imports, and a narrow allowlist for one public read, clipboard copy, and profile navigation.",
       "evidence": ["packages/web/src/app/proof/module.sweetspot.json"]
     },
     "sva": {
       "status": "passing",
       "score": 95,
-      "notes": "No secrets, privileged client, user record, provider credential, or runtime request is present.",
-      "evidence": ["packages/web/src/app/proof/page.tsx", "packages/web/src/app/proof/proof-verdict.ts"]
+      "notes": "No secret, privileged client, provider credential, raw usage record, prompt, or local file reaches the browser; the live path receives only a normalized public snapshot.",
+      "evidence": ["packages/web/src/app/proof/page.tsx", "packages/web/src/app/proof/live-proof-snapshot.ts"]
     },
     "srls": {
       "status": "not_applicable",
       "score": 100,
-      "notes": "The brick does not access a database.",
-      "evidence": []
+      "notes": "The brick delegates published-profile reads to the upstream data adapter; that adapter owns RLS and this brick imports no privileged client.",
+      "evidence": ["packages/web/src/app/proof/page.tsx", "packages/web/src/lib/data.ts"]
     },
     "sev": {
       "status": "not_applicable",
@@ -128,13 +135,13 @@
     "sai": {
       "status": "passing",
       "score": 95,
-      "notes": "Lease, intent, source commit, owned paths, and current verification are recorded.",
-      "evidence": [".smarch/agent-context/000-vibetracker.web.proof-contract-console.ndjson"]
+      "notes": "Lease, intent, source commit, guarded deployment stamp, owned paths, and current verification are recorded.",
+      "evidence": [".smarch/agent-context/000-vibetracker.web.proof-contract-console.ndjson", ".smarch/agent-context/web-proof-claim-decoder.ndjson"]
     }
   },
   "interfaces": {
-    "public_api": ["GET /proof", "buildProofVerdict(evidence)", "<ProofVerdictPanel verdict={verdict} />"],
-    "adapters": ["packages/web/src/lib/evidence-cockpit.ts#buildEvidenceCockpit"],
+    "public_api": ["GET /proof", "buildLiveProofSnapshot(profile)", "<LiveProofWorkbench />", "buildProofVerdict(evidence)", "<ProofVerdictPanel verdict={verdict} />"],
+    "adapters": ["packages/web/src/lib/data.ts#getProfile", "packages/web/src/lib/evidence-cockpit.ts#buildEvidenceCockpit"],
     "required_dependencies": ["next", "react"],
     "forbidden_dependencies": ["supabase-admin", "service-role client", "provider SDKs", "automatic upload"]
   },
@@ -169,15 +176,15 @@
   "quality": {
     "score": 95,
     "line_count": {
-      "max_file_lines": 436,
+      "max_file_lines": 462,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 809,
-      "file_count": 5,
+      "feature_lines": 964,
+      "file_count": 9,
       "dependency_count": 2,
-      "notes": "The inherited cockpit remains in one sub-600-line route while the new verdict model, view, and style stay focused and route-local."
+      "notes": "The server route, snapshot builder, client workbench, verdict model, views, and styles remain focused, route-local, and below 600 lines."
     },
     "test_commands": [
       "node --test packages/web/src/lib/__tests__/proof-route.test.ts"
@@ -206,6 +213,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T11:00:49Z",
         "notes": "Stable-domain mobile Lighthouse scored accessibility, best practices, SEO, and agentic browsing at 100; 390x844 and 3840x2160 had no horizontal overflow, no percent-ready labels, and the verdict fit the first 4K viewport. No fetch, XHR, WebSocket, or event-source request occurred."
+      },
+      {
+        "command": "5 focused proof tests + pnpm sma:release-gate + 30-route build + guarded canonical production deploy + Playwright exact/stable proof",
+        "status": "pass",
+        "timestamp": "2026-07-15T05:58:00Z",
+        "notes": "662 package tests, 15 control-plane tests, strict telemetry, typecheck, and the production build passed. Preview 6a571f58f6e008caec942a4d and guarded production 6a5720faf6e008d04a942b20 expose four selectable claims with their live values, sources, and non-claims. Clipboard and public-profile navigation pass; exact and stable deployments have zero browser errors, failed requests, or overflow at mobile, desktop, and centered 2640px 4K. Production serves stamp mrlo2lse-lvrzlu3m and is locked to the verified deploy."
       }
     ]
   },

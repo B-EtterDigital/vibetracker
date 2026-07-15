@@ -198,7 +198,18 @@ test("proof center is exposed as a first-class local-first evidence route", () =
   assert.match(liveWorkbench, /No cached or fixture values were substituted/);
   assert.match(liveWorkbench, /fabricated metrics 0/);
   assert.match(liveWorkbench, /not a cryptographic signature or independent attestation/i);
+  assert.match(liveWorkbench, /Decode what this receipt can actually claim/);
+  assert.match(liveWorkbench, /role="group" aria-label="Public receipt claims"/);
+  assert.match(liveWorkbench, /Were operations counted/);
+  assert.match(liveWorkbench, /reviewed public aggregate \/ record_count/);
+  assert.match(liveWorkbench, /Trust labels do not add usage|Usage volume, spend, rank input/);
+  assert.match(liveWorkbench, /doesNotProve/);
+  assert.match(liveWorkbench, /0 hidden reads/);
+  assert.match(liveWorkbench, /0 writes/);
   assert.match(liveStyles, /\.live-proof__workspace/);
+  assert.match(liveStyles, /\.live-proof__decoder-body/);
+  assert.match(liveStyles, /\.live-proof__claim-switch button\[aria-pressed="true"\]/);
+  assert.match(liveStyles, /\.live-proof__claim-readout/);
   assert.match(liveStyles, /\.proof-blueprint/);
   assert.match(liveStyles, /@media \(max-width: 760px\)/);
   assert.match(liveStyles, /@media \(min-width: 2200px\)/);

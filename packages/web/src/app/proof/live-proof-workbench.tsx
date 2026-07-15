@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
-import type { LiveProofSnapshot } from "./live-proof-snapshot";
+import type { LiveProofMetric, LiveProofSnapshot } from "./live-proof-snapshot";
 
 interface LiveProofWorkbenchProps {
   requestedHandle: string;
@@ -11,12 +11,69 @@ interface LiveProofWorkbenchProps {
 
 type CopyState = "idle" | "copied" | "blocked";
 
+interface ProofClaim {
+  id: string;
+  label: string;
+  question: string;
+  metricId: LiveProofMetric["id"];
+  source: string;
+  tone: "usage" | "provider" | "trust" | "freshness";
+  proves: (value: string) => string;
+  doesNotProve: string;
+}
+
+const PROOF_CLAIMS: ProofClaim[] = [
+  {
+    id: "counted-usage",
+    label: "Counted usage",
+    question: "Were operations counted?",
+    metricId: "records",
+    source: "reviewed public aggregate / record_count",
+    tone: "usage",
+    proves: (value) => `${value} accepted aggregate operations are present in the reviewed public payload.`,
+    doesNotProve: "Prompts, files, token-level billing, effort, quality, or business outcome.",
+  },
+  {
+    id: "provider-mix",
+    label: "Provider mix",
+    question: "Which rails contributed?",
+    metricId: "providers",
+    source: "public provider rollups / providers[]",
+    tone: "provider",
+    proves: (value) => `${value} provider sources contributed public rollups to this receipt.`,
+    doesNotProve: "That every provider account is linked, billed, or owned by this profile.",
+  },
+  {
+    id: "trust-context",
+    label: "Trust context",
+    question: "What context is attached?",
+    metricId: "trust",
+    source: "published sidecars / trustSignals[]",
+    tone: "trust",
+    proves: (value) => `${value} published trust signals are attached as separately labelled context.`,
+    doesNotProve: "Usage volume, spend, rank input, or automatic account verification.",
+  },
+  {
+    id: "snapshot-freshness",
+    label: "Freshness",
+    question: "When was this published?",
+    metricId: "updated",
+    source: "reviewed publish date + deterministic snapshot ID",
+    tone: "freshness",
+    proves: (value) => `The latest reviewed public publish is dated ${value}; the fingerprint identifies the same payload.`,
+    doesNotProve: "An independent signature, timestamp authority, or the current state of a local ledger.",
+  },
+];
+
 export function LiveProofWorkbench({ requestedHandle, snapshot, loadFailed }: LiveProofWorkbenchProps) {
   const [selectedEvent, setSelectedEvent] = useState(0);
+  const [selectedClaim, setSelectedClaim] = useState(0);
   const [copyState, setCopyState] = useState<CopyState>("idle");
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const event = snapshot?.events[selectedEvent] ?? snapshot?.events[0];
+  const claim = PROOF_CLAIMS[selectedClaim] ?? PROOF_CLAIMS[0];
+  const claimMetric = snapshot?.metrics.find((metric) => metric.id === claim.metricId);
 
   useEffect(() => () => {
     if (resetTimer.current) clearTimeout(resetTimer.current);
@@ -113,6 +170,39 @@ export function LiveProofWorkbench({ requestedHandle, snapshot, loadFailed }: Li
               </article>
             ))}
           </div>
+
+          <section className="live-proof__decoder" aria-labelledby="proof-claim-decoder-title">
+            <header>
+              <div><span>VERIFIER MATRIX</span><h3 id="proof-claim-decoder-title">Decode what this receipt can actually claim.</h3></div>
+              <b>CLAIM {String(selectedClaim + 1).padStart(2, "0")} / {String(PROOF_CLAIMS.length).padStart(2, "0")}</b>
+            </header>
+            <div className="live-proof__decoder-body">
+              <div className="live-proof__claim-switch" role="group" aria-label="Public receipt claims">
+                {PROOF_CLAIMS.map((item, index) => (
+                  <button
+                    aria-pressed={selectedClaim === index}
+                    data-tone={item.tone}
+                    key={item.id}
+                    onClick={() => setSelectedClaim(index)}
+                    type="button"
+                  >
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <b>{item.label}</b>
+                    <small>{item.question}</small>
+                  </button>
+                ))}
+              </div>
+              <article className="live-proof__claim-readout" data-tone={claim.tone} aria-live="polite">
+                <header><span>PUBLIC VALUE</span><strong>{claimMetric?.value ?? "unavailable"}</strong><small>{claimMetric?.detail ?? "No public metric supplied."}</small></header>
+                <dl>
+                  <div><dt>PROVES</dt><dd>{claim.proves(claimMetric?.value ?? "No")}</dd></div>
+                  <div><dt>READ FROM</dt><dd><code>{claim.source}</code></dd></div>
+                  <div><dt>DOES NOT PROVE</dt><dd>{claim.doesNotProve}</dd></div>
+                </dl>
+                <footer><b>AGGREGATE ONLY</b><span>0 hidden reads</span><span>0 writes</span></footer>
+              </article>
+            </div>
+          </section>
 
           <div className="live-proof__workspace">
             <aside className="live-proof__terminal" aria-label="Public receipt terminal">
