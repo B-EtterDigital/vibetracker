@@ -482,22 +482,42 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       };
     });
   };
-  // sources per trait (by each source's primary discipline) + per-trait model distribution
+  // sources per trait (by each source's primary discipline — the fallback map)
   const provsByCat = new Map<string, Set<string>>();
   for (const p of profile.providers) {
     const cat = primaryCategory(p.provider);
     if (!provsByCat.has(cat)) provsByCat.set(cat, new Set());
     provsByCat.get(cat)!.add(p.provider);
   }
+  // Per-MODEL trait classification: a multi-discipline source (Higgsfield spans image, video, 3D;
+  // fal.ai image + video) carries models from several traits, so mapping by the source's primary
+  // discipline put video/music/3D models under "image" and left those specs falling back to the
+  // CLI hex. The model name decides its trait; unmatched models ride the source's primary.
+  const MODEL_TRAIT_HINTS: Array<[RegExp, string]> = [
+    [/kling|veo|sora|runway|hailuo|minimax|luma|pixverse|wan[-_ ]?2|hunyuan.?video|ltx|mochi|seedance|dream.?machine|video/i, "video"],
+    [/hunyuan.?3d|trellis|tripo|meshy|rodin|3d/i, "threed"],
+    [/suno|udio|lyria|riffusion|music/i, "music"],
+    [/eleven|tts|voice|speech|chatterbox|dubbing|whisper|audio/i, "voice"],
+    [/flux|banana|imagen|dall|gpt-image|seedream|ideogram|recraft|sdxl|stable.?diff|photon|midjourney|image|upscal|aura-sr|sam-?\d|sam2|florence|vector/i, "image"],
+  ];
+  const traitOfModel = (providerId: string, model: string): string => {
+    for (const [re, trait] of MODEL_TRAIT_HINTS) if (re.test(model)) return trait;
+    return primaryCategory(providerId);
+  };
+  const modelsByTrait = new Map<string, Map<string, number>>();
+  const provsByTrait = new Map<string, Set<string>>();
+  for (const m of profile.providerModels) {
+    const trait = traitOfModel(m.provider, m.model);
+    const name = prettyModel(m.model);
+    if (!modelsByTrait.has(trait)) modelsByTrait.set(trait, new Map());
+    const bucket = modelsByTrait.get(trait)!;
+    bucket.set(name, (bucket.get(name) ?? 0) + m.ops);
+    if (!provsByTrait.has(trait)) provsByTrait.set(trait, new Set());
+    provsByTrait.get(trait)!.add(m.provider);
+  }
   const spiralForCat = (cat: string) => {
-    const provs = provsByCat.get(cat);
-    if (!provs) return [];
-    const byModel = new Map<string, number>();
-    for (const m of profile.providerModels) {
-      if (!provs.has(m.provider)) continue;
-      const name = prettyModel(m.model);
-      byModel.set(name, (byModel.get(name) ?? 0) + m.ops);
-    }
+    const byModel = modelsByTrait.get(cat);
+    if (!byModel) return [];
     const total = [...byModel.values()].reduce((s, v) => s + v, 0);
     return [...byModel.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([model, ops], i) => ({
       // keep the END of long model ids — "…nano-banana" and "…nano-banana-pro" must stay distinct
@@ -527,7 +547,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     },
   };
   for (const c of categories) {
-    const provs = provsByCat.get(c.id);
+    const provs = provsByTrait.get(c.id) ?? provsByCat.get(c.id);
     const spiral = spiralForCat(c.id);
     const sourceNames = provs ? [...provs].map((p) => providerLabel(p)) : [];
     const topModelNames = spiral.slice(0, 3).map((s) => s.label);

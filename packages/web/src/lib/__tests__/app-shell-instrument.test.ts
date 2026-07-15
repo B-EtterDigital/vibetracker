@@ -1,9 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { filterOperatorRoutes, operatorRouteIsActive } from "../../components/operator-menu-model.ts";
 
 const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
 const dock = readFileSync("packages/web/src/components/UsageSignalDock.tsx", "utf8");
+const operatorMenu = readFileSync("packages/web/src/components/operator-menu.tsx", "utf8");
+const operatorMenuStyles = readFileSync("packages/web/src/components/operator-menu.module.css", "utf8");
 const css = readFileSync("packages/web/src/app/globals.css", "utf8");
 
 test("home signal dock opens with a readable usage instrument before advanced telemetry", () => {
@@ -24,12 +27,29 @@ test("home signal dock opens with a readable usage instrument before advanced te
 test("global navigation keeps primary actions visible and secondary routes in a menu", () => {
   assert.match(layout, /className="hdr-primary" aria-label="Primary navigation"/);
   assert.match(layout, /className="hdr-cli" href="\/how-to"/);
-  assert.match(layout, /<details className="hdr-menu">/);
-  assert.match(layout, /aria-label="Open product menu"/);
+  assert.match(layout, /<OperatorMenu \/>/);
+  assert.match(operatorMenu, /<details className="hdr-menu"/);
+  assert.match(operatorMenu, /aria-label="Open product menu"/);
 
   for (const route of ["sources", "scan", "proof", "score", "wizard", "motion", "contributors", "passkeys", "roadmap"]) {
-    assert.match(layout, new RegExp(`href="/${route}"`));
+    assert.equal(filterOperatorRoutes("").some((entry) => entry.href === `/${route}`), true);
   }
+});
+
+test("operator switcher filters all terms and marks profile families active", () => {
+  assert.equal(filterOperatorRoutes("").length, 13);
+  assert.deepEqual(filterOperatorRoutes("github account").map((route) => route.href), ["/account"]);
+  assert.deepEqual(filterOperatorRoutes("local usage").map((route) => route.href), ["/scan"]);
+  assert.equal(operatorRouteIsActive("/u/cyrill-etter", "/u/demo"), true);
+  assert.equal(operatorRouteIsActive("/insights", "/proof"), false);
+  assert.match(operatorMenu, /aria-label="Filter product menu"/);
+  assert.match(operatorMenu, /event\.key === "Escape"/);
+  assert.match(operatorMenu, /event\.key !== "ArrowDown" && event\.key !== "ArrowUp"/);
+  assert.match(operatorMenu, /aria-current=\{active \? "page" : undefined\}/);
+  assert.match(operatorMenuStyles, /max-height: calc\(100dvh - 76px\)/);
+  assert.match(operatorMenuStyles, /-webkit-line-clamp: 2/);
+  assert.match(operatorMenuStyles, /@media \(max-width: 430px\)[\s\S]*grid-template-columns: 1fr/);
+  assert.match(operatorMenuStyles, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
 test("instrument CSS preserves desktop hierarchy, mobile fit, focus, and reduced motion", () => {

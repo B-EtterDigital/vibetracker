@@ -2,6 +2,7 @@ import "./globals.css";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
 import { AccountControl } from "../components/account-control";
+import { OperatorMenu } from "../components/operator-menu";
 
 const displayFont = Space_Grotesk({
   subsets: ["latin"],
@@ -48,26 +49,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="hdr-actions">
             <AccountControl />
             <a className="hdr-cli" href="/how-to">Get the CLI</a>
-            <details className="hdr-menu">
-              <summary aria-label="Open product menu" title="Product menu">
-                <i aria-hidden="true"><span /><span /><span /></i>
-              </summary>
-              <nav aria-label="Product menu">
-                <a href="/u/demo"><span>01</span><b>Profile<small>usage, disciplines, models, rhythm</small></b></a>
-                <a href="/life"><span>02</span><b>AI Life<small>your whole AI practice</small></b></a>
-                <a href="/compare"><span>03</span><b>Compare lab<small>two public receipts on one scope</small></b></a>
-                <a href="/score"><span>04</span><b>Score lab<small>how the signal score is built</small></b></a>
-                <a href="/proof"><span>05</span><b>Proof center<small>what is verified vs self-reported</small></b></a>
-                <a href="/scan"><span>06</span><b>Scan<small>run a local usage scan</small></b></a>
-                <a href="/wizard"><span>07</span><b>Wizard<small>set up tracking step by step</small></b></a>
-                <a href="/sources"><span>08</span><b>Source atlas<small>every source lane, mapped</small></b></a>
-                <a href="/motion"><span>09</span><b>Motion lab<small>the ASCII motion references</small></b></a>
-                <a href="/contributors"><span>10</span><b>Contributors<small>open-source credit</small></b></a>
-                <a href="/passkeys"><span>11</span><b>Passkeys<small>account keys</small></b></a>
-                <a href="/roadmap"><span>12</span><b>Roadmap<small>what ships next</small></b></a>
-                <a href="/account"><span>13</span><b>Identity<small>GitHub proof and account link</small></b></a>
-              </nav>
-            </details>
+            <OperatorMenu />
           </div>
         </header>
         <main className="wrap">{children}</main>
