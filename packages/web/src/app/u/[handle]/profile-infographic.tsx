@@ -121,7 +121,8 @@ export function PolygonSpiral({ items, sides = 6, ariaContext }: { items: Spiral
     <svg viewBox={`0 0 ${W} ${H}`} className="vinfo-spiral" role="img"
       aria-label={`${ariaContext ?? "Distribution"}: ${shown.map((s) => `${s.label} ${s.pct}`).join(", ")}`}>
       {shown.map((item, i) => {
-        const r = base + i * step;
+        // a lone coil renders at a dignified mid radius instead of the tiny innermost one
+        const r = n === 1 ? 170 : base + i * step;
         const color = item.color ?? INFO_RAMP[i % INFO_RAMP.length];
         const ink = readableInk(color);
         const pts = angles.map((deg) => polar(cx, cy, r, deg));

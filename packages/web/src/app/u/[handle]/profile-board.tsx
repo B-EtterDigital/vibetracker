@@ -52,7 +52,7 @@ export function InfographicBoard({
   return (
     <section className={`vprofile-panel vboard${booted ? " vboard--fast" : ""}`}>
       <div className="vboard-left" key={`left-${spec.id}`}>
-        {spec.spiral.length >= 2 ? (
+        {spec.spiral.length >= 1 ? (
           <PolygonSpiral items={spec.spiral} sides={6} ariaContext={spec.spiralTitle} />
         ) : null}
         <div className="vboard-bio">

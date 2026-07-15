@@ -557,7 +557,9 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       id: c.id,
       label: c.label,
       spiralTitle: `${c.label} — model distribution by operations`,
-      spiral: spiral.length >= 2 ? spiral : cliSpiral,
+      // a thin trait NEVER borrows the CLI coils (that read as wrong content): one model = one
+      // coil, zero models = no hexagon at all, and the story says so
+      spiral,
       months: provs?.size ? monthsFor(provs) : monthsFor(),
       story: {
         title: c.label.toLowerCase(),
@@ -568,7 +570,9 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
         ],
         foot: spiral.length >= 2
           ? "the hexagon and bars are filtered to this specialization"
-          : "not enough distinct models to chart — the hexagon shows the CLI overview",
+          : spiral.length === 1
+            ? "one model recorded here so far — the single coil is that model"
+            : "no per-model split recorded for this trait yet — the bars are still filtered to its sources",
       },
     };
   }
