@@ -34,16 +34,23 @@ live stamp matches (exit 13 if production serves anything else).`;
 
 function parseArgs(argv) {
   const out = { _: [] };
-  for (let i = 0; i < argv.length; i += 1) {
+  let i = 0;
+  const nextValue = () => {
+    let value = argv[(i += 1)];
+    if (value === '--') value = argv[(i += 1)];
+    return value;
+  };
+  for (; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--dry-run') out.dryRun = true;
     else if (a === '--json') out.json = true;
     else if (a === '--allow-unverified-live') out.allowUnverifiedLive = true;
     else if (a === '--status') out.status = true;
     else if (a === '--help') out.help = true;
-    else if (a === '--why') out.why = argv[(i += 1)];
-    else if (a === '--config') out.config = argv[(i += 1)];
-    else if (a === '--force') out.force = argv[(i += 1)];
+    else if (a === '--why') out.why = nextValue();
+    else if (a === '--config') out.config = nextValue();
+    else if (a === '--force') out.force = nextValue();
+    else if (a === '--') continue;
     else throw usage(`unknown option: ${a}`);
   }
   return out;

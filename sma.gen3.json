@@ -208,6 +208,11 @@
         "pnpm-lock.yaml",
         "pnpm-workspace.yaml",
         "scripts/build.mjs",
+        "scripts/deploy-web.mjs",
+        "scripts/guard-live.mjs",
+        "sma.deploy.json",
+        "tools/sma-deploy-guard.mjs",
+        "tools/lib/deploy-guard-core.mjs",
         "tsconfig.base.json",
         ".npmrc"
       ],
