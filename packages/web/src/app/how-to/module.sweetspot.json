@@ -1,0 +1,201 @@
+{
+  "schema_version": "1.0.0",
+  "brick": {
+    "id": "000-vibetracker.web.operator-command-atlas",
+    "name": "Operator Command Atlas",
+    "kind": "module",
+    "status": "project_bound",
+    "version": "0.1.0",
+    "language": ["typescript", "tsx", "css"],
+    "frameworks": ["next", "react"],
+    "domain": ["onboarding", "cli", "operator-guide"]
+  },
+  "hierarchy": {
+    "level": "brick",
+    "group_id": "000-vibetracker:packages/web/src/app",
+    "contains": ["route", "component", "utility", "style", "test"],
+    "component_policy": "internal_by_default",
+    "notes": "Copyable five-command fast start with a deterministic 37-command atlas and explicit local, privacy, usage, and publish rails."
+  },
+  "source": {
+    "project": "000-vibetracker",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "03b59d7",
+    "paths": [
+      "packages/web/src/app/how-to",
+      "packages/web/src/lib/how-to-command-atlas.ts",
+      "packages/web/src/lib/__tests__/how-to-command-atlas.test.ts"
+    ]
+  },
+  "owner": {
+    "primary": "Cyrill",
+    "team": "Better Digital",
+    "reviewers": []
+  },
+  "boundaries": {
+    "owned_paths": [
+      "packages/web/src/app/how-to",
+      "packages/web/src/lib/how-to-command-atlas.ts",
+      "packages/web/src/lib/__tests__/how-to-command-atlas.test.ts"
+    ],
+    "public_paths": [
+      "packages/web/src/app/how-to/page.tsx",
+      "packages/web/src/app/how-to/how-to-fast-start.tsx"
+    ],
+    "private_paths": [
+      "packages/web/src/lib/how-to-command-atlas.ts",
+      "packages/web/src/lib/__tests__/how-to-command-atlas.test.ts"
+    ],
+    "forbidden_imports": [
+      "service-role clients",
+      "shell execution",
+      "automatic provider scanning",
+      "automatic publishing"
+    ],
+    "allowed_side_effects": ["user-initiated clipboard write"]
+  },
+  "classification": {
+    "data_classes": ["public"],
+    "risk": "low",
+    "notes": "The route renders static command guidance and copies only a user-selected command."
+  },
+  "sweetspot": {
+    "ssa_v2": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Fast start, deterministic atlas model, route composition, styling, and tests remain separated.",
+      "evidence": ["packages/web/src/app/how-to", "packages/web/src/lib/how-to-command-atlas.ts"]
+    },
+    "ssi": {
+      "status": "passing",
+      "score": 95,
+      "notes": "One atlas model drives five lanes, 37 commands, launch choreography, impacts, and credits.",
+      "evidence": ["packages/web/src/lib/how-to-command-atlas.ts"]
+    },
+    "sstf": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Focused tests lock deterministic totals, impact classification, copy actions, responsive layout, and motion safety.",
+      "evidence": ["packages/web/src/lib/__tests__/how-to-command-atlas.test.ts"]
+    },
+    "spe": {
+      "status": "passing",
+      "score": 96,
+      "notes": "The default route renders five fast-start commands while the complete atlas stays collapsed until requested.",
+      "evidence": ["packages/web/src/app/how-to/page.tsx"]
+    },
+    "srs": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Copy success or failure is visible and every non-usage or publish boundary is labelled.",
+      "evidence": ["packages/web/src/app/how-to/how-to-fast-start.tsx"]
+    },
+    "ssra": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Focused tests, release gate, production build, and live mobile, desktop, and 4K closed and expanded states pass.",
+      "evidence": [
+        "Netlify preview 6a5711158589bede5d916629",
+        "Netlify production deploy 6a5711f969a5e7026581f9e7"
+      ]
+    },
+    "sas": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Route, atlas model, component, style, and focused test have explicit ownership.",
+      "evidence": ["packages/web/src/app/how-to/module.sweetspot.json"]
+    },
+    "sva": {
+      "status": "passing",
+      "score": 96,
+      "notes": "The route performs no command execution, provider access, secret read, or automatic publish.",
+      "evidence": ["packages/web/src/app/how-to/how-to-fast-start.tsx"]
+    },
+    "srls": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick does not access a database.",
+      "evidence": []
+    },
+    "sev": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick requires no environment variables.",
+      "evidence": []
+    },
+    "ssc": {
+      "status": "passing",
+      "score": 90,
+      "notes": "The route inherits Next and React and adds no dependency.",
+      "evidence": ["packages/web/package.json"]
+    },
+    "sai": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Gen3 intent, lease, source base, decisions, and proof are recorded.",
+      "evidence": [".smarch/agent-context/web-onboarding-4k.ndjson"]
+    }
+  },
+  "interfaces": {
+    "public_api": ["GET /how-to", "buildHowToCommandAtlas(groups)", "<HowToFastStart />"],
+    "adapters": ["GET /cli-login", "GET /providers"],
+    "required_dependencies": ["next", "react"],
+    "forbidden_dependencies": ["shell execution", "provider clients", "automatic publish"]
+  },
+  "security": {
+    "rls": {"required": false, "status": "not_applicable", "negative_tests": []},
+    "env": {"required": false, "status": "not_applicable", "variables": []},
+    "vulnerability_findings": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "report_paths": []
+    }
+  },
+  "supply_chain": {
+    "dependencies": [
+      {"name": "next", "version": "^16.1.1", "purpose": "Server route and navigation.", "risk": "low"},
+      {"name": "react", "version": "^19.0.0", "purpose": "Clipboard feedback and atlas disclosure.", "risk": "low"}
+    ],
+    "licenses": ["MIT"],
+    "checksums": [],
+    "sbom_path": ""
+  },
+  "quality": {
+    "score": 94,
+    "line_count": {"max_file_lines": 429, "over_600_count": 0},
+    "code_budget": {
+      "status": "acceptable",
+      "feature_lines": 1346,
+      "file_count": 7,
+      "dependency_count": 2,
+      "notes": "The quick start, complete command atlas, deterministic model, styles, metadata, and focused contract remain bounded."
+    },
+    "test_commands": [
+      "node --test packages/web/src/lib/__tests__/how-to-command-atlas.test.ts",
+      "pnpm sma:release-gate",
+      "pnpm --filter @vibetracker/web build"
+    ],
+    "verification": [
+      {
+        "command": "focused install tests + release gate + production build + mobile/desktop/4K Playwright",
+        "status": "pass",
+        "timestamp": "2026-07-14T21:00:26Z",
+        "notes": "The five-command fast start and collapsed 37-command atlas passed without hidden execution or publish actions."
+      },
+      {
+        "command": "focused onboarding tests + pnpm sma:release-gate + Next production build + preview/production Playwright",
+        "status": "pass",
+        "timestamp": "2026-07-15T04:53:48Z",
+        "notes": "Five focused tests, 15 control-plane tests, 662 package tests, strict telemetry, typecheck, and the 30-route build passed. Preview 6a5711158589bede5d916629 and production 6a5711f969a5e7026581f9e7 prove unchanged 343px mobile and 1320px desktop layouts plus centered 2640px 4K fast-start and expanded-manual surfaces. Clipboard feedback reached COPIED, the identity handoff preserved /cli-login, and all runs had zero writes, failed requests, console errors, or horizontal overflow."
+      }
+    ]
+  },
+  "clone": {
+    "readiness": "project_bound",
+    "adaptation_points": ["command groups", "route handoffs", "brand labels"],
+    "install_steps": ["Copy the route module and atlas model.", "Replace commands with real product commands.", "Verify every copy and deep link."],
+    "known_traps": ["Do not execute displayed commands from the browser.", "Do not classify audits or identity actions as usage."]
+  }
+}

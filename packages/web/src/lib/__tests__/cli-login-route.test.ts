@@ -64,6 +64,10 @@ test("cli login route exposes the zero-movement auth control room", () => {
   assert.match(entryStyles, /\.cli-entry__header/);
   assert.match(entryStyles, /grid-template-columns: minmax\(0, 1\.08fr\) minmax\(360px, \.92fr\)/);
   assert.match(entryStyles, /@media \(max-width: 620px\)/);
+  assert.match(entryStyles, /@media \(min-width: 2200px\)/);
+  assert.match(entryStyles, /width: min\(2640px, 95vw\)/);
+  assert.match(entryStyles, /margin-left: 50%/);
+  assert.match(entryStyles, /transform: translateX\(-50%\)/);
   assert.match(entryStyles, /@media \(prefers-reduced-motion: reduce\)/);
 
   assert.match(styles, /\.device-auth-control-room/);

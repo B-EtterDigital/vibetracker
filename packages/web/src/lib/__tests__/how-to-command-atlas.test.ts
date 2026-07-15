@@ -186,5 +186,10 @@ test("how-to route surfaces the impressive launch aliases", () => {
   assert.match(fastStartStyles, /\.howto-fast__hero/);
   assert.match(fastStartStyles, /\.howto-manual:not\(\[open\]\) > \.howto-manual__body \{ display: none; \}/);
   assert.match(fastStartStyles, /@media \(max-width: 620px\)/);
+  assert.match(fastStartStyles, /@media \(min-width: 2200px\)/);
+  assert.match(fastStartStyles, /\.howto-fast,\n  \.howto-manual \{/);
+  assert.match(fastStartStyles, /width: min\(2640px, 95vw\)/);
+  assert.match(fastStartStyles, /grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
+  assert.match(fastStartStyles, /transform: translateX\(-50%\)/);
   assert.match(fastStartStyles, /@media \(prefers-reduced-motion: reduce\)/);
 });

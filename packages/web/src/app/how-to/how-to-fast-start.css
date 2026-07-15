@@ -197,6 +197,39 @@
   .howto-manual__body { padding: 10px; }
 }
 
+@media (min-width: 2200px) {
+  .howto-fast,
+  .howto-manual {
+    width: min(2640px, 95vw);
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .howto-fast__hero {
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr);
+    min-height: 560px;
+  }
+
+  .howto-fast__intro { padding: 72px; }
+  .howto-fast__primary { padding: 64px; }
+
+  .howto-fast__commands ol {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .howto-fast__commands li {
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-content: start;
+    min-height: 180px;
+    padding: 26px;
+  }
+
+  .howto-fast__commands li + li { border-left: 1px solid rgba(217, 255, 242, .11); }
+  .howto-fast__commands li button { grid-column: 1 / -1; width: 100%; margin-top: auto; }
+  .howto-fast__handoff > div { padding: 32px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .howto-fast *, .howto-fast *::before, .howto-fast *::after { animation: none !important; transition: none !important; }
 }
