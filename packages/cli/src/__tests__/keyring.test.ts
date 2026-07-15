@@ -51,6 +51,29 @@ test("storeProviderCreds persists to the keyring; clearProviderCreds removes it"
   }
 });
 
+test("Cynaps3 OAuth rotation state round-trips through the keyring and clears together", () => {
+  const kr = memoryKeyring();
+  __setKeyringBackend(kr);
+  try {
+    const cfg: VtConfig = { enabled: ["cynaps3"] };
+    storeProviderCreds(cfg, "cynaps3", {
+      token: "access-token",
+      refreshToken: "refresh-token",
+      expiresAt: "2026-07-15T13:00:00.000Z",
+    });
+    const resolved = resolveCreds("cynaps3", cfg) as Record<string, string>;
+    assert.equal(resolved.token, "access-token");
+    assert.equal(resolved.refreshToken, "refresh-token");
+    assert.equal(resolved.expiresAt, "2026-07-15T13:00:00.000Z");
+    clearProviderCreds(cfg, "cynaps3");
+    assert.equal(kr.get("cynaps3", "token"), undefined);
+    assert.equal(kr.get("cynaps3", "refreshToken"), undefined);
+    assert.equal(kr.get("cynaps3", "expiresAt"), undefined);
+  } finally {
+    __setKeyringBackend(null);
+  }
+});
+
 test("storeToken/clearToken use the keyring account slot", () => {
   const kr = memoryKeyring();
   __setKeyringBackend(kr);

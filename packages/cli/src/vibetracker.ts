@@ -44,7 +44,17 @@ import { redactFixture, renderFixtureRedaction } from "./fixture.ts";
 import { createRoiNote, loadRoiNotes, renderRoiNotes, saveRoiNotes } from "./roi-notes.ts";
 import { startLocalApiServer } from "./api-server.ts";
 import { desktopActivitiesToRecords, renderDesktopActivity, scanDesktopActivity } from "./desktop-activity.ts";
-import { buildOAuthUrl, exchangeOAuthCode, waitForOAuthCallback } from "./oauth.ts";
+import {
+  buildOAuthUrl,
+  exchangeOAuthCode,
+  oauthCredentialsFromTokenResponse,
+  oauthProviderPreset,
+  refreshOAuthCredentials,
+  validateOAuthCredentialsForPreset,
+  waitForOAuthCallback,
+  type OAuthProviderPreset,
+  type StoredOAuthCredentials,
+} from "./oauth.ts";
 import { ccusageToRecords, findCcJson, CCUSAGE_PROVIDERS } from "./import-ccusage.ts";
 import { collectCodingTelemetry } from "./coding-telemetry.ts";
 import { collectOrchestrationHours } from "./orchestration-hours.ts";
@@ -180,12 +190,33 @@ function demoTargets(): SyncTarget[] {
   ];
 }
 
-function configTargets(): SyncTarget[] {
+async function resolveFreshProviderCreds(
+  id: string,
+  cfg: ReturnType<typeof loadConfig>,
+): Promise<Record<string, string>> {
+  const resolved = resolveCreds(id, cfg) as Record<string, string>;
+  const preset = oauthProviderPreset(id);
+  if (!preset || !resolved.token) return resolved;
+
+  const current: StoredOAuthCredentials = {
+    token: resolved.token,
+    ...(resolved.refreshToken ? { refreshToken: resolved.refreshToken } : {}),
+    ...(resolved.expiresAt ? { expiresAt: resolved.expiresAt } : {}),
+  };
+  const fresh = await refreshOAuthCredentials({ preset, credentials: current });
+  if (fresh !== current) {
+    storeProviderCreds(cfg, id, fresh as unknown as Record<string, string>);
+    saveConfig(cfg);
+  }
+  return { ...resolved, ...fresh };
+}
+
+async function configTargets(): Promise<SyncTarget[]> {
   const cfg = loadConfig();
   const targets: SyncTarget[] = [];
   for (const id of cfg.enabled) {
     try {
-      targets.push({ id, adapter: createAdapterFromConfig(id, resolveCreds(id, cfg)) });
+      targets.push({ id, adapter: createAdapterFromConfig(id, await resolveFreshProviderCreds(id, cfg)) });
     } catch (err) {
       console.error(`  skip ${id}: ${(err as Error).message}`);
     }
@@ -519,6 +550,35 @@ function openBrowser(url: string): void {
     if (r.error) console.error(`(couldn't open a browser — open the URL above manually)`);
   } catch (err) {
     console.error(`(couldn't open a browser: ${(err as Error).message} — open the URL above)`);
+  }
+}
+
+async function authorizeOAuthProvider(
+  preset: OAuthProviderPreset,
+  port: number,
+  scope = preset.scope,
+): Promise<StoredOAuthCredentials> {
+  const redirectUri = `http://127.0.0.1:${port}/callback`;
+  const bundle = buildOAuthUrl({ ...preset, scope, redirectUri });
+  console.log(`OAuth URL for ${preset.provider}: ${bundle.url}`);
+  console.log(`listening on ${redirectUri}`);
+  const pendingCallback = waitForOAuthCallback({ port, state: bundle.state });
+  openBrowser(bundle.url);
+  const callback = await pendingCallback;
+  try {
+    const response = await exchangeOAuthCode({
+      tokenUrl: preset.tokenUrl,
+      clientId: preset.clientId,
+      redirectUri,
+      code: callback.code,
+      verifier: bundle.verifier,
+    });
+    return validateOAuthCredentialsForPreset(
+      preset,
+      oauthCredentialsFromTokenResponse(response),
+    );
+  } finally {
+    callback.close();
   }
 }
 
@@ -1534,7 +1594,7 @@ async function main() {
       save: saveConfig,
     });
     // Immediately pull what got connected so you see results right away.
-    const targets = configTargets();
+    const targets = await configTargets();
     if (targets.length) {
       console.log("\n" + rule("SYNC"));
       const sync = await syncTargets(targets, ctx);
@@ -1593,7 +1653,7 @@ async function main() {
   }
 
   if (cmd === "sync") {
-    const targets = argv.includes("--demo") ? demoTargets() : configTargets();
+    const targets = argv.includes("--demo") ? demoTargets() : await configTargets();
     if (!targets.length) { console.log("No providers enabled — run `vibetracker init`."); return; }
     const providerIds = targets.map((target) => target.id);
     await showSyncSurpriseQueue(providerIds, {
@@ -1671,25 +1731,19 @@ async function main() {
       console.error("usage: vibetracker oauth start <provider> --auth-url <url> --token-url <url> --client-id <id> [--scope s] [--port 8787]");
       process.exit(2);
     }
-    const redirectUri = `http://127.0.0.1:${port}/callback`;
-    const bundle = buildOAuthUrl({ provider, authUrl, tokenUrl, clientId, scope: flag(argv, "--scope"), redirectUri });
-    console.log(`OAuth URL for ${provider}: ${bundle.url}`);
-    console.log(`listening on ${redirectUri}`);
-    openBrowser(bundle.url);
     try {
-      const callback = await waitForOAuthCallback({ port, state: bundle.state });
-      try {
-        const token = await exchangeOAuthCode({ tokenUrl, clientId, redirectUri, code: callback.code, verifier: bundle.verifier });
-        const accessToken = typeof token.access_token === "string" ? token.access_token : undefined;
-        if (!accessToken) throw new Error("token response did not include access_token");
-        const cfg = loadConfig();
-        const inKeyring = storeProviderCreds(cfg, provider, { token: accessToken });
-        if (!cfg.enabled.includes(provider)) cfg.enabled.push(provider);
-        saveConfig(cfg);
-        console.log(`OAuth token stored for ${provider} ${inKeyring ? "in the OS keyring" : `in ${CONFIG_PATH} (mode 600)`}.`);
-      } finally {
-        callback.close();
-      }
+      const credentials = await authorizeOAuthProvider({
+        provider,
+        authUrl,
+        tokenUrl,
+        clientId,
+        scope: flag(argv, "--scope") || "",
+      }, port, flag(argv, "--scope"));
+      const cfg = loadConfig();
+      const inKeyring = storeProviderCreds(cfg, provider, credentials as unknown as Record<string, string>);
+      if (!cfg.enabled.includes(provider)) cfg.enabled.push(provider);
+      saveConfig(cfg);
+      console.log(`OAuth token stored for ${provider} ${inKeyring ? "in the OS keyring" : `in ${CONFIG_PATH} (mode 600)`}.`);
     } catch (err) {
       console.error(`OAuth failed: ${(err as Error).message}`);
       process.exit(1);
@@ -1711,8 +1765,11 @@ async function main() {
     if (!cfg.enabled.length) { console.log(`  ${dim("nothing connected yet — run")} ${paint("vibetracker connect <id>", 190)}`); return; }
     for (const id of cfg.enabled) {
       const c = resolveCreds(id, cfg) as Record<string, string>; // reads the keyring at point of use
-      const fields = Object.entries(c).map(([k, v]) => `${dim(fieldLabel(k))} ${paint(maskKey(String(v)), 200)}`).join("  ");
-      console.log(`  ${icon(id)} ${id.padEnd(14)} ${fields || dim("no key needed (local)")}`);
+      const visibleFields = [...new Set([...(CRED_FIELDS[id] ?? []), "token"])];
+      const fields = visibleFields.filter((field) => c[field])
+        .map((field) => `${dim(fieldLabel(field))} ${paint(maskKey(c[field]), 200)}`).join("  ");
+      const rotation = c.refreshToken ? `  ${dim("OAuth refresh armed")}` : "";
+      console.log(`  ${icon(id)} ${id.padEnd(14)} ${fields || dim("no key needed (local)")}${rotation}`);
     }
     console.log(`\n  ${dim("add:")} ${paint("vibetracker connect <id>", 190)}   ${dim("remove:")} ${paint("vibetracker disconnect <id>", 190)}   ${dim("catalog:")} ${paint("vibetracker providers", 190)}`);
     return;
@@ -1744,6 +1801,7 @@ async function main() {
     }
     if (!PROVIDERS.some((p) => p.id === provider)) { console.error(`unknown provider: ${provider}`); process.exit(2); }
     const creds: Record<string, string> = { ...(resolveCreds(provider) as Record<string, string>) }; // env first
+    const hasExplicitCreds = argv.includes("--set");
     for (let i = 2; i < argv.length; i++) {
       if (argv[i] === "--set" && argv[i + 1]) {
         const eq = argv[i + 1].indexOf("=");
@@ -1753,7 +1811,24 @@ async function main() {
     }
     // Guided mode: no --set given and fields are missing → show the how-to and prompt (masked).
     const fields = CRED_FIELDS[provider] ?? [];
-    const missingNow = fields.filter((f) => !creds[f]);
+    let missingNow = fields.filter((f) => !creds[f]);
+    const preset = oauthProviderPreset(provider);
+    if (preset && !hasExplicitCreds) {
+      const g = GUIDE[provider];
+      console.log(rule(provider.toUpperCase()));
+      if (g?.why) console.log(`  ${dim("why:  " + g.why)}`);
+      console.log(`  ${paint("scope:", 190)} ${preset.scope} ${dim("· browser authorization · loopback PKCE · no cookie paste")}`);
+      try {
+        Object.assign(creds, await authorizeOAuthProvider(
+          preset,
+          Number(flag(argv, "--port") || 8787),
+        ));
+        missingNow = fields.filter((f) => !creds[f]);
+      } catch (err) {
+        console.error(`  ${bad("✗")} ${provider} OAuth failed: ${(err as Error).message}`);
+        process.exit(1);
+      }
+    }
     if (missingNow.length && process.stdin.isTTY) {
       const g = GUIDE[provider];
       console.log(rule(provider.toUpperCase()));
@@ -1769,10 +1844,11 @@ async function main() {
     const inKeyring = storeProviderCreds(cfg, provider, creds);
     if (!cfg.enabled.includes(provider)) cfg.enabled.push(provider);
     saveConfig(cfg);
-    const have = Object.keys(cfg.creds?.[provider] ?? {});
-    const missing = (CRED_FIELDS[provider] ?? []).filter((f) => !have.includes(f));
+    const have = fields.filter((field) => Boolean((cfg.creds?.[provider] as Record<string, string> | undefined)?.[field]));
+    const missing = fields.filter((field) => !have.includes(field));
     const where = inKeyring ? dim("→ OS keyring") : dim("→ ~/.vibetracker/config.json (no keyring; mode 600)");
     console.log(`  ${ok("✓")} ${provider} connected ${where}${have.length ? `  ${dim(have.map((k) => `${fieldLabel(k)} ${maskKey(String(cfg.creds![provider]![k]))}`).join("  "))}` : ""}`);
+    if (creds.refreshToken) console.log(`  ${dim("↻ rotating OAuth refresh token stored locally; access refreshes before sync")}`);
     if (missing.length) console.log(`  ${dim(`⚠ still missing: ${missing.join(", ")} — re-run or use env VT_* / --set`)}`);
     if (!missing.length) {
       // instant gratification: pull this provider right away

@@ -52,8 +52,14 @@ cost, so VibeTRACKER records exact image counts without fabricating USD or credi
 
 ## Cynaps3 Musicmation ledger
 
-Connect Cynaps3 with `vibetracker connect cynaps3` and authorize the read-only
-`usage:read` scope. The adapter reads versioned, per-user Musicmation operations and native
+Connect Cynaps3 with `vibetracker connect cynaps3`. The CLI opens the read-only
+`usage:read` authorization screen, receives the result on a loopback PKCE callback, and stores
+the access and rotating refresh tokens in the OS keyring. No token or cookie paste is required.
+The adapter reads versioned, per-user Musicmation operations and native
 credits from Cynaps3's authoritative ledger. It never receives prompts, lyrics, media URLs,
 browser cookies, or a service-role key. The provider remains marked as awaiting live proof until
 the producer endpoint is deployed and its OAuth, pagination, and populated-range probes pass.
+
+The Cynaps3 producer registers the public OAuth client ID `vibeusage-cli` for
+`http://127.0.0.1:8787/callback`. Operators can override that client ID with
+`VT_CYNAPS3_OAUTH_CLIENT_ID` and the callback port with `--port` during staged deployments.

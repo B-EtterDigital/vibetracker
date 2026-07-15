@@ -166,9 +166,9 @@ export const GUIDE: Record<string, { cred: string; url?: string; fmt?: string; w
   cynaps3: { cred: "OAuth access token", url: "https://cynaps3.app",
     why: "Cynaps3 exposes a first-party, read-only Musicmation usage ledger. The usage:read token can read your operation totals, generated tracks, audio duration, and native credits, but not prompts, lyrics, or media.",
     steps: [
-      "Open Cynaps3 and authorize VibeUsage with the usage:read scope",
-      "Paste the returned access token below - it is hidden and stored in your OS keyring",
-      "Run `vibetracker sync`; no browser cookie or service-role key is accepted",
+      "Run `vibetracker connect cynaps3`; VibeTRACKER opens the usage:read authorization screen",
+      "Approve the read-only scope; the PKCE callback stores access and rotating refresh tokens in your OS keyring",
+      "Run `vibetracker sync`; no browser cookie, token paste, or service-role key is accepted",
     ] },
   higgsfield: { cred: "API key", url: "https://higgsfield.ai/account" },
   suno: { cred: "session cookie", url: "https://suno.com",

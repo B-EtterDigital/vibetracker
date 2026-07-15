@@ -1,8 +1,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
+import { readFileSync } from "node:fs";
 
-import { buildOAuthUrl, exchangeOAuthCode, pkceChallenge, waitForOAuthCallback } from "../oauth.ts";
+import {
+  buildOAuthUrl,
+  exchangeOAuthCode,
+  oauthCredentialsFromTokenResponse,
+  oauthCredentialsNeedRefresh,
+  oauthProviderPreset,
+  pkceChallenge,
+  refreshOAuthCredentials,
+  validateOAuthCredentialsForPreset,
+  waitForOAuthCallback,
+} from "../oauth.ts";
 
 async function freePort(): Promise<number> {
   return await new Promise((resolve, reject) => {
@@ -72,6 +83,135 @@ test("OAuth code exchange posts x-www-form-urlencoded PKCE payload", async () =>
   assert.match(calls[0]?.body ?? "", /code_verifier=verifier-123/);
 });
 
+test("Cynaps3 preset pins the read-only producer contract and allows staged client overrides", () => {
+  const preset = oauthProviderPreset("cynaps3", {});
+  assert.ok(preset);
+  assert.equal(preset.clientId, "vibeusage-cli");
+  assert.equal(preset.scope, "usage:read");
+  assert.equal(preset.requireRotatingRefresh, true);
+  assert.equal(
+    preset.authUrl,
+    "https://tvsvttguftnatztsedyx.supabase.co/functions/v1/oauth-server/authorize",
+  );
+  assert.equal(
+    preset.tokenUrl,
+    "https://tvsvttguftnatztsedyx.supabase.co/functions/v1/oauth-server/token",
+  );
+  assert.equal(
+    oauthProviderPreset("cynaps3", { VT_CYNAPS3_OAUTH_CLIENT_ID: "staged-client" })?.clientId,
+    "staged-client",
+  );
+  assert.equal(oauthProviderPreset("openai", {}), undefined);
+});
+
+test("OAuth token response becomes rotation-safe local credentials", () => {
+  const now = Date.parse("2026-07-15T12:00:00.000Z");
+  const credentials = oauthCredentialsFromTokenResponse({
+    access_token: "access-1",
+    token_type: "Bearer",
+    refresh_token: "refresh-1",
+    expires_in: 3600,
+  }, now);
+  assert.deepEqual(credentials, {
+    token: "access-1",
+    refreshToken: "refresh-1",
+    expiresAt: "2026-07-15T13:00:00.000Z",
+  });
+  assert.equal(oauthCredentialsNeedRefresh(credentials, now), false);
+  assert.equal(oauthCredentialsNeedRefresh(credentials, now + 3_550_000), true);
+  assert.throws(
+    () => oauthCredentialsFromTokenResponse({ access_token: "dpop", token_type: "DPoP" }),
+    /not supported/,
+  );
+});
+
+test("Cynaps3 refuses an authorization response that cannot refresh safely", () => {
+  const preset = oauthProviderPreset("cynaps3", {})!;
+  assert.throws(
+    () => validateOAuthCredentialsForPreset(preset, { token: "access-only" }),
+    /rotating refresh credentials/,
+  );
+  assert.doesNotThrow(() => validateOAuthCredentialsForPreset(preset, {
+    token: "access",
+    refreshToken: "refresh",
+    expiresAt: "2026-07-15T13:00:00.000Z",
+  }));
+});
+
+test("OAuth token errors redact credentials returned by a hostile endpoint", async () => {
+  await assert.rejects(
+    () => exchangeOAuthCode({
+      tokenUrl: "https://provider.example/oauth/token",
+      clientId: "client-123",
+      redirectUri: "http://127.0.0.1:8787/callback",
+      code: "code-456",
+      verifier: "verifier-123",
+      fetchImpl: async () => new Response(JSON.stringify({
+        error: "invalid_grant",
+        error_description: `refresh_token=${"s".repeat(60)}`,
+      }), { status: 400 }),
+    }),
+    (error: unknown) => {
+      assert.match((error as Error).message, /invalid_grant/);
+      assert.doesNotMatch((error as Error).message, /s{20}/);
+      return true;
+    },
+  );
+});
+
+test("expired Cynaps3 OAuth credentials rotate before provider sync", async () => {
+  const preset = oauthProviderPreset("cynaps3", {})!;
+  let requestBody = "";
+  const refreshed = await refreshOAuthCredentials({
+    preset,
+    credentials: {
+      token: "access-old",
+      refreshToken: "refresh-old",
+      expiresAt: "2026-07-15T11:59:00.000Z",
+    },
+    now: Date.parse("2026-07-15T12:00:00.000Z"),
+    fetchImpl: async (_url, init) => {
+      requestBody = String(init?.body);
+      return new Response(JSON.stringify({
+        access_token: "access-new",
+        token_type: "Bearer",
+        refresh_token: "refresh-new",
+        expires_in: 7200,
+      }), { status: 200 });
+    },
+  });
+  assert.match(requestBody, /grant_type=refresh_token/);
+  assert.match(requestBody, /client_id=vibeusage-cli/);
+  assert.match(requestBody, /refresh_token=refresh-old/);
+  assert.deepEqual(refreshed, {
+    token: "access-new",
+    refreshToken: "refresh-new",
+    expiresAt: "2026-07-15T14:00:00.000Z",
+  });
+});
+
+test("expired OAuth without a refresh token fails closed", async () => {
+  await assert.rejects(
+    () => refreshOAuthCredentials({
+      preset: oauthProviderPreset("cynaps3", {})!,
+      credentials: { token: "expired", expiresAt: "2026-07-15T11:00:00.000Z" },
+      now: Date.parse("2026-07-15T12:00:00.000Z"),
+    }),
+    /run vibetracker connect cynaps3/,
+  );
+});
+
+test("connect routes preset OAuth before the manual secret prompt and sync refreshes first", () => {
+  const cli = readFileSync("packages/cli/src/vibetracker.ts", "utf8");
+  const presetBranch = cli.indexOf("const preset = oauthProviderPreset(provider)");
+  const manualPrompt = cli.indexOf("if (missingNow.length && process.stdin.isTTY)");
+  assert.ok(presetBranch > 0 && presetBranch < manualPrompt);
+  assert.match(cli, /if \(preset && !hasExplicitCreds\)/);
+  assert.match(cli, /Object\.assign\(creds, await authorizeOAuthProvider/);
+  assert.match(cli, /await refreshOAuthCredentials\(\{ preset, credentials: current \}\)/);
+  assert.match(cli, /await resolveFreshProviderCreds\(id, cfg\)/);
+});
+
 test("OAuth callback validates state and returns code", async () => {
   const port = await freePort();
   const pending = waitForOAuthCallback({ port, state: "expected-state", timeoutMs: 2_000 });
@@ -87,4 +227,20 @@ test("OAuth callback validates state and returns code", async () => {
   } finally {
     callback.close();
   }
+});
+
+test("OAuth callback reports cancellation immediately", async () => {
+  const port = await freePort();
+  const pending = waitForOAuthCallback({ port, state: "expected-state", timeoutMs: 2_000 });
+  const rejected = assert.rejects(pending, /OAuth authorization failed: User cancelled/);
+  await new Promise<void>((resolve, reject) => {
+    http.get(
+      `http://127.0.0.1:${port}/callback?state=expected-state&error=access_denied&error_description=User+cancelled`,
+      (res) => {
+        res.resume();
+        res.on("end", resolve);
+      },
+    ).on("error", reject);
+  });
+  await rejected;
 });

@@ -26,6 +26,7 @@ export interface VtConfig {
 
 export const CONFIG_PATH = join(homedir(), ".vibetracker", "config.json");
 const ACCOUNT = "_account"; // keyring account for non-provider secrets (the C0VIBE token)
+const OAUTH_AUX_FIELDS = ["refreshToken", "expiresAt"] as const;
 
 export function loadConfig(): VtConfig {
   if (!existsSync(CONFIG_PATH)) return { enabled: ["claude-code"] }; // works with zero setup
@@ -96,7 +97,9 @@ export function storeProviderCreds(cfg: VtConfig, provider: string, creds: Recor
 export function clearProviderCreds(cfg: VtConfig, provider: string): void {
   const kr = keyring();
   if (kr.available()) {
-    for (const field of [...(CRED_FIELDS[provider] ?? []), "token"]) kr.clear(provider, field);
+    for (const field of [...(CRED_FIELDS[provider] ?? []), "token", ...OAUTH_AUX_FIELDS]) {
+      kr.clear(provider, field);
+    }
   }
   if (cfg.creds) delete cfg.creds[provider];
 }
@@ -165,7 +168,7 @@ export function resolveCreds(id: string, cfg?: VtConfig): ProviderCreds {
   const kr = keyring();
   const fromKeyring: Record<string, string> = {};
   if (kr.available()) {
-    for (const field of [...(CRED_FIELDS[id] ?? []), "token"]) {
+    for (const field of [...(CRED_FIELDS[id] ?? []), "token", ...OAUTH_AUX_FIELDS]) {
       const v = kr.get(id, field);
       if (v) fromKeyring[field] = v;
     }
