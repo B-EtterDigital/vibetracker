@@ -1,5 +1,3 @@
-import "../../reliability.css";
-
 // Streamed while the profile dashboard resolves. Server component, no spinner:
 // calm bones in the dashboard's real layout order (header, progress, four stat
 // cards, wide chart). The shimmer is transform-only and disabled under

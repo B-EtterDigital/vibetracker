@@ -1,5 +1,3 @@
-import "../../reliability.css";
-
 // Shown when a handle has no public profile yet. Server component, zero JS: an
 // honest invitation, not an error. The command is a static chip — no copy
 // behaviour — so the surface works even before hydration.

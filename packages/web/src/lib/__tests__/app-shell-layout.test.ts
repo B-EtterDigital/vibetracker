@@ -8,6 +8,12 @@ const home = readFileSync("packages/web/src/app/page.tsx", "utf8");
 const dock = readFileSync("packages/web/src/components/UsageSignalDock.tsx", "utf8");
 const css = readFileSync("packages/web/src/app/globals.css", "utf8");
 const logo = readFileSync("packages/web/public/brand/vibeusage-logo.png");
+const reliabilityBoundaries = [
+  "packages/web/src/app/error.tsx",
+  "packages/web/src/app/not-found.tsx",
+  "packages/web/src/app/u/[handle]/loading.tsx",
+  "packages/web/src/app/u/[handle]/not-found.tsx",
+].map((file) => readFileSync(file, "utf8"));
 
 test("root layout and home stay route-neutral while the legacy signal dock remains reusable", () => {
   assert.doesNotMatch(layout, /buildAppShellStatus/);
@@ -17,6 +23,14 @@ test("root layout and home stay route-neutral while the legacy signal dock remai
 
   assert.doesNotMatch(home, /UsageSignalDock|app-shell-dock/);
   assert.match(home, /<LeaderboardConsole boards=\{\[verified, selfReported\]\} \/>/);
+});
+
+test("root shell owns reliability styles without route-boundary preload duplication", () => {
+  assert.match(layout, /import "\.\/reliability\.css"/);
+  for (const boundary of reliabilityBoundaries) {
+    assert.doesNotMatch(boundary, /reliability\.css/);
+    assert.match(boundary, /className="vrel/);
+  }
 });
 
 test("home signal dock preserves separated usage rails with compact diagnostics", () => {

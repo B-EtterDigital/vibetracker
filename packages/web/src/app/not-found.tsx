@@ -1,5 +1,3 @@
-import "./reliability.css";
-
 // Root 404. Server component, zero JS: a single calm panel that points people
 // back to the board instead of dead-ending them.
 export default function NotFound() {

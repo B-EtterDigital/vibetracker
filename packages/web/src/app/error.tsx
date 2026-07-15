@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import "./reliability.css";
 
 // App-level error boundary. Next passes the caught error and a reset() to retry
 // the segment. We report the failure (never swallow it, never surface a raw

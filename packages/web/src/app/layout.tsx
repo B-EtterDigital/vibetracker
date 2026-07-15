@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./reliability.css";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
 import { AccountControl } from "../components/account-control";
