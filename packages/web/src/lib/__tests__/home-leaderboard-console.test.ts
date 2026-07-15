@@ -141,6 +141,9 @@ test("leaderboard explains concentration, unit cost, active depth, and identity 
   assert.match(source, /<LeaderboardBrief rows=\{active\.rows\}/);
   assert.match(page, /credits: row\.total_credits/);
   assert.match(page, /ops: row\.record_count/);
+  assert.match(source, /id="leaderboard-handle-search"/);
+  assert.match(source, /name="leaderboard-handle-search"/);
+  assert.match(source, /autoComplete="off"/);
   assert.match(page, /\.\/home\/leaderboard-brief\.css/);
   assert.match(briefCss, /@media \(max-width: 560px\)/);
   assert.match(briefCss, /@media \(min-width: 2200px\)/);

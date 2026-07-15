@@ -264,14 +264,14 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
             </div>
             <label>
               <span>Search handle</span>
-              <input
+              <input id="leaderboard-handle-search" name="leaderboard-handle-search"
                 type="search"
                 value={query}
                 onChange={(event) => {
                   setQuery(event.target.value);
                   setExpanded(false);
                 }}
-                placeholder="type a handle"
+                placeholder="type a handle" autoComplete="off"
               />
             </label>
           </div>
