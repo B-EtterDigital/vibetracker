@@ -75,9 +75,18 @@ test("creator quick targets preserve product order and expose the real Midjourne
   ]);
 
   assert.deepEqual(featuredProviderRows(directory.rows).map((row) => row.provider.id), ["midjourney", "leonardo", "cynaps3"]);
+  const connections = featuredProviderConnections(directory.rows);
   assert.deepEqual(
-    featuredProviderConnections(directory.rows).map(({ row, protocol }) => [row.provider.id, protocol]),
+    connections.map(({ row, protocol }) => [row.provider.id, protocol]),
     [["midjourney", "OFFICIAL /INFO"], ["leonardo", "PRODUCTION API"], ["cynaps3", "PKCE OAUTH"]],
+  );
+  assert.deepEqual(
+    connections.map(({ row, signal, boundary }) => [row.provider.id, signal, boundary]),
+    [
+      ["midjourney", "lifetime image total", "official /info · no cookie"],
+      ["leonardo", "completed image generations", "production feed · API-token wallet"],
+      ["cynaps3", "music operations ledger", "read-only OAuth · upstream spend deduped"],
+    ],
   );
   assert.deepEqual(providerActionFor(providers[3]!, "manual"), {
     kind: "copy",
@@ -129,8 +138,10 @@ test("provider route leads with discovery and keeps the coverage brief as honest
   const styles = readFileSync("packages/web/src/app/providers/directory.css", "utf8");
 
   const connectionBay = readFileSync("packages/web/src/app/providers/featured-connections.tsx", "utf8");
+  const routeStyles = readFileSync("packages/web/src/app/providers/providers.css", "utf8");
   assert.match(connectionBay, /CREATOR CONNECTION BAY/);
-  assert.match(connectionBay, /exact local lanes/);
+  assert.match(connectionBay, /reviewed local lanes/);
+  assert.match(connectionBay, /providers-directory__quick-proof/);
   assert.match(connectionBay, /Copy \$\{provider\.label\} command/);
   assert.match(directory, /COVERAGE READOUT \/ WHY LABELS DIFFER/);
   assert.match(directory, /TRUST VECTOR/);
@@ -148,7 +159,9 @@ test("provider route leads with discovery and keeps the coverage brief as honest
   assert.match(styles, /\.providers-coverage-brief/);
   assert.match(styles, /\.providers-directory__quick/);
   assert.match(styles, /grid-template-columns: repeat\(6, minmax\(0, 1fr\)\)/);
-  assert.match(readFileSync("packages/web/src/app/providers/providers.css", "utf8"), /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(routeStyles, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(routeStyles, /@media \(min-width: 3000px\)/);
+  assert.match(routeStyles, /max-width: min\(3200px, calc\(100vw - 240px\)\)/);
   assert.match(styles, /@media \(max-width: 620px\)/);
   assert.doesNotMatch(directory, /dangerouslySetInnerHTML/);
 });

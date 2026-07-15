@@ -371,6 +371,23 @@ button.providers-chip { cursor: pointer; transition: background-color .16s ease,
 .providers-directory__quick-identity b { font: 750 10px/1.15 ui-monospace, SFMono-Regular, Menlo, monospace; }
 .providers-directory__quick-identity em { color: var(--brand-from); font: normal 750 7px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; }
 .providers-directory__quick-identity small { color: var(--muted); font: 650 7px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.providers-directory__quick-proof {
+  display: grid;
+  gap: 3px;
+  min-height: 44px;
+  padding: 7px;
+  border-top: 1px solid color-mix(in srgb, var(--brand-from) 16%, var(--line));
+  background: color-mix(in srgb, var(--brand-from) 4%, #050708);
+}
+.providers-directory__quick-proof b {
+  color: #d9fff2;
+  font: 700 8px/1.25 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.providers-directory__quick-proof small {
+  color: var(--muted);
+  font: 600 7px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow-wrap: anywhere;
+}
 .providers-directory__quick-command {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

@@ -54,6 +54,8 @@ export interface ProviderRow {
 export interface FeaturedProviderConnection {
   row: ProviderRow;
   protocol: string;
+  signal: string;
+  boundary: string;
   action: ProviderDirectoryAction;
 }
 
@@ -183,12 +185,43 @@ const FEATURED_PROTOCOLS: Record<(typeof FEATURED_PROVIDER_IDS)[number], string>
   runway: "ORG LEDGER",
 };
 
+const FEATURED_SIGNAL: Record<(typeof FEATURED_PROVIDER_IDS)[number], { signal: string; boundary: string }> = {
+  midjourney: {
+    signal: "lifetime image total",
+    boundary: "official /info · no cookie",
+  },
+  leonardo: {
+    signal: "completed image generations",
+    boundary: "production feed · API-token wallet",
+  },
+  cynaps3: {
+    signal: "music operations ledger",
+    boundary: "read-only OAuth · upstream spend deduped",
+  },
+  suno: {
+    signal: "settled song generations",
+    boundary: "session feed · approximate credits",
+  },
+  udio: {
+    signal: "generated music feed",
+    boundary: "session feed · approximate credits",
+  },
+  runway: {
+    signal: "organization credit usage",
+    boundary: "endpoint-attested ledger",
+  },
+};
+
 export function featuredProviderConnections(rows: ProviderRow[]): FeaturedProviderConnection[] {
-  return featuredProviderRows(rows).map((row) => ({
-    row,
-    protocol: FEATURED_PROTOCOLS[row.provider.id as (typeof FEATURED_PROVIDER_IDS)[number]],
-    action: providerActionFor(row.provider, row.key),
-  }));
+  return featuredProviderRows(rows).map((row) => {
+    const id = row.provider.id as (typeof FEATURED_PROVIDER_IDS)[number];
+    return {
+      row,
+      protocol: FEATURED_PROTOCOLS[id],
+      ...FEATURED_SIGNAL[id],
+      action: providerActionFor(row.provider, row.key),
+    };
+  });
 }
 
 function percent(part: number, total: number): number {

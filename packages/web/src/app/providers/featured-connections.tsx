@@ -22,10 +22,10 @@ export function CreatorConnectionBay({
     <section className="providers-directory__quick" aria-labelledby="creator-connection-title">
       <header>
         <span id="creator-connection-title">CREATOR CONNECTION BAY</span>
-        <small>{connections.length} exact local lanes</small>
+        <small>{connections.length} reviewed local lanes</small>
       </header>
       <div className="providers-directory__quick-grid">
-        {connections.map(({ row: { provider, key }, protocol, action }) => {
+        {connections.map(({ row: { provider, key }, protocol, signal, boundary, action }) => {
           const brand = providerBrand(provider.id);
           const hint = feedback?.id === provider.id ? feedback.text : "";
           const command = action.kind === "copy" ? action.command : action.label;
@@ -48,6 +48,10 @@ export function CreatorConnectionBay({
                   <small>{STATUS_WORD[key]}</small>
                 </span>
               </button>
+              <div className="providers-directory__quick-proof">
+                <b>{signal}</b>
+                <small>{boundary}</small>
+              </div>
               <div className="providers-directory__quick-command">
                 <code title={command}>{command}</code>
                 {action.kind === "copy" ? (

@@ -99,6 +99,14 @@
   .providers-directory__toolbar { gap: 7px; }
   .providers-directory__quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .providers-directory__quick > header { align-items: flex-start; }
+  .providers-directory__quick-identity { min-height: 62px; padding: 8px; }
+  .providers-directory__quick-identity b { font-size: 11px; }
+  .providers-directory__quick-identity em,
+  .providers-directory__quick-identity small { font-size: 8px; }
+  .providers-directory__quick-proof { min-height: 56px; padding: 8px; }
+  .providers-directory__quick-proof b { font-size: 9px; }
+  .providers-directory__quick-proof small { font-size: 8px; }
+  .providers-directory__quick-command { min-height: 30px; }
   .providers-directory__select { min-height: 40px; }
   .providers-directory__filters {
     flex-wrap: nowrap;
@@ -175,6 +183,89 @@
   .providers-route .providers-row__cats,
   .providers-route .providers-row__method span { font-size: 13px; }
   .providers-route .providers-row__cmd { font-size: 12px; }
+}
+
+@media (min-width: 3000px) {
+  .wrap:has(> .providers-route) { max-width: min(3200px, calc(100vw - 240px)); }
+
+  .providers-route .providers-hero {
+    grid-template-columns: minmax(0, .78fr) minmax(920px, 1.22fr);
+  }
+
+  .providers-route .providers-copy,
+  .providers-route .registry-terminal { min-height: 330px; }
+
+  .providers-route .providers-copy { padding: 48px; }
+  .providers-route .providers-copy h1 { font-size: 64px; }
+  .providers-route .providers-copy > p { max-width: 1080px; font-size: 19px; }
+  .providers-route .registry-terminal pre { font-size: 17px; }
+
+  .providers-route .providers-directory { padding: 24px; }
+  .providers-route .providers-directory__toolbar {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .providers-route .providers-directory__search,
+  .providers-route .providers-directory__select { min-height: 52px; }
+
+  .providers-route .providers-directory__input { font-size: 17px; }
+
+  .providers-route .providers-directory__quick {
+    margin-bottom: 12px;
+    padding: 14px;
+  }
+
+  .providers-route .providers-directory__quick > header { padding: 0 4px 11px; }
+  .providers-route .providers-directory__quick > header span,
+  .providers-route .providers-directory__quick > header small { font-size: 11px; }
+  .providers-route .providers-directory__quick-grid { gap: 10px; }
+
+  .providers-route .providers-directory__quick-identity {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 10px;
+    min-height: 82px;
+    padding: 13px;
+  }
+
+  .providers-route .providers-directory__quick-identity > i {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .providers-route .providers-directory__quick-identity img {
+    max-width: 22px;
+    max-height: 22px;
+  }
+
+  .providers-route .providers-directory__quick-identity b { font-size: 15px; }
+  .providers-route .providers-directory__quick-identity em,
+  .providers-route .providers-directory__quick-identity small { font-size: 10px; }
+
+  .providers-route .providers-directory__quick-proof {
+    gap: 5px;
+    min-height: 66px;
+    padding: 11px 13px;
+  }
+
+  .providers-route .providers-directory__quick-proof b { font-size: 12px; }
+  .providers-route .providers-directory__quick-proof small { font-size: 10px; }
+
+  .providers-route .providers-directory__quick-command { min-height: 38px; }
+  .providers-route .providers-directory__quick-command code,
+  .providers-route .providers-directory__quick-command button,
+  .providers-route .providers-directory__quick-command a { font-size: 11px; }
+
+  .providers-route .providers-row td { padding: 11px 16px; }
+  .providers-route .providers-row__mark { width: 28px; height: 28px; }
+  .providers-route .providers-row__name { width: calc(100% - 42px); }
+  .providers-route .providers-row__name b { font-size: 16px; }
+  .providers-route .providers-row__name span,
+  .providers-route .providers-row__cats,
+  .providers-route .providers-row__method span { font-size: 14px; }
+  .providers-route .providers-row__cmd { font-size: 13px; }
 }
 
 /* ---- reduced motion: no mount sweep, no hover transitions ---- */
