@@ -107,9 +107,9 @@
 @media (max-width: 760px) {
   .intel-scope { margin-top: 20px; }
   .intel-scope__rail { grid-template-columns: repeat(10, minmax(0, 1fr)); }
-  .intel-scope__facts { grid-template-columns: 1fr; }
-  .intel-scope__facts div { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
-  .intel-scope__facts div + div { border-top: 1px solid var(--intel-line); border-left: 0; }
+  .intel-scope__facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .intel-scope__facts div + div { border-left: 1px solid var(--intel-line); }
+  .intel-scope > p { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

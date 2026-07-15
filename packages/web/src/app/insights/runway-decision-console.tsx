@@ -155,6 +155,15 @@ export function RunwayDecisionConsole({
           {sourceMode !== "sample" ? <a href="/insights">Use sample</a> : <a href="/scan">Create a real scan</a>}
         </div>
         <header className="intel-mast">
+          <div className="intel-readout" aria-live="polite">
+            <span>CURRENT SCENARIO · PLANNED PAID SPEND</span>
+            <strong>{currency.format(snapshot.adjustedUsd)}</strong>
+            <small>of a {currency.format(monthlyCapUsd)} monthly limit</small>
+            <b>{snapshot.varianceUsd >= 0 ? `${currency.format(snapshot.varianceUsd)} left` : `${currency.format(Math.abs(snapshot.varianceUsd))} over`}</b>
+            <em className="intel-readout__verdict">{decision.title}</em>
+            <a href="#intel-controls-title">Tune assumptions <span aria-hidden="true">↓</span></a>
+            <InsightEvidenceScope source={source} />
+          </div>
           <div className="intel-mast__copy">
             <p>MONTHLY AI COST PLAN</p>
             <h1 id="intel-title">{mastTitle}</h1>
@@ -166,13 +175,6 @@ export function RunwayDecisionConsole({
               <i aria-hidden="true">→</i>
               <div><small>03 · 30-DAY PLAN</small><b>{currency.format(source.forecastUsd)}</b><span>{projectionFormula}</span></div>
             </div>
-          </div>
-          <div className="intel-readout" aria-live="polite">
-            <span>CURRENT SCENARIO · PLANNED PAID SPEND</span>
-            <strong>{currency.format(snapshot.adjustedUsd)}</strong>
-            <small>of a {currency.format(monthlyCapUsd)} monthly limit</small>
-            <b>{snapshot.varianceUsd >= 0 ? `${currency.format(snapshot.varianceUsd)} left` : `${currency.format(Math.abs(snapshot.varianceUsd))} over`}</b>
-            <InsightEvidenceScope source={source} />
           </div>
         </header>
 

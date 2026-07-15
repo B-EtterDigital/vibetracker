@@ -57,6 +57,9 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(consoleSource, /type="range"/);
   assert.match(consoleSource, /aria-pressed=/);
   assert.match(consoleSource, /navigator\.clipboard\.writeText/);
+  assert.match(consoleSource, /intel-readout__verdict/);
+  assert.match(consoleSource, /href="#intel-controls-title">Tune assumptions/);
+  assert.ok(consoleSource.indexOf('className="intel-readout"') < consoleSource.indexOf('className="intel-mast__copy"'), "the answer precedes the explanation in source order");
   assert.match(methodologySource, /Clipboard access failed/);
   assert.match(consoleSource, /0 usage writes · 0 rank changes · 0 provider changes/);
   assert.match(styles, /\.intel-console/);
@@ -85,6 +88,13 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(methodologySource, /Open six calculation rows, provider review, evidence boundaries, formula, and CLI dry run/);
   assert.match(methodologySource, /This page writes nothing/);
   assert.match(responsive, /@media \(max-width: 760px\)/);
+  assert.match(responsive, /\.intel-console \{ display: flex; flex-direction: column; \}/);
+  assert.match(responsive, /\.intel-mast \{ order: 1; \}/);
+  assert.match(responsive, /\.intel-brief \{ order: 2; \}/);
+  assert.match(responsive, /\.intel-profile-picker \{ order: 4; \}/);
+  assert.match(responsive, /\.intel-basis \{ display: flex; overflow-x: auto;/);
+  assert.match(scopeStyles, /\.intel-scope__facts \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/);
+  assert.match(scopeStyles, /\.intel-scope > p \{ display: none; \}/);
   assert.match(responsive, /@media \(min-width: 2200px\)/);
   assert.match(responsive, /max-width: min\(2640px, 95vw\)/);
   assert.match(responsive, /\.intel-console \{ display: grid; grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
