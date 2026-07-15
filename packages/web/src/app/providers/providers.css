@@ -60,6 +60,7 @@
 /* ---- focus-visible for every interactive element ---- */
 .providers-directory__input:focus-visible,
 .providers-directory__clear:focus-visible,
+.providers-directory__quick button:focus-visible,
 .providers-directory__select select:focus-visible,
 .providers-chip:focus-visible,
 .providers-directory__domains button:focus-visible,
@@ -83,7 +84,9 @@
 
 /* ---- mobile: bounded cards, one search column, scrollable status rail ---- */
 @media (max-width: 767px) {
-  .providers-hero .registry-terminal { min-height: 210px; }
+  .providers-hero { margin-bottom: 14px; }
+  .providers-hero .registry-terminal { min-height: 0; }
+  .providers-hero .registry-terminal pre { overflow: hidden; line-height: 1.25; }
   .providers-directory { padding: 10px; }
   .providers-directory__brief:not(.providers-coverage-brief) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .providers-directory__brief:not(.providers-coverage-brief) > div { padding: 10px 8px; }
@@ -94,6 +97,9 @@
   .providers-directory__toolbar,
   .providers-directory__facets { grid-template-columns: 1fr; }
   .providers-directory__toolbar { gap: 7px; }
+  .providers-directory__quick { grid-template-columns: 1fr; gap: 6px; }
+  .providers-directory__quick > span { padding: 0 4px; }
+  .providers-directory__quick button { flex-basis: 132px; }
   .providers-directory__select { min-height: 40px; }
   .providers-directory__filters {
     flex-wrap: nowrap;

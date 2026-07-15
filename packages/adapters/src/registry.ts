@@ -173,7 +173,7 @@ export const PROVIDERS: ProviderDescriptor[] = [
   ai({ id: "diffusers-local", label: "Diffusers local scripts", categories: ["image", "audio", "video"], tier: "local", auth: "localLogs", status: "planned", verified: false, method: "local manifest/proxy / $0" }),
 
   // ===== AI — NO API =====
-  ai({ id: "midjourney", label: "Midjourney", categories: ["image"], tier: "manual", auth: "none", status: "manual-only", verified: false, method: "Discord-only → manual entry" }),
+  ai({ id: "midjourney", label: "Midjourney", categories: ["image"], tier: "manual", auth: "none", status: "manual-only", verified: false, method: "official /info lifetime-image import" }),
 
   // ===== DEV COSTS (hosting / CI / GPU / DB) =====
   dev({ id: "vercel", label: "Vercel", categories: ["other"], tier: "ledger", auth: "apiKey", status: "planned", verified: false, method: "usage/billing API" }),

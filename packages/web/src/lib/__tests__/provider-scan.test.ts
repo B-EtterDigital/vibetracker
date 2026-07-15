@@ -457,7 +457,8 @@ test("providers route ships the theatre encore collapsed and drops the freshness
   assert.match(directoryTableCss, /providers-columns__action \{ width: 20%/);
   assert.match(providersCss, /\.providers-row td\.providers-row__cats \{/);
   assert.match(providersCss, /grid-area: cats/);
-  assert.match(providersCss, /\.providers-hero \.registry-terminal \{ min-height: 210px; \}/);
+  assert.match(providersCss, /\.providers-hero \.registry-terminal \{ min-height: 0; \}/);
+  assert.match(providersCss, /\.providers-directory__quick button:focus-visible/);
   assert.match(providersCss, /@media \(max-width: 767px\)/);
   assert.match(providersCss, /@media \(min-width: 2200px\)/);
   assert.match(providersCss, /max-width: min\(2640px, 95vw\)/);

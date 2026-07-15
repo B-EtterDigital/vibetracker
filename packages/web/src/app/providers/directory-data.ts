@@ -8,6 +8,7 @@ export const PAGE_SIZES = [12, 24, 48] as const;
 export type PageSize = (typeof PAGE_SIZES)[number];
 export const PAGE_SIZE: PageSize = 12;
 export const STATUS_KEYS: StatusKey[] = ["verified", "built", "proxy", "manual", "planned"];
+export const FEATURED_PROVIDER_IDS = ["midjourney", "leonardo", "cynaps3", "suno", "udio", "runway"] as const;
 
 export const STATUS_WORD: Record<StatusKey, string> = {
   verified: "built · verified",
@@ -79,6 +80,35 @@ export interface ProviderFilters {
   domain: DomainFilter;
 }
 
+export type ProviderDirectoryAction =
+  | { kind: "copy"; label: string; command: string }
+  | { kind: "link"; label: string; href: string };
+
+const GOOD_FIRST_ADAPTERS =
+  "https://github.com/B-EtterDigital/vibetracker/blob/main/docs/GOOD_FIRST_ADAPTERS.md";
+
+export function providerActionFor(provider: ProviderDescriptor, key: StatusKey): ProviderDirectoryAction {
+  if (provider.id === "midjourney") {
+    return {
+      kind: "copy",
+      label: "import /info total",
+      command: "vibetracker import midjourney --images <lifetime-images>",
+    };
+  }
+  if (key === "verified" || key === "built") {
+    return { kind: "copy", label: `connect ${provider.id}`, command: `vibetracker connect ${provider.id}` };
+  }
+  if (key === "proxy") return { kind: "copy", label: "detect", command: "vibetracker detect" };
+  if (key === "manual") {
+    return {
+      kind: "copy",
+      label: `add ${provider.id}`,
+      command: `vibetracker add ${provider.id} --usd 20 --note manual`,
+    };
+  }
+  return { kind: "link", label: "contribute", href: GOOD_FIRST_ADAPTERS };
+}
+
 export function statusKeyOf(provider: ProviderDescriptor): StatusKey {
   if (provider.status === "built" && provider.verified) return "verified";
   if (provider.status === "built") return "built";
@@ -128,6 +158,13 @@ export function buildProviderDirectoryData(providers: ProviderDescriptor[]): Pro
     readyCount: statusCounts.verified + statusCounts.built + statusCounts.proxy + statusCounts.manual,
     categories: [...categoryCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
   };
+}
+
+export function featuredProviderRows(rows: ProviderRow[]): ProviderRow[] {
+  return FEATURED_PROVIDER_IDS.flatMap((id) => {
+    const row = rows.find((candidate) => candidate.provider.id === id);
+    return row ? [row] : [];
+  });
 }
 
 function percent(part: number, total: number): number {

@@ -292,6 +292,69 @@ button.providers-chip { cursor: pointer; transition: background-color .16s ease,
   color: var(--muted);
   font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+.providers-directory__quick {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin: 0 0 8px;
+  padding: 7px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
+  background: #070b0d;
+}
+.providers-directory__quick > span {
+  padding-left: 4px;
+  color: #ffc64d;
+  font: 800 8px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap;
+}
+.providers-directory__quick > div {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.providers-directory__quick button {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  flex: 1 0 142px;
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid color-mix(in srgb, var(--brand-from) 44%, var(--line));
+  border-left: 2px solid var(--brand-from);
+  padding: 5px 7px;
+  background: #050708;
+  color: #d9fff2;
+  text-align: left;
+  cursor: pointer;
+}
+.providers-directory__quick button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--brand-from) 14%, #050708);
+  border-color: var(--brand-from);
+}
+.providers-directory__quick button > i {
+  display: grid;
+  grid-row: 1 / -1;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  align-self: center;
+  color: var(--brand-ink);
+  font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.providers-directory__quick button img { display: block; max-width: 16px; max-height: 16px; object-fit: contain; }
+.providers-directory__quick button b,
+.providers-directory__quick button small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.providers-directory__quick button b { font: 750 10px/1.15 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.providers-directory__quick button small { color: var(--muted); font: 650 7px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.providers-directory__pagination + .providers-coverage-brief,
+.providers-directory__empty + .providers-coverage-brief { margin-top: 12px; }
 .providers-directory__clear { cursor: pointer; color: #d9fff2; font-size: 17px; }
 .providers-directory__select {
   display: grid;

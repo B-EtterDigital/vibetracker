@@ -7,6 +7,7 @@ import { providerBrand } from "../../lib/provider-brand";
 import {
   buildProviderDirectoryData,
   buildProviderCoverageBrief,
+  featuredProviderRows,
   filterProviderRows,
   pageProviderRows,
   PAGE_SIZE,
@@ -14,33 +15,13 @@ import {
   STATUS_KEYS,
   STATUS_LEGEND,
   STATUS_WORD,
+  providerActionFor,
 } from "./directory-data";
-import type { DomainFilter, PageSize, StatusFilter, StatusKey } from "./directory-data";
+import type { DomainFilter, PageSize, StatusFilter } from "./directory-data";
 
-const GOOD_FIRST_ADAPTERS =
-  "https://github.com/B-EtterDigital/vibetracker/blob/main/docs/GOOD_FIRST_ADAPTERS.md";
 const REQUEST_ADAPTER = "https://github.com/B-EtterDigital/vibetracker/issues/new";
 const COPIED = "copied";
 const COPY_BLOCKED = "copy blocked";
-
-type RowAction =
-  | { kind: "copy"; label: string; command: string }
-  | { kind: "link"; label: string; href: string };
-
-function actionFor(provider: ProviderDescriptor, key: StatusKey): RowAction {
-  if (key === "verified" || key === "built") {
-    return { kind: "copy", label: `connect ${provider.id}`, command: `vibetracker connect ${provider.id}` };
-  }
-  if (key === "proxy") return { kind: "copy", label: "detect", command: "vibetracker detect" };
-  if (key === "manual") {
-    return {
-      kind: "copy",
-      label: `add ${provider.id}`,
-      command: `vibetracker add ${provider.id} --usd 20 --note manual`,
-    };
-  }
-  return { kind: "link", label: "contribute", href: GOOD_FIRST_ADAPTERS };
-}
 
 export function ProvidersDirectory({ providers }: { providers: ProviderDescriptor[] }) {
   const [query, setQuery] = useState("");
@@ -55,6 +36,7 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
 
   const directory = useMemo(() => buildProviderDirectoryData(providers), [providers]);
   const coverageBrief = useMemo(() => buildProviderCoverageBrief(directory), [directory]);
+  const featuredRows = useMemo(() => featuredProviderRows(directory.rows), [directory.rows]);
   const results = useMemo(
     () => filterProviderRows(directory.rows, {
       query,
@@ -103,6 +85,16 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
     setCategoryFilter("all");
     setDomainFilter("all");
     setPage(1);
+    requestAnimationFrame(() => searchRef.current?.focus());
+  }
+
+  function focusProvider(providerId: string) {
+    setQuery(providerId);
+    setStatusFilter("all");
+    setCategoryFilter("all");
+    setDomainFilter("all");
+    setPage(1);
+    requestAnimationFrame(() => searchRef.current?.focus());
   }
 
   function flash(id: string, text: string) {
@@ -126,67 +118,6 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
         <span>directory@registry</span>
         <b>{directory.readyCount} READY · {providers.length} MAPPED</b>
       </div>
-
-      <section className="providers-directory__brief providers-coverage-brief" aria-labelledby="providers-coverage-title">
-        <header>
-          <div>
-            <span>OPERATOR BRIEF / READ THIS FIRST</span>
-            <h2 id="providers-coverage-title">{coverageBrief.headline}</h2>
-            <p>{coverageBrief.summary}</p>
-          </div>
-          <b>{coverageBrief.coverageLabel}</b>
-        </header>
-
-        <div
-          className="providers-coverage-brief__meter"
-          role="img"
-          aria-label={`${coverageBrief.verifiedCount} verified, ${coverageBrief.caveatedCount} usable with caveats, ${coverageBrief.plannedCount} planned`}
-        >
-          <i data-status="verified" style={{ "--share": `${coverageBrief.verifiedShare}%` } as CSSProperties} />
-          <i data-status="caveated" style={{ "--share": `${coverageBrief.caveatedShare}%` } as CSSProperties} />
-          <i data-status="planned" style={{ "--share": `${coverageBrief.plannedShare}%` } as CSSProperties} />
-        </div>
-
-        <div className="providers-coverage-brief__grid">
-          <article data-tone="verified">
-            <small>TRUST VECTOR</small>
-            <strong>{coverageBrief.vectorLabel}</strong>
-            <p>{coverageBrief.decisiveLabel}</p>
-            <button type="button" aria-pressed={statusFilter === "verified"} onClick={() => focusCoverage("verified")}>SHOW VERIFIED</button>
-          </article>
-          <article data-tone="caveated">
-            <small>USABLE WITH CAVEATS</small>
-            <strong>{coverageBrief.caveatedCount}</strong>
-            <p>{directory.statusCounts.built} approximate // {directory.statusCounts.proxy} proxy // {directory.statusCounts.manual} manual</p>
-            <button type="button" aria-pressed={statusFilter === "ready"} onClick={() => focusCoverage("ready")}>SHOW ALL READY</button>
-          </article>
-          <article data-tone="planned">
-            <small>UNBUILT GAP</small>
-            <strong>{coverageBrief.plannedCount} planned</strong>
-            <p>Mapped for discovery and contribution; never presented as working coverage.</p>
-            <button type="button" aria-pressed={statusFilter === "planned"} onClick={() => focusCoverage("planned")}>SHOW PLANNED</button>
-          </article>
-        </div>
-
-        <footer>
-          <div><b>NEXT INSPECTION</b><span>{coverageBrief.nextAction}</span></div>
-          <button type="button" onClick={() => focusCoverage(coverageBrief.recommendedStatus)}>
-            OPEN {coverageBrief.recommendedStatus === "verified" ? "VERIFIED RAILS" : coverageBrief.recommendedStatus === "ready" ? "READY RAILS" : "PLANNED GAP"}
-          </button>
-        </footer>
-      </section>
-
-      <details className="providers-legend">
-        <summary>Read the five coverage labels</summary>
-        <ul>
-          {STATUS_KEYS.map((key) => (
-            <li className="providers-legend__item" key={key}>
-              <span className={`providers-chip providers-chip--${key}`}>{STATUS_WORD[key]}</span>
-              <span className="providers-legend__def">{STATUS_LEGEND[key]}</span>
-            </li>
-          ))}
-        </ul>
-      </details>
 
       <div className="providers-directory__toolbar">
         <div className="providers-directory__search">
@@ -228,6 +159,28 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
             ))}
           </select>
         </label>
+      </div>
+
+      <div className="providers-directory__quick" aria-label="Creator provider quick targets">
+        <span>CREATOR QUICK TARGETS</span>
+        <div>
+          {featuredRows.map(({ provider, key }) => {
+            const brand = providerBrand(provider.id);
+            return (
+              <button
+                type="button"
+                key={provider.id}
+                aria-pressed={query === provider.id}
+                onClick={() => focusProvider(provider.id)}
+                style={{ "--brand-from": brand.from, "--brand-to": brand.to, "--brand-ink": brand.ink } as CSSProperties}
+              >
+                <i aria-hidden="true">{brand.logo ? <img src={brand.logo} alt="" width={13} height={13} /> : brand.mark}</i>
+                <b>{provider.label}</b>
+                <small>{STATUS_WORD[key]}</small>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="providers-directory__facets">
@@ -310,7 +263,7 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
             </thead>
             <tbody>
               {paged.rows.map(({ provider, key }) => {
-                const action = actionFor(provider, key);
+                const action = providerActionFor(provider, key);
                 const brand = providerBrand(provider.id);
                 const extra = provider.categories.length - 3;
                 const hint = feedback?.id === provider.id ? feedback.text : "";
@@ -350,6 +303,67 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
           </nav>
         </>
       )}
+
+      <section className="providers-directory__brief providers-coverage-brief" aria-labelledby="providers-coverage-title">
+        <header>
+          <div>
+            <span>COVERAGE READOUT / WHY LABELS DIFFER</span>
+            <h2 id="providers-coverage-title">{coverageBrief.headline}</h2>
+            <p>{coverageBrief.summary}</p>
+          </div>
+          <b>{coverageBrief.coverageLabel}</b>
+        </header>
+
+        <div
+          className="providers-coverage-brief__meter"
+          role="img"
+          aria-label={`${coverageBrief.verifiedCount} verified, ${coverageBrief.caveatedCount} usable with caveats, ${coverageBrief.plannedCount} planned`}
+        >
+          <i data-status="verified" style={{ "--share": `${coverageBrief.verifiedShare}%` } as CSSProperties} />
+          <i data-status="caveated" style={{ "--share": `${coverageBrief.caveatedShare}%` } as CSSProperties} />
+          <i data-status="planned" style={{ "--share": `${coverageBrief.plannedShare}%` } as CSSProperties} />
+        </div>
+
+        <div className="providers-coverage-brief__grid">
+          <article data-tone="verified">
+            <small>TRUST VECTOR</small>
+            <strong>{coverageBrief.vectorLabel}</strong>
+            <p>{coverageBrief.decisiveLabel}</p>
+            <button type="button" aria-pressed={statusFilter === "verified"} onClick={() => focusCoverage("verified")}>SHOW VERIFIED</button>
+          </article>
+          <article data-tone="caveated">
+            <small>USABLE WITH CAVEATS</small>
+            <strong>{coverageBrief.caveatedCount}</strong>
+            <p>{directory.statusCounts.built} approximate // {directory.statusCounts.proxy} proxy // {directory.statusCounts.manual} manual</p>
+            <button type="button" aria-pressed={statusFilter === "ready"} onClick={() => focusCoverage("ready")}>SHOW ALL READY</button>
+          </article>
+          <article data-tone="planned">
+            <small>UNBUILT GAP</small>
+            <strong>{coverageBrief.plannedCount} planned</strong>
+            <p>Mapped for discovery and contribution; never presented as working coverage.</p>
+            <button type="button" aria-pressed={statusFilter === "planned"} onClick={() => focusCoverage("planned")}>SHOW PLANNED</button>
+          </article>
+        </div>
+
+        <footer>
+          <div><b>NEXT INSPECTION</b><span>{coverageBrief.nextAction}</span></div>
+          <button type="button" onClick={() => focusCoverage(coverageBrief.recommendedStatus)}>
+            OPEN {coverageBrief.recommendedStatus === "verified" ? "VERIFIED RAILS" : coverageBrief.recommendedStatus === "ready" ? "READY RAILS" : "PLANNED GAP"}
+          </button>
+        </footer>
+      </section>
+
+      <details className="providers-legend">
+        <summary>Read the five coverage labels</summary>
+        <ul>
+          {STATUS_KEYS.map((key) => (
+            <li className="providers-legend__item" key={key}>
+              <span className={`providers-chip providers-chip--${key}`}>{STATUS_WORD[key]}</span>
+              <span className="providers-legend__def">{STATUS_LEGEND[key]}</span>
+            </li>
+          ))}
+        </ul>
+      </details>
     </section>
   );
 }

@@ -25,4 +25,7 @@ test("manual-only and unverified API providers are labelled honestly", () => {
   assert.equal(getProvider("perplexity")?.verified, false);
   assert.equal(getProvider("mistral")?.verified, false);
   assert.match(getProvider("poe")?.method ?? "", /manual/);
+  assert.equal(getProvider("midjourney")?.status, "manual-only");
+  assert.equal(getProvider("midjourney")?.verified, false);
+  assert.match(getProvider("midjourney")?.method ?? "", /official \/info lifetime-image import/);
 });
