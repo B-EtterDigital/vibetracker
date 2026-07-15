@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { accountIdentityFromSession } from "../app/account/account-session";
 import { supabaseBrowser, supabaseBrowserConfigured } from "../lib/supabase-browser";
@@ -11,6 +12,8 @@ type ControlState = "loading" | "signed-out" | "session" | "linked" | "unavailab
 export function AccountControl() {
   const [state, setState] = useState<ControlState>(supabaseBrowserConfigured() ? "loading" : "signed-out");
   const [handle, setHandle] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!supabaseBrowserConfigured()) return;
@@ -22,10 +25,12 @@ export function AccountControl() {
       const identity = accountIdentityFromSession(session);
       if (!session || !identity) {
         setHandle("");
+        setAvatarUrl("");
         setState("signed-out");
         return;
       }
       setHandle(identity.handle);
+      setAvatarUrl(identity.avatarUrl || "");
       setState("session");
       try {
         const response = await fetch("/api/identity/github/status", {
@@ -33,9 +38,10 @@ export function AccountControl() {
           headers: { authorization: `Bearer ${session.access_token}` },
         });
         if (!active) return;
-        const payload = await response.json() as { linked?: boolean; identity?: { handle?: string } };
+        const payload = await response.json() as { linked?: boolean; identity?: { handle?: string; avatarUrl?: string | null } };
         if (response.ok && payload.linked) {
           setHandle(payload.identity?.handle || identity.handle);
+          setAvatarUrl(payload.identity?.avatarUrl || identity.avatarUrl || "");
           setState("linked");
         }
       } catch {
@@ -56,7 +62,7 @@ export function AccountControl() {
   const label = state === "loading"
     ? "Checking session"
     : state === "signed-out"
-      ? "Sign in GitHub"
+      ? "Sign in with GitHub"
       : state === "session"
         ? "Finish setup"
         : `@${handle}`;
@@ -76,10 +82,18 @@ export function AccountControl() {
       : state === "loading"
         ? "Checking GitHub session status"
         : "Sign in with GitHub; no C0VIBE account required";
+  const accountHref = pathname === "/account"
+    ? "/account"
+    : `/account?next=${encodeURIComponent(pathname || "/")}`;
 
   return (
-    <a className={styles.control} data-state={state} href="/account" title={title} aria-label={title} aria-busy={state === "loading"}>
-      <span className={styles.mark} aria-hidden="true">{state === "linked" ? "✓" : state === "session" ? "·" : state === "unavailable" ? "!" : "GH"}</span>
+    <a className={styles.control} data-state={state} href={accountHref} title={title} aria-label={title} aria-busy={state === "loading"}>
+      <span className={styles.mark} aria-hidden="true">
+        {avatarUrl && state !== "signed-out" && state !== "loading"
+          ? <img src={avatarUrl} alt="" width={22} height={22} />
+          : state === "linked" ? "✓" : state === "session" ? "·" : state === "unavailable" ? "!" : "GH"}
+        {state === "linked" && avatarUrl ? <i>✓</i> : null}
+      </span>
       <span className={styles.label} data-short-label={shortLabel}>{label}</span>
     </a>
   );

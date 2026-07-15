@@ -63,6 +63,18 @@
 .account-identity__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
 .account-identity__actions button,
 .account-identity__actions a { min-height: 38px; padding: 0 12px; display: inline-flex; align-items: center; border: 1px solid rgba(255, 255, 255, .14); border-radius: 5px; color: #cad7da; background: rgba(255, 255, 255, .04); font: 600 10px/1 var(--font-data), monospace; cursor: pointer; }
+.account-identity__actions .account-identity__primary-link { border-color: rgba(91, 169, 255, .72); color: #071019; background: #5ba9ff; }
+.account-identity__actions button:hover,
+.account-identity__actions button:focus-visible,
+.account-identity__actions a:hover,
+.account-identity__actions a:focus-visible { border-color: rgba(91, 169, 255, .72); color: #f5fffc; background: rgba(91, 169, 255, .12); }
+.account-identity__actions .account-identity__primary-link:hover,
+.account-identity__actions .account-identity__primary-link:focus-visible { color: #071019; background: #83beff; }
+.account-identity__ledger { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 14px; border: 1px solid rgba(255, 255, 255, .09); background: rgba(2, 7, 8, .38); }
+.account-identity__ledger span { min-width: 0; padding: 10px; }
+.account-identity__ledger span + span { border-left: 1px solid rgba(255, 255, 255, .08); }
+.account-identity__ledger small { display: block; color: #667b80; font: 600 8px/1 var(--font-data), monospace; text-transform: uppercase; }
+.account-identity__ledger b { display: block; margin-top: 6px; overflow: hidden; color: #b9d9ff; font: 700 9px/1 var(--font-data), monospace; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 
 .account-console__oauth { min-width: 0; background: #040708; }
 .account-console__proof-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 20px 24px 0; overflow: hidden; border: 1px solid rgba(255, 255, 255, .1); border-radius: 4px; }
@@ -112,6 +124,9 @@
   .account-identity__profile img,
   .account-identity__profile > span { width: 54px; height: 54px; }
   .account-identity__profile > b { grid-column: 1 / -1; width: fit-content; }
+  .account-identity__ledger { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .account-identity__ledger span:nth-child(3) { border-left: 0; }
+  .account-identity__ledger span:nth-child(n + 3) { border-top: 1px solid rgba(255, 255, 255, .08); }
   .account-console__migration { grid-template-columns: 1fr; padding: 18px 22px; }
   .account-boundary { grid-template-columns: 1fr; }
   .account-boundary article + article { border-left: 0; border-top: 1px solid rgba(255, 255, 255, .08); }

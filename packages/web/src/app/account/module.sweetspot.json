@@ -5,7 +5,7 @@
     "name": "GitHub-first Account Console",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "language": ["tsx", "ts", "css"],
     "frameworks": ["next", "react", "supabase"],
     "domain": ["identity", "authentication", "github_verification", "cli_migration"]
@@ -74,7 +74,7 @@
     "ssa_v2": {
       "status": "passing",
       "score": 95,
-      "notes": "Session derivation, provider availability, adaptive account interaction, global status, and server status lookup are separated into focused files; the largest source file is 240 lines.",
+      "notes": "Session derivation, provider availability, adaptive account interaction, global status, and server status lookup are separated into focused files; the largest source file is 295 lines.",
       "evidence": ["packages/web/src/app/account", "packages/web/src/components/account-control.tsx"]
     },
     "ssi": {
@@ -86,7 +86,7 @@
     "sstf": {
       "status": "passing",
       "score": 96,
-      "notes": "Nineteen focused identity contracts and the full 611-test suite cover sanitization, redirect safety, status authorization, one-time linking, local sign-out, adaptive CLI fallback, responsive layout, and motion safety.",
+      "notes": "Eight focused account contracts and the full 661-test suite cover sanitization, redirect safety, status authorization, one-time linking, local sign-out, adaptive CLI fallback, responsive layout, and motion safety.",
       "evidence": ["packages/web/src/lib/__tests__/account-route.test.ts", "packages/web/src/lib/__tests__/github-identity-route.test.ts"]
     },
     "spe": {
@@ -98,14 +98,14 @@
     "srs": {
       "status": "passing",
       "score": 96,
-      "notes": "Signed-out, checking, OAuth-ready, CLI-ready, unavailable, session-only, linked, migration, copy-success, and copy-failure states are visible; a missing provider never leaves the primary action disabled.",
+      "notes": "Signed-out, checking, OAuth-ready, CLI-ready, unavailable, session-only, linked, migration, avatar, route-return, identity-ledger, copy-success, and copy-failure states are visible without upgrading identity into usage proof.",
       "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/components/account-control.tsx"]
     },
     "ssra": {
-      "status": "partial",
-      "score": 97,
-      "notes": "Exact deploy 6a564ba0545612fcf12c76f5 from d896cf3 passed the provider-disabled CLI action, clipboard feedback, a second real GitHub CLI identity exchange, all network requests, zero console errors, 390x844 mobile and 3840x2160 fullscreen proof, and Lighthouse 100 in all four reported categories. Browser OAuth remains visibly unavailable until its dedicated GitHub app is configured.",
-      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/__tests__/account-route.test.ts", "https://vibeusage.c0vibe.app/account", "Netlify production deploy 6a564ba0545612fcf12c76f5"]
+      "status": "passing",
+      "score": 98,
+      "notes": "Exact deploy 6a56f77e6bb82d2ca60427e4 passed enabled browser OAuth, route-return from Insights, a real github.com login redirect, all network requests, zero console errors, and zero horizontal overflow at 390x844, 1440x1000, and 3840x2160. The earlier real GitHub CLI identity exchange remains the machine-verification proof.",
+      "evidence": ["packages/web/src/app/account/account-console.tsx", "packages/web/src/lib/__tests__/account-route.test.ts", "https://vibeusage.c0vibe.app/account", "Netlify production deploy 6a56f77e6bb82d2ca60427e4"]
     },
     "sas": {
       "status": "passing",
@@ -200,12 +200,12 @@
   "quality": {
     "score": 96,
     "line_count": {
-      "max_file_lines": 240,
+      "max_file_lines": 295,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 829,
+      "feature_lines": 908,
       "file_count": 10,
       "dependency_count": 3,
       "notes": "The implementation is split across the route, pure session helper, global control, server status endpoint, styles, and focused contracts."
@@ -228,6 +228,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T14:50:48Z",
         "notes": "611 tests and every gate passed. Exact deploy 6a564ba0545612fcf12c76f5 exposes an enabled CLI primary action when OAuth is disabled, copy feedback succeeds, the post-deploy GitHub CLI identity exchange succeeds without browser approval or usage movement, mobile/4K have no overflow, and Lighthouse reports four 100 scores."
+      },
+      {
+        "command": "8 focused account tests + pnpm typecheck + pnpm sma:release-gate + Next production build + netlify deploy --prod --build + Playwright production proof",
+        "status": "pass",
+        "timestamp": "2026-07-15T03:03:16Z",
+        "notes": "661 package tests, 15 control-plane tests, strict telemetry, typecheck, and the production build passed. Exact deploy 6a56f77e6bb82d2ca60427e4 exposes the full GitHub sign-in label, preserves the source route, redirects through the real github.com login, and renders without browser errors, failed requests, or horizontal overflow at mobile, desktop, and 4K. Authenticated source contracts cover the verified avatar, public-profile action, migration control, and identity ledger while keeping usage proof separate."
       }
     ]
   },
@@ -235,7 +241,7 @@
     "readiness": "project_bound",
     "adaptation_points": [
       "Create a dedicated GitHub OAuth app for the target Supabase callback.",
-      "Configure the GitHub provider and production redirect allowlist.",
+      "Keep the GitHub provider and production redirect allowlist synchronized with the target domain.",
       "Keep the verified GitHub CLI channel active until browser OAuth is proven live.",
       "Retain the immutable GitHub subject as the account migration anchor."
     ],

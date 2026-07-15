@@ -27,6 +27,7 @@
 .control[data-state="signed-out"] { box-shadow: inset 0 0 18px rgba(91, 169, 255, .05); }
 
 .mark {
+  position: relative;
   display: grid;
   place-items: center;
   width: 19px;
@@ -37,11 +38,39 @@
   font-size: 8px;
 }
 
+.mark img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mark i {
+  position: absolute;
+  right: -4px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #071019;
+  border-radius: 50%;
+  color: #071019;
+  background: #5ba9ff;
+  font: 800 6px/1 var(--font-data), ui-monospace, monospace;
+}
+
 .control[data-state="linked"] .mark {
   color: #071019;
   border-color: #5ba9ff;
   background: #5ba9ff;
   box-shadow: 0 0 14px rgba(91, 169, 255, .36);
+}
+
+.control[data-state="linked"] .mark:has(img) {
+  color: inherit;
+  border-color: rgba(91, 169, 255, .72);
+  background: transparent;
 }
 
 .label {

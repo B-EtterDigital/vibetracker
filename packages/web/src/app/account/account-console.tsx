@@ -208,6 +208,7 @@ export function AccountConsole() {
   const providerCopy = browserReady ? "GitHub sign-in ready" : browserChecking ? "checking GitHub" : "GitHub CLI ready";
   const linkCopy = linkState === "linked" ? "identity linked" : linkState === "checking" ? "checking account link" : linkState === "unlinked" ? "session ready, link pending" : linkState === "error" ? "link needs attention" : "no browser session";
   const proofSteps = proofChannel === "browser" ? BROWSER_STEPS : CLI_STEPS;
+  const accountHandle = linked?.handle || identity?.handle || "";
 
   return (
     <section className="account-console" aria-labelledby="account-console-title">
@@ -231,10 +232,17 @@ export function AccountConsole() {
                 <b data-linked={linkState === "linked"}>{linkState === "linked" ? "✓ identity verified" : "session active"}</b>
               </div>
               <div className="account-identity__actions">
+                <a className="account-identity__primary-link" href={`/u/${encodeURIComponent(accountHandle)}`}>view public profile</a>
                 {linkState === "unlinked" || linkState === "error" ? <button type="button" onClick={signIn} disabled={busy || provider !== "available"}>reconnect GitHub</button> : null}
                 {linkState === "linked" ? <button type="button" onClick={linkToC0VIBE} disabled={busy || bridgeState === "linked"}>{bridgeState === "linked" ? "✓ C0VIBE linked" : bridgeState === "starting" ? "opening C0VIBE" : "link to C0VIBE"}</button> : null}
-                {returnPath ? <a href={returnPath}>continue</a> : null}
+                {returnPath ? <a href={returnPath}>return to previous view</a> : null}
                 <button type="button" onClick={signOut} disabled={busy}>sign out</button>
+              </div>
+              <div className="account-identity__ledger" aria-label="Identity ledger">
+                <span><small>GitHub subject</small><b>{linkState === "linked" ? "verified" : "session"}</b></span>
+                <span><small>CLI history</small><b>retained</b></span>
+                <span><small>Usage proof</small><b>separate</b></span>
+                <span><small>C0VIBE</small><b>{bridgeState === "linked" ? "linked" : "optional"}</b></span>
               </div>
             </>
           ) : (
