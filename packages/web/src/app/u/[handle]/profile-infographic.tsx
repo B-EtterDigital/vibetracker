@@ -109,9 +109,10 @@ export function PolygonSpiral({ items, sides = 6, ariaContext }: { items: Spiral
   const stroke = n > 7 ? 5 : n > 5 ? 6 : 7;
   const pctSize = n > 7 ? 18 : n > 5 ? 21 : 24;
   const labelSize = n > 7 ? 12 : n > 5 ? 13 : 14.5;
-  const diag = 44; // the diagonal cascade: every row's dot lands this much further right
-  const lastDot = cx + rMax + 36 + (n - 1) * diag;
-  const W = lastDot + 118 + 150;
+  const diag = 28; // the diagonal cascade: every row's dot lands this much further right
+  // FIXED canvas (user order): the hexagon renders at the same big size on every spec — the
+  // canvas is sized for the 10-row worst case instead of shrinking-to-fit the current list.
+  const W = 1080;
   const H = cy + rMax + 34;
   const angleStep = 360 / sides;
   const endAngle = sides === 6 ? 90 : 54; // hexagons end at the bottom vertex
