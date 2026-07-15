@@ -49,6 +49,7 @@ import { ccusageToRecords, findCcJson, CCUSAGE_PROVIDERS } from "./import-ccusag
 import { collectCodingTelemetry } from "./coding-telemetry.ts";
 import { collectOrchestrationHours } from "./orchestration-hours.ts";
 import { fetchViberankProfile, decomposeViberank, VIBERANK_PROVIDER } from "./import-viberank.ts";
+import { buildMidjourneyLifetimeRecord, isMidjourneyLifetimeImport, parseMidjourneyInfo } from "./import-midjourney.ts";
 import { commandCockpitPayload, renderCommandCockpit, renderCommandCockpitHtml } from "./command-cockpit.ts";
 import {
   defaultSyncSurpriseDirectorProviders,
@@ -156,6 +157,7 @@ const USAGE = [
   "  plugins path",
   "  adapter scaffold <id> [--dir path] [--dry-run] [--force]",
   "  subscription add <provider> --usd N --from YYYY-MM-DD --to YYYY-MM-DD",
+  "  import midjourney --images N [--info path|-] [--as-of YYYY-MM-DD] [--usd N]",
   "  add <provider> --usd N [--credits N] [--minutes N] [--characters N] [--category c] [--operation op]",
   "  proxy --target <url> --provider <id> [--port 8899]",
   "  trust list | trust add youtube|x|linkedin|huggingface|npm|pypi --handle h --metric uploads --count N",
@@ -436,7 +438,7 @@ function emptyUsageState(title: string, detail: string): string {
     `  ${paint("vibetracker init --gui", 190)}     ${dim("guided setup with inline terminal")}`,
     `  ${paint("vibetracker sync --demo", 190)}    ${dim("see a working profile with safe sample data")}`,
     `  ${paint("vibetracker detect", 190)}         ${dim("find Ollama, LM Studio, llama.cpp, Jan, GPT4All")}`,
-    `  ${paint("vibetracker add midjourney --usd 30 --category image", 190)} ${dim("manual ledger")}`,
+    `  ${paint("vibetracker import midjourney --images 12345", 190)} ${dim("official /info lifetime total")}`,
   ].join("\n");
 }
 
@@ -842,6 +844,74 @@ async function main() {
       usd: totalUsd,
       sourceMix: checkpointSourceMix(recs),
       hint: "viberank coding history decomposed into real providers (feed_recon, low confidence)",
+    });
+    return;
+  }
+
+  if (cmd === "import" && argv[1] === "midjourney") {
+    const imagesFlag = flag(argv, "--images");
+    const infoPath = flag(argv, "--info");
+    let images = imagesFlag != null ? Number(imagesFlag.replace(/,/g, "")) : undefined;
+    if (infoPath) {
+      let infoText: string;
+      try {
+        infoText = infoPath === "-" ? readFileSync(0, "utf8") : readFileSync(infoPath, "utf8");
+      } catch (err) {
+        console.error(`  ${bad("✗")} could not read Midjourney /info text: ${(err as Error).message}`);
+        return;
+      }
+      const parsed = parseMidjourneyInfo(infoText);
+      if (parsed == null) {
+        console.error(`  ${bad("✗")} could not find "Lifetime Usage ... images" in ${infoPath === "-" ? "stdin" : infoPath}`);
+        return;
+      }
+      if (images != null && images !== parsed) {
+        console.error(`  ${bad("✗")} --images (${images}) does not match the /info total (${parsed})`);
+        return;
+      }
+      images = parsed;
+    }
+    if (images == null) {
+      console.log("usage: vibetracker import midjourney --images <lifetime-images> [--info path|-] [--as-of YYYY-MM-DD] [--usd <lifetime-spend>]");
+      console.log("  In Discord, run Midjourney /info and copy the Lifetime Usage image count. No cookie is needed or accepted.");
+      return;
+    }
+    const usdFlag = flag(argv, "--usd");
+    let record;
+    try {
+      record = buildMidjourneyLifetimeRecord({
+        images,
+        asOf: flag(argv, "--as-of") ?? new Date().toISOString(),
+        ...(usdFlag != null ? { usdEst: Number(usdFlag) } : {}),
+        ...(flag(argv, "--account") ? { accountId: flag(argv, "--account") } : {}),
+        ...(flag(argv, "--profile") ? { profileId: flag(argv, "--profile") } : {}),
+        ...(flag(argv, "--team") ? { teamId: flag(argv, "--team") } : {}),
+      });
+    } catch (err) {
+      console.error(`  ${bad("✗")} ${(err as Error).message}`);
+      return;
+    }
+    const { accepted, rejected } = ingestRecords([record], { untrustedSource: true });
+    if (!accepted.length) {
+      console.error(`  ${bad("✗")} Midjourney lifetime total was rejected: ${rejected[0]?.errors.join(", ")}`);
+      return;
+    }
+    const kept = readRecords(STORE).filter((item) => !isMidjourneyLifetimeImport(item));
+    writeRecords(STORE, [...kept, ...accepted]);
+    console.log(`  ${ok("✓")} Midjourney lifetime total: ${images.toLocaleString("en-US")} images counted`);
+    console.log(`  ${dim("source: official /info total entered locally · manual · low confidence · re-import replaces this snapshot")}`);
+    console.log(`  ${dim("next:")} ${paint("vibetracker total --provider midjourney", 190)}`);
+    await showCollectionCheckpoint({
+      providerId: "midjourney",
+      label: "Midjourney lifetime images",
+      status: "new",
+      received: 1,
+      accepted: 1,
+      fresh: 1,
+      duplicate: 0,
+      usd: record.usdEst ?? 0,
+      sourceMix: checkpointSourceMix(accepted),
+      hint: `${images.toLocaleString("en-US")} lifetime images from the user-entered official /info total`,
     });
     return;
   }

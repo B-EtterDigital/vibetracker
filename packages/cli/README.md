@@ -16,6 +16,7 @@ npx vibetrack api serve --port 8765 # tokenized local API + private /life cockpi
 npx vibetracker export --json|csv
 npx vibetracker upload              # opt-in push to the VibeTRACKER leaderboard
 npx vibetracker login               # reuse an existing `gh auth` session; browser/C0VIBE fallback
+npx vibetracker import midjourney --images 12345 # official /info lifetime total
 ```
 
 - Local store: SQLite at `~/.vibetracker/db.sqlite` (git-ignored).
@@ -29,3 +30,11 @@ npx vibetracker login               # reuse an existing `gh auth` session; brows
   usage, calls no providers, and uploads nothing. Piped/non-TTY output
   automatically emits one snapshot instead of hanging.
 - Depends on `@vibetracker/core` (contract) and `@vibetracker/adapters`.
+
+## Midjourney lifetime images
+
+Midjourney is deliberately cookie-free. Run Midjourney's official `/info` command in Discord,
+then import its Lifetime Usage image count with `vibetracker import midjourney --images N`.
+The count is stored locally as manual, low-confidence image usage. Re-importing replaces the
+previous lifetime snapshot, so the total never stacks or double-counts. For copied `/info` text,
+use `--info path/to/midjourney-info.txt` (or `--info -` for stdin).

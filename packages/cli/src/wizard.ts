@@ -171,13 +171,13 @@ export const GUIDE: Record<string, { cred: string; url?: string; fmt?: string; w
       "Copy the `sb-…-auth-token` (session) cookie value",
       "Paste it below — hidden as you type",
     ] },
-  midjourney: { cred: "session cookie", url: "https://www.midjourney.com",
-    why: "Midjourney has no usage API — read from your logged-in session cookie (stored locally).",
+  midjourney: { cred: "no credential", url: "https://docs.midjourney.com/hc/en-us/articles/32084927086861-Info-Command",
+    why: "Midjourney does not provide a public usage API and prohibits third-party automation. Import the official /info lifetime total locally instead.",
     steps: [
-      "Open https://www.midjourney.com and log in",
-      "F12 → Application → Cookies → midjourney.com",
-      "Copy `__Secure-next-auth.session-token`",
-      "Paste it below — hidden as you type",
+      "In Discord, run the Midjourney /info command",
+      "Copy the Lifetime Usage image count",
+      "Run `vibetracker import midjourney --images <count>`",
+      "Re-run later with the new total; the previous lifetime snapshot is replaced",
     ] },
 };
 
