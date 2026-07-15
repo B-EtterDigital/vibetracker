@@ -7,7 +7,7 @@
 //     anonymous → 'self_reported'. An upload can NEVER be 'verified' (that needs a backend
 //     connector that fetches from the provider). No self-promotion via the payload.
 //  3. AGGREGATES ONLY leave this function — individual records, prompts, model names, and
-//     keys are never returned or persisted. Only per-provider rollups, totals, and
+//     keys are never returned or persisted. Only per-provider/tool rollups, totals, and
 //     clearly labelled non-usage trust signals.
 
 import { ingestRecords } from "../../core/src/verify/validate.ts";
@@ -37,6 +37,13 @@ export interface NativeMetricRollup {
   durationSeconds: number;
 }
 
+export interface ToolRollup {
+  tool: string;
+  ops: number;
+  credits: number;
+  usd?: number;
+}
+
 export interface IngestResult {
   ok: boolean;
   errors: string[];
@@ -47,7 +54,7 @@ export interface IngestResult {
   accepted: number;
   rejected: number;
   totals: { count: number; credits: number; usd?: number; providers: number };
-  byProvider: ProviderRollup[];              // the ONLY breakdown that leaves the server
+  byProvider: ProviderRollup[];              // billing-provider breakdown; no individual events
   byDay: DailyRollup[];                      // aggregate-only rhythm data for public heatgrids
   byCategory: CategoryRollup[];              // true per-record category rollup (Vibe Categories) — a
                                              // single provider (e.g. Higgsfield) splits across image/
@@ -57,12 +64,14 @@ export interface IngestResult {
   byProviderModel: ProviderModelRollup[];    // per-provider model breakdown — "click a source, see
                                              // which models you used" (opus/fable vs gpt vs Kling…)
   byNativeMetric: NativeMetricRollup[];      // what media operations produced, kept separate from ops
+  byTool: ToolRollup[];                      // orchestrators used; defaults to provider when no tool is set
   trustSignals: TrustSignal[];               // labelled evidence only; never counted in totals
 }
 
 const MAX_PROVIDER_DAY_ROWS = 8_000;         // 10 providers × ~2 years of days — a hard abuse ceiling
 const MAX_PROVIDER_MODEL_ROWS = 2_000;       // far above any real per-provider model count
 const MAX_NATIVE_METRIC_ROWS = 2_000;
+const MAX_TOOL_ROWS = 2_000;
 
 const MAX_RECORDS = 200_000;
 const MAX_TRUST_SIGNALS = 8;
@@ -269,6 +278,23 @@ export function handleIngest(payload: unknown, opts: { userId?: string; identity
     .sort((a, b) => a.provider.localeCompare(b.provider) || a.category.localeCompare(b.category) || a.outputUnit.localeCompare(b.outputUnit))
     .slice(0, MAX_NATIVE_METRIC_ROWS);
 
+  // A tool can orchestrate a separately billed provider. Keep this aggregate independent from
+  // byProvider so a Cynaps3 -> Suno event remains one operation while both relationships survive.
+  const toolMap = new Map<string, ToolRollup>();
+  for (const r of accepted) {
+    const tool = r.toolId ?? r.provider;
+    const row = toolMap.get(tool) ?? { tool, ops: 0, credits: 0 };
+    row.ops += qtyOf(r);
+    // Never move an upstream provider's bill onto its orchestrator. Tool-only rows carry activity;
+    // spend remains exclusively in byProvider unless the tool itself is also the billed provider.
+    if (tool === r.provider && r.rawUnit === "credits") row.credits += r.rawAmount;
+    if (tool === r.provider && r.usdEst != null) row.usd = Number(((row.usd ?? 0) + r.usdEst).toFixed(4));
+    toolMap.set(tool, row);
+  }
+  const byTool = [...toolMap.values()]
+    .sort((a, b) => b.ops - a.ops || a.tool.localeCompare(b.tool))
+    .slice(0, MAX_TOOL_ROWS);
+
   const trustSignals = sanitizeTrustSignals(bundle.trustSignals);
 
   // Individual records are intentionally NOT returned — only aggregates leave here.
@@ -288,6 +314,7 @@ export function handleIngest(payload: unknown, opts: { userId?: string; identity
     byProviderDay,
     byProviderModel,
     byNativeMetric,
+    byTool,
     trustSignals,
   };
 }

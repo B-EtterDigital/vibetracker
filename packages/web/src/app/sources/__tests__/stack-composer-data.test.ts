@@ -35,7 +35,7 @@ test("runbook deduplicates detect and keeps planned sources as comments", () => 
 
   assert.equal(runbook.lines.filter((line) => line === "npx vibetrack detect").length, 1);
   assert.match(runbook.text, /npx vibetrack connect codex/);
-  assert.match(runbook.text, /npx vibetrack add midjourney --usd <monthly-usd>/);
+  assert.match(runbook.text, /npx vibetrack import midjourney --images <lifetime-images> --usd <lifetime-spend>/);
   assert.match(runbook.text, /# planned: cursor/);
   assert.doesNotMatch(runbook.text, /npx vibetrack connect cursor/);
   assert.match(runbook.text, /npx vibetrack sync --receipt/);
@@ -74,7 +74,7 @@ test("stack diagnosis distinguishes empty, blocked, manual-review, and ready sta
   assert.equal(buildStackDiagnosis([get("codex"), get("midjourney")]).state, "review");
   assert.equal(buildStackDiagnosis([get("codex"), get("ollama")]).state, "ready");
   assert.match(buildStackDiagnosis([get("cursor")]).headline, /None/);
-  assert.match(buildStackDiagnosis([get("midjourney")]).nextAction, /monthly-usd/);
+  assert.match(buildStackDiagnosis([get("midjourney")]).nextAction, /manual placeholder/);
 });
 
 test("presets resolve only registry-backed IDs", () => {

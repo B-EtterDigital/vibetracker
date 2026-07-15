@@ -42,6 +42,10 @@ function optionalNativeMetricStorageError(message: string): boolean {
   return /vibetracker_submission_native_metrics|schema cache|does not exist|relation .* not found/i.test(message);
 }
 
+function optionalToolStorageError(message: string): boolean {
+  return /vibetracker_submission_tools|schema cache|does not exist|relation .* not found/i.test(message);
+}
+
 async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -188,6 +192,22 @@ async function sha256Hex(input: string): Promise<string> {
         error: `providers: ${bpErr.message}`,
         ...(cleanupErr ? { cleanupError: "partial submission cleanup failed" } : {}),
       }, 500);
+    }
+  }
+
+  let toolsPersisted = 0;
+  let toolWarning: string | undefined;
+  if (result.byTool.length) {
+    const rows = result.byTool.map((r) => ({
+      submission_id: sub.id, tool: r.tool, ops: r.ops, credits: r.credits, usd: r.usd ?? 0,
+    }));
+    const { error: btErr } = await admin.from("vibetracker_submission_tools").insert(rows);
+    if (btErr) {
+      toolWarning = optionalToolStorageError(btErr.message)
+        ? "tool aggregate table not deployed yet; profile falls back to billing providers"
+        : `tools: ${btErr.message}`;
+    } else {
+      toolsPersisted = rows.length;
     }
   }
 
@@ -340,6 +360,9 @@ async function sha256Hex(input: string): Promise<string> {
     identityProvider: identityId ? "github" : userId ? "c0vibe" : null,
     accepted: result.accepted, rejected: result.rejected,
     totals: result.totals, byProvider: result.byProvider,
+    byTool: result.byTool,
+    toolsPersisted,
+    ...(toolWarning ? { toolWarning } : {}),
     byDay: result.byDay,
     byCategory: result.byCategory,
     dailyUsagePersisted,

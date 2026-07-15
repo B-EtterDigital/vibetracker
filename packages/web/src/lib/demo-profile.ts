@@ -172,6 +172,12 @@ export function buildDemoProfile(): ProfileView {
     },
     // Fresh copies on every call so callers can never mutate the module's fixtures.
     providers: PROVIDER_ROWS.map((row) => ({ ...row })),
+    // Music is billed by Suno but orchestrated in Cynaps3. The separate tool aggregate makes the
+    // sample exercise the same no-double-count attribution contract as a real v2 usage export.
+    tools: PROVIDER_ROWS.map((row) => ({
+      tool: row.provider === "suno" ? "cynaps3" : row.provider,
+      ops: row.ops,
+    })),
     usageDays: usdCents.map((cents, i) => ({ date: dayDate(i), ops: ops[i], credits: credits[i], usd: cents / 100 })),
     categories: CATEGORY_ROWS.map((row) => ({ ...row })),
     providerDays: demoProviderDays(),

@@ -21,6 +21,14 @@ test("demo profile is fully deterministic: two builds are deep-equal and never s
   assert.equal(first.created_at, "2026-03-04T09:00:00Z");
 });
 
+test("toolchain attributes Suno-billed music to Cynaps3 without adding a provider", () => {
+  const profile = buildDemoProfile();
+  assert.ok(profile.tools?.some((row) => row.tool === "cynaps3" && row.ops === 920));
+  assert.equal(profile.tools?.some((row) => row.tool === "suno"), false);
+  assert.ok(profile.providers.some((row) => row.provider === "suno" && row.ops === 920));
+  assert.equal(profile.providers.some((row) => row.provider === "cynaps3"), false);
+});
+
 test("sums invariant: usageDays sums equal the latest totals exactly (cents for usd, units for ops/credits)", () => {
   const profile = buildDemoProfile();
 

@@ -25,6 +25,7 @@ test("normalizes completed generations into exact image counts", () => {
   assert.deepEqual(records.map((record) => record.quantity), [4, 2]);
   assert.ok(records.every((record) => record.rawAmount === record.quantity));
   assert.ok(records.every((record) => record.unit === "image" && record.rawUnit === "images"));
+  assert.ok(records.every((record) => record.outputUnit === "image" && record.outputQuantity === record.quantity));
   assert.ok(records.every((record) => record.source === "feed_recon" && record.confidence === "high"));
   assert.ok(records.every((record) => record.verified === false));
 });

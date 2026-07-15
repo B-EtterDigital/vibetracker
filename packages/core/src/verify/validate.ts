@@ -121,6 +121,14 @@ export function validateRecord(input: unknown, opts: IngestOpts = {}): Validatio
   }
   if (durationSeconds != null) sanitized.durationSeconds = durationSeconds;
   if (usdEst != null) sanitized.usdEst = usdEst;
+  if (rec.toolId != null) {
+    const toolId = sanitizeText(rec.toolId, 64);
+    if (toolId) sanitized.toolId = toolId;
+  }
+  if (rec.sourceEventId != null) {
+    const sourceEventId = sanitizeText(rec.sourceEventId, 160);
+    if (sourceEventId) sanitized.sourceEventId = sourceEventId;
+  }
   if (rec.accountId != null) sanitized.accountId = sanitizeText(rec.accountId, 128);
   if (rec.profileId != null) sanitized.profileId = sanitizeText(rec.profileId, 128);
   if (rec.teamId != null) sanitized.teamId = sanitizeText(rec.teamId, 128);

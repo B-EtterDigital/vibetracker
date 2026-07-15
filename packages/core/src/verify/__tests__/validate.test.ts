@@ -67,6 +67,17 @@ test("native media metrics survive the whitelist without changing operation quan
   assert.equal(res.sanitized!.durationSeconds, 241.25);
 });
 
+test("tool and stable event provenance survive the whitelist as bounded inert data", () => {
+  const res = validateRecord({
+    ...good,
+    toolId: "cynaps3\n",
+    sourceEventId: "provider-event-123\x1b[31m",
+  });
+  assert.equal(res.ok, true);
+  assert.equal(res.sanitized!.toolId, "cynaps3");
+  assert.equal(res.sanitized!.sourceEventId, "provider-event-123");
+});
+
 test("malformed or partial native media metrics fail closed", () => {
   for (const candidate of [
     { outputQuantity: -1, outputUnit: "track" },

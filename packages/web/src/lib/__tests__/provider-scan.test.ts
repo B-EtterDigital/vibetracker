@@ -708,7 +708,7 @@ test("provider passport wall gives every registry source a branded action card",
   const midjourney = wall.cards.find((card) => card.id === "midjourney");
   assert.ok(midjourney);
   assert.equal(midjourney.impact, "manual");
-  assert.match(midjourney.command, /npx vibetrack add midjourney/);
+  assert.match(midjourney.command, /npx vibetrack import midjourney --images <lifetime-images>/);
 
   const gemini = wall.cards.find((card) => card.id === "gemini");
   assert.ok(gemini);

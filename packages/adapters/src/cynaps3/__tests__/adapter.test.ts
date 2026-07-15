@@ -41,7 +41,38 @@ test("normalizes authoritative Musicmation operations without inventing USD", ()
   assert.ok(records.every((record) => record.unit === "request" && record.rawUnit === "credits"));
   assert.ok(records.every((record) => record.outputUnit === "track"));
   assert.ok(records.every((record) => record.source === "ledger" && record.confidence === "high"));
-  assert.ok(records.every((record) => record.verified && record.usdEst === undefined));
+  assert.ok(records.every((record) => !record.verified && record.usdEst === undefined));
+  assert.ok(records.every((record) => record.toolId === "cynaps3" && record.sourceEventId));
+});
+
+test("schema v2 keeps Cynaps3 as the tool while upstream billing remains one provider event", () => {
+  const v2 = parseStatsPage({
+    ...fixture,
+    schemaVersion: 2,
+    events: [{
+      ...fixture.events[0],
+      toolId: "cynaps3",
+      providerId: "suno",
+      billingOwner: "upstream-provider",
+      upstreamEventId: "suno_clip_123",
+    }],
+  });
+  const [record] = normalizeEvents(v2.events, v2.account.id);
+  assert.equal(record?.provider, "suno");
+  assert.equal(record?.toolId, "cynaps3");
+  assert.equal(record?.sourceEventId, "suno_clip_123");
+  assert.equal(record?.rawAmount, fixture.events[0]?.creditsConsumed);
+  assert.equal(record?.quantity, 1);
+  assert.throws(() => parseStatsPage({
+    ...fixture,
+    schemaVersion: 2,
+    events: [{
+      ...fixture.events[0],
+      toolId: "cynaps3",
+      providerId: "suno",
+      billingOwner: "upstream-provider",
+    }],
+  }), /upstreamEventId is required/);
 });
 
 test("paginates exact range records and keeps one operation per source event", async () => {
@@ -57,7 +88,7 @@ test("paginates exact range records and keeps one operation per source event", a
 });
 
 test("fails closed on schema drift and inconsistent summary math", () => {
-  assert.throws(() => parseStatsPage({ ...fixture, schemaVersion: 2 }), /schemaVersion 1/);
+  assert.throws(() => parseStatsPage({ ...fixture, schemaVersion: 3 }), /schemaVersion 1 or 2/);
   assert.throws(() => parseStatsPage({
     ...fixture,
     summary: { ...fixture.summary, operations: 99 },
@@ -88,6 +119,25 @@ test("rejects duplicate events, out-of-range events, and partial safety-capped h
   await assert.rejects(
     () => capped.getUsage({ from: "2026-07-01", to: "2026-07-31" }, ctx),
     /safety cap/,
+  );
+});
+
+test("rejects distinct Cynaps3 envelopes that point at one billed upstream event", async () => {
+  const base = {
+    ...fixture.events[0]!,
+    toolId: "cynaps3" as const,
+    providerId: "suno",
+    billingOwner: "upstream-provider" as const,
+    upstreamEventId: "suno_clip_duplicated",
+  };
+  const duplicate = createCynaps3Adapter(createFixtureClient([{
+    ...fixture,
+    schemaVersion: 2,
+    events: [{ ...base, id: "cynaps_op_1" }, { ...base, id: "cynaps_op_2" }],
+  }]));
+  await assert.rejects(
+    () => duplicate.getUsage({ from: "2026-07-01", to: "2026-07-31" }, ctx),
+    /duplicate billed event suno:suno_clip_duplicated/,
   );
 });
 

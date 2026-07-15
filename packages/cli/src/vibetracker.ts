@@ -20,6 +20,7 @@ import { appendRecords, readRecords, writeRecords } from "../../core/src/store/j
 import { ingestRecords } from "../../core/src/verify/validate.ts";
 import { PROVIDERS, createAdapterFromConfig, providersInDomain, getProvider, type Domain } from "../../adapters/src/index.ts";
 import { runSync, type SyncTarget } from "./sync.ts";
+import { shouldReplaceSyncRecord, syncRecordKey } from "./sync-dedupe.ts";
 import { runProxy } from "./proxy.ts";
 import { planSetup, runWizard, localLogsPresent, GUIDE, fieldLabel, maskKey, setupPlanSurpriseTargets } from "./wizard.ts";
 import { showBanner, showWelcome, withSpinner, typeLine, rule, icon, bar, dim, paint, ok, bad, gold, human } from "./banner.ts";
@@ -248,6 +249,7 @@ function recoveryHint(provider: string, msg: string): string | undefined {
   }
   if (/\b416\b|within the last|created_after|out of range/.test(m)) return "fix: no usage in that provider window; try again after new activity.";
   if (/\b429\b|rate.?limit/.test(m)) return "fix: wait for the provider rate limit, then re-run vibetracker sync.";
+  if (provider === "midjourney") return "fix: vibetracker import midjourney --images <lifetime-images>";
   if (desc?.tier === "manual" || desc?.status === "manual-only") return `fix: vibetracker add ${provider} --usd <amount>`;
   return undefined;
 }
@@ -294,9 +296,7 @@ async function syncTargets(targets: SyncTarget[], ctx: AdapterCtxLike): Promise<
   // live-log records from double-counting days already covered by a ccusage import.
   const generatedAt = new Date().toISOString();
   const existing = readRecords(STORE);
-  const key = (r: { provider: string; ts: string; model?: string; rawAmount?: number }) =>
-    `${r.provider}|${r.ts}|${r.model ?? ""}|${r.rawAmount ?? 0}`;
-  const seen = new Set(existing.map(key));
+  const recordsByKey = new Map(existing.map((record) => [syncRecordKey(record), record]));
   const cutoff: Record<string, string> = {};
   for (const r of existing) {
     if (r.operation !== "import-day") continue;
@@ -340,18 +340,32 @@ async function syncTargets(targets: SyncTarget[], ctx: AdapterCtxLike): Promise<
       continue;
     }
     const { accepted } = ingestRecords(records, { untrustedSource: true });
+    const replacementKeys = new Set<string>();
     const fresh = accepted.filter((r) => {
-      const k = key(r);
-      if (seen.has(k)) return false;
+      const k = syncRecordKey(r);
+      const prior = recordsByKey.get(k);
+      // Prefer the orchestrator-aware form of the same stable provider event. This upgrades an
+      // older direct-provider row in place instead of adding a second operation.
+      if (prior) {
+        if (shouldReplaceSyncRecord(prior, r)) {
+          replacementKeys.add(k);
+          recordsByKey.set(k, r);
+          return true;
+        }
+        return false;
+      }
       const c = cutoff[r.provider];
       if (c && r.ts.slice(0, 10) <= c) return false; // day already covered by import
-      seen.add(k);
+      recordsByKey.set(k, r);
       return true;
     });
     // Snapshot semantics: a lifetime-total record REPLACES this provider's previous
     // snapshot(s) (incl. legacy "usage" balance rows) rather than stacking on top.
     const snaps = new Set(fresh.filter((r) => r.operation === "snapshot").map((r) => r.provider));
-    if (snaps.size) {
+    if (replacementKeys.size) {
+      const kept = readRecords(STORE).filter((r) => !replacementKeys.has(syncRecordKey(r)));
+      writeRecords(STORE, [...kept, ...fresh]);
+    } else if (snaps.size) {
       const kept = readRecords(STORE).filter((r) =>
         !(snaps.has(r.provider) && (r.operation === "snapshot" || (r.operation === "usage" && r.source === "balance_delta"))));
       writeRecords(STORE, [...kept, ...fresh]);

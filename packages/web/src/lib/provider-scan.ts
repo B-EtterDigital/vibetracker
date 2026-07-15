@@ -669,7 +669,7 @@ const COLLECTION_SEQUENCE: ProviderCollectionStepDef[] = [
     call: "MANUAL",
     label: "Creator ledger",
     badge: "manual evidence",
-    command: "npx vibetrack add midjourney --usd <amount>",
+    command: "npx vibetrack import midjourney --images <lifetime-images> --usd <lifetime-spend>",
     surprise: "Closed creator tools get their own ledger flash so subscription context is useful without fake API proof.",
     note: "Manual and subscription evidence can enrich reports while staying separate from verified provider usage.",
     guardrail: "Manual is never fake API usage.",
@@ -907,7 +907,7 @@ const SIGNAL_MARQUEE_RAILS: ProviderSignalMarqueeRailDef[] = [
     id: "manual-signal",
     call: "LEDGER",
     label: "Manual creator",
-    command: "npx vibetrack add midjourney --usd <amount>",
+    command: "npx vibetrack import midjourney --images <lifetime-images> --usd <lifetime-spend>",
     impact: "manual",
     guardrail: "Manual entries are useful context, never fake API usage.",
     providerIds: ["midjourney", "canva", "adobe-cc", "poe", "notion-ai", "topaz"],
@@ -1033,7 +1033,7 @@ const COLLECTION_COMMAND_WALL_CHANNELS: ProviderCollectionCommandChannelDef[] = 
     call: "MANUAL",
     label: "Creator subscription ledger",
     readPath: "receipt/subscription entry",
-    command: "npx vibetrack add midjourney --usd <amount>",
+    command: "npx vibetrack import midjourney --images <lifetime-images> --usd <lifetime-spend>",
     impact: "manual",
     guardrail: "Manual entries are useful spend context, never fake API usage.",
     surprise: "Midjourney, Canva, Adobe, Poe, and closed creator tools get a beautiful lane without greenwashing.",
@@ -1428,6 +1428,7 @@ function passportStatus(provider: ProviderDescriptor): string {
 function passportCommand(provider: ProviderDescriptor): string {
   if (provider.status === "built" || provider.verified) return `npx vibetrack connect ${provider.id}`;
   if (provider.tier === "proxy") return `npx vibetrack proxy --provider ${provider.id}`;
+  if (provider.id === "midjourney") return "npx vibetrack import midjourney --images <lifetime-images> --usd <lifetime-spend>";
   if (provider.tier === "manual" || provider.status === "manual-only") return `npx vibetrack add ${provider.id} --usd <amount>`;
   if (provider.auth === "localLogs") return `npx vibetrack detect`;
   return `npx vibetrack connect ${provider.id}`;

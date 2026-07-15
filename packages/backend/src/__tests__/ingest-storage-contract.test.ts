@@ -7,6 +7,7 @@ const quantityMigration = readFileSync("supabase/migrations/011_vibetracker_usag
 const selfReportedMigration = readFileSync("supabase/migrations/012_vibetracker_self_reported.sql", "utf8");
 const orchestrationMigration = readFileSync("supabase/migrations/013_vibetracker_orchestration.sql", "utf8");
 const nativeMetricsMigration = readFileSync("supabase/migrations/20260715131500_vibetracker_native_metrics.sql", "utf8");
+const toolsMigration = readFileSync("supabase/migrations/20260716183000_vibetracker_submission_tools.sql", "utf8");
 const edgeBytes = readFileSync("supabase/functions/vibetracker-ingest/index.ts");
 const edge = edgeBytes.toString("utf8");
 
@@ -65,4 +66,14 @@ test("native media metrics are aggregate-only, bounded by constraints, and publi
   assert.doesNotMatch(nativeMetricsMigration, /for (insert|update|delete)/i);
   assert.match(edge, /vibetracker_submission_native_metrics/);
   assert.match(edge, /result\.byNativeMetric/);
+});
+
+test("tool attribution is aggregate-only, public read-only, and independent from billing providers", () => {
+  assert.match(toolsMigration, /create table if not exists public\.vibetracker_submission_tools/);
+  assert.match(toolsMigration, /ops\s+numeric not null default 0 check \(ops >= 0\)/);
+  assert.match(toolsMigration, /enable row level security/);
+  assert.match(toolsMigration, /for select using \(true\)/);
+  assert.doesNotMatch(toolsMigration, /for (insert|update|delete)/i);
+  assert.match(edge, /vibetracker_submission_tools/);
+  assert.match(edge, /result\.byTool/);
 });

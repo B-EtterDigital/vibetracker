@@ -16,6 +16,7 @@ test("normalizeFeed reconstructs credits and skips errored clips", () => {
   assert.equal(recs.length, 2); // errored clip dropped
   assert.ok(recs.every((r: any) => r.source === "feed_recon" && r.confidence === "medium"));
   assert.ok(recs.every((r: any) => r.category === "music" && r.rawAmount === DEFAULT_CREDITS_PER_CLIP));
+  assert.ok(recs.every((r: any) => r.outputQuantity === 1 && r.outputUnit === "track" && r.sourceEventId));
 });
 
 test("creditsPerClip and creditUsd overrides flow through", () => {

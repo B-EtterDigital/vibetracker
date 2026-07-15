@@ -143,14 +143,16 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const usageTier = tierRaw === "verified" || tierRaw === "attested" ? tierRaw : "self_reported";
   const byUsd = profile.providers.slice().sort((a, b) => b.usd - a.usd);
 
-  // Every source with real activity, ranked by spend — shown as the hero's labelled "Sources" row
-  // so the question "where are the sources?" is answered at the top, with the full stack (spend +
-  // ops per source) in the Usage → Your stack panel below.
-  const brands = byUsd
-    .filter((p) => p.usd > 0 || p.ops > 0)
-    .map((p) => {
-      const brand = providerBrand(p.provider);
-      return { id: p.provider, label: providerLabel(p.provider), mark: brand.mark, from: brand.from, to: brand.to, ink: brand.ink, logo: brand.logo };
+  // The toolbar is a toolchain, not a billing-provider list. New submissions carry an explicit
+  // aggregate for orchestrators such as Cynaps3; older submissions safely fall back to providers.
+  const toolbarRows = profile.tools?.length
+    ? profile.tools.map((row) => ({ id: row.tool, ops: row.ops }))
+    : byUsd.filter((p) => p.usd > 0 || p.ops > 0).map((p) => ({ id: p.provider, ops: p.ops }));
+  const brands = toolbarRows
+    .sort((a, b) => b.ops - a.ops || a.id.localeCompare(b.id))
+    .map((row) => {
+      const brand = providerBrand(row.id);
+      return { id: row.id, label: providerLabel(row.id), mark: brand.mark, from: brand.from, to: brand.to, ink: brand.ink, logo: brand.logo };
     });
 
   // Per-provider daily series for the interactive chart. Ranked by ops (activity), not spend, so

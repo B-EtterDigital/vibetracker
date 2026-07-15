@@ -22,6 +22,7 @@ test("only settled generations become usage records (failed / processing exclude
   assert.ok(recs.every((r) => r.operation === "generate" && r.unit === "request" && r.quantity === 1));
   assert.ok(recs.every((r) => r.rawUnit === "credits" && r.rawAmount === DEFAULT_CREDITS_PER_GEN));
   assert.ok(recs.every((r) => r.source === "feed_recon" && r.confidence === "medium" && r.verified === false));
+  assert.ok(recs.every((r) => r.outputQuantity === 1 && r.outputUnit === "track" && r.sourceEventId));
 });
 
 test("isConsuming skips failed and unfinished generations", () => {

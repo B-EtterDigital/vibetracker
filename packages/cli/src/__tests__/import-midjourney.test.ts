@@ -34,6 +34,8 @@ test("lifetime import counts every image as an image operation", () => {
     unit: "image",
     rawAmount: 12_345,
     rawUnit: "images",
+    outputQuantity: 12_345,
+    outputUnit: "image",
     usdEst: 720,
     source: "manual",
     confidence: "low",

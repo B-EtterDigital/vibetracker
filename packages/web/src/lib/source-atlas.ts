@@ -345,9 +345,9 @@ export function buildSourceIntakeStack(): SourceIntakeStack {
     }),
     intakeStep("manual_ledger", "midjourney", {
       label: "Manual ledger",
-      command: "ledger add --manual",
+      command: "import midjourney --images <lifetime-images>",
       status: "LOW CONF",
-      note: "Midjourney, Canva, Poe, subscriptions, and closed tools remain useful with visible confidence.",
+      note: "Midjourney's official /info total and manual closed-tool entries remain useful with visible confidence.",
       guardrail: "Manual entries are labelled and never auto-upgrade to verified usage.",
       impact: "manual",
       meter: 64,

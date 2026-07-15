@@ -18,6 +18,8 @@ export function normalizeGenerations(generations: LeonardoGeneration[]): Normali
       unit: "image",
       rawAmount: imageCount,
       rawUnit: "images",
+      outputQuantity: imageCount,
+      outputUnit: "image",
       source: "feed_recon",
       confidence: "high",
       verified: false,

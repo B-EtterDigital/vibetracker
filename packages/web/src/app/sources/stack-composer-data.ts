@@ -214,7 +214,7 @@ export function buildStackDiagnosis(selected: SourceCandidate[]): StackDiagnosis
       label: "MANUAL REVIEW",
       headline: `${trackableCount} of ${selectedCount} selected sources have a collection path today.`,
       explanation: `${automaticCount} automatic and ${manual.length} manual. Manual values remain explicit and are never upgraded to verified usage.`,
-      nextAction: "Replace every <monthly-usd> placeholder before running the local sync.",
+      nextAction: "Replace every manual placeholder before running the local sync.",
     };
   }
 
@@ -254,9 +254,11 @@ export function buildRunbook(selected: SourceCandidate[]): Runbook {
     lines.push(cliCommand("detect"));
   }
   if (manual.length) {
-    lines.push("", "# manual subscriptions — replace <monthly-usd>");
+    lines.push("", "# manual sources — replace every placeholder");
     for (const candidate of manual) {
-      lines.push(cliCommand(`add ${candidate.provider.id} --usd <monthly-usd> --note subscription`));
+      lines.push(candidate.provider.id === "midjourney"
+        ? cliCommand("import midjourney --images <lifetime-images> --usd <lifetime-spend>")
+        : cliCommand(`add ${candidate.provider.id} --usd <monthly-usd> --note subscription`));
     }
   }
   if (planned.length) {

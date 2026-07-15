@@ -40,6 +40,8 @@ export interface NormalizedRecord {
   source: Source;
   confidence: Confidence;
   verified: boolean;     // set true only when the backend fetched it authoritatively
+  toolId?: string;       // orchestrator used for the operation; defaults to provider
+  sourceEventId?: string; // stable provider event id for replay-safe collection
   accountId?: string;
   profileId?: string;
   teamId?: string;

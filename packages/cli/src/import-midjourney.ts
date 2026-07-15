@@ -61,6 +61,8 @@ export function buildMidjourneyLifetimeRecord(input: MidjourneyLifetimeInput): N
     unit: "image",
     rawAmount: images,
     rawUnit: "images",
+    outputQuantity: images,
+    outputUnit: "image",
     ...(input.usdEst != null ? { usdEst: input.usdEst } : {}),
     source: "manual",
     confidence: "low",

@@ -30,6 +30,9 @@ export function normalizeFeed(clips: SunoClip[], opts: SunoNormalizeOpts = {}): 
       unit: "request",
       rawAmount: perClip,
       rawUnit: "credits",
+      outputQuantity: 1,
+      outputUnit: "track",
+      sourceEventId: clip.id,
       source: "feed_recon",   // reconstructed, not a real ledger
       confidence: "medium",   // estimated cost
       verified: false,

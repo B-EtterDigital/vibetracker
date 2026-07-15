@@ -58,6 +58,7 @@ export interface ProfileView {
   accountLinked?: boolean;
   latest: { total_usd: number; total_credits: number; record_count: number; created_at: string; tier: string } | null;
   providers: Array<{ provider: string; ops: number; credits: number; usd: number }>;
+  tools?: Array<{ tool: string; ops: number }>;
   usageDays: Array<{ date: string; ops: number; credits: number; usd: number }>;
   categories: Array<{ category: string; ops: number; credits: number; usd: number }>;
   providerDays: Array<{ provider: string; date: string; ops: number; credits: number; usd: number }>;
@@ -281,6 +282,23 @@ async function nativeMetricsFor(submissionId: string): Promise<NonNullable<Profi
   }).filter((row) => row.provider.length > 0 && row.category.length > 0 && row.outputUnit.length > 0);
 }
 
+async function toolsFor(submissionId: string): Promise<NonNullable<ProfileView["tools"]>> {
+  const { data, error } = await supabaseServer()
+    .from("vibetracker_submission_tools")
+    .select("tool,ops")
+    .eq("submission_id", submissionId)
+    .order("ops", { ascending: false })
+    .limit(2000);
+  if (error) {
+    reportOptionalFallback("profile.tools.fallback", error);
+    return [];
+  }
+  return (data ?? []).map((row) => {
+    const r = row as { tool?: string; ops?: number };
+    return { tool: String(r.tool ?? ""), ops: Number(r.ops ?? 0) };
+  }).filter((row) => row.tool.length > 0 && row.ops > 0);
+}
+
 export async function getProfile(handle: string): Promise<ProfileView | null> {
   try {
     const sb = supabaseServer();
@@ -317,6 +335,7 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
     const providerDays = latest ? await providerDaysFor(latest.id) : [];
     const providerModels = latest ? await providerModelsFor(latest.id) : [];
     const nativeMetrics = latest ? await nativeMetricsFor(latest.id) : [];
+    const tools = latest ? await toolsFor(latest.id) : [];
     const trustSignals = latest ? await trustSignalsFor(latest.id) : [];
     const tokenBreakdown = latest ? await tokenBreakdownFor(latest.id) : [];
     const agents = latest ? await agentsFor(latest.id) : [];
@@ -339,6 +358,7 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
       providerDays,
       providerModels,
       nativeMetrics,
+      tools,
       trustSignals,
       totalTokens: Number((latest as { total_tokens?: number } | null)?.total_tokens ?? 0),
       crossProviderDays: Number((latest as { cross_provider_days?: number } | null)?.cross_provider_days ?? 0),

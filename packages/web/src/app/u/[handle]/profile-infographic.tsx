@@ -231,7 +231,7 @@ export interface ToolbarBrand { id: string; label: string; logo?: string; mark: 
 export function SourceToolbar({ brands }: { brands: ToolbarBrand[] }) {
   if (!brands.length) return null;
   return (
-    <div className="vtoolbar" role="list" aria-label="AI toolset — every source tracked on this profile">
+    <div className="vtoolbar" role="list" aria-label="AI toolset — every tool tracked on this profile">
       <b className="vtoolbar-title" aria-hidden="true">My Tools:</b>
       {brands.map((b, i) => (
         <span
@@ -239,7 +239,7 @@ export function SourceToolbar({ brands }: { brands: ToolbarBrand[] }) {
           role="listitem"
           key={b.id}
           style={{ "--i": i } as React.CSSProperties}
-          title={`${b.label} — a tracked source on this profile. Hover any logo for its name; the full stack with spend per source lives in Usage below.`}
+          title={`${b.label} — a tracked tool on this profile. Billing providers and spend remain separate in Usage below.`}
         >
           {b.logo
             ? <img src={b.logo} alt={b.label} loading="lazy" />

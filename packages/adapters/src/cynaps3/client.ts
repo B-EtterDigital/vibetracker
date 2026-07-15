@@ -2,6 +2,7 @@ export const CYNAPS3_STATS_URL =
   "https://tvsvttguftnatztsedyx.supabase.co/functions/v1/vibeusage-stats";
 
 export type Cynaps3UsageStatus = "completed" | "failed";
+export type Cynaps3BillingOwner = "cynaps3" | "upstream-provider";
 
 export interface Cynaps3UsageEvent {
   id: string;
@@ -12,6 +13,10 @@ export interface Cynaps3UsageEvent {
   tracksCreated: number;
   audioSeconds: number;
   creditsConsumed: number;
+  toolId: "cynaps3";
+  providerId: string;
+  billingOwner: Cynaps3BillingOwner;
+  upstreamEventId?: string;
 }
 
 export interface Cynaps3StatsSummary {
@@ -24,7 +29,7 @@ export interface Cynaps3StatsSummary {
 }
 
 export interface Cynaps3StatsPage {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   provider: "cynaps3";
   account: {
     id: string;
@@ -103,13 +108,40 @@ function parseSummary(value: unknown): Cynaps3StatsSummary {
   return parsed;
 }
 
-function parseEvent(value: unknown, index: number): Cynaps3UsageEvent {
+function providerId(value: unknown, label: string): string {
+  const result = text(value, label).toLowerCase();
+  if (!/^[a-z0-9][a-z0-9._-]{0,63}$/.test(result)) {
+    throw new Error(`Cynaps3 stats contract: ${label} is not a provider id`);
+  }
+  return result;
+}
+
+function parseEvent(value: unknown, index: number, schemaVersion: 1 | 2): Cynaps3UsageEvent {
   const event = object(value, `events[${index}]`);
   const status = text(event.status, `events[${index}].status`);
   if (status !== "completed" && status !== "failed") {
     throw new Error(`Cynaps3 stats contract: events[${index}].status is unsupported`);
   }
   const model = event.model == null ? undefined : text(event.model, `events[${index}].model`);
+  let eventProvider = "cynaps3";
+  let billingOwner: Cynaps3BillingOwner = "cynaps3";
+  let upstreamEventId: string | undefined;
+  if (schemaVersion === 2) {
+    if (event.toolId !== "cynaps3") {
+      throw new Error(`Cynaps3 stats contract: events[${index}].toolId must be cynaps3`);
+    }
+    eventProvider = providerId(event.providerId, `events[${index}].providerId`);
+    if (event.billingOwner !== "cynaps3" && event.billingOwner !== "upstream-provider") {
+      throw new Error(`Cynaps3 stats contract: events[${index}].billingOwner is unsupported`);
+    }
+    billingOwner = event.billingOwner;
+    upstreamEventId = event.upstreamEventId == null
+      ? undefined
+      : text(event.upstreamEventId, `events[${index}].upstreamEventId`);
+    if (billingOwner === "upstream-provider" && !upstreamEventId) {
+      throw new Error(`Cynaps3 stats contract: events[${index}].upstreamEventId is required for upstream billing`);
+    }
+  }
   return {
     id: text(event.id, `events[${index}].id`),
     occurredAt: timestamp(event.occurredAt, `events[${index}].occurredAt`),
@@ -119,14 +151,19 @@ function parseEvent(value: unknown, index: number): Cynaps3UsageEvent {
     tracksCreated: count(event.tracksCreated, `events[${index}].tracksCreated`),
     audioSeconds: amount(event.audioSeconds, `events[${index}].audioSeconds`),
     creditsConsumed: amount(event.creditsConsumed, `events[${index}].creditsConsumed`),
+    toolId: "cynaps3",
+    providerId: eventProvider,
+    billingOwner,
+    ...(upstreamEventId ? { upstreamEventId } : {}),
   };
 }
 
 export function parseStatsPage(value: unknown): Cynaps3StatsPage {
   const root = object(value, "response");
-  if (root.schemaVersion !== 1 || root.provider !== "cynaps3") {
-    throw new Error("Cynaps3 stats contract: expected schemaVersion 1 and provider cynaps3");
+  if ((root.schemaVersion !== 1 && root.schemaVersion !== 2) || root.provider !== "cynaps3") {
+    throw new Error("Cynaps3 stats contract: expected schemaVersion 1 or 2 and provider cynaps3");
   }
+  const schemaVersion = root.schemaVersion;
   const account = object(root.account, "account");
   if (account.product !== "musicmation") {
     throw new Error("Cynaps3 stats contract: account.product must be musicmation");
@@ -143,12 +180,12 @@ export function parseStatsPage(value: unknown): Cynaps3StatsPage {
     throw new Error("Cynaps3 stats contract: hasMore and nextCursor disagree");
   }
   return {
-    schemaVersion: 1,
+    schemaVersion,
     provider: "cynaps3",
     account: { id: text(account.id, "account.id"), product: "musicmation" },
     generatedAt: timestamp(root.generatedAt, "generatedAt"),
     summary: parseSummary(root.summary),
-    events: root.events.map(parseEvent),
+    events: root.events.map((event, index) => parseEvent(event, index, schemaVersion)),
     page: { nextCursor, hasMore: page.hasMore },
   };
 }

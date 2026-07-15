@@ -53,6 +53,7 @@ export function createCynaps3Adapter(client: Cynaps3Client, opts: Cynaps3Adapter
 
       const records: NormalizedRecord[] = [];
       const eventIds = new Set<string>();
+      const billedEventIds = new Set<string>();
       const cursors = new Set<string>();
       let cursor: string | undefined;
       let accountId: string | undefined;
@@ -105,6 +106,15 @@ export function createCynaps3Adapter(client: Cynaps3Client, opts: Cynaps3Adapter
             throw error;
           }
           eventIds.add(event.id);
+          const billedProvider = event.billingOwner === "upstream-provider" ? event.providerId : "cynaps3";
+          const billedEventId = event.upstreamEventId ?? event.id;
+          const billedEventKey = `${billedProvider}:${billedEventId}`;
+          if (billedEventIds.has(billedEventKey)) {
+            const error = new Error(`Cynaps3 stats contract: duplicate billed event ${billedEventKey}`);
+            ctx.telemetry.captureError(error, { area: "adapter.cynaps3.pagination", severity: "error" });
+            throw error;
+          }
+          billedEventIds.add(billedEventKey);
         }
         records.push(...normalizeEvents(page.events, accountId));
         ctx.telemetry.addBreadcrumb("adapter.cynaps3.page", {
@@ -155,5 +165,6 @@ export type {
   Cynaps3StatsSummary,
   Cynaps3UsageEvent,
   Cynaps3UsageStatus,
+  Cynaps3BillingOwner,
 } from "./client.ts";
 export { normalizeEvents } from "./normalize.ts";

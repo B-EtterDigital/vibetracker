@@ -216,6 +216,25 @@ test("native media outputs aggregate separately without inflating operations", (
   }]);
 });
 
+test("orchestrated usage separates the tool from the billed provider without duplicating spend", () => {
+  const res = handleIngest({
+    handle: "musicmation",
+    records: [rec({
+      provider: "suno",
+      toolId: "cynaps3",
+      sourceEventId: "suno_clip_123",
+      category: "music",
+      operation: "generate",
+      rawAmount: 10,
+      rawUnit: "credits",
+      usdEst: 0.2,
+    })],
+  });
+  assert.equal(res.totals.count, 1);
+  assert.deepEqual(res.byProvider, [{ provider: "suno", ops: 1, credits: 10, usd: 0.2 }]);
+  assert.deepEqual(res.byTool, [{ tool: "cynaps3", ops: 1, credits: 0 }]);
+});
+
 test("non-object / missing records payloads fail safe", () => {
   assert.equal(handleIngest(null).accepted, 0);
   assert.equal(handleIngest({ handle: "x" }).accepted, 0);
