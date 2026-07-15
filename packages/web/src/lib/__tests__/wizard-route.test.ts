@@ -28,6 +28,12 @@ test("wizard route is a focused interactive command deck", () => {
   assert.match(shell, /navigator\.clipboard\.writeText/);
   assert.match(shell, /Clipboard access failed/);
   assert.match(shell, /nothing runs on this page/);
+  assert.match(shell, /Generated runbook summary/);
+  assert.match(shell, /COMMANDS/);
+  assert.match(shell, /manual paste/);
+  assert.match(shell, /SOURCE RAILS/);
+  assert.match(shell, /local receipt/);
+  assert.match(shell, /page writes/);
   assert.match(shell, /type="checkbox"/);
   assert.match(shell, /aria-pressed=/);
   assert.match(shell, /aria-live="polite"/);
@@ -42,6 +48,10 @@ test("wizard route is a focused interactive command deck", () => {
   assert.match(layoutStyles, /@media \(min-width: 2200px\)/);
   assert.match(layoutStyles, /\.wizard-surface \{ width: min\(2640px, 95vw\); \}/);
   assert.match(layoutStyles, /grid-template-columns: 240px minmax\(0, 1\.2fr\) minmax\(700px, 0\.8fr\)/);
+  assert.match(layoutStyles, /@media \(min-width: 3000px\)/);
+  assert.match(layoutStyles, /\.wizard-surface \{ width: min\(3200px, calc\(100vw - 240px\)\); \}/);
+  assert.match(layoutStyles, /grid-template-columns: 280px minmax\(0, 1\.35fr\) minmax\(900px, 0\.82fr\)/);
+  assert.match(layoutStyles, /min-height: 1030px/);
   assert.match(layoutStyles, /@media \(max-width: 760px\)/);
   assert.match(layoutStyles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(manifest, /000-vibetracker\.web\.first-run-command-deck/);

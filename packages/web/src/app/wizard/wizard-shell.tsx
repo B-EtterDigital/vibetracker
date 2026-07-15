@@ -42,6 +42,8 @@ export function WizardShell({ sequence, proofCounters, runwaySummary }: WizardSh
   const runbook = useMemo(() => buildWizardRunbook(options), [options]);
   const activeMode = modeFor(options.mode);
   const sideEffects = Object.values(proofCounters).reduce((total, value) => total + value, 0);
+  const usageRails = runbook.selectedSources.filter((source) => source.rail === "usage").length;
+  const localRails = runbook.selectedSources.length - usageRails;
 
   useEffect(() => () => {
     if (resetTimer.current) clearTimeout(resetTimer.current);
@@ -92,11 +94,27 @@ export function WizardShell({ sequence, proofCounters, runwaySummary }: WizardSh
           </div>
         </header>
 
-        <div className="wizard-console__telemetry" aria-label="Wizard contract summary">
-          <span><b>{runwaySummary.tracks}</b> setup tracks</span>
-          <span><b>{runwaySummary.localFirst}</b> local-first checks</span>
-          <span><b>{sideEffects}</b> page side effects</span>
-          <span><b>{runwaySummary.publishGates}</b> publish gates</span>
+        <div className="wizard-console__telemetry" aria-label="Generated runbook summary">
+          <span>
+            <small>COMMANDS</small>
+            <b>{String(runbook.commands.length).padStart(2, "0")}</b>
+            <em>manual paste</em>
+          </span>
+          <span>
+            <small>SOURCE RAILS</small>
+            <b>{String(runbook.selectedSources.length).padStart(2, "0")}</b>
+            <em>{usageRails} usage / {localRails} local</em>
+          </span>
+          <span>
+            <small>EVIDENCE</small>
+            <b>{options.receipt ? "ARMED" : "AUDIT"}</b>
+            <em>{options.receipt ? "local receipt" : "no receipt"}</em>
+          </span>
+          <span>
+            <small>RELAY</small>
+            <b>{options.publishPreview ? "DRY RUN" : "LOCAL"}</b>
+            <em>{sideEffects} page writes</em>
+          </span>
         </div>
 
         <div className="wizard-workspace">
@@ -231,6 +249,7 @@ export function WizardShell({ sequence, proofCounters, runwaySummary }: WizardSh
 
         <footer className="wizard-console__foot">
           <span><i aria-hidden="true" /> local-first command plan</span>
+          <span>{runwaySummary.tracks} tracks / {runwaySummary.localFirst} local checks / {runwaySummary.publishGates} relay gate</span>
           <span>trust signals remain NOT USAGE</span>
           <a href="/how-to">Open the CLI guide</a>
         </footer>

@@ -125,18 +125,35 @@
 }
 
 .wizard-console__telemetry span {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 10px;
   align-items: baseline;
-  gap: 8px;
   min-width: 0;
-  padding: 13px 18px;
+  padding: 12px 18px 13px;
   border-right: 1px solid var(--wiz-line);
   color: var(--wiz-muted);
   font: 500 9px/1.2 var(--font-data), ui-monospace, monospace;
 }
 
 .wizard-console__telemetry span:last-child { border-right: 0; }
-.wizard-console__telemetry b { color: var(--wiz-ink); font-size: 15px; font-variant-numeric: tabular-nums; }
+.wizard-console__telemetry small {
+  grid-column: 1 / -1;
+  color: var(--wiz-accent);
+  font: 600 8px/1 var(--font-data), ui-monospace, monospace;
+}
+.wizard-console__telemetry b {
+  color: var(--wiz-ink);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.wizard-console__telemetry em {
+  min-width: 0;
+  color: var(--wiz-muted);
+  font: inherit;
+  font-style: normal;
+  overflow-wrap: anywhere;
+}
 
 .wizard-workspace {
   display: grid;

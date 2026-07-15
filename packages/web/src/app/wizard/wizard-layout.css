@@ -28,6 +28,193 @@
   .wizard-sequence { padding: 30px; }
 }
 
+@media (min-width: 3000px) {
+  .wizard-surface { width: min(3200px, calc(100vw - 240px)); }
+
+  .wizard-console { background-size: 32px 32px; }
+
+  .wizard-console__mast {
+    gap: 48px;
+    padding: 42px 48px 44px;
+  }
+
+  .wizard-console__eyebrow,
+  .wizard-sequence header p,
+  .wizard-phases > p {
+    margin-bottom: 13px;
+    font-size: 13px;
+  }
+
+  .wizard-console h1 {
+    max-width: 1120px;
+    font-size: 4rem;
+  }
+
+  .wizard-console__lede {
+    max-width: 980px;
+    margin-top: 17px;
+    font-size: 19px;
+    line-height: 1.5;
+  }
+
+  .wizard-console__readiness {
+    gap: 11px;
+    min-width: 280px;
+    padding-top: 8px;
+    font-size: 13px;
+  }
+
+  .wizard-console__readiness code { font-size: 11px; }
+
+  .wizard-console__telemetry span {
+    gap: 6px 14px;
+    padding: 18px 28px 20px;
+    font-size: 12px;
+  }
+
+  .wizard-console__telemetry small { font-size: 10px; }
+  .wizard-console__telemetry b { font-size: 22px; }
+
+  .wizard-workspace {
+    grid-template-columns: 280px minmax(0, 1.35fr) minmax(900px, 0.82fr);
+    min-height: 1030px;
+  }
+
+  .wizard-phases { padding: 34px 26px; }
+
+  .wizard-phases li {
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 5px 12px;
+    min-height: 122px;
+    padding: 19px 8px;
+  }
+
+  .wizard-phases li[data-active="true"]::before {
+    left: -26px;
+    top: 19px;
+    bottom: 19px;
+    width: 3px;
+  }
+
+  .wizard-phases li > span { font-size: 13px; }
+  .wizard-phases li b { font-size: 14px; }
+  .wizard-phases li small { font-size: 11px; }
+  .wizard-phases__seal { gap: 8px; padding-top: 20px; }
+  .wizard-phases__seal span { font-size: 11px; }
+  .wizard-phases__seal b { font-size: 14px; }
+  .wizard-phases__seal small { font-size: 11px; }
+
+  .wizard-config__section { padding: 34px 38px; }
+  .wizard-config__section legend { font-size: 18px; }
+  .wizard-config__section legend span { margin-right: 13px; font-size: 12px; }
+  .wizard-config__hint { margin: 11px 0 20px; font-size: 15px; }
+
+  .wizard-modes__options { margin-top: 20px; }
+
+  .wizard-modes__options button,
+  .wizard-sources__grid label {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 14px;
+    min-height: 132px;
+    padding: 20px;
+  }
+
+  .wizard-sources__grid label { grid-template-columns: 46px minmax(0, 1fr) auto; }
+
+  .wizard-modes__options button > i,
+  .wizard-sources__grid label > i {
+    width: 44px;
+    height: 38px;
+    font-size: 11px;
+  }
+
+  .wizard-modes__options button b,
+  .wizard-sources__grid label b,
+  .wizard-guards__rows label b { font-size: 14px; }
+
+  .wizard-modes__options button small,
+  .wizard-sources__grid label small,
+  .wizard-guards__rows label small { margin-top: 8px; font-size: 11px; }
+
+  .wizard-sources__grid em,
+  .wizard-guards__rows em { font-size: 10px; }
+
+  .wizard-guards__rows { margin-top: 20px; }
+  .wizard-guards__rows label { min-height: 86px; }
+
+  .wizard-terminal {
+    top: 92px;
+    padding: 30px;
+  }
+
+  .wizard-terminal__bar {
+    min-height: 52px;
+    padding: 0 16px;
+    font-size: 12px;
+  }
+
+  .wizard-terminal__status { gap: 7px; padding: 21px 19px; }
+  .wizard-terminal__status span { font-size: 11px; }
+  .wizard-terminal__status code { font-size: 12px; }
+
+  .wizard-terminal__commands {
+    min-height: 460px;
+    padding: 11px 0;
+    background-size: auto 32px;
+  }
+
+  .wizard-terminal__commands li {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 12px;
+    min-height: 68px;
+    padding: 16px 18px;
+  }
+
+  .wizard-terminal__commands span { font-size: 11px; }
+  .wizard-terminal__commands code { font-size: 13px; }
+
+  .wizard-terminal__boundary span {
+    gap: 6px;
+    padding: 14px;
+    font-size: 10px;
+  }
+
+  .wizard-terminal__boundary b { font-size: 17px; }
+
+  .wizard-terminal > button {
+    min-height: 60px;
+    margin-top: 16px;
+    padding: 0 18px;
+    font-size: 14px;
+  }
+
+  .wizard-terminal > p { margin-top: 12px; font-size: 10px; }
+
+  .wizard-sequence { padding: 36px 48px 40px; }
+  .wizard-sequence header { margin-bottom: 22px; }
+  .wizard-sequence h2 { font-size: 1.85rem; }
+  .wizard-sequence header > span { font-size: 11px; }
+
+  .wizard-sequence li {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px 14px;
+    min-height: 206px;
+    padding: 22px;
+  }
+
+  .wizard-sequence li > span { font-size: 13px; }
+  .wizard-sequence li b { font-size: 14px; }
+  .wizard-sequence li p { margin-top: 9px; font-size: 12px; }
+  .wizard-sequence li em { font-size: 10px; }
+
+  .wizard-console__foot {
+    gap: 18px 28px;
+    min-height: 68px;
+    padding: 12px 48px;
+    font-size: 11px;
+  }
+}
+
 @keyframes wizard-deck-scan {
   0% { opacity: 0; transform: translateY(0); }
   20% { opacity: 0.55; }
