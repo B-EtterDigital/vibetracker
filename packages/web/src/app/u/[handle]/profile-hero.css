@@ -523,7 +523,9 @@
   .vhero-state-grid { grid-template-columns: repeat(4, 1fr); }
 }
 @media (max-width: 760px) {
-  .vhero-banner { min-height: 200px; padding: 20px; }
+  /* Keep the pre-login banner/avatar controls above the identity footer. At 200px the two
+     controls occupied the same vertical band as the avatar and handle on narrow phones. */
+  .vhero-banner { min-height: 260px; padding: 20px; }
   .vhero-avatar { width: 78px; }
   .vhero-avatar-mark { font-size: 30px; }
   .vhero-name { font-size: 1.9rem; }

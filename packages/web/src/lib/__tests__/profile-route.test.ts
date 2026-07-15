@@ -23,6 +23,7 @@ const identityStyles = readFileSync("packages/web/src/app/u/[handle]/profile-ide
 const infographic = readFileSync("packages/web/src/app/u/[handle]/profile-infographic.tsx", "utf8");
 const infographicStyles = readFileSync("packages/web/src/app/u/[handle]/profile-infographic.css", "utf8");
 const accessibilityStyles = readFileSync("packages/web/src/app/u/[handle]/profile-accessibility.css", "utf8");
+const largeDisplayStyles = readFileSync("packages/web/src/app/u/[handle]/profile-4k.css", "utf8");
 const layout = readFileSync("packages/web/src/app/u/[handle]/layout.tsx", "utf8");
 const nextConfig = readFileSync("packages/web/next.config.ts", "utf8");
 
@@ -98,8 +99,18 @@ test("profile first read compresses lifetime scale and puts current evidence bef
   assert.match(page, /<ProfileHero[\s\S]*<ProfileReadout[\s\S]*<ProfileHeroEvidence/);
   assert.match(heroStyles, /\.vhero-banner \{[\s\S]*min-height: clamp\(420px, 62vh, 780px\)/);
   assert.match(heroStyles, /\.vhero-metrics \{[\s\S]*repeat\(4/);
-  assert.match(heroStyles, /@media \(max-width: 760px\) \{[\s\S]*min-height: 200px/);
+  assert.match(heroStyles, /@media \(max-width: 760px\) \{[\s\S]*min-height: 260px/);
   assert.match(heroStyles, /@media \(max-width: 620px\) \{[\s\S]*grid-template-columns: repeat\(2/);
+});
+
+test("profile expands into a fixed-format 4K instrument without changing ordinary viewports", () => {
+  assert.match(page, /import "\.\/profile-4k\.css"/);
+  assert.match(largeDisplayStyles, /@media \(min-width: 2200px\) and \(min-height: 1200px\)/);
+  assert.match(largeDisplayStyles, /\.wrap:has\(> \.vprofile\) \{[\s\S]*max-width: min\(2640px, calc\(100vw - 96px\)\)/);
+  assert.match(largeDisplayStyles, /\.vprofile \{[\s\S]*max-width: 2592px/);
+  assert.match(largeDisplayStyles, /\.vboard \{[\s\S]*minmax\(820px, 1fr\)/);
+  assert.match(largeDisplayStyles, /\.vinfo-pie \{ width: 84px; \}/);
+  assert.doesNotMatch(largeDisplayStyles, /@media \(max-width:/);
 });
 
 test("vibe state ranks by spend, lists top 5 models, and explains the signal tier", () => {

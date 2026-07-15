@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
-import { accountIdentityFromSession } from "../app/account/account-session";
+import { accountIdentityFromSession, accountRedirectUrl } from "../app/account/account-session";
 import { supabaseBrowser, supabaseBrowserConfigured } from "../lib/supabase-browser";
 import styles from "./account-control.module.css";
 
@@ -86,15 +86,40 @@ export function AccountControl() {
     ? "/account"
     : `/account?next=${encodeURIComponent(pathname || "/")}`;
 
+  // One click, straight to GitHub (user order 2026-07-15): a signed-out click starts the OAuth
+  // dance immediately instead of detouring through /account. The OAuth callback returns to the
+  // page the viber was on. Signed-in states keep linking to the account console.
+  const directSignIn = state === "signed-out" && supabaseBrowserConfigured()
+    ? (event: MouseEvent<HTMLAnchorElement>) => {
+        event.preventDefault();
+        void supabaseBrowser().auth.signInWithOAuth({
+          provider: "github",
+          options: { redirectTo: accountRedirectUrl(window.location.origin, pathname || "/") },
+        });
+      }
+    : undefined;
+
+  // Once signed in, the viber's own board profile is one click away in the header.
+  const profileHref = state === "linked" || state === "session"
+    ? `/u/${handle.toLowerCase()}`
+    : null;
+
   return (
-    <a className={styles.control} data-state={state} href={accountHref} title={title} aria-label={title} aria-busy={state === "loading"}>
-      <span className={styles.mark} aria-hidden="true">
-        {avatarUrl && state !== "signed-out" && state !== "loading"
-          ? <img src={avatarUrl} alt="" width={22} height={22} />
-          : state === "linked" ? "✓" : state === "session" ? "·" : state === "unavailable" ? "!" : "GH"}
-        {state === "linked" && avatarUrl ? <i>✓</i> : null}
-      </span>
-      <span className={styles.label} data-short-label={shortLabel}>{label}</span>
-    </a>
+    <>
+      {profileHref ? (
+        <a className={styles.profileLink} href={profileHref} title={`Your board profile — /u/${handle.toLowerCase()}`}>
+          Profile
+        </a>
+      ) : null}
+      <a className={styles.control} data-state={state} href={accountHref} onClick={directSignIn} title={title} aria-label={title} aria-busy={state === "loading"}>
+        <span className={styles.mark} aria-hidden="true">
+          {avatarUrl && state !== "signed-out" && state !== "loading"
+            ? <img src={avatarUrl} alt="" width={22} height={22} />
+            : state === "linked" ? "✓" : state === "session" ? "·" : state === "unavailable" ? "!" : "GH"}
+          {state === "linked" && avatarUrl ? <i>✓</i> : null}
+        </span>
+        <span className={styles.label} data-short-label={shortLabel}>{label}</span>
+      </a>
+    </>
   );
 }

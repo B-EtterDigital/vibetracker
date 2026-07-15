@@ -1,0 +1,107 @@
+/* Large-display profile composition.
+   The regular profile is deliberately editorial at laptop widths. On a true large canvas the
+   flagship board should use the room instead of remaining a narrow desktop column. This layer is
+   imported last and starts above 2200x1200, so tablet, mobile and ordinary desktop rules stay exact. */
+
+@media (min-width: 2200px) and (min-height: 1200px) {
+  .wrap:has(> .vprofile) {
+    max-width: min(2640px, calc(100vw - 96px));
+    padding-inline: 24px;
+  }
+
+  .vprofile {
+    max-width: 2592px;
+    gap: 22px;
+    padding: 28px 24px 140px;
+  }
+
+  .vprofile-grid { gap: 22px; }
+
+  .vprofile-panel:not(.vboard),
+  .vhero-body,
+  .vhero-evidence {
+    padding-inline: 32px;
+  }
+
+  .vprofile-movement {
+    gap: 22px;
+    margin-top: 34px;
+  }
+
+  .vprofile-movement::before { font-size: 3.25rem; }
+  .vprofile-movement > span { font-size: 14px; }
+
+  .vhero-banner {
+    min-height: 780px;
+    padding: 46px;
+  }
+
+  .vhero-banner-grid { background-size: 38px 38px; }
+  .vhero-banner-foot { gap: 28px; }
+
+  .vhero-avatar {
+    width: 156px;
+    border-radius: 12px;
+  }
+
+  .vhero-avatar-mark { font-size: 48px; }
+  .vhero-eyebrow { font-size: 11px; }
+  .vhero-name { font-size: 3rem; }
+  .vhero-identity { font-size: 15px; }
+  .vhero-metric { padding-block: 19px; }
+  .vhero-metric dd { font-size: 2rem; }
+  .vhero-metric p { font-size: 11px; }
+
+  .vtoolbar {
+    gap: 32px;
+    padding: 12px 10px 6px;
+  }
+
+  .vtoolbar-title { font-size: 2.25rem; }
+
+  .vtoolbar-item img,
+  .vtoolbar-item i {
+    width: 52px;
+    height: 52px;
+  }
+
+  .vboard {
+    grid-template-columns: minmax(0, 1.22fr) minmax(820px, 1fr);
+    column-gap: 34px;
+  }
+
+  .vboard-left { padding: 38px 0 34px 38px; }
+
+  .vboard-right {
+    gap: 18px;
+    padding: 38px 38px 34px 12px;
+  }
+
+  .vboard-right .vinfo-pies { margin-left: -22%; }
+
+  .vinfo-pies {
+    gap: 18px;
+    padding-bottom: 14px;
+  }
+
+  .vinfo-pie { width: 84px; }
+  .vinfo-pie-item { gap: 8px; }
+  .vinfo-pie-item strong { font-size: 1.45rem; }
+
+  .vinfo-pie-item span {
+    max-width: 104px;
+    font-size: 10px;
+  }
+
+  .vboard-bio {
+    max-width: 84ch;
+    padding-top: 18px;
+  }
+
+  .vboard-story-title { font-size: 2rem; }
+
+  .vboard-bio p,
+  .vboard-story-list li { font-size: 15px; }
+
+  .vtelemetry-comb { height: 240px; }
+}

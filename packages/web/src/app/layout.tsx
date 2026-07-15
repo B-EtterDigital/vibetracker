@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
 import { AccountControl } from "../components/account-control";
 import { OperatorMenu } from "../components/operator-menu";
+import { SiteTicker } from "../components/site-ticker";
 
 const displayFont = Space_Grotesk({
   subsets: ["latin"],
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${displayFont.variable} ${dataFont.variable}`}>
       <body>
+        <SiteTicker />
         <header className="hdr">
           <a href="/" className="brand" aria-label="VibeUsage home">
             <img
@@ -48,7 +50,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </nav>
           <div className="hdr-actions">
             <AccountControl />
-            <a className="hdr-cli" href="/how-to">Get the CLI</a>
+            <a className="hdr-cli" href="/how-to" title="npx vibetracker — get your usage stats on the board">Get your UsageStats</a>
             <OperatorMenu />
           </div>
         </header>

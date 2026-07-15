@@ -4705,3 +4705,30 @@ code, pre, .console-top {
   .wizard-choreography__head { align-items: flex-start; flex-direction: column; }
   .wizard-choreography__grid { grid-template-columns: 1fr; }
 }
+
+/* ---- live board ticker — the looping strip above the header (real data, never mock) ---- */
+.vticker {
+  overflow: hidden;
+  border-bottom: 1px solid rgba(46, 232, 214, 0.16);
+  background: #060a0d;
+  font: 600 11.5px/1 var(--font-data), ui-monospace, monospace;
+  color: rgba(217, 255, 242, 0.72);
+  letter-spacing: 0.06em;
+}
+.vticker-track {
+  display: inline-flex; white-space: nowrap; will-change: transform;
+  animation: vticker-roll 42s linear infinite;
+}
+.vticker:hover .vticker-track { animation-play-state: paused; }
+.vticker-strip { display: inline-flex; align-items: center; padding-block: 9px; }
+.vticker-item { display: inline-flex; align-items: center; }
+.vticker-item i {
+  font-style: normal; color: #f28c33; margin-inline: 18px;
+}
+@keyframes vticker-roll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vticker-track { animation: none; }
+}

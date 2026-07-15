@@ -92,7 +92,7 @@ export function C0vibeBand({
           </a>
           {accountLinked ? null : (
             <a className="vjoin-btn" href={migrateHref}>
-              {githubVerified ? "Link C0VIBE account" : "Migrate this profile"}
+              {githubVerified ? "Link C0VIBE account" : "Powerup your VibeTools (free)"}
             </a>
           )}
         </div>
