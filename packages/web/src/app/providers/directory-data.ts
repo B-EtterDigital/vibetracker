@@ -50,6 +50,12 @@ export interface ProviderRow {
   id: string;
 }
 
+export interface FeaturedProviderConnection {
+  row: ProviderRow;
+  protocol: string;
+  action: ProviderDirectoryAction;
+}
+
 export interface ProviderDirectoryData {
   rows: ProviderRow[];
   statusCounts: Record<StatusKey, number>;
@@ -165,6 +171,23 @@ export function featuredProviderRows(rows: ProviderRow[]): ProviderRow[] {
     const row = rows.find((candidate) => candidate.provider.id === id);
     return row ? [row] : [];
   });
+}
+
+const FEATURED_PROTOCOLS: Record<(typeof FEATURED_PROVIDER_IDS)[number], string> = {
+  midjourney: "OFFICIAL /INFO",
+  leonardo: "PRODUCTION API",
+  cynaps3: "PKCE OAUTH",
+  suno: "SESSION FEED",
+  udio: "SESSION FEED",
+  runway: "ORG LEDGER",
+};
+
+export function featuredProviderConnections(rows: ProviderRow[]): FeaturedProviderConnection[] {
+  return featuredProviderRows(rows).map((row) => ({
+    row,
+    protocol: FEATURED_PROTOCOLS[row.provider.id as (typeof FEATURED_PROVIDER_IDS)[number]],
+    action: providerActionFor(row.provider, row.key),
+  }));
 }
 
 function percent(part: number, total: number): number {

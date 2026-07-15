@@ -97,9 +97,8 @@
   .providers-directory__toolbar,
   .providers-directory__facets { grid-template-columns: 1fr; }
   .providers-directory__toolbar { gap: 7px; }
-  .providers-directory__quick { grid-template-columns: 1fr; gap: 6px; }
-  .providers-directory__quick > span { padding: 0 4px; }
-  .providers-directory__quick button { flex-basis: 132px; }
+  .providers-directory__quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .providers-directory__quick > header { align-items: flex-start; }
   .providers-directory__select { min-height: 40px; }
   .providers-directory__filters {
     flex-wrap: nowrap;
@@ -162,6 +161,14 @@
   .providers-route .providers-directory { padding: 18px; }
   .providers-route .providers-directory__brief:not(.providers-coverage-brief) strong { font-size: 30px; }
   .providers-route .providers-directory__input { font-size: 15px; }
+  .providers-route .providers-directory__quick-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .providers-route .providers-directory__quick-identity { min-height: 70px; padding: 10px; }
+  .providers-route .providers-directory__quick-identity b { font-size: 13px; }
+  .providers-route .providers-directory__quick-identity em,
+  .providers-route .providers-directory__quick-identity small,
+  .providers-route .providers-directory__quick-command code,
+  .providers-route .providers-directory__quick-command button,
+  .providers-route .providers-directory__quick-command a { font-size: 9px; }
   .providers-route .providers-row td { padding: 11px 14px; }
   .providers-route .providers-row__name b { font-size: 15px; }
   .providers-route .providers-row__name span,

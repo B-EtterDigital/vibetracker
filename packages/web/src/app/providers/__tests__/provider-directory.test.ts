@@ -5,6 +5,7 @@ import type { ProviderDescriptor } from "../../../../../adapters/src/registry.ts
 import {
   buildProviderDirectoryData,
   buildProviderCoverageBrief,
+  featuredProviderConnections,
   featuredProviderRows,
   filterProviderRows,
   PAGE_SIZE,
@@ -74,6 +75,10 @@ test("creator quick targets preserve product order and expose the real Midjourne
   ]);
 
   assert.deepEqual(featuredProviderRows(directory.rows).map((row) => row.provider.id), ["midjourney", "leonardo", "cynaps3"]);
+  assert.deepEqual(
+    featuredProviderConnections(directory.rows).map(({ row, protocol }) => [row.provider.id, protocol]),
+    [["midjourney", "OFFICIAL /INFO"], ["leonardo", "PRODUCTION API"], ["cynaps3", "PKCE OAUTH"]],
+  );
   assert.deepEqual(providerActionFor(providers[3]!, "manual"), {
     kind: "copy",
     label: "import /info total",
@@ -123,7 +128,10 @@ test("provider route leads with discovery and keeps the coverage brief as honest
   const directory = readFileSync("packages/web/src/app/providers/directory.tsx", "utf8");
   const styles = readFileSync("packages/web/src/app/providers/directory.css", "utf8");
 
-  assert.match(directory, /CREATOR QUICK TARGETS/);
+  const connectionBay = readFileSync("packages/web/src/app/providers/featured-connections.tsx", "utf8");
+  assert.match(connectionBay, /CREATOR CONNECTION BAY/);
+  assert.match(connectionBay, /exact local lanes/);
+  assert.match(connectionBay, /Copy \$\{provider\.label\} command/);
   assert.match(directory, /COVERAGE READOUT \/ WHY LABELS DIFFER/);
   assert.match(directory, /TRUST VECTOR/);
   assert.match(directory, /USABLE WITH CAVEATS/);
@@ -139,6 +147,8 @@ test("provider route leads with discovery and keeps the coverage brief as honest
   assert.match(directory, /providerActionFor\(provider, key\)/);
   assert.match(styles, /\.providers-coverage-brief/);
   assert.match(styles, /\.providers-directory__quick/);
+  assert.match(styles, /grid-template-columns: repeat\(6, minmax\(0, 1fr\)\)/);
+  assert.match(readFileSync("packages/web/src/app/providers/providers.css", "utf8"), /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(styles, /@media \(max-width: 620px\)/);
   assert.doesNotMatch(directory, /dangerouslySetInnerHTML/);
 });

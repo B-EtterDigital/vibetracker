@@ -7,7 +7,7 @@ import { providerBrand } from "../../lib/provider-brand";
 import {
   buildProviderDirectoryData,
   buildProviderCoverageBrief,
-  featuredProviderRows,
+  featuredProviderConnections,
   filterProviderRows,
   pageProviderRows,
   PAGE_SIZE,
@@ -18,6 +18,7 @@ import {
   providerActionFor,
 } from "./directory-data";
 import type { DomainFilter, PageSize, StatusFilter } from "./directory-data";
+import { CreatorConnectionBay } from "./featured-connections";
 
 const REQUEST_ADAPTER = "https://github.com/B-EtterDigital/vibetracker/issues/new";
 const COPIED = "copied";
@@ -36,7 +37,7 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
 
   const directory = useMemo(() => buildProviderDirectoryData(providers), [providers]);
   const coverageBrief = useMemo(() => buildProviderCoverageBrief(directory), [directory]);
-  const featuredRows = useMemo(() => featuredProviderRows(directory.rows), [directory.rows]);
+  const featuredConnections = useMemo(() => featuredProviderConnections(directory.rows), [directory.rows]);
   const results = useMemo(
     () => filterProviderRows(directory.rows, {
       query,
@@ -161,27 +162,13 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
         </label>
       </div>
 
-      <div className="providers-directory__quick" aria-label="Creator provider quick targets">
-        <span>CREATOR QUICK TARGETS</span>
-        <div>
-          {featuredRows.map(({ provider, key }) => {
-            const brand = providerBrand(provider.id);
-            return (
-              <button
-                type="button"
-                key={provider.id}
-                aria-pressed={query === provider.id}
-                onClick={() => focusProvider(provider.id)}
-                style={{ "--brand-from": brand.from, "--brand-to": brand.to, "--brand-ink": brand.ink } as CSSProperties}
-              >
-                <i aria-hidden="true">{brand.logo ? <img src={brand.logo} alt="" width={13} height={13} /> : brand.mark}</i>
-                <b>{provider.label}</b>
-                <small>{STATUS_WORD[key]}</small>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <CreatorConnectionBay
+        connections={featuredConnections}
+        activeId={query}
+        feedback={feedback}
+        onFocus={focusProvider}
+        onCopy={copyCommand}
+      />
 
       <div className="providers-directory__facets">
         <div className="providers-directory__filters" role="group" aria-label="Filter by coverage status">
