@@ -98,6 +98,12 @@ test("scan route is the calm Make-your-scan page with a scripted local demo", ()
   assert.match(demo, /prefers-reduced-motion: reduce/);
   assert.match(demo, /is-armed/);
   assert.match(demo, /data-shown=/);
+  assert.match(demo, /trace ready/);
+  assert.match(demo, /network 0/);
+  assert.match(demo, /Array\.from\(\{ length: TOTAL_STEPS \}/);
+  assert.match(demo, /useEffect\(\(\) => clearTimer, \[clearTimer\]\)/);
+  assert.doesNotMatch(demo, /if \(!prefersReduced\(\)\) start\(\)/);
+  assert.match(demo, /className="vscan-demo-stack"/);
   assert.match(demo, /Replay the scan preview/);
   assert.doesNotMatch(demo, /Math\.random/);
   assert.doesNotMatch(demo, /dangerouslySetInnerHTML/);
@@ -118,7 +124,7 @@ test("scan route is the calm Make-your-scan page with a scripted local demo", ()
   assert.doesNotMatch(receiptPanel, /dangerouslySetInnerHTML/);
   assert.match(receiptStyles, /\.vscan-receipt-table/);
   assert.match(receiptStyles, /@media \(max-width: 560px\)/);
-  assert.match(receiptStyles, /@media \(min-width: 2200px\)/);
+  assert.match(receiptStyles, /grid-template-areas: "provider spend" "method records" "confidence confidence"/);
   assert.doesNotMatch(receiptStyles, /@import/);
 
   // ---- route-scoped calm CSS mirrors the profile system, not imported ----
@@ -131,6 +137,10 @@ test("scan route is the calm Make-your-scan page with a scripted local demo", ()
   assert.match(scan, /outline: 2px solid #2ee8d6/);
   assert.match(scan, /\.vscan-demo\.is-armed/);
   assert.match(scan, /\[data-shown="false"\]/);
+  assert.match(scan, /\.vscan-demo-progress/);
+  assert.match(scan, /\.vscan-demo-mark \{ grid-column: 3; grid-row: 1; justify-self: end; \}/);
+  assert.match(scan, /\.wrap:has\(> \.vscan\) \{ max-width: min\(2640px, 95vw\); \}/);
+  assert.match(scan, /grid-template-columns: minmax\(0, 0\.78fr\) minmax\(0, 1\.22fr\)/);
   assert.match(scan, /\.vscan-reads-grid \{ display: grid; grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(scan, /prefers-reduced-motion: reduce/);
   assert.match(scan, /@media \(max-width: 900px\)/);

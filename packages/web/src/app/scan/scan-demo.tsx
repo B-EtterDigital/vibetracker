@@ -2,8 +2,8 @@
 
 // Client surface for /scan: the copy chips and the signature scripted
 // scan-preview. Everything renders server-visible in its final state; JS only
-// arms a staged reveal on mount. No network calls, no randomness — the sequence
-// is a fixed-delay script over bundled sample numbers.
+// replays the trace after an explicit click. No network calls, no randomness —
+// the sequence is a fixed-delay script over bundled sample numbers.
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ScanReceiptPanel } from "./scan-receipt-panel";
@@ -82,9 +82,9 @@ export function CopyChip({
 
 /**
  * Signature scripted scan-preview. Renders every line and stat card in its final
- * state for first paint (no-JS and reduced-motion show the whole result). On
- * mount, unless the user prefers reduced motion, `.is-armed` begins a staged
- * hide/reveal driven by a fixed-delay counter.
+ * state for first paint (no-JS and reduced-motion show the whole result).
+ * Replay is deliberately opt-in so hydration never replaces useful evidence
+ * with an almost-empty stage while a screenshot or a fast reader is looking.
  */
 export function ScanDemo() {
   const [armed, setArmed] = useState(false);
@@ -115,13 +115,12 @@ export function ScanDemo() {
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  useEffect(() => {
-    if (!prefersReduced()) start();
-    return clearTimer;
-  }, [start, clearTimer]);
+  useEffect(() => clearTimer, [clearTimer]);
 
   // Not armed → everything is shown (SSR / no-JS / reduced-motion final state).
   const shown = (at: number): "true" | "false" => (!armed || revealed > at ? "true" : "false");
+  const completedSteps = armed ? Math.min(revealed, TOTAL_STEPS) : TOTAL_STEPS;
+  const running = armed && completedSteps < TOTAL_STEPS;
 
   function replay() {
     if (prefersReduced()) return; // already fully visible; nothing to reveal
@@ -129,21 +128,41 @@ export function ScanDemo() {
   }
 
   return (
-    <>
+    <div className="vscan-demo-stack">
       <section
         className={`vscan-panel vscan-demo${armed ? " is-armed" : ""}`}
+        data-state={running ? "running" : "ready"}
         aria-label="Scan preview — scripted demo, makes no network calls"
       >
         <header className="vscan-panel-head">
           <h2 className="vscan-panel-title">scan preview</h2>
-          <span className="vscan-panel-sub">scripted demo · makes no calls</span>
+          <div className="vscan-demo-status" aria-live="polite">
+            <span className="vscan-demo-boundary">scripted demo · makes no calls</span>
+            <span className="vscan-demo-state" data-state={running ? "running" : "ready"}>
+              {running ? "replaying trace" : "trace ready"}
+            </span>
+            <span>{completedSteps}/{TOTAL_STEPS} stages</span>
+            <span>network 0</span>
+          </div>
         </header>
 
+        <div className="vscan-demo-progress" aria-hidden="true">
+          {Array.from({ length: TOTAL_STEPS }, (_, index) => (
+            <span data-active={index < completedSteps ? "true" : "false"} key={index} />
+          ))}
+        </div>
+
         <div className="vscan-demo-stream">
-          {STREAM_LINES.map((line) => (
+          {STREAM_LINES.map((line, index) => (
             <p className="vscan-demo-line" data-shown={shown(line.at)} key={line.verb}>
+              <span className="vscan-demo-index" aria-hidden="true">
+                {String(index + 1).padStart(2, "0")}
+              </span>
               <span className="vscan-demo-verb">{line.verb}</span>
               {line.detail ? <span className="vscan-demo-detail">{line.detail}</span> : null}
+              <span className="vscan-demo-mark" aria-hidden="true">
+                {shown(line.at) === "true" ? "ok" : ".."}
+              </span>
             </p>
           ))}
         </div>
@@ -159,20 +178,21 @@ export function ScanDemo() {
           ))}
         </div>
 
-        <p className="vscan-demo-note" data-shown={shown(NOTE_AT)}>
-          sample numbers from the bundled demo dataset. your scan reveals your own.
-        </p>
-
-        <button
-          type="button"
-          className="vscan-demo-replay"
-          onClick={replay}
-          aria-label="Replay the scan preview"
-        >
-          replay
-        </button>
+        <footer className="vscan-demo-footer">
+          <p className="vscan-demo-note" data-shown={shown(NOTE_AT)}>
+            sample numbers from the bundled demo dataset. your scan reveals your own.
+          </p>
+          <button
+            type="button"
+            className="vscan-demo-replay"
+            onClick={replay}
+            aria-label="Replay the scan preview"
+          >
+            {running ? "restart trace" : "replay trace"}
+          </button>
+        </footer>
       </section>
       <ScanReceiptPanel />
-    </>
+    </div>
   );
 }

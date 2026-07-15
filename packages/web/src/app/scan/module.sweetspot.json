@@ -5,7 +5,7 @@
     "name": "Local Scan Demo",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["usage-scan", "provider-catalog", "local-first"]
@@ -79,26 +79,26 @@
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "The focused contract verifies exact derived receipt totals, honest demo boundaries, responsive styling, and route composition.",
+      "notes": "The focused contract verifies exact derived receipt totals, honest demo boundaries, populated first paint, explicit replay, responsive styling, and route composition.",
       "evidence": ["packages/web/src/lib/__tests__/scan-route.test.ts"]
     },
     "spe": {
       "status": "passing",
       "score": 95,
-      "notes": "The preview has nine fixed reveal steps and clears its timer on completion or unmount.",
+      "notes": "The preview is complete on first paint, replays nine fixed steps only after an explicit click, and clears its timer on completion or unmount.",
       "evidence": ["packages/web/src/app/scan/scan-demo.tsx"]
     },
     "srs": {
       "status": "passing",
       "score": 95,
-      "notes": "Clipboard failure is visible, the demo is labelled scripted, confidence terms are explained, and the receipt states that it is not a real browser or machine scan.",
+      "notes": "Clipboard failure is visible, the stage labels its scripted zero-call boundary, confidence terms are explained, and the receipt states that it is not a real browser or machine scan.",
       "evidence": ["packages/web/src/app/scan/scan-demo.tsx", "packages/web/src/app/scan/scan-receipt-panel.tsx"]
     },
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Release gate, production builds, immutable Netlify preview, replay, mobile, desktop, 4K, and Lighthouse proof pass.",
-      "evidence": ["scripts/release-gate.mjs", "Netlify deploy 6a560e1e5361878cc15a209e", "https://vibeusage.c0vibe.app/scan"]
+      "notes": "Release gate, production builds, immutable Netlify deployment, first paint, replay, clipboard, zero-network, mobile, desktop, and 4K proof pass.",
+      "evidence": ["scripts/release-gate.mjs", "Netlify deploy 6a56e30f7599e49127dd2025", "https://vibeusage.c0vibe.app/scan"]
     },
     "sas": {
       "status": "passing",
@@ -179,7 +179,7 @@
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 862,
+      "feature_lines": 953,
       "file_count": 7,
       "dependency_count": 2,
       "notes": "The route stays split across a 96-line server surface, focused preview, pure receipt model, receipt view, two route stylesheets, and one contract test."
@@ -193,6 +193,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T10:26:36Z",
         "notes": "2 focused route tests, 15 control-plane tests, 599 package tests, strict VTRS with 0 violations, TypeScript, dependency audit, CLI and Next builds, 390/1440/3840 browser proof, zero replay calls, and stable-production Lighthouse 100 in all four categories passed."
+      },
+      {
+        "command": "pnpm sma:release-gate + Netlify production deploy + Playwright 390/1440/3840 runtime proof",
+        "status": "pass",
+        "timestamp": "2026-07-15T01:37:20Z",
+        "notes": "Populated first paint, deterministic nine-stage replay, zero replay requests, clipboard, all nine receipt rows, compact mobile ledger, 2592px 4K route rail, zero browser errors, and zero horizontal overflow passed on immutable deploy 6a56e30f7599e49127dd2025."
       }
     ]
   },
@@ -254,6 +260,35 @@
         "attestation": {
           "method": "agent_runner",
           "reference": "lease-1784023028029-b6e33e85"
+        }
+      },
+      {
+        "actor_kind": "ai_model",
+        "actor_id": "codex",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "files_touched": [
+          "packages/web/src/app/scan/scan-demo.tsx",
+          "packages/web/src/app/scan/scan.css",
+          "packages/web/src/app/scan/scan-receipt.css",
+          "packages/web/src/lib/__tests__/scan-route.test.ts",
+          "packages/web/src/app/scan/module.sweetspot.json"
+        ],
+        "verification": [
+          {
+            "command": "pnpm sma:release-gate + Netlify production deploy + Playwright 390/1440/3840 runtime proof",
+            "status": "pass",
+            "timestamp": "2026-07-15T01:37:20Z",
+            "notes": "First paint, replay, zero-network, clipboard, receipt density, mobile, desktop, and 4K proof passed on immutable deploy 6a56e30f7599e49127dd2025."
+          }
+        ],
+        "timestamp": "2026-07-15T01:37:20Z",
+        "summary": "Kept the scan trace populated on first paint, made replay opt-in, compressed the mobile ledger, and added a wide 4K evidence layout.",
+        "attestation": {
+          "method": "agent_runner",
+          "reference": "lease-1784078590493-fd214c5a"
         }
       }
     ],

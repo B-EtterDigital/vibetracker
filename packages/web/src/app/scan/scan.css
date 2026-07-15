@@ -88,17 +88,44 @@
 
 /* ---- signature scan demo ---- */
 
-.vscan-demo { display: grid; gap: 14px; }
+.vscan-demo-stack { display: grid; gap: 14px; }
 
-.vscan-demo-stream { display: grid; gap: 8px; }
+.vscan-demo { display: grid; gap: 12px; }
+
+.vscan-demo-status {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px 12px;
+  color: rgba(217, 255, 242, 0.48); font: 600 10px/1.2 var(--vs-mono);
+  text-transform: uppercase;
+}
+
+.vscan-demo-state { color: #36e39b; }
+.vscan-demo-state[data-state="running"] { color: #f0c75e; }
+
+.vscan-demo-progress {
+  display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px;
+}
+
+.vscan-demo-progress span {
+  height: 3px; background: rgba(217, 255, 242, 0.1);
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.vscan-demo-progress span[data-active="true"] {
+  background: #2ee8d6; box-shadow: 0 0 10px rgba(46, 232, 214, 0.32);
+}
+
+.vscan-demo-stream { display: grid; gap: 2px; padding: 4px 0; }
 
 .vscan-demo-line {
-  margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px;
+  margin: 0; display: grid; grid-template-columns: 26px minmax(0, auto) minmax(0, 1fr) 22px;
+  align-items: baseline; gap: 8px; padding: 5px 0;
   font: 500 13px/1.4 var(--vs-mono);
 }
 
+.vscan-demo-index { color: rgba(46, 232, 214, 0.38); font-size: 10px; }
 .vscan-demo-verb { color: rgba(217, 255, 242, 0.85); }
 .vscan-demo-detail { color: rgba(217, 255, 242, 0.55); }
+.vscan-demo-mark { color: #36e39b; font: 700 10px/1 var(--vs-mono); text-transform: uppercase; }
 
 .vscan-demo-divider { height: 1px; background: rgba(46, 232, 214, 0.14); }
 
@@ -119,6 +146,10 @@
   color: var(--fg); overflow-wrap: anywhere;
 }
 
+.vscan-demo-footer {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+}
+
 .vscan-demo-note { margin: 0; font: 500 12px/1.5 var(--vs-mono); color: rgba(217, 255, 242, 0.45); }
 
 .vscan-demo-replay {
@@ -127,13 +158,13 @@
   font: 500 12px/1.3 var(--vs-mono); color: #2ee8d6;
 }
 
-/* Staged reveal: armed on mount only; default (no-JS / reduced-motion) shows all. */
+/* Replay dims pending stages but leaves the complete trace scaffold visible. */
 .vscan-demo.is-armed :is(.vscan-demo-line, .vscan-demo-card, .vscan-demo-note, .vscan-demo-divider) {
   transition: opacity 0.34s ease, transform 0.34s ease;
 }
 
 .vscan-demo.is-armed :is(.vscan-demo-line, .vscan-demo-card, .vscan-demo-note, .vscan-demo-divider)[data-shown="false"] {
-  opacity: 0; transform: translateY(6px);
+  opacity: 0.18; transform: translateY(2px);
 }
 
 /* ---- what the scan reads ---- */
@@ -186,6 +217,27 @@
     line-height: 1.35;
     letter-spacing: 0;
   }
-  .vscan-demo-result { grid-template-columns: 1fr; }
+  .vscan-panel-head { align-items: flex-start; }
+  .vscan-demo-status { max-width: 18ch; gap: 4px 8px; }
+  .vscan-demo-line { grid-template-columns: 20px minmax(0, 1fr) 20px; gap: 6px; }
+  .vscan-demo-index { grid-column: 1; grid-row: 1; }
+  .vscan-demo-verb { grid-column: 2; grid-row: 1; }
+  .vscan-demo-mark { grid-column: 3; grid-row: 1; justify-self: end; }
+  .vscan-demo-detail { grid-column: 2 / -1; grid-row: 2; }
+  .vscan-demo-result { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .vscan-demo-card { padding: 10px; }
+  .vscan-demo-footer { align-items: flex-start; flex-direction: column; }
   .vscan-hero-cmds { flex-direction: column; align-items: stretch; }
+}
+
+@media (min-width: 2200px) {
+  .wrap:has(> .vscan) { max-width: min(2640px, 95vw); }
+  .vscan {
+    max-width: 2592px; grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+    grid-template-rows: auto auto auto; align-items: start;
+  }
+  .vscan-slot:nth-child(1) { grid-column: 1; grid-row: 1; }
+  .vscan-slot:nth-child(2) { grid-column: 2; grid-row: 1 / span 3; }
+  .vscan-slot:nth-child(3) { grid-column: 1; grid-row: 2; }
+  .vscan-slot:nth-child(4) { grid-column: 1; grid-row: 3; }
 }

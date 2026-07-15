@@ -66,13 +66,22 @@
 }
 
 @media (max-width: 560px) {
-  .vscan-receipt-table, .vscan-receipt-table tbody, .vscan-receipt-table tr, .vscan-receipt-table :is(th, td) { display: block; }
+  .vscan-receipt { gap: 14px; }
+  .vscan-receipt-table, .vscan-receipt-table tbody { display: block; }
   .vscan-receipt-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .vscan-receipt-table tr { padding: 10px 0; border-bottom: 1px solid rgba(217, 255, 242, 0.1); }
-  .vscan-receipt-table :is(th, td) { padding: 3px 0; border: 0; text-align: left !important; overflow-wrap: anywhere; }
-  .vscan-receipt-table td::before { content: attr(data-label) ": "; color: rgba(217, 255, 242, 0.38); }
-}
-
-@media (min-width: 2200px) {
-  .vscan { max-width: 1760px; }
+  .vscan-receipt-table tr {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "provider spend" "method records" "confidence confidence";
+    gap: 3px 12px; padding: 9px 0; border-bottom: 1px solid rgba(217, 255, 242, 0.1);
+  }
+  .vscan-receipt-table :is(th, td) {
+    display: block; padding: 0; border: 0; text-align: left !important; overflow-wrap: anywhere;
+  }
+  .vscan-receipt-table th[scope="row"] { grid-area: provider; }
+  .vscan-receipt-table td[data-label="method"] { grid-area: method; color: rgba(217, 255, 242, 0.48); }
+  .vscan-receipt-table td[data-label="records"] { grid-area: records; text-align: right !important; }
+  .vscan-receipt-table td[data-label="confidence"] { grid-area: confidence; font-size: 10px; }
+  .vscan-receipt-table td[data-label="spend"] { grid-area: spend; text-align: right !important; color: #d9fff2; }
+  .vscan-receipt-table td[data-label="method"]::before { content: "via "; color: rgba(217, 255, 242, 0.3); }
+  .vscan-receipt-table td[data-label="records"]::after { content: " rec"; color: rgba(217, 255, 242, 0.3); }
 }
