@@ -452,8 +452,8 @@
   .home-board__rank, .home-board__runway b { font-size: 14px; }
   .home-board__runway strong { font-size: 13px; }
   .home-board__bar { height: 8px; }
-  .home-board__section-head label { font-size: 11px; }
-  .home-board__section-head input { min-width: 300px; height: 40px; font-size: 14px; }
+  .home-board__section-head label { grid-template-columns: auto minmax(260px, 360px); font-size: 11px; }
+  .home-board__section-head input { width: 100%; min-width: 0; height: 40px; font-size: 14px; }
   .home-board__table-shell th { padding-block: 12px; font-size: 10px; }
   .home-board__table-shell td { height: 52px; font-size: 14px; }
   .home-board__more { min-height: 44px; font-size: 11px; }

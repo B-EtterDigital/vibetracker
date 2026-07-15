@@ -166,6 +166,8 @@ test("4K leaderboard becomes a two-channel broadcast wall without changing mobil
   assert.match(briefCss, /\.home-readout__signals article \{ min-height: 132px;/);
   assert.match(fieldInstrumentCss, /\.home-board__signal-stage \{ grid-template-columns: 540px minmax\(0, 1fr\); gap: 26px; \}/);
   assert.match(fieldInstrumentCss, /\.home-field__scope \{ height: 220px; \}/);
+  assert.match(homeCss, /\.home-board__section-head label \{ grid-template-columns: auto minmax\(260px, 360px\); font-size: 11px; \}/);
+  assert.match(homeCss, /\.home-board__section-head input \{ width: 100%; min-width: 0; height: 40px; font-size: 14px; \}/);
   assert.match(homeCss, /\.home-board > \.home-readout \{ grid-column: 1; border-right: 1px solid var\(--hb-line\); \}/);
   assert.match(homeCss, /\.home-board > \.home-board__chart \{ grid-column: 2; min-width: 0; \}/);
   assert.match(homeCss, /\.home-board__leader-lock,[\s\S]*\.home-board__boundary,[\s\S]*grid-column: 1 \/ -1/);
