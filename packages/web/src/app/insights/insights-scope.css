@@ -109,7 +109,7 @@
   .intel-scope__rail { grid-template-columns: repeat(10, minmax(0, 1fr)); }
   .intel-scope__facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .intel-scope__facts div + div { border-left: 1px solid var(--intel-line); }
-  .intel-scope > p { display: none; }
+  .intel-scope > p { display: block; font-size: 11px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

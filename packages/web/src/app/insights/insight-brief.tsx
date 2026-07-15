@@ -1,7 +1,14 @@
-import type { InsightsRunwaySnapshot, InsightsRunwaySource } from "../../lib/insights-runway.ts";
+import type { CSSProperties } from "react";
+import {
+  buildInsightsEvidenceScope,
+  type InsightsRunwaySnapshot,
+  type InsightsRunwaySource,
+} from "../../lib/insights-runway.ts";
+import { InsightEvidenceScope } from "./insight-evidence-scope";
 
 interface InsightBriefProps {
   localShiftPercent: number;
+  monthlyCapUsd: number;
   snapshot: InsightsRunwaySnapshot;
   source: InsightsRunwaySource;
 }
@@ -13,100 +20,121 @@ const currency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
-function evidence(source: InsightsRunwaySource) {
-  if (source.evidenceBasis === "upload_total_fallback") {
-    return {
-      label: "No daily rhythm",
-      value: "Upload total only",
-      note: "Daily rows are unavailable, so this uses the latest uploaded total as a provisional baseline.",
-    };
-  }
-  if (source.observedDays >= 21) {
-    return {
-      label: "Full evidence window",
-      value: `${source.observedDays} days observed`,
-      note: `${source.activeDays} active and ${source.idleDays} idle days are included in the calendar-day pace.`,
-    };
-  }
-  return {
-    label: source.observedDays >= 7 ? "Partial evidence window" : "Thin evidence window",
-    value: `${source.observedDays} days observed`,
-    note: `${source.activeDays} active and ${source.idleDays} idle days. Treat the projection as directional until more days arrive.`,
-  };
-}
-
-function verdict(snapshot: InsightsRunwaySnapshot) {
+function budgetSignal(snapshot: InsightsRunwaySnapshot, monthlyCapUsd: number) {
   if (snapshot.state === "over") {
     return {
-      label: "Over budget",
+      label: "Budget status",
       value: `${currency.format(Math.abs(snapshot.varianceUsd))} over`,
-      note: "The selected limit does not cover the planned paid spend.",
+      note: `${snapshot.utilizationPercent}% of the ${currency.format(monthlyCapUsd)} limit. The scenario needs a real change.`,
     };
   }
   if (snapshot.state === "near") {
     return {
-      label: "No real buffer",
-      value: `${snapshot.utilizationPercent}% committed`,
-      note: `${currency.format(snapshot.varianceUsd)} remains, so one heavy day can break the plan.`,
+      label: "Budget status",
+      value: `${currency.format(snapshot.varianceUsd)} left`,
+      note: `${snapshot.utilizationPercent}% of the ${currency.format(monthlyCapUsd)} limit. One heavy day can erase the buffer.`,
     };
   }
   return {
-    label: "Inside budget",
-    value: `${currency.format(snapshot.varianceUsd)} free`,
-    note: `${snapshot.utilizationPercent}% of the selected limit is committed by this scenario.`,
+    label: "Budget status",
+    value: `${currency.format(snapshot.varianceUsd)} left`,
+    note: `${snapshot.utilizationPercent}% of the ${currency.format(monthlyCapUsd)} limit. The scenario has usable headroom.`,
   };
 }
 
-function lever(snapshot: InsightsRunwaySnapshot, source: InsightsRunwaySource, localShiftPercent: number) {
-  const impactPercent = source.forecastUsd > 0
-    ? Math.round((snapshot.localOffsetUsd / source.forecastUsd) * 100)
-    : 0;
+function confidenceSignal(source: InsightsRunwaySource) {
+  const scope = buildInsightsEvidenceScope(source);
+  if (scope.confidence === "provisional") {
+    return {
+      label: "Forecast confidence",
+      value: "Provisional",
+      note: "No daily rhythm exists, so the latest upload total is a baseline rather than a monthly forecast.",
+    };
+  }
   return {
-    label: impactPercent >= 10 ? "Material lever" : "Small lever",
-    value: `${currency.format(snapshot.localOffsetUsd)} saved`,
-    note: `${localShiftPercent}% local applies to only ${currency.format(source.localShadowUsd)} of eligible work, changing the forecast by ${impactPercent}%.`,
+    label: "Forecast confidence",
+    value: `${scope.confidence} · ${source.observedDays}/30 days`,
+    note: `${scope.unobservedDays} days are unobserved. The current pace is extended ${scope.projectionMultiplier?.toFixed(1)}×.`,
   };
 }
 
-export function InsightBrief({ localShiftPercent, snapshot, source }: InsightBriefProps) {
-  const budgetSignal = verdict(snapshot);
-  const evidenceSignal = evidence(source);
-  const leverSignal = lever(snapshot, source, localShiftPercent);
-  const actionTail = snapshot.state === "over"
-    ? "The local-work assumption does not close this gap."
-    : snapshot.state === "near"
-      ? "The local-work assumption does not create a dependable buffer."
-      : "Most of this buffer comes from the higher limit, not from local savings.";
+function actionSignal(snapshot: InsightsRunwaySnapshot, source: InsightsRunwaySource) {
+  if (snapshot.state === "over") {
+    return {
+      value: "Cut paid work or raise the cap",
+      note: `Start with ${source.topProvider}; it has the highest observed spend in this evidence window.`,
+    };
+  }
+  if (snapshot.state === "near") {
+    return {
+      value: "Create a real buffer",
+      note: `Review ${source.topProvider} jobs first, then lower paid usage or choose a limit you can enforce.`,
+    };
+  }
+  return {
+    value: "Keep watching the pace",
+    note: `Review ${source.topProvider} first if the forecast rises; it is the largest observed cost driver.`,
+  };
+}
+
+export function InsightBrief({ localShiftPercent, monthlyCapUsd, snapshot, source }: InsightBriefProps) {
+  const budget = budgetSignal(snapshot, monthlyCapUsd);
+  const confidence = confidenceSignal(source);
+  const action = actionSignal(snapshot, source);
+  const comparisonMax = Math.max(snapshot.adjustedUsd, monthlyCapUsd, 1);
+  const comparisonStyle = {
+    "--plan-width": `${(snapshot.adjustedUsd / comparisonMax) * 100}%`,
+    "--budget-width": `${(monthlyCapUsd / comparisonMax) * 100}%`,
+  } as CSSProperties;
+  const evidenceSentence = source.evidenceBasis === "calendar_window"
+    ? `${currency.format(source.observedUsd)} across ${source.observedDays} calendar days`
+    : `${currency.format(source.observedUsd)} from the latest upload total`;
 
   return (
     <section className="intel-brief" aria-labelledby="intel-brief-title">
       <header className="intel-brief__header">
         <div>
-          <p>READ THIS FIRST</p>
-          <h2 id="intel-brief-title">What this scenario is actually saying</h2>
+          <p>OPERATOR BRIEF · READ THIS FIRST</p>
+          <h2 id="intel-brief-title">The decision, without the dashboard jargon</h2>
         </div>
         <code aria-label="Calculation summary">
-          {currency.format(source.observedUsd)} observed → {currency.format(snapshot.projectedUsd)} projected → {currency.format(snapshot.adjustedUsd)} planned
+          observed {currency.format(source.observedUsd)} → projected {currency.format(snapshot.projectedUsd)} → planned {currency.format(snapshot.adjustedUsd)}
         </code>
       </header>
 
       <div className="intel-brief__signals">
-        {[budgetSignal, evidenceSignal, leverSignal].map((signal, index) => (
-          <article data-signal={index === 0 ? snapshot.state : index === 1 ? "confidence" : "lever"} key={signal.label}>
-            <span>0{index + 1}</span>
-            <div><small>{signal.label}</small><strong>{signal.value}</strong></div>
-            <p>{signal.note}</p>
-          </article>
-        ))}
+        <article data-signal={snapshot.state}>
+          <span>01</span><div><small>{budget.label}</small><strong>{budget.value}</strong></div><p>{budget.note}</p>
+        </article>
+        <article data-signal="confidence">
+          <span>02</span><div><small>{confidence.label}</small><strong>{confidence.value}</strong></div><p>{confidence.note}</p>
+        </article>
+        <article data-signal="driver">
+          <span>03</span><div><small>Review first</small><strong>{source.topProvider}</strong></div><p>Highest observed spend. That makes it the first place to inspect, not proof that it is wasteful.</p>
+        </article>
+        <article data-signal="action">
+          <span>04</span><div><small>Do next</small><strong>{action.value}</strong></div><p>{action.note}</p>
+        </article>
       </div>
 
-      <div className="intel-brief__action">
-        <span>NEXT DECISION</span>
+      <div className="intel-brief__explanation">
         <p>
-          Review <b>{source.topProvider}</b> jobs first, then decide whether the selected limit is a hard cap or a warning line.
-          {" "}{actionTail}
+          <b>Plain English.</b> We saw {evidenceSentence}, extended that pace to a 30-day estimate of {currency.format(source.forecastUsd)},
+          then subtracted {currency.format(snapshot.localOffsetUsd)} for the {localShiftPercent}% local-work scenario. The result is
+          {" "}{currency.format(snapshot.adjustedUsd)} of estimated paid-provider spend against a {currency.format(monthlyCapUsd)} limit.
         </p>
+        <div
+          className="intel-comparison"
+          role="img"
+          aria-label={`Estimated paid-provider spend ${currency.format(snapshot.adjustedUsd)} compared with monthly limit ${currency.format(monthlyCapUsd)}.`}
+          style={comparisonStyle}
+        >
+          <div><span>Expected bill</span><i><b /></i><strong>{currency.format(snapshot.adjustedUsd)}</strong></div>
+          <div><span>Monthly limit</span><i><b /></i><strong>{currency.format(monthlyCapUsd)}</strong></div>
+        </div>
       </div>
+
+      <InsightEvidenceScope source={source} />
     </section>
   );
 }

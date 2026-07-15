@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  buildInsightsEvidenceScope,
   buildInsightsRunwaySnapshot,
   type InsightsRunwaySnapshot,
   type InsightsRunwaySource,
 } from "../../lib/insights-runway.ts";
 import { InsightBrief } from "./insight-brief";
-import { InsightEvidenceScope } from "./insight-evidence-scope";
 import { InsightMethodology, type InsightCopyState } from "./insight-methodology";
 import { buildPlanScale } from "./plan-scale";
 
@@ -29,27 +29,14 @@ const currency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
-function recommendation(snapshot: InsightsRunwaySnapshot) {
-  const difference = currency.format(Math.abs(snapshot.varianceUsd));
+function verdictTitle(snapshot: InsightsRunwaySnapshot): string {
   if (snapshot.state === "over") {
-    return {
-      label: "Action needed",
-      title: "This plan is over budget.",
-      body: `You would exceed the limit by ${difference}. Reduce paid usage, move more eligible work local, or raise the limit before relying on this plan.`,
-    };
+    return "This plan is over budget.";
   }
   if (snapshot.state === "near") {
-    return {
-      label: "Very small buffer",
-      title: "This plan leaves almost no room for a spike.",
-      body: `Only ${difference} remains. One unusually heavy generation or coding day could push the month over your limit.`,
-    };
+    return "This plan leaves almost no room for a spike.";
   }
-  return {
-    label: "Healthy buffer",
-    title: "This plan has room for heavier days.",
-    body: `${difference} remains below the limit. Keep the plan unless your workload or provider mix changes materially.`,
-  };
+  return "This plan has room for heavier days.";
 }
 
 export function RunwayDecisionConsole({
@@ -95,7 +82,7 @@ export function RunwayDecisionConsole({
   const selectedPreset = planScale.presets.find(
     (preset) => preset.cap === monthlyCapUsd && preset.shift === localShiftPercent,
   )?.id;
-  const decision = recommendation(snapshot);
+  const decisionTitle = verdictTitle(snapshot);
   const hasDailyEvidence = source.evidenceBasis === "calendar_window";
   const evidenceWindow = hasDailyEvidence
     ? `${source.observedDays} calendar ${source.observedDays === 1 ? "day" : "days"} · ${activeDays} active · ${source.idleDays} idle`
@@ -106,26 +93,20 @@ export function RunwayDecisionConsole({
   const projectionFormula = hasDailyEvidence
     ? `${currency.format(source.observedUsd)} ÷ ${source.observedDays} days × 30`
     : "latest upload total used as provisional baseline";
-  const comparisonMax = Math.max(snapshot.adjustedUsd, monthlyCapUsd, 1);
-  const comparisonStyle = {
-    "--plan-width": `${(snapshot.adjustedUsd / comparisonMax) * 100}%`,
-    "--budget-width": `${(monthlyCapUsd / comparisonMax) * 100}%`,
-  } as CSSProperties;
-  const remainingLabel = snapshot.varianceUsd >= 0 ? "Budget remaining" : "Amount over budget";
+  const evidenceScope = buildInsightsEvidenceScope(source);
   const isPublic = sourceMode === "public";
   const sourceLabel = isPublic ? "Live public profile" : sourceMode === "demo" ? "Bundled demo profile" : "Teaching sample";
   const publicBasis = source.providerBasis === "recent_30d" ? "latest 30-day provider detail" : "provider totals fallback";
   const sourceDetail = isPublic ? `@${handle} · ${publicBasis}` : sourceMode === "demo" ? "deterministic full-profile data" : "example numbers · not your account";
   const mastTitle = isPublic
-    ? `@${handle}: usage translated into a monthly plan.`
+    ? `At this pace, @${handle} lands near ${currency.format(source.forecastUsd)} in monthly paid AI spend.`
     : sourceMode === "demo"
-      ? "Demo usage, translated into a monthly plan."
-      : "Example usage, translated into a monthly plan.";
-  const mastDescription = isPublic
-    ? "Start with the observed public aggregates, inspect the projection assumption, then choose the monthly limit you can actually enforce. Nothing here changes the profile."
-    : sourceMode === "demo"
-      ? "This deterministic demo teaches the forecast before you load a public profile. Inspect the observed window, projection, and budget decision in that order."
-      : "This is not your account. Use the example to learn the forecast, then load a public profile above or create a real scan. Every number below stays read-only.";
+      ? `This demo pace lands near ${currency.format(source.forecastUsd)} in monthly paid AI spend.`
+      : `This example pace lands near ${currency.format(source.forecastUsd)} in monthly paid AI spend.`;
+  const forecastBoundary = source.evidenceBasis === "calendar_window"
+    ? `That estimate extends ${source.observedDays} observed calendar days across a 30-day month. ${evidenceScope.unobservedDays} days are still outside the evidence window, so confidence is ${evidenceScope.confidence}.`
+    : "Daily evidence is unavailable, so the latest upload total is shown as a provisional baseline rather than a reliable monthly pace.";
+  const mastDescription = `${sourceMode === "sample" ? "This is teaching data, not your account. " : ""}${forecastBoundary} Nothing on this page changes usage, providers, score, or rank.`;
 
   return (
     <div className="intel-surface">
@@ -156,13 +137,13 @@ export function RunwayDecisionConsole({
         </div>
         <header className="intel-mast">
           <div className="intel-readout" aria-live="polite">
-            <span>CURRENT SCENARIO · PLANNED PAID SPEND</span>
+            <span>EXPECTED MONTHLY PROVIDER BILL</span>
             <strong>{currency.format(snapshot.adjustedUsd)}</strong>
-            <small>of a {currency.format(monthlyCapUsd)} monthly limit</small>
+            <small>after {currency.format(snapshot.localOffsetUsd)} of assumed local savings</small>
             <b>{snapshot.varianceUsd >= 0 ? `${currency.format(snapshot.varianceUsd)} left` : `${currency.format(Math.abs(snapshot.varianceUsd))} over`}</b>
-            <em className="intel-readout__verdict">{decision.title}</em>
+            <em className="intel-readout__verdict">{decisionTitle}</em>
+            <span className="intel-readout__confidence">{evidenceScope.confidence} confidence · {source.observedDays}/30 days observed</span>
             <a href="#intel-controls-title">Tune assumptions <span aria-hidden="true">↓</span></a>
-            <InsightEvidenceScope source={source} />
           </div>
           <div className="intel-mast__copy">
             <p>MONTHLY AI COST PLAN</p>
@@ -187,31 +168,10 @@ export function RunwayDecisionConsole({
 
         <InsightBrief
           localShiftPercent={localShiftPercent}
+          monthlyCapUsd={monthlyCapUsd}
           snapshot={snapshot}
           source={source}
         />
-
-        <section className="intel-decision" aria-labelledby="intel-decision-title">
-          <header>
-            <p>{decision.label}</p>
-            <h2 id="intel-decision-title">{decision.title}</h2>
-            <span>{decision.body}</span>
-          </header>
-          <div
-            className="intel-comparison"
-            role="img"
-            aria-label={`Planned paid spend ${currency.format(snapshot.adjustedUsd)} compared with monthly budget ${currency.format(monthlyCapUsd)}. ${Math.abs(snapshot.varianceUsd).toFixed(2)} dollars ${snapshot.varianceUsd >= 0 ? "remaining" : "over budget"}.`}
-            style={comparisonStyle}
-          >
-            <div><span>Planned spend</span><i><b /></i><strong>{currency.format(snapshot.adjustedUsd)}</strong></div>
-            <div><span>Your limit</span><i><b /></i><strong>{currency.format(monthlyCapUsd)}</strong></div>
-          </div>
-          <div className="intel-decision__facts">
-            <span><small>Observed spend</small><strong>{currency.format(source.observedUsd)}</strong><em>{evidenceWindow}</em></span>
-            <span><small>30-day projection</small><strong>{currency.format(snapshot.projectedUsd)}</strong><em>{projectionFormula}</em></span>
-            <span><small>{remainingLabel}</small><strong>{currency.format(Math.abs(snapshot.varianceUsd))}</strong><em>{snapshot.utilizationPercent}% of limit used</em></span>
-          </div>
-        </section>
 
         <div className="intel-workspace">
           <section className="intel-controls" aria-labelledby="intel-controls-title">

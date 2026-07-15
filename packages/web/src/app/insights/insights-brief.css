@@ -24,7 +24,7 @@
 .intel-brief__header h2 {
   margin: 0;
   color: var(--intel-ink);
-  font: 650 clamp(1.45rem, 2.2vw, 2.25rem)/1.12 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font: 650 2rem/1.12 var(--font-display), ui-sans-serif, system-ui, sans-serif;
   letter-spacing: 0;
 }
 
@@ -42,7 +42,7 @@
 
 .intel-brief__signals {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   border: 1px solid var(--intel-line);
 }
 
@@ -59,37 +59,45 @@
 .intel-brief__signals article > span { color: #59726e; font: 700 10px/1.2 var(--font-data), ui-monospace, monospace; }
 .intel-brief__signals article > div { display: grid; gap: 5px; min-width: 0; }
 .intel-brief__signals small { color: var(--intel-muted); font: 700 10px/1.2 var(--font-data), ui-monospace, monospace; text-transform: uppercase; }
-.intel-brief__signals strong { color: var(--intel-ink); font: 650 1.55rem/1 var(--font-display), ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.intel-brief__signals strong { overflow-wrap: anywhere; color: var(--intel-ink); font: 650 1.4rem/1.08 var(--font-display), ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
 .intel-brief__signals p { grid-column: 2; margin: 3px 0 0; color: #8fa5a1; font-size: 12px; line-height: 1.5; }
 .intel-brief__signals article[data-signal="near"] strong,
 .intel-brief__signals article[data-signal="over"] strong { color: var(--intel-amber); }
 .intel-brief__signals article[data-signal="over"] strong { color: var(--intel-red); }
 .intel-brief__signals article[data-signal="confidence"] strong { color: var(--intel-cyan); }
-.intel-brief__signals article[data-signal="lever"] strong { color: var(--intel-mint); }
+.intel-brief__signals article[data-signal="driver"] strong { color: var(--intel-mint); text-transform: uppercase; }
+.intel-brief__signals article[data-signal="action"] strong { color: var(--intel-ink); }
 
-.intel-brief__action {
+.intel-brief__explanation {
   display: grid;
-  grid-template-columns: 120px minmax(0, 1fr);
-  gap: 18px;
-  align-items: start;
-  padding: 16px 18px;
+  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
+  gap: 34px;
+  align-items: center;
+  padding: 20px;
   border: solid var(--intel-line);
   border-width: 0 1px 1px;
   background: #071112;
 }
 
-.intel-brief__action > span { padding-top: 3px; color: var(--intel-amber); font: 700 10px/1.2 var(--font-data), ui-monospace, monospace; letter-spacing: 0.08em; }
-.intel-brief__action p { margin: 0; color: #a9bcb8; font-size: 13px; line-height: 1.55; }
-.intel-brief__action b { color: var(--intel-ink); text-transform: uppercase; }
+.intel-brief__explanation > p { margin: 0; color: #a9bcb8; font-size: 13px; line-height: 1.65; }
+.intel-brief__explanation > p b { color: var(--intel-amber); font: 700 10px/1.2 var(--font-data), ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+.intel-brief > .intel-scope { margin-top: 22px; padding: 20px; border: 1px solid var(--intel-line); background: #050a0b; }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .intel-brief__header { align-items: start; flex-direction: column; }
   .intel-brief__header code { max-width: 100%; text-align: left; }
-  .intel-brief__signals { grid-template-columns: 1fr; }
-  .intel-brief__signals article + article { border-top: 1px solid var(--intel-line); border-left: 0; }
+  .intel-brief__signals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .intel-brief__signals article:nth-child(3) { border-top: 1px solid var(--intel-line); border-left: 0; }
+  .intel-brief__signals article:nth-child(4) { border-top: 1px solid var(--intel-line); }
+  .intel-brief__explanation { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 760px) {
   .intel-brief { padding: 28px 20px; }
-  .intel-brief__action { grid-template-columns: 1fr; gap: 8px; }
+  .intel-brief__header h2 { font-size: 1.65rem; }
+  .intel-brief__signals { grid-template-columns: 1fr; }
+  .intel-brief__signals article + article,
+  .intel-brief__signals article:nth-child(4) { border-top: 1px solid var(--intel-line); border-left: 0; }
+  .intel-brief__explanation { gap: 20px; padding: 17px; }
+  .intel-brief > .intel-scope { padding: 16px; }
 }

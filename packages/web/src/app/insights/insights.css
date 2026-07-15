@@ -88,8 +88,7 @@
 .intel-mast p,
 .intel-controls header p,
 .intel-math header p,
-.intel-details header p,
-.intel-decision header p {
+.intel-details header p {
   margin: 0 0 9px;
   color: var(--intel-mint);
   font: 700 10px/1.2 var(--font-data), ui-monospace, monospace;
@@ -100,7 +99,7 @@
   max-width: 760px;
   margin: 0;
   color: var(--intel-ink);
-  font: 650 clamp(2.45rem, 4.2vw, 4.7rem)/0.98 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font: 650 4.2rem/0.98 var(--font-display), ui-sans-serif, system-ui, sans-serif;
   letter-spacing: 0;
 }
 
@@ -152,6 +151,12 @@
   font: 650 15px/1.35 var(--font-display), ui-sans-serif, system-ui, sans-serif;
   font-style: normal;
 }
+.intel-readout > .intel-readout__confidence {
+  margin-top: 11px;
+  color: var(--intel-amber);
+  font-size: 10px;
+  line-height: 1.35;
+}
 .intel-readout > a {
   width: fit-content;
   margin-top: 14px;
@@ -177,28 +182,14 @@
 .intel-contract b { margin-right: 7px; color: var(--intel-ink); font-size: 14px; font-variant-numeric: tabular-nums; }
 .intel-contract span:first-child b { color: var(--intel-amber); }
 
-.intel-decision {
-  display: grid;
-  grid-template-columns: minmax(260px, 0.8fr) minmax(360px, 1.2fr);
-  gap: 30px 48px;
-  padding: 34px 40px 0;
-  border-bottom: 1px solid var(--intel-line);
-  background: #071011;
-}
-
-.intel-decision header h2,
 .intel-controls h2,
 .intel-math h2,
 .intel-details h2 {
   margin: 0;
   color: var(--intel-ink);
-  font: 650 clamp(1.45rem, 2.2vw, 2.25rem)/1.12 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font: 650 2rem/1.12 var(--font-display), ui-sans-serif, system-ui, sans-serif;
   letter-spacing: 0;
 }
-
-.intel-decision header > span { display: block; margin-top: 12px; color: #afc0bd; font-size: 14px; line-height: 1.55; }
-.intel-console[data-state="near"] .intel-decision header p { color: var(--intel-amber); }
-.intel-console[data-state="over"] .intel-decision header p { color: var(--intel-red); }
 
 .intel-comparison {
   display: grid;
@@ -220,20 +211,6 @@
 .intel-comparison i b { display: block; width: var(--plan-width); height: 100%; background: var(--intel-mint); }
 .intel-comparison > div:nth-child(2) i b { width: var(--budget-width); background: var(--intel-amber); }
 .intel-comparison strong { color: var(--intel-ink); font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
-
-.intel-decision__facts {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 4px -40px 0;
-  border-top: 1px solid var(--intel-line);
-}
-
-.intel-decision__facts > span { display: grid; gap: 7px; min-width: 0; padding: 20px 40px; }
-.intel-decision__facts > span + span { border-left: 1px solid var(--intel-line); }
-.intel-decision__facts small { color: var(--intel-muted); font-size: 11px; }
-.intel-decision__facts strong { color: var(--intel-ink); font: 650 1.6rem/1 var(--font-display), ui-sans-serif, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
-.intel-decision__facts em { color: #78908c; font: 600 10px/1.35 var(--font-data), ui-monospace, monospace; font-style: normal; }
 
 .intel-workspace {
   display: grid;
