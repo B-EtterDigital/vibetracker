@@ -7,12 +7,12 @@ test("launch sequence presents the terminal-to-GUI onboarding flow", () => {
 
   assert.deepEqual(steps.map((step) => step.id), ["gui", "connect", "collect", "share"]);
   assert.deepEqual(steps.map((step) => step.status), ["local", "consent", "audit", "dry-run"]);
-  assert.equal(steps[0].command, "npx vibetracker init --gui");
+  assert.equal(steps[0].command, "npx vibetrack init --gui");
   assert.match(steps[0].note, /ASCII CLI/);
   assert.match(steps[1].note, /OAuth/);
   assert.match(steps[1].note, /manual ledgers/);
   assert.match(steps[2].note, /trust signals/);
-  assert.equal(steps[3].command, "vibetracker upload --dry-run");
+  assert.equal(steps[3].command, "npx vibetrack upload --dry-run");
   assert.match(steps[3].note, /Vibers Unite/);
   assert.match(steps[3].note, /c0vibe\.app/);
   assert.match(steps[3].note, /what leaves the machine/);

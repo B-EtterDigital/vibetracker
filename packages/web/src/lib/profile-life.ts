@@ -127,7 +127,7 @@ export function buildProfileLifeDashboard(profile: ProfileView): ProfileLifeDash
   ];
 
   const terminalLines = [
-    `$ vibetracker profile @${profile.handle} --public`,
+    `$ npx vibetrack profile`,
     latest ? `[usage] ${int(totalOps)} ops / ${usd(totalUsd)} / ${int(providers.length)} providers` : "[usage] no uploaded usage bundle yet",
     `[mix] ${lanes.filter((lane) => lane.usageImpact === "usage").map((lane) => `${lane.id}:${lane.value}`).join(" | ") || "waiting for first provider"}`,
     `[trust] ${int(trustCount)} signals // NOT USAGE // rank impact none`,

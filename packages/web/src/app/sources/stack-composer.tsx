@@ -252,7 +252,7 @@ export function SourceStackComposer({ providers }: { providers: ProviderDescript
 
       <div className="stack-boundary" aria-label="Runbook trust boundary">
         <div><b>1 · local</b><span>Commands run on your machine. This page makes no provider calls.</span></div>
-        <div><b>2 · preview</b><span>The runbook ends with <code>sync --dry-run</code>, before any publish step.</span></div>
+        <div><b>2 · collect</b><span>The runbook seals <code>sync --receipt</code>, then keeps upload behind a separate dry-run.</span></div>
         <div><b>3 · explicit</b><span>Planned sources stay comments. Upload remains opt-in and commented.</span></div>
       </div>
     </section>

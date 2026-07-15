@@ -695,7 +695,7 @@ test("provider passport wall gives every registry source a branded action card",
   assert.ok(higgsfield);
   assert.equal(higgsfield.tone, "verified");
   assert.equal(higgsfield.impact, "usage");
-  assert.equal(higgsfield.command, "vibetracker sync --provider higgsfield");
+  assert.equal(higgsfield.command, "npx vibetrack connect higgsfield");
   assert.equal(higgsfield.mark, "HF");
   assert.equal(higgsfield.meter, 100);
 
@@ -708,7 +708,7 @@ test("provider passport wall gives every registry source a branded action card",
   const midjourney = wall.cards.find((card) => card.id === "midjourney");
   assert.ok(midjourney);
   assert.equal(midjourney.impact, "manual");
-  assert.match(midjourney.command, /vibetracker add midjourney/);
+  assert.match(midjourney.command, /npx vibetrack add midjourney/);
 
   const gemini = wall.cards.find((card) => card.id === "gemini");
   assert.ok(gemini);

@@ -164,7 +164,7 @@ export function buildInsightsRunwaySnapshot(input: InsightsRunwayInput): Insight
     utilizationPercent,
     state,
     stateLabel,
-    command: `vibetracker insights --budget ${monthlyCapUsd} --local-shift ${localShiftPercent} --dry-run`,
+    command: `npx vibetrack mission --budget ${monthlyCapUsd}`,
   };
 }
 

@@ -57,7 +57,7 @@ test("passkey ceremony control maps a local assertion without mutating usage", (
 
   const publish = ceremony.stages.find((stage) => stage.id === "public-publish");
   assert.ok(publish);
-  assert.equal(publish.command, "vibetracker upload --dry-run");
+  assert.equal(publish.command, "npx vibetrack upload --dry-run");
   assert.match(publish.target, /c0vibe\.app/);
   assert.match(publish.value, /Vibers Unite/);
 
@@ -165,7 +165,7 @@ test("passkey recovery relay drills safe account recovery without usage movement
 
   const token = relay.steps.find((step) => step.id === "cli-refresh");
   assert.ok(token);
-  assert.equal(token.command, "vibetracker login --refresh");
+  assert.equal(token.command, "npx vibetrack login");
   assert.match(token.guardrail, /does not read/);
 
   const freeze = relay.steps.find((step) => step.id === "usage-freeze");
@@ -176,7 +176,7 @@ test("passkey recovery relay drills safe account recovery without usage movement
 
   const publish = relay.steps.find((step) => step.id === "public-dry-run");
   assert.ok(publish);
-  assert.equal(publish.command, "vibetracker upload --dry-run");
+  assert.equal(publish.command, "npx vibetrack upload --dry-run");
   assert.match(publish.guardrail, /No c0vibe\.app write/);
 });
 

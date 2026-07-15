@@ -1,4 +1,5 @@
 import type { ProviderDescriptor } from "../../../../adapters/src/registry";
+import { cliCommand } from "../../lib/cli-command.ts";
 
 export type StatusKey = "verified" | "built" | "proxy" | "manual" | "planned";
 export type StatusFilter = "all" | "ready" | StatusKey;
@@ -98,18 +99,18 @@ export function providerActionFor(provider: ProviderDescriptor, key: StatusKey):
     return {
       kind: "copy",
       label: "import /info total",
-      command: "vibetracker import midjourney --images <lifetime-images>",
+      command: cliCommand("import midjourney --images <lifetime-images>"),
     };
   }
   if (key === "verified" || key === "built") {
-    return { kind: "copy", label: `connect ${provider.id}`, command: `vibetracker connect ${provider.id}` };
+    return { kind: "copy", label: `connect ${provider.id}`, command: cliCommand(`connect ${provider.id}`) };
   }
-  if (key === "proxy") return { kind: "copy", label: "detect", command: "vibetracker detect" };
+  if (key === "proxy") return { kind: "copy", label: "detect", command: cliCommand("detect") };
   if (key === "manual") {
     return {
       kind: "copy",
       label: `add ${provider.id}`,
-      command: `vibetracker add ${provider.id} --usd 20 --note manual`,
+      command: cliCommand(`add ${provider.id} --usd 20 --note manual`),
     };
   }
   return { kind: "link", label: "contribute", href: GOOD_FIRST_ADAPTERS };

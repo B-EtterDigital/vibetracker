@@ -68,7 +68,7 @@ export default function ProvidersPage() {
       <section className="providers-contribute" aria-label="Contribute a planned adapter">
         <div className="console-top"><span>contributors@registry</span><b>{planned} PLANNED</b></div>
         <p>Planned means mapped with a scaffold ready, not secretly built. Pick one and make it real.</p>
-        <div className="providers-contribute__cmd">{"vibetracker adapter scaffold <provider>"}</div>
+        <div className="providers-contribute__cmd">{"npx vibetrack adapter scaffold <provider>"}</div>
         <div className="providers-contribute__links">
           <a href="https://github.com/B-EtterDigital/vibetracker/blob/main/docs/GOOD_FIRST_ADAPTERS.md">
             good first adapters

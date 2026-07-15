@@ -82,12 +82,12 @@ test("creator quick targets preserve product order and expose the real Midjourne
   assert.deepEqual(providerActionFor(providers[3]!, "manual"), {
     kind: "copy",
     label: "import /info total",
-    command: "vibetracker import midjourney --images <lifetime-images>",
+    command: "npx vibetrack import midjourney --images <lifetime-images>",
   });
   assert.deepEqual(providerActionFor(directory.rows.find((row) => row.provider.id === "leonardo")!.provider, "built"), {
     kind: "copy",
     label: "connect leonardo",
-    command: "vibetracker connect leonardo",
+    command: "npx vibetrack connect leonardo",
   });
 });
 

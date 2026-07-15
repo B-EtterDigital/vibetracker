@@ -199,12 +199,14 @@ test("source composer turns the registry into a bounded local setup runbook", ()
   assert.doesNotMatch(composer, /dangerouslySetInnerHTML/);
 
   assert.match(data, /sourceCollectionPath/);
-  assert.match(data, /vibetracker connect/);
-  assert.match(data, /vibetracker detect/);
+  assert.match(data, /cliCommand\(`connect \$\{candidate\.provider\.id\}`\)/);
+  assert.match(data, /cliCommand\("detect"\)/);
   assert.match(data, /--usd <monthly-usd>/);
   assert.match(data, /# planned:/);
   assert.match(data, /const planned = ordered\.filter\(\(candidate\) => candidate\.path === "planned"\)/);
-  assert.match(data, /vibetracker sync --dry-run/);
+  assert.match(data, /cliCommand\("sync --receipt"\)/);
+  assert.match(data, /cliCommand\("upload --dry-run"\)/);
+  assert.doesNotMatch(data, /sync --dry-run/);
   assert.match(data, /# publish stays opt-in/);
 
   assert.match(routeCss, /\.stack-page-hero/);

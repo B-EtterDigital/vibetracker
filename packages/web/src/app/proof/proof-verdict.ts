@@ -38,17 +38,17 @@ export function buildProofVerdict(evidence: EvidenceCockpit): ProofVerdict {
     actions: [
       {
         label: "Audit the local receipt",
-        command: "vibetracker audit",
+        command: "npx vibetrack audit",
         note: "Validate source adapters, secret boundaries, and accepted records locally.",
       },
       {
         label: "Preview what leaves",
-        command: "vibetracker upload --dry-run",
+        command: "npx vibetrack upload --dry-run",
         note: "See the redacted aggregate before any explicit publish step.",
       },
       {
         label: "Explain every rail",
-        command: "vibetracker proof --explain",
+        command: "npx vibetrack audit",
         note: "Print the usage, local-only, trust, and publish contract in the terminal.",
       },
     ],

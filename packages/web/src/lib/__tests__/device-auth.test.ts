@@ -77,7 +77,7 @@ test("device auth control room maps approval to zero usage movement", () => {
 
   const dryRun = room.signals.find((signal) => signal.id === "dry-run");
   assert.ok(dryRun);
-  assert.equal(dryRun.command, "vibetracker upload --dry-run");
+  assert.equal(dryRun.command, "npx vibetrack upload --dry-run");
   assert.match(dryRun.guardrail, /sends nothing/);
 
   const publish = room.signals.find((signal) => signal.id === "public-relay");

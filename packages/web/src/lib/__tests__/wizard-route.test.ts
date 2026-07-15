@@ -55,13 +55,13 @@ test("runbook generator emits only real reviewed CLI steps", () => {
   assert.equal(defaultRunbook.selectedSources.length, WIZARD_SOURCES.length);
   assert.deepEqual(defaultRunbook.commands, [
     "npx vibetrack init --gui",
-    "vibetracker providers --domain ai",
-    "vibetracker providers --domain creative",
-    "vibetracker providers --domain dev",
-    "vibetracker detect --json",
-    "vibetracker sync --receipt --out ~/.vibetracker/receipts",
-    "vibetracker audit",
-    "vibetracker upload --dry-run",
+    "npx vibetrack providers --domain ai",
+    "npx vibetrack providers --domain creative",
+    "npx vibetrack providers --domain dev",
+    "npx vibetrack detect --json",
+    "npx vibetrack sync --receipt --out ~/.vibetracker/receipts",
+    "npx vibetrack audit",
+    "npx vibetrack upload --dry-run",
   ]);
   assert.match(defaultRunbook.status, /4 source rails/);
   assert.match(defaultRunbook.status, /publish preview locked/);
@@ -75,10 +75,10 @@ test("runbook generator emits only real reviewed CLI steps", () => {
   assert.equal(localRunbook.primary, "npx vibetrack init");
   assert.deepEqual(localRunbook.commands, [
     "npx vibetrack init",
-    "vibetracker detect --json",
-    "vibetracker audit",
+    "npx vibetrack detect --json",
+    "npx vibetrack audit",
   ]);
   assert.equal(localRunbook.status, "1 source rail / local only");
-  assert.ok(localRunbook.commands.every((command) => command !== "vibetracker upload"));
+  assert.ok(localRunbook.commands.every((command) => command !== "npx vibetrack upload"));
   assert.equal(WIZARD_MODES.length, 3);
 });

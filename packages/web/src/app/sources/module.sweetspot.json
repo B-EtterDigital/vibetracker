@@ -100,7 +100,7 @@
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Thirteen focused source tests cover collection-path truth, multi-field search, registry-backed presets, every readiness state, fail-closed planned coverage, dry-run defaults, deduplicated detection, and forbidden client behavior.",
+      "notes": "Focused source tests cover collection-path truth, multi-field search, registry-backed presets, every readiness state, fail-closed planned coverage, receipt-backed sync, explicit upload preview, deduplicated detection, and forbidden client behavior.",
       "evidence": [
         "packages/web/src/app/sources/__tests__/stack-composer-data.test.ts",
         "packages/web/src/lib/__tests__/source-atlas.test.ts"
@@ -325,7 +325,7 @@
     "readiness": "manual_only",
     "adaptation_points": [
       "Confirm the provider registry contract and status semantics.",
-      "Confirm CLI command names and dry-run behavior.",
+      "Confirm CLI package invocation, receipt sync, and upload-preview behavior.",
       "Confirm clipboard support in the target browser."
     ],
     "install_steps": [
@@ -336,7 +336,7 @@
     "known_traps": [
       "Do not turn planned sources into executable commands.",
       "Do not add provider calls or hidden upload behavior to this local composer.",
-      "Keep publication explicit and opt-in after dry-run review."
+      "Keep publication explicit and opt-in after receipt inspection and upload preview."
     ]
   },
   "provenance": {

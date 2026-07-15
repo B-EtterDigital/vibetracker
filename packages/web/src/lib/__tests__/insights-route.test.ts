@@ -175,7 +175,7 @@ test("insights console derives every planning state from the production runway m
   assert.equal(target.adjustedUsd, 640.94);
   assert.equal(target.varianceUsd, 9.06);
   assert.equal(target.stateLabel, "close to the limit");
-  assert.match(target.command, /--budget 650 --local-shift 35 --dry-run/);
+  assert.equal(target.command, "npx vibetrack mission --budget 650");
 
   assert.deepEqual(buildInsightsEvidenceScope(source), {
     confidence: "thin",

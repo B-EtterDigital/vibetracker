@@ -421,7 +421,7 @@ export default function CliLogin() {
 
         <div className={`device-status device-status-${state}`} aria-live="polite">
           <span>{statusLabel}</span>
-          <b>{state === "done" ? msg : state === "error" ? msg : code ? "Ready to approve this terminal session." : "Open this link from `vibetracker login` to load a code."}</b>
+          <b>{state === "done" ? msg : state === "error" ? msg : code ? "Ready to approve this terminal session." : "Open this link from `npx vibetrack login` to load a code."}</b>
           <small>GitHub or C0VIBE proves identity only. Approval never uploads local records or marks uploaded usage provider-verified.</small>
         </div>
 

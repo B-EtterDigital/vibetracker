@@ -27,7 +27,7 @@ export default function SourcesPage() {
     `| mapped ${fit(PROVIDERS.length, 5)} adapters ${fit(counts.connect, 5)} verified ${fit(verified, 4)} |`,
     `| detect ${fit(counts.detect, 5)} manual   ${fit(counts.manual, 5)} planned  ${fit(counts.planned, 4)} |`,
     "|--------------------------------------------------|",
-    "| select -> review -> dry-run -> explicit publish  |",
+    "| select -> review -> receipt -> explicit publish  |",
     "+--------------------------------------------------+",
   ].join("\n");
 

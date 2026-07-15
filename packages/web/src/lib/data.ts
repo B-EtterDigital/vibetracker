@@ -326,7 +326,7 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
       handle: identity?.canonical_handle ?? h?.handle ?? handle,
       created_at: identity?.created_at ?? h?.created_at ?? latest?.created_at ?? "",
       isPremium: Boolean(identity?.is_premium ?? h?.is_premium),
-      // The viber's own bio, set with `vibetracker profile --bio` and carried on the submission.
+      // The viber's own bio, set with `npx vibetrack profile --bio` and carried on the submission.
       // Additive column — older rows return undefined and the profile shows the "add a bio" hint.
       bio: (latest as { bio?: string | null } | null)?.bio?.trim() || undefined,
       identityVerified: Boolean(identity?.verified_at || h?.user_id),

@@ -52,7 +52,7 @@ test("roadmap command center maps the accepted roadmap into labelled product lan
 
   const life = center.lanes.find((lane) => lane.id === "life-dashboard");
   assert.ok(life);
-  assert.match(life.command, /vibetracker life/);
+  assert.match(life.command, /npx vibetrack life/);
   assert.match(life.note, /coding, creating, research, and publishing/);
 });
 

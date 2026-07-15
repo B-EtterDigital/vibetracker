@@ -61,7 +61,7 @@ export const WIZARD_SOURCES: readonly WizardSource[] = [
     id: "hosted",
     label: "Hosted APIs",
     detail: "Usage and spend from authenticated AI providers.",
-    command: "vibetracker providers --domain ai",
+    command: "npx vibetrack providers --domain ai",
     rail: "usage",
     mark: "API",
   },
@@ -69,7 +69,7 @@ export const WIZARD_SOURCES: readonly WizardSource[] = [
     id: "creator",
     label: "Creator tools",
     detail: "Image, video, music, audio, and 3D workflows.",
-    command: "vibetracker providers --domain creative",
+    command: "npx vibetrack providers --domain creative",
     rail: "usage",
     mark: "ART",
   },
@@ -77,7 +77,7 @@ export const WIZARD_SOURCES: readonly WizardSource[] = [
     id: "coding",
     label: "Coding CLIs",
     detail: "Developer tools with source-labelled local evidence.",
-    command: "vibetracker providers --domain dev",
+    command: "npx vibetrack providers --domain dev",
     rail: "usage",
     mark: "DEV",
   },
@@ -85,7 +85,7 @@ export const WIZARD_SOURCES: readonly WizardSource[] = [
     id: "local",
     label: "Local stack",
     detail: "Discover Ollama, LM Studio, ComfyUI, and loopback tools.",
-    command: "vibetracker detect --json",
+    command: "npx vibetrack detect --json",
     rail: "local",
     mark: "127",
   },
@@ -108,9 +108,9 @@ export function buildWizardRunbook(options: WizardOptions): WizardRunbook {
   const commands = uniqueCommands([
     mode.command,
     ...selectedSources.map((source) => source.command),
-    ...(options.receipt ? ["vibetracker sync --receipt --out ~/.vibetracker/receipts"] : []),
-    "vibetracker audit",
-    ...(options.publishPreview ? ["vibetracker upload --dry-run"] : []),
+    ...(options.receipt ? ["npx vibetrack sync --receipt --out ~/.vibetracker/receipts"] : []),
+    "npx vibetrack audit",
+    ...(options.publishPreview ? ["npx vibetrack upload --dry-run"] : []),
   ]);
 
   const sourceLabel = selectedSources.length === 1 ? "1 source rail" : `${selectedSources.length} source rails`;

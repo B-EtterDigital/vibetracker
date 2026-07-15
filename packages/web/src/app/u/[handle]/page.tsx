@@ -396,7 +396,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       title: "What this usage would cost at published API list prices without a subscription — an estimate for scale, not money spent",
     },
   ];
-  // A viber's own bio (set with `vibetracker profile --bio`), shown below the sources. Empty for
+  // A viber's own bio (set with `npx vibetrack profile --bio`), shown below the sources. Empty for
   // most profiles today, which surfaces the "add a bio" affordance instead.
   const userBio = (profile.bio ?? "").trim();
 

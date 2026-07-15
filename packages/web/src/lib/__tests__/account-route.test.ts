@@ -123,6 +123,9 @@ test("global shell ticker uses live board data and remains motion-safe", () => {
   assert.match(layout, /<SiteTicker \/>/);
   assert.match(ticker, /vibetracker_leaderboard_self_reported/);
   assert.match(ticker, /vibetracker_submissions/);
+  assert.match(layout, /import \{ CLI_RUNNER \} from "\.\.\/lib\/cli-command\.ts"/);
+  assert.match(ticker, /`run \$\{CLI_RUNNER\} to join`/);
+  assert.match(layout, /<code>\{CLI_RUNNER\}<\/code>/);
   assert.match(ticker, /telemetry\.captureError/);
   assert.match(ticker, /aria-label="Live board stats"/);
   assert.match(ticker, /aria-hidden=\{hidden \|\| undefined\}/);
@@ -145,7 +148,7 @@ test("account console uses real GitHub OAuth when available and the verified CLI
   assert.match(consoleSource, /provider: "github"/);
   assert.match(consoleSource, /scopes: "read:user user:email"/);
   assert.match(consoleSource, /sign in with GitHub/);
-  assert.match(consoleSource, /const CLI_COMMAND = "npx vibetracker login"/);
+  assert.match(consoleSource, /const CLI_COMMAND = cliCommand\("login"\)/);
   assert.match(consoleSource, /navigator\.clipboard\.writeText\(CLI_COMMAND\)/);
   assert.match(consoleSource, /verify this machine/);
   assert.match(consoleSource, /GitHub CLI verification is live now/);

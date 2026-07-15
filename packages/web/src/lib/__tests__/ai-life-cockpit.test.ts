@@ -90,7 +90,7 @@ test("AI life practice passport covers creators, builders, local labs, research,
   assert.ok(research);
   assert.equal(research.impact, "privacy");
   assert.match(research.persona, /Researchers, writers/);
-  assert.match(research.command, /--dry-run/);
+  assert.match(research.command, /export --format markdown --out usage\.md/);
   assert.match(research.boundary, /Notes, sources/);
   assert.ok(research.providers.some((provider) => provider.id === "notion" || provider.id === "obsidian"));
 
@@ -162,7 +162,7 @@ test("AI life persona atlas makes the product legible beyond coders", () => {
   const researcher = atlas.personas.find((card) => card.id === "researcher");
   assert.ok(researcher);
   assert.equal(researcher.impact, "privacy");
-  assert.match(researcher.command, /notion --dry-run/);
+  assert.match(researcher.command, /export --format markdown --out usage\.md/);
   assert.match(researcher.notTracked, /document text/);
 
   const localist = atlas.personas.find((card) => card.id === "localist");

@@ -128,7 +128,7 @@ test("runway planner derives an estimate-only over-cap state", () => {
   assert.equal(snapshot.utilizationPercent, 128);
   assert.equal(snapshot.state, "over");
   assert.equal(snapshot.stateLabel, "over budget");
-  assert.match(snapshot.command, /--budget 500 --local-shift 35 --dry-run/);
+  assert.equal(snapshot.command, "npx vibetrack mission --budget 500");
 });
 
 test("runway planner clamps unsafe control values and handles a zero forecast", () => {
@@ -146,7 +146,7 @@ test("runway planner clamps unsafe control values and handles a zero forecast", 
   assert.equal(snapshot.utilizationPercent, 0);
   assert.equal(snapshot.state, "under");
   assert.equal(snapshot.stateLabel, "inside budget");
-  assert.match(snapshot.command, /--budget 1 --local-shift 100 --dry-run/);
+  assert.equal(snapshot.command, "npx vibetrack mission --budget 1");
 });
 
 test("Insights mounts an isolated, accessible planning instrument", () => {

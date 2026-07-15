@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { AccountControl } from "../components/account-control";
 import { OperatorMenu } from "../components/operator-menu";
 import { SiteTicker } from "../components/site-ticker";
+import { CLI_RUNNER } from "../lib/cli-command.ts";
 
 const displayFont = Space_Grotesk({
   subsets: ["latin"],
@@ -51,12 +52,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </nav>
           <div className="hdr-actions">
             <AccountControl />
-            <a className="hdr-cli" href="/how-to" title="npx vibetracker — get your usage stats on the board">Get your UsageStats</a>
+            <a className="hdr-cli" href="/how-to" title={`${CLI_RUNNER} — get your usage stats on the board`}>Get your UsageStats</a>
             <OperatorMenu />
           </div>
         </header>
         <main className="wrap">{children}</main>
-        <footer className="ftr">vibeusage.c0vibe.app · powered by <code>npx vibetracker</code></footer>
+        <footer className="ftr">vibeusage.c0vibe.app · powered by <code>{CLI_RUNNER}</code></footer>
       </body>
     </html>
   );

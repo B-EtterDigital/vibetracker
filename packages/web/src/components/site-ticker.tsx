@@ -5,6 +5,7 @@
 
 import { supabaseServer } from "../lib/supabase";
 import { createConsoleTelemetry } from "../../../core/src/telemetry";
+import { CLI_RUNNER } from "../lib/cli-command.ts";
 
 const telemetry = createConsoleTelemetry();
 
@@ -77,7 +78,7 @@ export async function SiteTicker() {
 
   const items = [
     `${facts.leaderHandle} leads at ${fmtUsd(facts.leaderUsd)}`,
-    "run npx vibetracker to join",
+    `run ${CLI_RUNNER} to join`,
     `${facts.vibers} viber${facts.vibers === 1 ? "" : "s"} on the board`,
     `${fmtUsd(facts.totalUsd)} tracked`,
     ...(facts.totalTokens > 0 ? [`${fmtTokens(facts.totalTokens)} tokens burned`] : []),

@@ -33,13 +33,14 @@ test("runbook deduplicates detect and keeps planned sources as comments", () => 
   const candidates = buildSourceCandidates([...providers, { ...providers[1], id: "lmstudio", label: "LM Studio" }]);
   const runbook = buildRunbook(candidates);
 
-  assert.equal(runbook.lines.filter((line) => line === "vibetracker detect").length, 1);
-  assert.match(runbook.text, /vibetracker connect codex/);
-  assert.match(runbook.text, /vibetracker add midjourney --usd <monthly-usd>/);
+  assert.equal(runbook.lines.filter((line) => line === "npx vibetrack detect").length, 1);
+  assert.match(runbook.text, /npx vibetrack connect codex/);
+  assert.match(runbook.text, /npx vibetrack add midjourney --usd <monthly-usd>/);
   assert.match(runbook.text, /# planned: cursor/);
-  assert.doesNotMatch(runbook.text, /vibetracker connect cursor/);
-  assert.match(runbook.text, /vibetracker sync --dry-run/);
-  assert.match(runbook.text, /# publish stays opt-in/);
+  assert.doesNotMatch(runbook.text, /npx vibetrack connect cursor/);
+  assert.match(runbook.text, /npx vibetrack sync --receipt/);
+  assert.doesNotMatch(runbook.text, /sync --dry-run/);
+  assert.match(runbook.text, /# publish stays opt-in: npx vibetrack upload --dry-run/);
   assert.deepEqual(runbook.diagnosis, buildStackDiagnosis(candidates));
 });
 

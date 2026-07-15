@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { buildHowToCommandAtlas, type HowToCommandAtlas, type HowToCommandGroupInput } from "../../lib/how-to-command-atlas";
 import { buildInstallRunway } from "../../lib/install-runway";
 import { buildLaunchSequence } from "../../lib/launch-sequence";
+import { cliCommand, cliSequence } from "../../lib/cli-command.ts";
 import { HowToFastStart } from "./how-to-fast-start";
 import "./how-to-fast-start.css";
 
@@ -11,11 +12,11 @@ export const metadata = {
 };
 
 const quickCommands = [
-  { id: "01", title: "Open the visual wizard", command: "npx vibetracker init --gui" },
-  { id: "02", title: "Show the launch kit", command: "vibetracker impress --open" },
-  { id: "03", title: "Try safe demo data", command: "vibetracker sync --demo" },
-  { id: "04", title: "Prove the source mix", command: "vibetracker audit" },
-  { id: "05", title: "Preview sharing", command: "vibetracker upload --dry-run" },
+  { id: "01", title: "Open the visual wizard", command: cliCommand("init --gui") },
+  { id: "02", title: "Show the launch kit", command: cliCommand("impress --open") },
+  { id: "03", title: "Try safe demo data", command: cliCommand("sync --demo") },
+  { id: "04", title: "Prove the source mix", command: cliCommand("audit") },
+  { id: "05", title: "Preview sharing", command: cliCommand("upload --dry-run") },
 ];
 
 const commandGroups: HowToCommandGroupInput[] = [
@@ -24,15 +25,15 @@ const commandGroups: HowToCommandGroupInput[] = [
     title: "First run",
     summary: "Open the local GUI, inspect coverage, connect the first provider, and see totals without uploading anything.",
     items: [
-      ["Start the visual wizard", "npx vibetracker init --gui"],
-      ["Open the impressive launch kit", "vibetracker impress --open"],
-      ["Inspect the launch manifest", "vibetracker vibe --json"],
-      ["Inspect coverage", "vibetracker providers --all"],
-      ["Try safe demo data", "vibetracker sync --demo"],
-      ["Connect a provider", "vibetracker connect openai --set adminKey=sk-..."],
-      ["Use provider OAuth when available", "vibetracker oauth start huggingface --auth-url https://provider/oauth/authorize --token-url https://provider/oauth/token --client-id app"],
-      ["Sync and view totals", "vibetracker sync -> vibetracker total --by provider"],
-      ["Audit proof", "vibetracker audit"],
+      ["Start the visual wizard", cliCommand("init --gui")],
+      ["Open the impressive launch kit", cliCommand("impress --open")],
+      ["Inspect the launch manifest", cliCommand("vibe --json")],
+      ["Inspect coverage", cliCommand("providers --all")],
+      ["Try safe demo data", cliCommand("sync --demo")],
+      ["Connect a provider", cliCommand("connect openai --set adminKey=sk-...")],
+      ["Use provider OAuth when available", cliCommand("oauth start huggingface --auth-url https://provider/oauth/authorize --token-url https://provider/oauth/token --client-id app")],
+      ["Sync and view totals", cliSequence(["sync", "total --by provider"])],
+      ["Audit proof", cliCommand("audit")],
     ],
   },
   {
@@ -40,14 +41,14 @@ const commandGroups: HowToCommandGroupInput[] = [
     title: "Local and creator AI",
     summary: "Track local models, creator subscriptions, voice work, ROI notes, and the AI-life dashboard.",
     items: [
-      ["Detect local AI", "vibetracker detect"],
-      ["Detect an OpenAI-compatible URL", "vibetracker detect --target http://127.0.0.1:1234"],
-      ["Check provider freshness", "vibetracker providers check"],
-      ["Forecast spend", "vibetracker insights --budget 200"],
-      ["Amortize subscriptions", "vibetracker subscription add canva --usd 15 --from 2026-07-01 --to 2026-07-31 --profile creator"],
-      ["Track voice work", "vibetracker add elevenlabs --characters 12000 --operation voice_clone --category audio"],
-      ["Add ROI notes", "vibetracker roi add --from 2026-07-01 --to 2026-07-05 --note \"finished client video pack\" --value-usd 1200"],
-      ["Open the AI-life dashboard", "vibetracker life"],
+      ["Detect local AI", cliCommand("detect")],
+      ["Detect an OpenAI-compatible URL", cliCommand("detect --target http://127.0.0.1:1234")],
+      ["Check provider freshness", cliCommand("providers check")],
+      ["Forecast spend", cliCommand("insights --budget 200")],
+      ["Amortize subscriptions", cliCommand("subscription add canva --usd 15 --from 2026-07-01 --to 2026-07-31 --profile creator")],
+      ["Track voice work", cliCommand("add elevenlabs --characters 12000 --operation voice_clone --category audio")],
+      ["Add ROI notes", cliCommand("roi add --from 2026-07-01 --to 2026-07-05 --note \"finished client video pack\" --value-usd 1200")],
+      ["Open the AI-life dashboard", cliCommand("life")],
     ],
   },
   {
@@ -57,7 +58,7 @@ const commandGroups: HowToCommandGroupInput[] = [
     items: [
       ["Provider status board", "/providers"],
       ["Contributor badges", "/contributors"],
-      ["Accepted roadmap", "vibetracker roadmap -> /roadmap"],
+      ["Accepted roadmap", `${cliCommand("roadmap")} -> /roadmap`],
       ["Passkey account proof", "/passkeys"],
     ],
   },
@@ -66,11 +67,11 @@ const commandGroups: HowToCommandGroupInput[] = [
     title: "Open-source extension",
     summary: "Scaffold adapters, generate fixtures, inspect plugins, and capture browser or desktop activity.",
     items: [
-      ["Start a custom adapter", "vibetracker adapter scaffold my-provider --dry-run"],
-      ["Redact a provider fixture", "vibetracker fixture redact raw.json --out packages/adapters/src/my-provider/__fixtures__/usage.sample.json"],
-      ["Inspect plugin manifests", "vibetracker plugins path"],
-      ["Capture browser activity", "vibetracker api serve --port 8765, then load packages/browser-extension"],
-      ["Snapshot desktop tools", "vibetracker desktop scan --record"],
+      ["Start a custom adapter", cliCommand("adapter scaffold my-provider --dry-run")],
+      ["Redact a provider fixture", cliCommand("fixture redact raw.json --out packages/adapters/src/my-provider/__fixtures__/usage.sample.json")],
+      ["Inspect plugin manifests", cliCommand("plugins path")],
+      ["Capture browser activity", `${cliCommand("api serve --port 8765")}, then load packages/browser-extension`],
+      ["Snapshot desktop tools", cliCommand("desktop scan --record")],
     ],
   },
   {
@@ -78,17 +79,17 @@ const commandGroups: HowToCommandGroupInput[] = [
     title: "Privacy, signing, export",
     summary: "Preview every upload, add noise, sign bundles, seal ledgers, and keep storage encrypted.",
     items: [
-      ["Review privacy boundaries", "vibetracker privacy"],
-      ["Preview sharing", "vibetracker upload --dry-run"],
-      ["Share noisy aggregates", "vibetracker export --private --epsilon 1"],
-      ["Sign and verify a bundle", "vibetracker bundle sign -> vibetracker bundle verify ~/.vibetracker/signed-upload-bundle.json"],
-      ["Sign a CLI release", "vibetracker release sign --file dist/vibetracker.js"],
-      ["Seal the local ledger", "vibetracker ledger seal -> vibetracker ledger verify"],
-      ["Use encrypted local storage", "VT_STORE_PASSPHRASE=... vibetracker sync"],
-      ["Preview opt-in telemetry", "vibetracker telemetry preview -> vibetracker telemetry opt-in"],
-      ["Export for Obsidian or Notion", "vibetracker export --format markdown --out ~/vibetracker.md"],
-      ["Export for data lakes", "vibetracker export --format parquet --out ~/vibetracker.parquet"],
-      ["Share to the self-reported board", "vibetracker upload --handle you"],
+      ["Review privacy boundaries", cliCommand("privacy")],
+      ["Preview sharing", cliCommand("upload --dry-run")],
+      ["Share noisy aggregates", cliCommand("export --private --epsilon 1")],
+      ["Sign and verify a bundle", cliSequence(["bundle sign", "bundle verify ~/.vibetracker/signed-upload-bundle.json"])],
+      ["Sign a CLI release", cliCommand("release sign --file dist/vibetracker.js")],
+      ["Seal the local ledger", cliSequence(["ledger seal", "ledger verify"])],
+      ["Use encrypted local storage", `VT_STORE_PASSPHRASE=... ${cliCommand("sync")}`],
+      ["Preview opt-in telemetry", cliSequence(["telemetry preview", "telemetry opt-in"])],
+      ["Export for Obsidian or Notion", cliCommand("export --format markdown --out ~/vibetracker.md")],
+      ["Export for data lakes", cliCommand("export --format parquet --out ~/vibetracker.parquet")],
+      ["Share to the self-reported board", cliCommand("upload --handle you")],
     ],
   },
 ];

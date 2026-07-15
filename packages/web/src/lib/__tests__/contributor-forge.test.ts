@@ -155,7 +155,7 @@ test("contributor mission control turns open-source work into not-usage rails", 
   const evidence = control.rails.find((rail) => rail.id === "evidence-rail");
   assert.ok(evidence);
   assert.match(evidence.guardrail, /NOT USAGE/);
-  assert.match(evidence.command, /trust add/);
+  assert.match(evidence.command, /npx vibetrack trust list/);
 
   const local = control.rails.find((rail) => rail.id === "local-lab");
   assert.ok(local);

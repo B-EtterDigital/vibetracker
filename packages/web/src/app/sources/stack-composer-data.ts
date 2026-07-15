@@ -1,4 +1,5 @@
 import type { ProviderDescriptor } from "../../../../adapters/src/registry";
+import { cliCommand } from "../../lib/cli-command.ts";
 
 export type CollectionPath = "connect" | "detect" | "manual" | "planned";
 export type SourceDomain = "all" | ProviderDescriptor["domain"];
@@ -200,7 +201,7 @@ export function buildStackDiagnosis(selected: SourceCandidate[]): StackDiagnosis
       ...common,
       state: "partial",
       label: "PARTIAL COVERAGE",
-      headline: `${trackableCount} of ${selectedCount} selected sources can enter a dry-run today.`,
+      headline: `${trackableCount} of ${selectedCount} selected sources have a collection path today.`,
       explanation: `${automaticCount} automatic and ${manual.length} manual. ${planned.length} ${noun} visibility-only and never inflates coverage.`,
       nextAction: `Keep ${planned.map((candidate) => candidate.provider.label).join(", ")} as planned notes, or remove the gap for a clean runnable stack.`,
     };
@@ -211,9 +212,9 @@ export function buildStackDiagnosis(selected: SourceCandidate[]): StackDiagnosis
       ...common,
       state: "review",
       label: "MANUAL REVIEW",
-      headline: `${trackableCount} of ${selectedCount} selected sources can enter a dry-run today.`,
+      headline: `${trackableCount} of ${selectedCount} selected sources have a collection path today.`,
       explanation: `${automaticCount} automatic and ${manual.length} manual. Manual values remain explicit and are never upgraded to verified usage.`,
-      nextAction: "Replace every <monthly-usd> placeholder before running the dry-run.",
+      nextAction: "Replace every <monthly-usd> placeholder before running the local sync.",
     };
   }
 
@@ -222,8 +223,8 @@ export function buildStackDiagnosis(selected: SourceCandidate[]): StackDiagnosis
     state: "ready",
     label: "RUNBOOK READY",
     headline: `All ${selectedCount} selected sources have an automatic collection path.`,
-    explanation: `${verifiedCount} are endpoint-verified in the public registry. A local dry-run still precedes every publish step.`,
-    nextAction: "Copy the runbook, run it locally, and inspect sync --dry-run before publishing.",
+    explanation: `${verifiedCount} are endpoint-verified in the public registry. A local receipt and upload preview still precede every publish step.`,
+    nextAction: "Copy the runbook, inspect the sync receipt, then preview the upload before publishing.",
   };
 }
 
@@ -237,7 +238,7 @@ export function buildRunbook(selected: SourceCandidate[]): Runbook {
 
   const lines = [
     "# VibeUsage local setup — review before running",
-    "npx vibetrack init",
+    cliCommand("init"),
   ];
   const connect = ordered.filter((candidate) => candidate.path === "connect");
   const detect = ordered.filter((candidate) => candidate.path === "detect");
@@ -246,16 +247,16 @@ export function buildRunbook(selected: SourceCandidate[]): Runbook {
 
   if (connect.length) {
     lines.push("", "# adapters");
-    for (const candidate of connect) lines.push(`vibetracker connect ${candidate.provider.id}`);
+    for (const candidate of connect) lines.push(cliCommand(`connect ${candidate.provider.id}`));
   }
   if (detect.length) {
     lines.push("", `# local/proxy detection: ${detect.map((candidate) => candidate.provider.id).join(", ")}`);
-    lines.push("vibetracker detect");
+    lines.push(cliCommand("detect"));
   }
   if (manual.length) {
     lines.push("", "# manual subscriptions — replace <monthly-usd>");
     for (const candidate of manual) {
-      lines.push(`vibetracker add ${candidate.provider.id} --usd <monthly-usd> --note subscription`);
+      lines.push(cliCommand(`add ${candidate.provider.id} --usd <monthly-usd> --note subscription`));
     }
   }
   if (planned.length) {
@@ -263,7 +264,7 @@ export function buildRunbook(selected: SourceCandidate[]): Runbook {
     for (const candidate of planned) lines.push(`# planned: ${candidate.provider.id}`);
   }
 
-  lines.push("", "vibetracker sync --dry-run", "# publish stays opt-in: vibetracker upload");
+  lines.push("", cliCommand("sync --receipt"), `# publish stays opt-in: ${cliCommand("upload --dry-run")}`);
   return {
     lines,
     text: lines.join("\n"),

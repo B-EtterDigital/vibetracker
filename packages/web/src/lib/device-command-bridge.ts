@@ -67,7 +67,7 @@ export function buildDeviceCommandBridge(state: DeviceAuthState, code: string): 
     withBrand({
       id: "login",
       label: "Approve identity",
-      command: "vibetracker login",
+      command: "npx vibetrack login",
       impact: "identity",
       status,
       note: hasCode ? `Match ${codeValue} in the terminal before approving.` : "Open this page from the terminal login link.",
@@ -81,7 +81,7 @@ export function buildDeviceCommandBridge(state: DeviceAuthState, code: string): 
     withBrand({
       id: "doctor",
       label: "Health preview",
-      command: "vibetracker doctor",
+      command: "npx vibetrack doctor",
       impact: "not_usage",
       status: "safe preview",
       note: "Shows local health and surprise art without provider calls, uploads, or secret reads.",
@@ -95,7 +95,7 @@ export function buildDeviceCommandBridge(state: DeviceAuthState, code: string): 
     withBrand({
       id: "sync",
       label: "Collect locally",
-      command: "vibetracker sync",
+      command: "npx vibetrack sync",
       impact: "local_only",
       status: issued ? "ready" : "after login",
       note: "Collects configured provider usage into the local ledger; nothing leaves the machine.",
@@ -109,7 +109,7 @@ export function buildDeviceCommandBridge(state: DeviceAuthState, code: string): 
     withBrand({
       id: "audit",
       label: "Review proof",
-      command: "vibetracker audit",
+      command: "npx vibetrack audit",
       impact: "privacy",
       status: "review",
       note: "Checks source mix, freshness, coverage gaps, and trust side rails before sharing.",
@@ -123,7 +123,7 @@ export function buildDeviceCommandBridge(state: DeviceAuthState, code: string): 
     withBrand({
       id: "dry-run",
       label: "Preview upload",
-      command: "vibetracker upload --dry-run",
+      command: "npx vibetrack upload --dry-run",
       impact: "privacy",
       status: issued ? "available" : "needs token",
       note: "Shows the aggregate bundle and redaction boundary before anything is sent.",
@@ -137,7 +137,7 @@ export function buildDeviceCommandBridge(state: DeviceAuthState, code: string): 
     withBrand({
       id: "publish",
       label: "Publish aggregate",
-      command: "vibetracker upload",
+      command: "npx vibetrack upload",
       impact: "publish",
       status: issued ? "manual" : "locked",
       note: "Only this command can send reviewed aggregates to c0vibe.app.",

@@ -1,4 +1,5 @@
 import { buildCollectionSurpriseRun, type CollectionSurpriseEncore, type CollectionSurpriseMark } from "./collection-surprises.ts";
+import { cliCommand, cliSequence } from "./cli-command.ts";
 import { providerBrand } from "./provider-brand.ts";
 
 export type HowToCommandAtlasImpact = "first_run" | "usage" | "local_only" | "not_usage" | "privacy" | "publish" | "open_source";
@@ -164,8 +165,9 @@ function providerFor(tag: string, label: string, command: string): string {
 function classifyItem(tag: string, label: string, command: string): HowToCommandAtlasImpact {
   const value = `${tag} ${label} ${command}`.toLowerCase();
   const commandValue = command.toLowerCase();
+  const subcommand = commandValue.match(/(?:^|\s)npx vibetrack\s+([a-z-]+)/)?.[1];
 
-  if (commandValue.includes("vibetracker impress") || commandValue.includes("vibetracker vibe") || commandValue.includes("launch-kit")) return "first_run";
+  if (subcommand === "impress" || subcommand === "vibe" || subcommand === "launch-kit") return "first_run";
   if (commandValue.includes("upload --handle") || value.includes("/providers") || value.includes("/contributors") || value.includes("/roadmap")) return "publish";
   if (value.includes("upload --dry-run") || value.includes("privacy") || value.includes("redact") || value.includes("export --private")) return "privacy";
   if (value.includes("bundle sign") || value.includes("release sign") || value.includes("ledger seal") || value.includes("passphrase") || value.includes("telemetry")) return "privacy";
@@ -328,7 +330,7 @@ function launchBoard(): HowToCommandAtlasLaunchStep[] {
       "ignite",
       "Terminal ignition",
       "terminal -> gui",
-      "npx vibetracker init --gui",
+      cliCommand("init --gui"),
       "first_run",
       "c0vibe",
       96,
@@ -339,7 +341,7 @@ function launchBoard(): HowToCommandAtlasLaunchStep[] {
       "preflight",
       "Provider preflight",
       "coverage scan",
-      "vibetracker providers --all",
+      cliCommand("providers --all"),
       "not_usage",
       "higgsfield",
       91,
@@ -350,7 +352,7 @@ function launchBoard(): HowToCommandAtlasLaunchStep[] {
       "collect",
       "Usage collection",
       "reviewed ledger",
-      "vibetracker sync -> vibetracker audit",
+      cliSequence(["sync", "audit"]),
       "usage",
       "openai",
       94,
@@ -361,7 +363,7 @@ function launchBoard(): HowToCommandAtlasLaunchStep[] {
       "relay",
       "C0VIBE relay",
       "publish gate",
-      "vibetracker upload --dry-run -> upload",
+      cliSequence(["upload --dry-run", "upload"]),
       "publish",
       "c0vibe",
       89,
@@ -383,7 +385,7 @@ export function buildHowToCommandAtlas(groups: HowToCommandGroupInput[]): HowToC
       summary: group.summary,
       impact: laneImpact(group.tag),
       commandCount: items.length,
-      primaryCommand: items[0]?.command ?? "vibetracker --help",
+      primaryCommand: items[0]?.command ?? cliCommand("--help"),
       meter,
       mark: brand.mark,
       from: brand.from,

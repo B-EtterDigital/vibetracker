@@ -81,9 +81,9 @@ test("proof verdict separates bundled contract coverage from live user evidence"
   assert.deepEqual(verdict.boundaries, ["no machine scan", "no account query", "no upload"]);
   assert.equal(verdict.excludes.some((item) => /No percentage.*product readiness/.test(item)), true);
   assert.deepEqual(verdict.actions.map((action) => action.command), [
-    "vibetracker audit",
-    "vibetracker upload --dry-run",
-    "vibetracker proof --explain",
+    "npx vibetrack audit",
+    "npx vibetrack upload --dry-run",
+    "npx vibetrack audit",
   ]);
 });
 
@@ -133,7 +133,7 @@ test("proof center is exposed as a first-class local-first evidence route", () =
   assert.match(page, /id: "trust"/);
   assert.match(page, /evidence\.bridge\.totals\.trustUsageWrites/);
   assert.match(page, /evidence\.bridge\.totals\.zeroHiddenUploads/);
-  assert.match(page, /vibetracker upload --target c0vibe/);
+  assert.match(page, /npx vibetrack upload/);
   assert.match(page, /ProofBlackBoxPanel/);
   assert.match(page, /proof-black-box/);
   assert.match(page, /VTK:\/\/BLACK-BOX\/\/CUSTODY\/\/NO-RAW-PROMPTS\/\/0-HIDDEN-UPLOADS/);
@@ -178,9 +178,9 @@ test("proof center is exposed as a first-class local-first evidence route", () =
   assert.match(verdictPanel, /not live readiness/);
   assert.match(verdictPanel, /href="\/scan"/);
   assert.match(verdictPanel, /href="\/account"/);
-  assert.match(evidence, /vibetracker upload --target c0vibe/);
+  assert.match(evidence, /npx vibetrack upload/);
   assert.match(evidence, /C0VIBE datastream/);
-  assert.match(evidence, /vibetracker trust scan/);
+  assert.match(evidence, /npx vibetrack trust list/);
   assert.match(evidence, /Tamper-evident replay/);
   assert.match(evidence, /sha256:c0vibe-profile-feed/);
   assert.match(evidence, /trust sidecars are NOT USAGE/);

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { cliCommand } from "../../lib/cli-command.ts";
 
-const LOGIN_COMMAND = "npx vibetracker login";
+const LOGIN_COMMAND = cliCommand("login");
 
 export function CliLoginEntry({ checking = false }: { checking?: boolean }) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "select">("idle");

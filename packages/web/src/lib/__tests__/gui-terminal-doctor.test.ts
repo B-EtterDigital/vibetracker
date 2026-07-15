@@ -9,8 +9,8 @@ test("GUI terminal doctor exposes local health commands and trust boundaries", (
   assert.match(doctor.terminalLines.join("\n"), /GUI-DOCTOR/);
   assert.match(doctor.terminalLines.join("\n"), /VIBERS-UNITE/);
   assert.match(doctor.terminalLines.join("\n"), /NOT USAGE/);
-  assert.ok(doctor.checks.some((check) => check.command === "vibetracker doctor"));
-  assert.ok(doctor.checks.some((check) => check.command === "vibetracker upload --dry-run"));
+  assert.ok(doctor.checks.some((check) => check.command === "npx vibetrack doctor"));
+  assert.ok(doctor.checks.some((check) => check.command === "npx vibetrack upload --dry-run"));
   assert.ok(doctor.checks.some((check) => check.impact === "not_usage" && check.note.includes("separately from usage spend")));
   assert.ok(doctor.checks.every((check) => check.meter >= 0 && check.meter <= 100));
 });

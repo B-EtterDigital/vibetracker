@@ -9,14 +9,14 @@ test("device command bridge renders the valid first-run command path", () => {
   assert.equal(bridge.codeLabel, "AB1 2CD");
   assert.deepEqual(bridge.commands.map((command) => command.id), ["login", "doctor", "sync", "audit", "dry-run", "publish"]);
   assert.deepEqual(bridge.commands.map((command) => command.command), [
-    "vibetracker login",
-    "vibetracker doctor",
-    "vibetracker sync",
-    "vibetracker audit",
-    "vibetracker upload --dry-run",
-    "vibetracker upload",
+    "npx vibetrack login",
+    "npx vibetrack doctor",
+    "npx vibetrack sync",
+    "npx vibetrack audit",
+    "npx vibetrack upload --dry-run",
+    "npx vibetrack upload",
   ]);
-  assert.equal(bridge.commands.some((command) => command.command === "vibetracker sync --dry-run"), false);
+  assert.equal(bridge.commands.some((command) => command.command === "npx vibetrack sync --dry-run"), false);
   assert.deepEqual(bridge.totals, { identity: 1, not_usage: 1, local_only: 1, privacy: 2, publish: 1 });
   assert.equal(bridge.terminalLines.every((line) => line.length === 64), true);
   assert.match(bridge.terminalLines.join("\n"), /NO-AUTO-UPLOAD/);

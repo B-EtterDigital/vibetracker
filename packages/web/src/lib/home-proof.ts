@@ -281,21 +281,21 @@ export function buildHomeCommandDeck(): HomeCommandDeckCell[] {
     },
     {
       id: "scan",
-      command: "vibetracker sync --demo",
+      command: "npx vibetrack sync --demo",
       label: "Watch providers light up",
       note: "Higgsfield, Codex, local AI, creator tools, and regional adapters get branded scan feedback.",
       status: "SCAN",
     },
     {
       id: "trust",
-      command: "vibetracker trust add github --handle <you>",
+      command: "npx vibetrack trust list",
       label: "Attach public cadence",
       note: "GitHub and creator signals are labelled NOT USAGE and never change spend totals.",
       status: "SIDE",
     },
     {
       id: "share",
-      command: "vibetracker upload --dry-run",
+      command: "npx vibetrack upload --dry-run",
       label: "Review before sharing",
       note: "Vibers Unite at c0vibe.app only after the local privacy cockpit is clean.",
       status: "DRY",
@@ -729,7 +729,7 @@ export function buildHomeCommandPalette(): HomeCommandPalette {
       frames: [" C0  ", " GUI ", " |>  ", " OK  "],
     }),
     paletteAction("surprises", "higgsfield", {
-      command: "vibetracker surprises --provider higgsfield,codex-cli,ollama --static",
+      command: "npx vibetrack surprises --provider higgsfield,codex-cli,ollama --static",
       label: "Preview scan reel",
       chord: "CTRL+2",
       cue: "Higgsfield prism, Codex cube, local sonar, and C0VIBE relay replay safely.",
@@ -739,7 +739,7 @@ export function buildHomeCommandPalette(): HomeCommandPalette {
       frames: [" /\\  ", "-HF- ", "<CX>", " C0  "],
     }),
     paletteAction("detect", "ollama", {
-      command: "vibetracker detect",
+      command: "npx vibetrack detect",
       label: "Scan local AI",
       chord: "CTRL+3",
       cue: "Ollama, LM Studio, ComfyUI, vLLM, and loopback-compatible tools get a local rail.",
@@ -749,7 +749,7 @@ export function buildHomeCommandPalette(): HomeCommandPalette {
       frames: ["127  ", "0.0.1", " ping", " LAN "],
     }),
     paletteAction("trust", "codex-cli", {
-      command: "vibetracker trust list",
+      command: "npx vibetrack trust list",
       label: "Inspect trust side rail",
       chord: "CTRL+4",
       cue: "GitHub, Codex, creator cadence, and Higgsfield MCP connection proof stay visible.",
@@ -759,7 +759,7 @@ export function buildHomeCommandPalette(): HomeCommandPalette {
       frames: [" +--+", "/CX/", "git ", "NOT$"],
     }),
     paletteAction("sync", "openai", {
-      command: "vibetracker sync --receipt",
+      command: "npx vibetrack sync --receipt",
       label: "Collect reviewed usage",
       chord: "CTRL+5",
       cue: "Real provider collection writes only accepted local ledger rows and emits a receipt.",
@@ -769,7 +769,7 @@ export function buildHomeCommandPalette(): HomeCommandPalette {
       frames: [" api ", "fetch", "check", "lock "],
     }),
     paletteAction("dry_run", "c0vibe", {
-      command: "vibetracker upload --dry-run",
+      command: "npx vibetrack upload --dry-run",
       label: "Review C0VIBE relay",
       chord: "CTRL+6",
       cue: "Preview exactly what would feed c0vibe.app before any public publish step.",
@@ -812,7 +812,7 @@ export function buildHomeScanConductor(): HomeScanConductor {
   const beats: HomeScanConductorBeat[] = [
     conductorBeat("queue", "higgsfield", {
       label: "Queue surprise reel",
-      command: "vibetracker surprises --static",
+      command: "npx vibetrack surprises --static",
       railLabel: "VISUAL ONLY",
       cue: "The Higgsfield prism and provider marks spin up before any collector runs.",
       guardrail: "Animated preview only: no provider call, no ledger write, no upload.",
@@ -823,7 +823,7 @@ export function buildHomeScanConductor(): HomeScanConductor {
     }),
     conductorBeat("detect", "ollama", {
       label: "Detect local lab",
-      command: "vibetracker detect --local",
+      command: "npx vibetrack detect",
       railLabel: "LOCAL ONLY",
       cue: "Loopback and LAN AI tools get sonar feedback without leaving the machine.",
       guardrail: "Detects local services only; prompts, outputs, and secrets are never read.",
@@ -834,7 +834,7 @@ export function buildHomeScanConductor(): HomeScanConductor {
     }),
     conductorBeat("collect", "openai", {
       label: "Collect usage receipt",
-      command: "vibetracker sync --receipt",
+      command: "npx vibetrack sync --receipt",
       railLabel: "USAGE",
       cue: "When the user runs collection, real usage rows get a local receipt first.",
       guardrail: "This preview writes nothing; the real command clearly enters local usage mode.",
@@ -845,7 +845,7 @@ export function buildHomeScanConductor(): HomeScanConductor {
     }),
     conductorBeat("verify", "codex-cli", {
       label: "Verify trust sidecar",
-      command: "vibetracker trust list",
+      command: "npx vibetrack trust list",
       railLabel: "NOT USAGE",
       cue: "GitHub, Codex, creator cadence, and Higgsfield MCP show up as proof context.",
       guardrail: "Trust context never changes spend, credits, operations, rank, or score math.",
@@ -856,7 +856,7 @@ export function buildHomeScanConductor(): HomeScanConductor {
     }),
     conductorBeat("redact", "privacy", {
       label: "Redact bundle",
-      command: "vibetracker upload --dry-run",
+      command: "npx vibetrack upload --dry-run",
       railLabel: "PRIVACY",
       cue: "Secret scan, bundle hash, and local review run before anything public exists.",
       guardrail: "Dry-run preview has hiddenUpload=0 and keeps raw records local.",
@@ -867,7 +867,7 @@ export function buildHomeScanConductor(): HomeScanConductor {
     }),
     conductorBeat("relay", "c0vibe", {
       label: "Relay reviewed profile",
-      command: "vibetracker upload --reviewed",
+      command: "npx vibetrack upload",
       railLabel: "PUBLISH",
       cue: "Vibers Unite at c0vibe.app after the reviewed aggregate datastream is clean.",
       guardrail: "Public relay is explicit and reviewed; this conductor still uploads nothing.",

@@ -48,7 +48,7 @@ test("cli login route exposes the zero-movement auth control room", () => {
   assert.doesNotMatch(page, /dangerouslySetInnerHTML/);
 
   assert.match(entry, /Connect your terminal\./);
-  assert.match(entry, /npx vibetracker login/);
+  assert.match(entry, /const LOGIN_COMMAND = cliCommand\("login"\)/);
   assert.match(entry, /href="\/account\?returnTo=%2Fcli-login"/);
   assert.match(entry, /Sign in with GitHub/);
   assert.match(entry, /GitHub proof is not usage proof\./);

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { authProviderAvailability, supabaseBrowser, supabaseBrowserConfigured } from "../../lib/supabase-browser";
 import { c0vibeBridgeMessage } from "../../lib/c0vibe-account-bridge";
+import { cliCommand } from "../../lib/cli-command.ts";
 import { accountIdentityFromSession, accountRedirectUrl, safeNextPath } from "./account-session";
 
 type ProviderState = "checking" | "available" | "disabled" | "unavailable";
@@ -18,7 +19,7 @@ interface LinkedIdentity {
   verifiedAt?: string | null;
 }
 
-const CLI_COMMAND = "npx vibetracker login";
+const CLI_COMMAND = cliCommand("login");
 
 const BROWSER_STEPS = [
   ["GitHub consent", "You authenticate on github.com, never in a copied terminal command."],

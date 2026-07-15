@@ -1,4 +1,5 @@
 import { PROVIDERS, type ProviderDescriptor } from "../../../adapters/src/registry.ts";
+import { cliCommand } from "./cli-command.ts";
 import { providerBrand } from "./provider-brand.ts";
 
 export type CollectionSurpriseImpact = "usage" | "local_only" | "trust" | "privacy" | "publish";
@@ -510,7 +511,7 @@ const MOMENTS: MomentDef[] = [
     id: "higgsfield-mcp-prism",
     call: "HF TURN",
     label: "Higgsfield MCP prism",
-    command: "vibetracker sync --provider higgsfield",
+    command: cliCommand("connect higgsfield"),
     impact: "usage",
     providerIds: ["higgsfield"],
     ascii: [
@@ -528,7 +529,7 @@ const MOMENTS: MomentDef[] = [
     id: "codex-builder-trace",
     call: "CX LOOP",
     label: "Codex builder trace",
-    command: "vibetracker trust github codex",
+    command: cliCommand("trust list"),
     impact: "trust",
     providerIds: ["codex-cli", "claude-code", "github"],
     ascii: [
@@ -546,7 +547,7 @@ const MOMENTS: MomentDef[] = [
     id: "local-lab-sonar",
     call: "LAN PING",
     label: "Local lab sonar",
-    command: "vibetracker detect --local",
+    command: cliCommand("detect"),
     impact: "local_only",
     providerIds: ["ollama", "lmstudio", "comfyui", "vllm"],
     ascii: [
@@ -564,7 +565,7 @@ const MOMENTS: MomentDef[] = [
     id: "creator-studio-meter",
     call: "MEDIA",
     label: "Creator studio meter",
-    command: "vibetracker sync --creator-tools",
+    command: cliCommand("sync --receipt"),
     impact: "usage",
     providerIds: ["replicate", "falai", "runway", "elevenlabs", "suno", "udio"],
     ascii: [
@@ -582,7 +583,7 @@ const MOMENTS: MomentDef[] = [
     id: "regional-provider-pass",
     call: "GLOBAL",
     label: "Regional provider pass",
-    command: "vibetracker sync --regional",
+    command: cliCommand("providers --all"),
     impact: "usage",
     providerIds: ["qwen", "doubao", "kimi", "mistral", "aleph-alpha", "lighton", "perplexity"],
     ascii: [
@@ -600,7 +601,7 @@ const MOMENTS: MomentDef[] = [
     id: "c0vibe-review-relay",
     call: "UNITE",
     label: "C0VIBE review relay",
-    command: "vibetracker upload --dry-run",
+    command: cliCommand("upload --dry-run"),
     impact: "publish",
     providerIds: ["c0vibe"],
     ascii: [

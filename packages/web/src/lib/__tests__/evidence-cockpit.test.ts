@@ -64,7 +64,7 @@ test("evidence cockpit exposes a labelled custody chain for public proof", () =>
   assert.ok(cockpit.custody.some((link) => link.checks.includes("NO RAW PROMPTS")));
   assert.ok(cockpit.custody.some((link) => link.checks.includes("NOT USAGE")));
   assert.ok(cockpit.custody.some((link) => /C0VIBE datastream/.test(link.label)));
-  assert.ok(cockpit.custody.some((link) => /vibetracker trust scan/.test(link.command)));
+  assert.ok(cockpit.custody.some((link) => /npx vibetrack trust list/.test(link.command)));
 });
 
 test("evidence cockpit exposes a tamper-evident proof replay without mixing trust into usage", () => {
@@ -112,7 +112,7 @@ test("evidence cockpit exposes a tamper-evident proof replay without mixing trus
   const relay = replay.events.find((event) => event.id === "c0vibe-relay");
   assert.ok(relay);
   assert.match(relay.note, /vibe score, public profile/);
-  assert.match(relay.command, /--target c0vibe/);
+  assert.equal(relay.command, "npx vibetrack upload");
 });
 
 test("evidence cockpit exposes an operator verification bridge", () => {
@@ -158,6 +158,6 @@ test("evidence cockpit exposes an operator verification bridge", () => {
   assert.match(trustGate.invariant, /mutate 0 spend, 0 credits, 0 ops, and 0 rank/);
   assert.match(trustGate.answer, /Higgsfield MCP/);
   assert.ok(publishGate);
-  assert.match(publishGate.command, /--target c0vibe/);
+  assert.equal(publishGate.command, "npx vibetrack upload");
   assert.match(publishGate.invariant, /tier labels visible/);
 });
