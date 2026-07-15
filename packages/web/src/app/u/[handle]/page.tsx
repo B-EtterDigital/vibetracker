@@ -37,6 +37,7 @@ import { InfographicBoard, type BoardSpec } from "./profile-board";
 import { SkillSignals } from "./profile-signals";
 import { computeProfileSignals } from "../../../lib/profile-signals";
 import { levelFor, fmtMeasure } from "../../../lib/viber-levels";
+import { FlipToC0vibe } from "./profile-flip";
 import { UsageTelemetry } from "./profile-telemetry";
 import { buildTelemetryModel } from "./profile-telemetry-model";
 import { ProfileReadout } from "./profile-readout";
@@ -621,6 +622,10 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     .sort((a, b) => b.level - a.level || b.progress - a.progress);
   add("hero", "full",
     <ViberIdentity signals={signals} opsValue={opsCompact} traitLevels={traitLevels} key="identity" />);
+  // A migrated (account-linked) profile carries the door to its C0VIBE face: the cube flip.
+  if (profile.accountLinked) {
+    add("hero", "full", <FlipToC0vibe handle={profile.handle} key="flip" />);
+  }
   if (reveal.rhythm) {
     add("hero", "full", <SyncRhythm days={profile.usageDays.map((d) => ({ date: d.date, ops: d.ops, usd: d.usd }))} key="rhythm" />);
   }
