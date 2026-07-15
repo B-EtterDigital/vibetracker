@@ -144,6 +144,51 @@
   overflow-wrap: anywhere;
   text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
 }
+.vhero-name-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+}
+.vhero-identity-proof {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 4px 9px 4px 5px;
+  border: 1px solid rgba(88, 166, 255, 0.7);
+  border-radius: 999px;
+  background: rgba(4, 13, 23, 0.78);
+  color: #a8d3ff;
+  font: 700 10px/1 var(--vp-mono);
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.vhero-identity-proof > span {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #58a6ff;
+  color: #03111f;
+  font: 900 11px/1 var(--vp-mono);
+  letter-spacing: 0;
+}
+.vhero-identity-proof > b { font: inherit; }
+.vhero-identity-proof[data-state="cli"] {
+  border-color: rgba(217, 255, 242, 0.26);
+  color: rgba(217, 255, 242, 0.68);
+}
+.vhero-identity-proof[data-state="cli"] > span {
+  width: 24px;
+  border-radius: 5px;
+  background: rgba(217, 255, 242, 0.12);
+  color: rgba(217, 255, 242, 0.72);
+  font-size: 8px;
+}
 .vhero-identity {
   display: flex;
   flex-wrap: wrap;

@@ -45,6 +45,8 @@ export interface ProfileHeroProps {
   accent: string;
   eyebrow: string;
   identity: string;
+  identityVerified: boolean;
+  identityProvider?: string;
   signalTier: string;
   signalHint: string;
   tierChip: string;
@@ -91,6 +93,8 @@ export function ProfileHero({
   accent,
   eyebrow,
   identity,
+  identityVerified,
+  identityProvider,
   signalTier,
   signalHint,
   tierChip,
@@ -98,6 +102,13 @@ export function ProfileHero({
   joinHref,
   migrateHref,
 }: ProfileHeroProps) {
+  const proofLabel = identityVerified
+    ? identityProvider === "github" ? "GitHub verified" : "C0VIBE verified"
+    : "CLI handle only";
+  const proofDetail = identityVerified
+    ? `${proofLabel}; identity proof only, usage evidence remains separate`
+    : "CLI handle only; identity is not verified and usage evidence remains separate";
+
   return (
     <section className="vhero" style={{ "--vhero-accent": accent } as CSSProperties}>
       {/* ---- banner: starfield + discipline wash, content bottom-aligned ---- */}
@@ -115,7 +126,19 @@ export function ProfileHero({
 
           <div className="vhero-headline">
             <p className="vhero-eyebrow">{eyebrow}</p>
-            <h1 className="vhero-name">@{handle}</h1>
+            <div className="vhero-name-line">
+              <h1 className="vhero-name">@{handle}</h1>
+              <span
+                className="vhero-identity-proof"
+                data-state={identityVerified ? "verified" : "cli"}
+                role="img"
+                aria-label={proofDetail}
+                title={proofDetail}
+              >
+                <span aria-hidden="true">{identityVerified ? "✓" : "CLI"}</span>
+                <b>{proofLabel}</b>
+              </span>
+            </div>
             <p className="vhero-identity" title={signalHint}>
               {identity}
               <i className="vhero-dot" aria-hidden="true" />

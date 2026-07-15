@@ -153,10 +153,10 @@
     "ssra": {
       "status": "passing",
       "score": 90,
-      "notes": "Production deploy 6a56994b4db301040d4146d1 passes 390x844, 1440x900, and 3840x2160 profile proof with exact viewport width, no console errors, page errors, or failed requests; the measured identity poster exposes accessible discipline and badge evidence.",
+      "notes": "Production deploy 6a56f2f5a251fd37cd6df016 passes 390x844, 1440x1000, and 3840x2160 profile proof with exact viewport width, no console errors, failed requests, or handle/badge overlap; GitHub-verified and CLI-only states expose an accessible identity-only boundary.",
       "evidence": [
         "scripts/release-gate.mjs",
-        "Netlify production deploy 6a56994b4db301040d4146d1",
+        "Netlify production deploy 6a56f2f5a251fd37cd6df016",
         "https://vibeusage.c0vibe.app/u/b-etterdigital"
       ]
     },
@@ -311,12 +311,12 @@
   "quality": {
     "score": 90,
     "line_count": {
-      "max_file_lines": 578,
+      "max_file_lines": 580,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 5171,
+      "feature_lines": 5241,
       "file_count": 26,
       "dependency_count": 3,
       "notes": "The route is split by responsibility and all 26 product TypeScript/TSX/CSS files stay below the 600-line Gen3 ceiling; framework loading, not-found, and layout shims are excluded."
@@ -372,6 +372,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T20:22:41Z",
         "notes": "636 package tests and 15 Gen3 control-plane tests passed with strict VTRS and TypeScript. Deploy 6a56994b4db301040d4146d1 is ready with one Next server function and a 29-route build. Its measured Viber identity dossier has three accessible formula-aligned badges, zero browser errors, and exact overflow-free widths at 390x844, 1440x900, and 3840x2160."
+      },
+      {
+        "command": "18 focused profile tests + pnpm sma:release-gate + production GitHub CLI exchange + Netlify deploy + Playwright identity proof",
+        "status": "pass",
+        "timestamp": "2026-07-15T02:44:31Z",
+        "notes": "661 package tests and 15 control-plane tests passed with zero VTRS violations and clean TypeScript. Existing gh auth verified @b-etterdigital against production without browser approval. Deploy 6a56f2f5a251fd37cd6df016 shows an accessible GitHub-verified check and real CLI-only state with zero overflow, overlap, console errors, or failed requests at 390x844, 1440x1000, and 3840x2160."
       }
     ]
   },

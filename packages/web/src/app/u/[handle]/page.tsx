@@ -415,6 +415,8 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       accent={heroAccent}
       eyebrow="viber profile"
       identity={read.identity.label}
+      identityVerified={Boolean(profile.identityVerified)}
+      identityProvider={profile.identityProvider}
       signalTier={read.tier}
       signalHint={read.hint}
       tierChip={tierRaw}

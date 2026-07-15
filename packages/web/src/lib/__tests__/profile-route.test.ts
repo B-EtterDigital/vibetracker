@@ -63,6 +63,14 @@ test("profile hero carries the identity surface, the full discipline set, and th
   assert.match(hero, /vhero-banner/);
   assert.match(hero, /vhero-avatar/);
   assert.match(hero, /vhero-name/);
+  assert.match(page, /identityVerified=\{Boolean\(profile\.identityVerified\)\}/);
+  assert.match(page, /identityProvider=\{profile\.identityProvider\}/);
+  assert.match(hero, /GitHub verified/);
+  assert.match(hero, /CLI handle only/);
+  assert.match(hero, /identity proof only, usage evidence remains separate/);
+  assert.match(hero, /role="img"/);
+  assert.match(heroStyles, /\.vhero-identity-proof\[data-state="cli"\]/);
+  assert.match(heroStyles, /background: #58a6ff/);
   assert.match(heroStyles, /url\("\/brand\/c0vibe-starfield\.webp"\)/);  // the C0VIBE banner
   assert.match(heroStyles, /aspect-ratio: 1/);                            // the square avatar
   assert.match(hero, /\{signalTier\} signal/);
