@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -79,16 +80,29 @@ test("bootstrap and explicit rollback overrides remain attributable", () => {
 });
 
 test("guard CLI refuses a dirty canonical tree before build or deploy", () => {
-  const dirtyPath = join(ROOT, `.deploy-guard-test-dirty-${process.pid}`);
-  writeFileSync(dirtyPath, "intentional test dirt\n");
+  const sandboxRoot = mkdtempSync(join(tmpdir(), "vibetracker-deploy-guard-"));
+  const sandboxRepo = join(sandboxRoot, "repo");
+  const sandboxConfig = join(sandboxRoot, "sma.deploy.json");
+  const clone = spawnSync("git", ["clone", "--shared", "--quiet", ROOT, sandboxRepo], {
+    encoding: "utf8",
+  });
+  assert.equal(clone.status, 0, clone.stderr);
+  writeFileSync(sandboxConfig, JSON.stringify({ ...config, canonicalRoot: sandboxRepo }));
+  writeFileSync(join(sandboxRepo, "dirty-contract-sentinel.txt"), "intentional test dirt\n");
+
   let result;
   try {
-    result = spawnSync(process.execPath, ["tools/sma-deploy-guard.mjs", "--why", "--", "contract test", "--dry-run"], {
-      cwd: ROOT,
+    result = spawnSync(process.execPath, [
+      join(ROOT, "tools/sma-deploy-guard.mjs"),
+      "--config", sandboxConfig,
+      "--why", "contract test",
+      "--dry-run",
+    ], {
+      cwd: sandboxRepo,
       encoding: "utf8",
     });
   } finally {
-    rmSync(dirtyPath, { force: true });
+    rmSync(sandboxRoot, { recursive: true, force: true });
   }
 
   assert.equal(result.status, 11);
