@@ -45,10 +45,10 @@
   .intel-profile-picker > a { grid-column: auto; width: 100%; }
   .intel-mast { display: flex; flex-direction: column; gap: 24px; padding: 24px 20px 28px; }
   .intel-readout { order: 1; padding: 0 0 22px; border: 0; border-bottom: 1px solid var(--intel-line); }
-  .intel-mast__copy { order: 2; }
+  .intel-mast__copy { order: 2; min-width: 0; width: 100%; max-width: 100%; }
   .intel-mast h1 { font-size: 2.65rem; }
   .intel-mast__copy > span { font-size: 14px; }
-  .intel-basis { display: flex; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; }
+  .intel-basis { display: flex; min-width: 0; width: 100%; max-width: 100%; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; }
   .intel-basis > div { flex: 0 0 min(74vw, 230px); scroll-snap-align: start; }
   .intel-basis > i { flex: 0 0 28px; min-height: 0; border: 0; transform: none; }
   .intel-readout { min-height: 0; }

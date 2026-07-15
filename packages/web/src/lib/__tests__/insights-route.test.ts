@@ -92,7 +92,8 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(responsive, /\.intel-mast \{ order: 1; \}/);
   assert.match(responsive, /\.intel-brief \{ order: 2; \}/);
   assert.match(responsive, /\.intel-profile-picker \{ order: 4; \}/);
-  assert.match(responsive, /\.intel-basis \{ display: flex; overflow-x: auto;/);
+  assert.match(responsive, /\.intel-mast__copy \{ order: 2; min-width: 0; width: 100%; max-width: 100%; \}/);
+  assert.match(responsive, /\.intel-basis \{ display: flex; min-width: 0; width: 100%; max-width: 100%; overflow-x: auto;/);
   assert.match(scopeStyles, /\.intel-scope__facts \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/);
   assert.match(scopeStyles, /\.intel-scope > p \{ display: none; \}/);
   assert.match(responsive, /@media \(min-width: 2200px\)/);
