@@ -5,7 +5,7 @@
     "name": "Providers",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "language": [
       "tsx"
     ],
@@ -29,12 +29,12 @@
       "file"
     ],
     "component_policy": "internal_by_default",
-    "notes": "Bootstrap brick manifest. Gates must be proven before canonical status."
+    "notes": "A public registry intelligence instrument that separates endpoint-verified, usable-with-caveats, and planned provider coverage before exposing searchable setup actions."
   },
   "source": {
     "project": "000-vibetracker",
     "repository": "https://github.com/B-EtterDigital/vibetracker.git",
-    "commit": "2e22947e2b39996de9bc09d367d2485b37228343",
+    "commit": "1123dc1",
     "paths": [
       "packages/web/src/app/providers"
     ]
@@ -57,7 +57,11 @@
       "undocumented cross-brick private imports",
       "unscoped privileged provider clients"
     ],
-    "allowed_side_effects": []
+    "allowed_side_effects": [
+      "user-initiated local filter and pagination state",
+      "user-initiated provider command clipboard write",
+      "user-initiated navigation to public contribution documentation"
+    ]
   },
   "classification": {
     "data_classes": [
@@ -93,7 +97,7 @@
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Four pure directory tests, the 18-test provider surface suite, and all 577 package tests pass on the current tree.",
+      "notes": "Eight pure directory and coverage-brief contracts plus the provider surface suite cover precedence, fail-closed states, search, filters, pagination, density, direct brief actions, and route boundaries.",
       "evidence": [
         "packages/web/src/app/providers/__tests__/provider-directory.test.ts",
         "packages/web/src/lib/__tests__/provider-scan.test.ts"
@@ -102,7 +106,7 @@
     "spe": {
       "status": "passing",
       "score": 96,
-      "notes": "The browser renders at most 24 of 155 registry rows per page. The live mobile document fell from 14,706px to 4,418px with zero horizontal overflow.",
+      "notes": "Derivation is linear across the compile-time registry and the browser renders at most the selected bounded page size; the coverage vector is computed once from the same normalized directory data.",
       "evidence": [
         "packages/web/src/app/providers/directory-data.ts",
         "packages/web/src/app/providers/directory.tsx"
@@ -111,19 +115,19 @@
     "srs": {
       "status": "passing",
       "score": 92,
-      "notes": "Search, empty results, reset, pagination, clipboard success or failure, and exact coverage labels are visible; no provider action can fail silently.",
+      "notes": "The first read now explains verified, caveated, and planned coverage, quantifies endpoint confidence, and opens the exact evidence lane while search, empty results, pagination, and clipboard failures remain visible.",
       "evidence": [
         "packages/web/src/app/providers/directory.tsx",
         "packages/web/src/app/providers/__tests__/provider-directory.test.ts"
       ]
     },
     "ssra": {
-      "status": "passing",
-      "score": 95,
-      "notes": "Release gate, root and Next builds, production deploy, and browser interaction proofs pass at 390px, 1440px, and 3840x2160.",
+      "status": "pending",
+      "score": 0,
+      "notes": "The coverage-intelligence update requires the full release gate, guarded production deploy, and stable plus immutable browser proof before release closeout.",
       "evidence": [
-        "scripts/release-gate.mjs",
-        "Netlify deploy 6a55c97f296b69a840ed1694"
+        "packages/web/src/app/providers/__tests__/provider-directory.test.ts",
+        "packages/web/src/lib/__tests__/provider-scan.test.ts"
       ]
     },
     "sas": {
@@ -220,12 +224,12 @@
   "quality": {
     "score": 94,
     "line_count": {
-      "max_file_lines": 293,
+      "max_file_lines": 404,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1324,
+      "feature_lines": 1641,
       "file_count": 8,
       "dependency_count": 2,
       "notes": "The route is split into server composition, a pure tested data model, one client directory, three focused stylesheets, theatre, and tests with no new dependency."
@@ -239,6 +243,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T05:24:00Z",
         "notes": "18 focused provider tests, 15 control-plane tests, 577 package tests, strict VTRS, TypeScript, root and Next builds, deploy 6a55c97f296b69a840ed1694, and live search, compound filters, empty state, pagination, clipboard, 390px, 1440px, and 3840x2160 checks passed with zero overflow or console errors."
+      },
+      {
+        "command": "node --test packages/web/src/app/providers/__tests__/provider-directory.test.ts packages/web/src/lib/__tests__/provider-scan.test.ts && pnpm typecheck",
+        "status": "pass",
+        "timestamp": "2026-07-15T06:52:00Z",
+        "notes": "22 focused provider contracts and TypeScript passed for the derived coverage vector, fail-closed states, direct filter actions, and legacy route-hook continuity."
       }
     ]
   },

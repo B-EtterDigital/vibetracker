@@ -6,6 +6,7 @@ import type { ProviderDescriptor } from "../../../../adapters/src/registry";
 import { providerBrand } from "../../lib/provider-brand";
 import {
   buildProviderDirectoryData,
+  buildProviderCoverageBrief,
   filterProviderRows,
   pageProviderRows,
   PAGE_SIZE,
@@ -53,6 +54,7 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const directory = useMemo(() => buildProviderDirectoryData(providers), [providers]);
+  const coverageBrief = useMemo(() => buildProviderCoverageBrief(directory), [directory]);
   const results = useMemo(
     () => filterProviderRows(directory.rows, {
       query,
@@ -95,6 +97,14 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
     searchRef.current?.focus();
   }
 
+  function focusCoverage(status: "verified" | "ready" | "planned") {
+    setQuery("");
+    setStatusFilter(status);
+    setCategoryFilter("all");
+    setDomainFilter("all");
+    setPage(1);
+  }
+
   function flash(id: string, text: string) {
     if (timerRef.current) clearTimeout(timerRef.current);
     setFeedback({ id, text });
@@ -117,23 +127,54 @@ export function ProvidersDirectory({ providers }: { providers: ProviderDescripto
         <b>{directory.readyCount} READY · {providers.length} MAPPED</b>
       </div>
 
-      <div className="providers-directory__brief" aria-label="Provider coverage readout">
-        <div>
-          <strong>{directory.readyCount}</strong>
-          <span>usable now</span>
-          <small>adapter, proxy, or manual path</small>
+      <section className="providers-directory__brief providers-coverage-brief" aria-labelledby="providers-coverage-title">
+        <header>
+          <div>
+            <span>OPERATOR BRIEF / READ THIS FIRST</span>
+            <h2 id="providers-coverage-title">{coverageBrief.headline}</h2>
+            <p>{coverageBrief.summary}</p>
+          </div>
+          <b>{coverageBrief.coverageLabel}</b>
+        </header>
+
+        <div
+          className="providers-coverage-brief__meter"
+          role="img"
+          aria-label={`${coverageBrief.verifiedCount} verified, ${coverageBrief.caveatedCount} usable with caveats, ${coverageBrief.plannedCount} planned`}
+        >
+          <i data-status="verified" style={{ "--share": `${coverageBrief.verifiedShare}%` } as CSSProperties} />
+          <i data-status="caveated" style={{ "--share": `${coverageBrief.caveatedShare}%` } as CSSProperties} />
+          <i data-status="planned" style={{ "--share": `${coverageBrief.plannedShare}%` } as CSSProperties} />
         </div>
-        <div>
-          <strong>{directory.statusCounts.verified}</strong>
-          <span>endpoint-verified</span>
-          <small>highest-confidence records</small>
+
+        <div className="providers-coverage-brief__grid">
+          <article data-tone="verified">
+            <small>TRUST VECTOR</small>
+            <strong>{coverageBrief.vectorLabel}</strong>
+            <p>{coverageBrief.decisiveLabel}</p>
+            <button type="button" aria-pressed={statusFilter === "verified"} onClick={() => focusCoverage("verified")}>SHOW VERIFIED</button>
+          </article>
+          <article data-tone="caveated">
+            <small>USABLE WITH CAVEATS</small>
+            <strong>{coverageBrief.caveatedCount}</strong>
+            <p>{directory.statusCounts.built} approximate // {directory.statusCounts.proxy} proxy // {directory.statusCounts.manual} manual</p>
+            <button type="button" aria-pressed={statusFilter === "ready"} onClick={() => focusCoverage("ready")}>SHOW ALL READY</button>
+          </article>
+          <article data-tone="planned">
+            <small>UNBUILT GAP</small>
+            <strong>{coverageBrief.plannedCount} planned</strong>
+            <p>Mapped for discovery and contribution; never presented as working coverage.</p>
+            <button type="button" aria-pressed={statusFilter === "planned"} onClick={() => focusCoverage("planned")}>SHOW PLANNED</button>
+          </article>
         </div>
-        <div>
-          <strong>{directory.statusCounts.planned}</strong>
-          <span>planned</span>
-          <small>mapped, never implied as built</small>
-        </div>
-      </div>
+
+        <footer>
+          <div><b>NEXT INSPECTION</b><span>{coverageBrief.nextAction}</span></div>
+          <button type="button" onClick={() => focusCoverage(coverageBrief.recommendedStatus)}>
+            OPEN {coverageBrief.recommendedStatus === "verified" ? "VERIFIED RAILS" : coverageBrief.recommendedStatus === "ready" ? "READY RAILS" : "PLANNED GAP"}
+          </button>
+        </footer>
+      </section>
 
       <details className="providers-legend">
         <summary>Read the five coverage labels</summary>

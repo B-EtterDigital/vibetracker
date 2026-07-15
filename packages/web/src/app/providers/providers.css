@@ -85,11 +85,11 @@
 @media (max-width: 767px) {
   .providers-hero .registry-terminal { min-height: 210px; }
   .providers-directory { padding: 10px; }
-  .providers-directory__brief { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .providers-directory__brief > div { padding: 10px 8px; }
-  .providers-directory__brief strong { font-size: 20px; }
-  .providers-directory__brief span { font-size: 9px; }
-  .providers-directory__brief small { display: none; }
+  .providers-directory__brief:not(.providers-coverage-brief) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .providers-directory__brief:not(.providers-coverage-brief) > div { padding: 10px 8px; }
+  .providers-directory__brief:not(.providers-coverage-brief) strong { font-size: 20px; }
+  .providers-directory__brief:not(.providers-coverage-brief) span { font-size: 9px; }
+  .providers-directory__brief:not(.providers-coverage-brief) small { display: none; }
   .providers-legend ul { grid-template-columns: 1fr; }
   .providers-directory__toolbar,
   .providers-directory__facets { grid-template-columns: 1fr; }
@@ -154,7 +154,7 @@
   .providers-route .providers-copy > p { max-width: 900px; font-size: 17px; }
   .providers-route .registry-terminal pre { font-size: 15px; }
   .providers-route .providers-directory { padding: 18px; }
-  .providers-route .providers-directory__brief strong { font-size: 30px; }
+  .providers-route .providers-directory__brief:not(.providers-coverage-brief) strong { font-size: 30px; }
   .providers-route .providers-directory__input { font-size: 15px; }
   .providers-route .providers-row td { padding: 11px 14px; }
   .providers-route .providers-row__name b { font-size: 15px; }

@@ -56,6 +56,22 @@ export interface ProviderDirectoryData {
   categories: Array<[string, number]>;
 }
 
+export interface ProviderCoverageBrief {
+  headline: string;
+  summary: string;
+  vectorLabel: string;
+  coverageLabel: string;
+  verifiedCount: number;
+  caveatedCount: number;
+  plannedCount: number;
+  verifiedShare: number;
+  caveatedShare: number;
+  plannedShare: number;
+  decisiveLabel: string;
+  nextAction: string;
+  recommendedStatus: "verified" | "ready" | "planned";
+}
+
 export interface ProviderFilters {
   query: string;
   status: StatusFilter;
@@ -111,6 +127,53 @@ export function buildProviderDirectoryData(providers: ProviderDescriptor[]): Pro
     statusCounts,
     readyCount: statusCounts.verified + statusCounts.built + statusCounts.proxy + statusCounts.manual,
     categories: [...categoryCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
+  };
+}
+
+function percent(part: number, total: number): number {
+  return total > 0 ? Math.round((part / total) * 100) : 0;
+}
+
+function plural(count: number, singular: string, pluralValue = `${singular}s`): string {
+  return count === 1 ? singular : pluralValue;
+}
+
+export function buildProviderCoverageBrief(directory: ProviderDirectoryData): ProviderCoverageBrief {
+  const total = directory.rows.length;
+  const verifiedCount = directory.statusCounts.verified;
+  const caveatedCount = directory.statusCounts.built + directory.statusCounts.proxy + directory.statusCounts.manual;
+  const plannedCount = directory.statusCounts.planned;
+  const verifiedReadyShare = percent(verifiedCount, directory.readyCount);
+  const headline = total === 0
+    ? "No provider coverage is mapped yet."
+    : directory.readyCount === 0
+      ? `${plannedCount} mapped ${plural(plannedCount, "provider")} still need a usable collection path.`
+      : verifiedCount === 0
+        ? "Usable paths exist, but none have endpoint-attested records yet."
+        : caveatedCount === 0
+          ? "Every usable provider path is endpoint-verified."
+          : `Start with ${verifiedCount} endpoint-verified ${plural(verifiedCount, "rail")}. Treat ${caveatedCount} more as usable with caveats.`;
+
+  return {
+    headline,
+    summary: "Verified rails have produced endpoint-attested records. Caveated rails can still collect usage through approximate adapters, local proxies, or explicit manual entries.",
+    vectorLabel: `V ${verifiedCount} // C ${caveatedCount} // P ${plannedCount}`,
+    coverageLabel: `${percent(directory.readyCount, total)}% usable`,
+    verifiedCount,
+    caveatedCount,
+    plannedCount,
+    verifiedShare: percent(verifiedCount, total),
+    caveatedShare: percent(caveatedCount, total),
+    plannedShare: percent(plannedCount, total),
+    decisiveLabel: directory.readyCount > 0
+      ? `${verifiedReadyShare}% of usable paths are endpoint-verified.`
+      : "0 usable paths are available today.",
+    nextAction: verifiedCount > 0
+      ? "Inspect endpoint-verified rails first when evidence confidence matters most."
+      : directory.readyCount > 0
+        ? "Inspect usable rails and read each coverage caveat before connecting it."
+        : "Inspect planned adapters and choose the next honest collection path to build.",
+    recommendedStatus: verifiedCount > 0 ? "verified" : directory.readyCount > 0 ? "ready" : "planned",
   };
 }
 

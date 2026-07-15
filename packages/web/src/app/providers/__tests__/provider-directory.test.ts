@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import type { ProviderDescriptor } from "../../../../../adapters/src/registry.ts";
 import {
   buildProviderDirectoryData,
+  buildProviderCoverageBrief,
   filterProviderRows,
   PAGE_SIZE,
   PAGE_SIZES,
@@ -23,6 +25,32 @@ test("provider status precedence and ready count stay honest", () => {
   const directory = buildProviderDirectoryData(providers);
   assert.equal(directory.readyCount, 4);
   assert.deepEqual(directory.statusCounts, { verified: 1, built: 1, proxy: 1, manual: 1, planned: 1 });
+});
+
+test("coverage brief separates verified, caveated, and planned rails without inventing readiness", () => {
+  const directory = buildProviderDirectoryData(providers);
+  const brief = buildProviderCoverageBrief(directory);
+
+  assert.equal(brief.verifiedCount, 1);
+  assert.equal(brief.caveatedCount, 3);
+  assert.equal(brief.plannedCount, 1);
+  assert.equal(brief.vectorLabel, "V 1 // C 3 // P 1");
+  assert.equal(brief.coverageLabel, "80% usable");
+  assert.equal(brief.recommendedStatus, "verified");
+  assert.match(brief.headline, /endpoint-verified rail/);
+  assert.match(brief.decisiveLabel, /25% of usable paths/);
+  assert.match(brief.summary, /approximate adapters, local proxies, or explicit manual entries/);
+});
+
+test("coverage brief fails closed when nothing is usable or mapped", () => {
+  const plannedOnly = buildProviderCoverageBrief(buildProviderDirectoryData([providers[4]!]));
+  const empty = buildProviderCoverageBrief(buildProviderDirectoryData([]));
+
+  assert.equal(plannedOnly.recommendedStatus, "planned");
+  assert.equal(plannedOnly.coverageLabel, "0% usable");
+  assert.match(plannedOnly.headline, /still need a usable collection path/);
+  assert.equal(empty.vectorLabel, "V 0 // C 0 // P 0");
+  assert.match(empty.headline, /No provider coverage is mapped/);
 });
 
 test("provider search covers IDs, methods, auth, domain, category, and status aliases", () => {
@@ -67,4 +95,23 @@ test("the default result density stays bounded with deliberate larger options", 
   }));
   assert.equal(pageProviderRows(manyRows, 1).rows.length, 12);
   assert.equal(pageProviderRows(manyRows, 1, 48).rows.length, 48);
+});
+
+test("provider route renders the coverage brief as direct honest filter controls", () => {
+  const directory = readFileSync("packages/web/src/app/providers/directory.tsx", "utf8");
+  const styles = readFileSync("packages/web/src/app/providers/directory.css", "utf8");
+
+  assert.match(directory, /OPERATOR BRIEF \/ READ THIS FIRST/);
+  assert.match(directory, /TRUST VECTOR/);
+  assert.match(directory, /USABLE WITH CAVEATS/);
+  assert.match(directory, /UNBUILT GAP/);
+  assert.match(directory, /focusCoverage\("verified"\)/);
+  assert.match(directory, /focusCoverage\("ready"\)/);
+  assert.match(directory, /focusCoverage\("planned"\)/);
+  assert.match(directory, /setQuery\(""\)/);
+  assert.match(directory, /setCategoryFilter\("all"\)/);
+  assert.match(directory, /setDomainFilter\("all"\)/);
+  assert.match(styles, /\.providers-coverage-brief/);
+  assert.match(styles, /@media \(max-width: 620px\)/);
+  assert.doesNotMatch(directory, /dangerouslySetInnerHTML/);
 });
