@@ -112,9 +112,19 @@ export function RunwayDecisionConsole({
   } as CSSProperties;
   const remainingLabel = snapshot.varianceUsd >= 0 ? "Budget remaining" : "Amount over budget";
   const isPublic = sourceMode === "public";
-  const sourceLabel = isPublic ? "Live public profile" : sourceMode === "demo" ? "Bundled demo profile" : "Bundled sample";
+  const sourceLabel = isPublic ? "Live public profile" : sourceMode === "demo" ? "Bundled demo profile" : "Teaching sample";
   const publicBasis = source.providerBasis === "recent_30d" ? "latest 30-day provider detail" : "provider totals fallback";
-  const sourceDetail = isPublic ? `@${handle} · ${publicBasis}` : sourceMode === "demo" ? "deterministic full-profile data" : "explicit example data · not your account";
+  const sourceDetail = isPublic ? `@${handle} · ${publicBasis}` : sourceMode === "demo" ? "deterministic full-profile data" : "example numbers · not your account";
+  const mastTitle = isPublic
+    ? `@${handle}: usage translated into a monthly plan.`
+    : sourceMode === "demo"
+      ? "Demo usage, translated into a monthly plan."
+      : "Example usage, translated into a monthly plan.";
+  const mastDescription = isPublic
+    ? "Start with the observed public aggregates, inspect the projection assumption, then choose the monthly limit you can actually enforce. Nothing here changes the profile."
+    : sourceMode === "demo"
+      ? "This deterministic demo teaches the forecast before you load a public profile. Inspect the observed window, projection, and budget decision in that order."
+      : "This is not your account. Use the example to learn the forecast, then load a public profile above or create a real scan. Every number below stays read-only.";
 
   return (
     <div className="intel-surface">
@@ -126,7 +136,7 @@ export function RunwayDecisionConsole({
             <small>{notice ?? sourceDetail}</small>
           </div>
           <form action="/insights" method="get">
-            <label htmlFor="insights-handle">Public profile handle</label>
+            <label htmlFor="insights-handle">{isPublic ? "Analyze another public profile" : "Analyze a public profile"}</label>
             <div>
               <span aria-hidden="true">@</span>
               <input
@@ -136,25 +146,18 @@ export function RunwayDecisionConsole({
                 maxLength={64}
                 name="handle"
                 pattern="[a-zA-Z0-9_.\-]{1,64}"
-                placeholder="cyrill-etter"
+                placeholder="github-handle"
               />
-              <button type="submit">Analyze profile</button>
+              <button type="submit">Load forecast</button>
             </div>
           </form>
-          {sourceMode !== "sample" ? <a href="/insights">Use sample</a> : <a href="/u/demo">View demo profile</a>}
+          {sourceMode !== "sample" ? <a href="/insights">Use sample</a> : <a href="/scan">Create a real scan</a>}
         </div>
         <header className="intel-mast">
           <div className="intel-mast__copy">
-            <div className="intel-sample-flag">
-              <b>{sourceLabel}</b>
-              <span>{sourceDetail}</span>
-            </div>
             <p>MONTHLY AI COST PLAN</p>
-            <h1 id="intel-title">Your usage, translated into a monthly plan.</h1>
-            <span>
-              Start with what was observed, inspect the projection assumption, then set the limit you are comfortable with.
-              Every number below stays read-only.
-            </span>
+            <h1 id="intel-title">{mastTitle}</h1>
+            <span>{mastDescription}</span>
             <div className="intel-basis" aria-label="Observed spend to monthly projection">
               <div><small>01 · OBSERVED</small><b>{currency.format(source.observedUsd)}</b><span>{evidenceWindow}</span></div>
               <i aria-hidden="true">→</i>
@@ -172,7 +175,7 @@ export function RunwayDecisionConsole({
         </header>
 
         <div className="intel-contract" aria-label="Usage data used by this calculation">
-          <span><b>{isPublic ? `@${handle}` : sourceMode}</b> {isPublic ? "public aggregates" : "not account data"}</span>
+          <span><b>{isPublic ? `@${handle}` : sourceMode === "demo" ? "demo" : "example"}</b> {isPublic ? "public aggregates" : "not account data"}</span>
           <span><b>{recordCount.toLocaleString("en-US")}</b> accepted rows</span>
           <span><b>{providerCount}</b> providers</span>
           <span><b>{source.observedDays || "—"}</b> calendar days observed</span>

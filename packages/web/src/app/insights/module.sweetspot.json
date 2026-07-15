@@ -5,7 +5,7 @@
     "name": "Explained AI Cost Plan",
     "kind": "module",
     "status": "project_bound",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "language": ["typescript", "tsx", "css"],
     "frameworks": ["next", "react"],
     "domain": ["usage-analytics", "budget-planning", "local-simulation", "explainable-analytics"]
@@ -94,7 +94,7 @@
     "sstf": {
       "status": "passing",
       "score": 95,
-      "notes": "Ten focused Insights tests and the complete 634-test suite pass on the final implementation commit.",
+      "notes": "Ten focused Insights tests and the complete 660-test suite pass with source-aware sample, demo, and public-profile contracts.",
       "evidence": [
         "packages/web/src/lib/__tests__/insights-route.test.ts",
         "packages/web/src/lib/__tests__/insights-runway.test.ts"
@@ -112,7 +112,7 @@
     "srs": {
       "status": "passing",
       "score": 95,
-      "notes": "Observed spend, calendar coverage, active and idle days, projection assumption, budget verdict, lever materiality, sample status, and zero-write boundaries are visible in plain language.",
+      "notes": "Observed spend, calendar coverage, projection assumption, budget verdict, lever materiality, source-aware sample/demo/public status, a truthful empty handle field, and zero-write boundaries are visible in plain language.",
       "evidence": [
         "packages/web/src/app/insights/runway-decision-console.tsx",
         "packages/web/src/app/insights/insight-brief.tsx",
@@ -122,9 +122,9 @@
     "ssra": {
       "status": "passing",
       "score": 95,
-      "notes": "Production deploy 6a5684919d0a839bae067ab5 passed live-profile, missing-profile fallback, account sign-in presence, guarded bridge API, preset interaction, network, console, document overflow, and internal readout containment at 390x844, 1440x900, and 3840x2160.",
+      "notes": "Production deploy 6a56e8ea7599e4a6b8dd1f41 passed sample, demo, and live-profile states, presets, methodology, clipboard, network, console, document overflow, and the 2592px three-lane 4K expert layout at 390x844, 1440x1000, and 3840x2160.",
       "evidence": [
-        "https://6a5684919d0a839bae067ab5--vibeusage.netlify.app/insights?handle=b-etterdigital",
+        "https://6a56e8ea7599e4a6b8dd1f41--vibeusage.netlify.app/insights?handle=cyrill-etter",
         "packages/web/src/app/insights/insights-brief.css",
         "packages/web/src/lib/__tests__/insights-route.test.ts"
       ]
@@ -242,15 +242,15 @@
   "quality": {
     "score": 90,
     "line_count": {
-      "max_file_lines": 313,
+      "max_file_lines": 287,
       "over_600_count": 0
     },
     "code_budget": {
       "status": "acceptable",
-      "feature_lines": 1544,
+      "feature_lines": 1654,
       "file_count": 13,
       "dependency_count": 3,
-      "notes": "The route remains a bounded server lookup plus a 313-line client decision component, 46-line scale policy, 112-line derived signal brief, 158-line model adapter, and split route-local styles."
+      "notes": "The route remains a bounded server lookup plus a 287-line client decision component, 46-line scale policy, 112-line derived signal brief, 158-line model adapter, and split route-local styles."
     },
     "test_commands": [
       "node --test packages/web/src/lib/__tests__/insights-route.test.ts",
@@ -274,6 +274,12 @@
         "status": "pass",
         "timestamp": "2026-07-14T18:52:16Z",
         "notes": "634 package tests, 15 control-plane tests, strict telemetry, TypeScript, no known dependency vulnerabilities, clean 29-route Next build, atomic deploy 6a5684919d0a839bae067ab5, and live plus immutable proof at 390x844, 1440x900, and 3840x2160 passed with working controls, honest sample fallback, account sign-in, guarded unauthenticated bridge response, exact containment, zero overflow, zero console errors, and zero failed requests."
+      },
+      {
+        "command": "10 focused Insights tests + pnpm sma:release-gate + Netlify production deploy + Playwright sample/demo/live matrix",
+        "status": "pass",
+        "timestamp": "2026-07-15T02:01:55Z",
+        "notes": "660 package tests, 15 control-plane tests, zero telemetry violations, TypeScript, production build, deploy 6a56e8ea7599e4a6b8dd1f41, truthful sample, demo and live profile states, preset and clipboard interactions, 2592px 4K layout, zero overflow, zero console errors, and zero failed requests passed at 390x844, 1440x1000, and 3840x2160."
       }
     ]
   },
@@ -373,6 +379,23 @@
         "lease_id": "lease-1784052830033-f52987f7",
         "context_event_ids": ["ctx-1784052830140-a09bb600", "ctx-1784055221103-3cdb75f2"],
         "attestation": {"method": "git_commit", "reference": "54f35b0"}
+      },
+      {
+        "actor_kind": "agent",
+        "actor_id": "bdd-main@019f4b2d",
+        "provider": "OpenAI",
+        "model": "gpt-5-codex",
+        "role": "implementer",
+        "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+        "files_touched": ["packages/web/src/app/insights/runway-decision-console.tsx", "packages/web/src/app/insights/insights.css", "packages/web/src/app/insights/insights-responsive.css", "packages/web/src/lib/__tests__/insights-route.test.ts", "packages/web/src/app/insights/module.sweetspot.json"],
+        "verification": ["10 focused tests", "660 full tests", "Netlify 6a56e8ea7599e4a6b8dd1f41", "390x844", "1440x1000", "3840x2160"],
+        "timestamp": "2026-07-15T02:01:55Z",
+        "summary": "Made Insights source-aware, removed duplicated sample framing, added a real-scan path, and composed an expert 4K decision console.",
+        "intent": "Make the forecast immediately understandable without implying example data belongs to the reader.",
+        "decision_rationale": "Source identity must agree with the headline and input state before a user can trust the projection, while 4K should expose the evidence chain and verdict concurrently.",
+        "lease_id": "lease-1784080010450-a245530b",
+        "context_event_ids": ["ctx-1784080010494-8b9f1512"],
+        "attestation": {"method": "agent_runner", "reference": "lease-1784080010450-a245530b"}
       }
     ],
     "reviewed_by": [],

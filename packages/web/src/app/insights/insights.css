@@ -96,23 +96,6 @@
   letter-spacing: 0.08em;
 }
 
-.intel-sample-flag {
-  display: flex;
-  width: fit-content;
-  margin-bottom: 26px;
-  border: 1px solid rgba(242, 199, 93, 0.52);
-  border-radius: 4px;
-  font: 700 10px/1 var(--font-data), ui-monospace, monospace;
-}
-
-.intel-sample-flag b,
-.intel-sample-flag span { padding: 9px 11px; }
-.intel-sample-flag b { background: var(--intel-amber); color: #171204; }
-.intel-sample-flag span { color: #f6df9e; }
-.intel-console[data-source="public"] .intel-sample-flag { border-color: rgba(45, 228, 194, 0.58); }
-.intel-console[data-source="public"] .intel-sample-flag b { background: var(--intel-mint); color: #02110e; }
-.intel-console[data-source="public"] .intel-sample-flag span { color: #a8f4e5; }
-
 .intel-mast h1 {
   max-width: 760px;
   margin: 0;

@@ -37,8 +37,16 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(consoleSource, /name="handle"/);
   assert.ok(consoleSource.includes('pattern="[a-zA-Z0-9_.\\-]{1,64}"'));
   assert.match(consoleSource, /defaultValue=\{isPublic \? handle : requestedHandle\}/);
-  assert.match(consoleSource, /Analyze profile/);
+  assert.match(consoleSource, /Load forecast/);
   assert.match(consoleSource, /Live public profile/);
+  assert.match(consoleSource, /Teaching sample/);
+  assert.match(consoleSource, /Example usage, translated into a monthly plan/);
+  assert.match(consoleSource, /usage translated into a monthly plan/);
+  assert.match(consoleSource, /This is not your account\. Use the example to learn the forecast/);
+  assert.match(consoleSource, /placeholder="github-handle"/);
+  assert.match(consoleSource, /href="\/scan">Create a real scan/);
+  assert.doesNotMatch(consoleSource, /Your usage, translated into a monthly plan/);
+  assert.doesNotMatch(consoleSource, /intel-sample-flag/);
   assert.match(consoleSource, /data-source=/);
   assert.match(consoleSource, /<InsightBrief/);
   assert.match(consoleSource, /<InsightMethodology/);
@@ -50,6 +58,7 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(styles, /\.intel-console/);
   assert.match(styles, /LIVE PUBLIC PROFILE \/ LATEST 30-DAY PACE/);
   assert.match(styles, /\.intel-decision/);
+  assert.doesNotMatch(styles, /\.intel-sample-flag/);
   assert.match(styles, /\.intel-readout strong \{[^}]*3\.3rem/);
   assert.doesNotMatch(styles, /\.intel-readout strong \{[^}]*clamp/);
   assert.match(briefSource, /What this scenario is actually saying/);
@@ -68,6 +77,12 @@ test("insights route is a route-local explained cost plan", () => {
   assert.match(methodologySource, /Open six calculation rows, provider review, evidence boundaries, formula, and CLI dry run/);
   assert.match(methodologySource, /This page writes nothing/);
   assert.match(responsive, /@media \(max-width: 760px\)/);
+  assert.match(responsive, /@media \(min-width: 2200px\)/);
+  assert.match(responsive, /max-width: min\(2640px, 95vw\)/);
+  assert.match(responsive, /\.intel-console \{ display: grid; grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
+  assert.match(responsive, /\.intel-brief \{ grid-column: 1; border-right: 1px solid var\(--intel-line\); \}/);
+  assert.match(responsive, /\.intel-mast__copy \{/);
+  assert.match(responsive, /\.intel-basis \{ grid-column: 2; grid-row: 1 \/ span 3/);
   assert.match(responsive, /prefers-reduced-motion/);
   assert.match(manifest, /000-vibetracker\.web\.runway-decision-console/);
   assert.doesNotMatch(page, /InsightsDecisionRadarPanel|InsightsBudgetPulsePanel|InsightsDeckPanel/);
@@ -80,7 +95,7 @@ test("insights route is a route-local explained cost plan", () => {
 test("insights explains its source, math, consequence, and confidence boundary in plain language", () => {
   const consoleSource = readFileSync("packages/web/src/app/insights/runway-decision-console.tsx", "utf8");
   const methodologySource = readFileSync("packages/web/src/app/insights/insight-methodology.tsx", "utf8");
-  assert.match(consoleSource, /explicit example data · not your account/);
+  assert.match(consoleSource, /example numbers · not your account/);
   assert.match(consoleSource, /latest 30-day provider detail/);
   assert.match(consoleSource, /provider totals fallback/);
   assert.match(consoleSource, /01 · OBSERVED/);
