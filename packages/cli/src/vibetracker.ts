@@ -71,6 +71,7 @@ import { renderShareBadgeMarkdown, renderShareBadgeSvg } from "./badge.ts";
 import { renderDoctorReport } from "./doctor.ts";
 import { lifeDemoInput, renderLifeCommand } from "./life.ts";
 import { resolveMissionCommand } from "./mission/mission-command.ts";
+import { buildLiveConsoleFrame, parseLiveConsoleOptions } from "./live-console.ts";
 import { resolveUsageCompareCommand } from "./compare/usage-compare-command.ts";
 import { formatTable, money } from "./format.ts";
 import { renderUploadBlocked, renderUploadFailure, renderUploadPreview, renderUploadSuccess, resolveUploadEndpoint, type UploadResponseProof } from "./upload.ts";
@@ -138,6 +139,7 @@ const USAGE = [
   "  sync [--demo] [--receipt --out dir]",
   "  receipts [--dir path] [--json] [--html --out path] [--open]   local sync receipt vault",
   "  mission | pulse | now [--budget N] [--json] [--html --out path] [--open] [--no-trust]   read-only operating picture",
+  "  live | watch [--once] [--interval N] [--budget N] [--no-trust]   auto-refresh local usage console",
   "  compare | delta | trend [--days N] [--as-of ISO] [--json] [--html --out path] [--open]   adjacent usage windows",
   "  total | stats | audit | trust | insights | profile | life | roadmap | privacy | detect [--target url] [--json] [--html --out path]",
   "    [--by provider|category|model|day] [--since 30d]",
@@ -907,6 +909,60 @@ async function main() {
     console.log(`  ${ok("✓")} mission control → ${dim(result.path)}`);
     console.log(`  ${dim("static HTML; ledger read-only, no usage writes, no uploads, no scripts")}`);
     if (result.open) openBrowser(result.path);
+    return;
+  }
+
+  if (cmd === "live" || cmd === "watch") {
+    const options = parseLiveConsoleOptions(argv, process.stdout.isTTY === true);
+    const trustSignals = options.trustEnabled ? collectTrustSignals() : [];
+    let frame = 0;
+    const draw = () => {
+      const output = buildLiveConsoleFrame({
+        records: filterRecords(readRecords(STORE), parseFilters(argv)),
+        trustSignals,
+        budgetUsd: options.budgetUsd,
+        frame: ++frame,
+        intervalSeconds: options.intervalSeconds,
+        mode: options.once ? "snapshot" : "watch",
+      });
+      if (options.once) console.log(output);
+      else process.stdout.write(`\x1b[H\x1b[2J${output}\n`);
+    };
+
+    if (options.once) {
+      draw();
+      return;
+    }
+
+    process.stdout.write("\x1b[?1049h");
+    try {
+      draw();
+      await new Promise<void>((resolve, reject) => {
+        let settled = false;
+        const tick = () => {
+          try { draw(); }
+          catch (error) { finish(error); }
+        };
+        const timer = setInterval(tick, options.intervalSeconds * 1_000);
+        const cleanup = () => {
+          clearInterval(timer);
+          process.off("SIGINT", stop);
+          process.off("SIGTERM", stop);
+        };
+        const finish = (error?: unknown) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          if (error != null) reject(error);
+          else resolve();
+        };
+        const stop = () => finish();
+        process.once("SIGINT", stop);
+        process.once("SIGTERM", stop);
+      });
+    } finally {
+      process.stdout.write("\x1b[?1049l");
+    }
     return;
   }
 
