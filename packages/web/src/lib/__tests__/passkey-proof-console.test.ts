@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { buildPasskeyCeremonyControl, buildPasskeyProofConsole, buildPasskeyRecoveryRelay } from "../passkey-proof-console.ts";
 
-test("passkey ceremony control maps account proof without mutating usage", () => {
+test("passkey ceremony control maps a local assertion without mutating usage", () => {
   const ceremony = buildPasskeyCeremonyControl({
-    state: "verified",
+    state: "asserted",
     supported: true,
     hasCredential: true,
   });
@@ -24,8 +24,8 @@ test("passkey ceremony control maps account proof without mutating usage", () =>
     "public-publish",
   ]);
   assert.deepEqual(ceremony.stages.map((stage) => stage.impact), [
-    "identity",
-    "identity",
+    "local_only",
+    "local_only",
     "local_only",
     "not_usage",
     "privacy",
@@ -39,8 +39,8 @@ test("passkey ceremony control maps account proof without mutating usage", () =>
     publishWrites: 0,
   });
   assert.deepEqual(ceremony.totals, {
-    identity: 2,
-    local_only: 1,
+    identity: 0,
+    local_only: 3,
     not_usage: 1,
     privacy: 1,
     publish: 1,
@@ -60,21 +60,21 @@ test("passkey ceremony control maps account proof without mutating usage", () =>
   assert.match(publish.target, /c0vibe\.app/);
   assert.match(publish.value, /Vibers Unite/);
 
-  assert.equal(ceremony.invariants.some((line) => /not usage truth/.test(line)), true);
+  assert.equal(ceremony.invariants.some((line) => /does not verify a server account/.test(line)), true);
   assert.equal(ceremony.invariants.some((line) => /No provider calls/.test(line)), true);
   assert.equal(ceremony.invariants.some((line) => /rank remain unchanged/.test(line)), true);
 });
 
-test("passkey proof console separates identity proof from usage and publish state", () => {
+test("passkey boundary console separates local authenticator state from usage and publish state", () => {
   const consoleState = buildPasskeyProofConsole({
-    state: "verified",
+    state: "asserted",
     supported: true,
     hasCredential: true,
   });
 
-  assert.equal(consoleState.headline, "Passkey proof console");
+  assert.equal(consoleState.headline, "Passkey boundary console");
   assert.equal(consoleState.terminalLines.every((line) => line.length === 64), true);
-  assert.match(consoleState.terminalLines.join("\n"), /IDENTITY-ONLY/);
+  assert.match(consoleState.terminalLines.join("\n"), /LOCAL-ONLY/);
   assert.match(consoleState.terminalLines.join("\n"), /C0VIBE\.APP/);
   assert.match(consoleState.terminalLines.join("\n"), /Vibers Unite/);
   assert.deepEqual(consoleState.rails.map((rail) => rail.id), [
@@ -85,7 +85,7 @@ test("passkey proof console separates identity proof from usage and publish stat
     "c0vibe-publish",
   ]);
   assert.deepEqual(consoleState.rails.map((rail) => rail.impact), [
-    "identity",
+    "local_only",
     "local_only",
     "not_usage",
     "privacy",
@@ -101,8 +101,8 @@ test("passkey proof console separates identity proof from usage and publish stat
 
   const cli = consoleState.rails.find((rail) => rail.id === "cli-approval");
   assert.ok(cli);
-  assert.equal(cli.value, "asserted");
-  assert.match(cli.guardrail, /preview/);
+  assert.equal(cli.value, "GitHub/server required");
+  assert.match(cli.guardrail, /grants no token/);
 
   const publish = consoleState.rails.find((rail) => rail.id === "c0vibe-publish");
   assert.ok(publish);
@@ -112,7 +112,7 @@ test("passkey proof console separates identity proof from usage and publish stat
 
 test("passkey recovery relay drills safe account recovery without usage movement", () => {
   const relay = buildPasskeyRecoveryRelay({
-    state: "verified",
+    state: "asserted",
     supported: true,
     hasCredential: true,
   });
@@ -120,6 +120,7 @@ test("passkey recovery relay drills safe account recovery without usage movement
   assert.equal(relay.headline, "Recovery relay");
   assert.equal(relay.terminalLines.every((line) => line.length === 64), true);
   assert.match(relay.terminalLines.join("\n"), /PASSKEY-RECOVERY-RELAY/);
+  assert.match(relay.terminalLines.join("\n"), /LOCAL-ONLY/);
   assert.match(relay.terminalLines.join("\n"), /NOT-USAGE/);
   assert.match(relay.terminalLines.join("\n"), /rankImpact 0/);
   assert.match(relay.terminalLines.join("\n"), /Vibers Unite/);
@@ -133,9 +134,9 @@ test("passkey recovery relay drills safe account recovery without usage movement
     "public-dry-run",
   ]);
   assert.deepEqual(relay.steps.map((step) => step.impact), [
-    "identity",
     "local_only",
-    "identity",
+    "local_only",
+    "local_only",
     "privacy",
     "not_usage",
     "publish",
@@ -145,8 +146,8 @@ test("passkey recovery relay drills safe account recovery without usage movement
   assert.equal(relay.steps.every((step) => step.meter > 0 && step.meter <= 100), true);
   assert.deepEqual(relay.totals, {
     steps: 6,
-    identity: 2,
-    localOnly: 1,
+    identity: 0,
+    localOnly: 3,
     notUsage: 1,
     privacy: 1,
     publish: 1,
@@ -194,33 +195,53 @@ test("passkey proof console shows blocked secure-context state honestly", () => 
   assert.equal(vault.value, "no local proof");
 });
 
-test("passkeys route exposes the ceremony console with responsive SFF styling", () => {
+test("passkeys route leads with GitHub-first identity truth and collapses the technical diagrams", () => {
   const page = readFileSync("packages/web/src/app/passkeys/page.tsx", "utf8");
+  const client = readFileSync("packages/web/src/app/passkeys/passkey-local-console.tsx", "utf8");
+  const reference = readFileSync("packages/web/src/app/passkeys/passkey-technical-reference.tsx", "utf8");
   const layout = readFileSync("packages/web/src/app/layout.tsx", "utf8");
   const css = readFileSync("packages/web/src/app/globals.css", "utf8");
+  const localCss = readFileSync("packages/web/src/app/passkeys/passkey-local.css", "utf8");
 
-  assert.match(layout, /href="\/passkeys"/);   // reachable from the header
-  assert.match(page, /buildPasskeyCeremonyControl/);
-  assert.match(page, /buildPasskeyRecoveryRelay/);
-  assert.match(page, /PasskeyCeremonyControlPanel/);
-  assert.match(page, /PasskeyRecoveryRelayPanel/);
-  assert.match(page, /VTK:\/\/PASSKEY-CEREMONY\/\/IDENTITY-ONLY\/\/ZERO-USAGE-MUTATION/);
-  assert.match(page, /VTK:\/\/PASSKEY-RECOVERY-RELAY\/\/IDENTITY-ONLY\/\/NOT-USAGE/);
-  assert.match(page, /providerCalls/);
-  assert.match(page, /promptReads/);
-  assert.match(page, /outputReads/);
-  assert.match(page, /usageMutations/);
-  assert.match(page, /publishWrites/);
-  assert.match(page, /publicWrites/);
-  assert.match(page, /relay\.steps\.map/);
-  assert.match(page, /step\.checklist\.map/);
-  assert.match(page, /stage\.impact === "not_usage"/);
-  assert.match(page, /step\.impact === "not_usage"/);
-  assert.match(page, /stage\.source/);
-  assert.match(page, /stage\.target/);
-  assert.match(page, /Vibers Unite/);
-  assert.match(page, /c0vibe\.app/);
-  assert.doesNotMatch(page, /dangerouslySetInnerHTML/);
+  assert.match(layout, /href="\/passkeys"/);
+  assert.match(page, /<PasskeyLocalConsole/);
+  assert.match(client, /GitHub proves the account\. This key stays local\./);
+  assert.match(client, /NOT AN ACCOUNT LOGIN/);
+  assert.match(client, /server verification: none/);
+  assert.match(client, /SIGN IN WITH GITHUB/);
+  assert.match(client, /CREATE LOCAL KEY/);
+  assert.match(client, /CHECK LOCAL KEY/);
+  assert.match(client, /CLEAR REFERENCE/);
+  assert.match(client, /No server verified this assertion/);
+  assert.match(client, /<details className="passkey-technical">/);
+  assert.match(client, /<PasskeyTechnicalReference/);
+  assert.doesNotMatch(client, /proof verified|verified for this session|proves account control/i);
+
+  assert.match(reference, /buildPasskeyCeremonyControl/);
+  assert.match(reference, /buildPasskeyRecoveryRelay/);
+  assert.match(reference, /VTK:\/\/PASSKEY-CEREMONY\/\/LOCAL-ONLY\/\/ZERO-USAGE-MUTATION/);
+  assert.match(reference, /VTK:\/\/PASSKEY-RECOVERY-RELAY\/\/LOCAL-ONLY\/\/NOT-USAGE/);
+  assert.match(reference, /providerCalls/);
+  assert.match(reference, /promptReads/);
+  assert.match(reference, /outputReads/);
+  assert.match(reference, /usageMutations/);
+  assert.match(reference, /publishWrites/);
+  assert.match(reference, /publicWrites/);
+  assert.match(reference, /relay\.steps\.map/);
+  assert.match(reference, /step\.checklist\.map/);
+  assert.match(reference, /stage\.impact === "not_usage"/);
+  assert.match(reference, /step\.impact === "not_usage"/);
+  assert.match(reference, /stage\.source/);
+  assert.match(reference, /stage\.target/);
+  assert.doesNotMatch(reference, /dangerouslySetInnerHTML/);
+
+  assert.match(localCss, /\.passkey-local__warning/);
+  assert.match(localCss, /\.passkey-local__rails/);
+  assert.match(localCss, /\.passkey-local__console/);
+  assert.match(localCss, /@media \(max-width: 620px\)/);
+  assert.match(localCss, /@media \(min-width: 2200px\)/);
+  assert.match(localCss, /max-width: min\(2640px, 95vw\)/);
+  assert.match(localCss, /prefers-reduced-motion: reduce/);
 
   assert.match(css, /\.passkey-ceremony-control/);
   assert.match(css, /\.passkey-ceremony-stage--not_usage/);

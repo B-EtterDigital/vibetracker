@@ -1,4 +1,4 @@
-export type PasskeyProofState = "idle" | "working" | "ready" | "verified" | "error";
+export type PasskeyProofState = "idle" | "working" | "ready" | "asserted" | "error";
 export type PasskeyProofImpact = "identity" | "local_only" | "not_usage" | "privacy" | "publish";
 
 export interface PasskeyProofInput {
@@ -130,7 +130,7 @@ function ceremonyTerminal(stage: Omit<PasskeyCeremonyStage, "terminal">): string
 export function buildPasskeyCeremonyControl(input: PasskeyProofInput): PasskeyCeremonyControl {
   const browserValue = input.supported ? "secure ready" : "secure context needed";
   const credentialValue = input.hasCredential ? "credential id preview" : "no local proof";
-  const stateValue = input.state === "verified" ? "asserted" : input.state;
+  const stateValue = input.state;
   const counters = {
     providerCalls: 0,
     promptReads: 0,
@@ -147,7 +147,7 @@ export function buildPasskeyCeremonyControl(input: PasskeyProofInput): PasskeyCe
       id: "secure-context",
       call: "SECURE",
       label: "Secure browser context",
-      impact: "identity",
+      impact: "local_only",
       value: browserValue,
       status: input.supported ? "ready" : "blocked",
       command: "window.isSecureContext",
@@ -160,14 +160,14 @@ export function buildPasskeyCeremonyControl(input: PasskeyProofInput): PasskeyCe
       id: "authenticator-prompt",
       call: "PROMPT",
       label: "Platform authenticator",
-      impact: "identity",
-      value: input.state === "verified" ? "asserted" : input.state === "working" ? "prompting" : "user mediated",
+      impact: "local_only",
+      value: input.state === "asserted" ? "asserted locally" : input.state === "working" ? "prompting" : "user mediated",
       status: input.state === "error" ? "attention" : input.state === "working" ? "waiting" : "manual",
       command: "navigator.credentials.create/get",
       source: "browser API",
       target: "device authenticator",
-      guardrail: "Authenticator proves account control only.",
-      meter: input.state === "verified" ? 100 : input.state === "working" ? 82 : input.state === "error" ? 42 : 64,
+      guardrail: "A local response is not server account verification.",
+      meter: input.state === "asserted" ? 100 : input.state === "working" ? 82 : input.state === "error" ? 42 : 64,
     }),
     stage({
       id: "credential-preview",
@@ -201,12 +201,12 @@ export function buildPasskeyCeremonyControl(input: PasskeyProofInput): PasskeyCe
       label: "CLI approval bridge",
       impact: "privacy",
       value: stateValue,
-      status: input.state === "verified" ? "ready" : "after proof",
+      status: input.state === "asserted" ? "local only" : "after check",
       command: "vibetracker login",
-      source: "C0VIBE account",
+      source: "GitHub / C0VIBE server",
       target: "local CLI token",
-      guardrail: "Upload still requires preview.",
-      meter: input.state === "verified" ? 92 : input.state === "ready" ? 78 : 58,
+      guardrail: "Local assertion grants no CLI token; server identity is required.",
+      meter: input.state === "asserted" ? 92 : input.state === "ready" ? 78 : 58,
     }),
     stage({
       id: "public-publish",
@@ -214,12 +214,12 @@ export function buildPasskeyCeremonyControl(input: PasskeyProofInput): PasskeyCe
       label: "Public profile relay",
       impact: "publish",
       value: "Vibers Unite",
-      status: input.state === "verified" ? "opt-in" : "locked",
+      status: input.state === "asserted" ? "still locked" : "locked",
       command: "vibetracker upload --dry-run",
       source: "reviewed aggregates",
       target: "c0vibe.app profile",
       guardrail: "Dry-run before public profile.",
-      meter: input.state === "verified" ? 90 : 54,
+      meter: input.state === "asserted" ? 90 : 54,
     }),
   ];
   const totals = stages.reduce<Record<PasskeyProofImpact, number>>((acc, current) => {
@@ -229,22 +229,22 @@ export function buildPasskeyCeremonyControl(input: PasskeyProofInput): PasskeyCe
 
   return {
     headline: "Passkey ceremony control",
-    subline: "A WebAuthn handoff map that keeps account identity, browser-local credential state, usage records, CLI approval, and public publishing on separate rails.",
+    subline: "A browser-local WebAuthn map that keeps authenticator state separate from server account identity, usage records, CLI approval, and public publishing.",
     terminalLines: [
       "+----------------------------------------------------------------+",
-      ceremonyLine("VTK://PASSKEY-CEREMONY//IDENTITY-ONLY//C0VIBE.APP"),
+      ceremonyLine("VTK://PASSKEY-CEREMONY//LOCAL-ONLY//C0VIBE.APP"),
       ceremonyLine(`browser ${browserValue} // credential ${credentialValue}`),
       ceremonyLine(`state ${stateValue} // stages ${stages.length}`),
       ceremonyLine(`calls ${counters.providerCalls} prompts ${counters.promptReads} outputs ${counters.outputReads}`),
       ceremonyLine(`usage mutations ${counters.usageMutations} // publish writes ${counters.publishWrites}`),
-      ceremonyLine("Vibers Unite // passkey proof is not usage"),
+      ceremonyLine("Vibers Unite // local assertion is not account proof"),
       "+----------------------------------------------------------------+",
     ],
     stages,
     counters,
     totals,
     invariants: [
-      "Passkeys prove account control, not usage truth.",
+      "This local WebAuthn ceremony does not verify a server account.",
       "No provider calls, prompt reads, or output reads occur during the ceremony.",
       "Usage totals, credits, spend, records, and rank remain unchanged.",
       "Public profile publishing still requires dry-run review and explicit upload.",
@@ -255,20 +255,20 @@ export function buildPasskeyCeremonyControl(input: PasskeyProofInput): PasskeyCe
 export function buildPasskeyRecoveryRelay(input: PasskeyProofInput): PasskeyRecoveryRelay {
   const browserValue = input.supported ? "secure ready" : "secure context needed";
   const credentialValue = input.hasCredential ? "local proof present" : "no local proof";
-  const stateValue = input.state === "verified" ? "asserted" : input.state;
+  const stateValue = input.state;
   const steps: PasskeyRecoveryStep[] = [
     {
       id: "secure-context-check",
       call: "CHECK",
       label: "Secure context drill",
-      impact: "identity",
+      impact: "local_only",
       value: browserValue,
       status: input.supported ? "ready" : "blocked",
       command: "window.isSecureContext",
       note: "Recovery starts by checking whether this browser can run a WebAuthn ceremony at all.",
       guardrail: "A blocked browser never becomes usage proof.",
       meter: input.supported ? 94 : 36,
-      frames: recoveryFrames(["https context", "webauthn available", "identity rail armed"]),
+      frames: recoveryFrames(["https context", "webauthn available", "local rail armed"]),
       checklist: ["secure origin", "webauthn API", "manual user action", "no provider calls"],
     },
     {
@@ -289,27 +289,27 @@ export function buildPasskeyRecoveryRelay(input: PasskeyProofInput): PasskeyReco
       id: "backup-authenticator",
       call: "BACKUP",
       label: "Second authenticator path",
-      impact: "identity",
+      impact: "local_only",
       value: input.supported ? "add another passkey" : "wait for secure context",
       status: input.supported ? "available" : "blocked",
       command: "navigator.credentials.create",
-      note: "A second passkey is treated as another identity ceremony, not as stronger usage evidence.",
+      note: "A second local key remains browser-authenticator state, not server identity or stronger usage evidence.",
       guardrail: "More authenticators do not raise usage rank.",
       meter: input.supported ? 84 : 38,
       frames: recoveryFrames(["second key slot", "user mediated", "identity only"]),
-      checklist: ["user present", "attestation none", "account bound", "rank unchanged"],
+      checklist: ["user present", "attestation none", "local only", "rank unchanged"],
     },
     {
       id: "cli-refresh",
       call: "TOKEN",
       label: "CLI token refresh",
       impact: "privacy",
-      value: stateValue,
-      status: input.state === "verified" ? "ready" : "after proof",
+      value: "GitHub/server required",
+      status: input.state === "asserted" ? "local only" : "after check",
       command: "vibetracker login --refresh",
-      note: "Refreshing a local uploader token stays separate from collecting records or publishing a profile.",
-      guardrail: "Token refresh does not read prompts, outputs, files, or spend.",
-      meter: input.state === "verified" ? 92 : input.state === "ready" ? 78 : 58,
+      note: "Refreshing a local uploader token uses the server identity flow and stays separate from this browser-local assertion.",
+      guardrail: "Local assertion grants no token and does not read prompts, outputs, files, or spend.",
+      meter: input.state === "asserted" ? 92 : input.state === "ready" ? 78 : 58,
       frames: recoveryFrames(["device code loop", "scoped token", "ledger untouched"]),
       checklist: ["account approval", "scoped token", "local store", "no usage read"],
     },
@@ -333,11 +333,11 @@ export function buildPasskeyRecoveryRelay(input: PasskeyProofInput): PasskeyReco
       label: "Public profile dry-run",
       impact: "publish",
       value: "Vibers Unite",
-      status: input.state === "verified" ? "preview" : "locked",
+      status: input.state === "asserted" ? "still locked" : "locked",
       command: "vibetracker upload --dry-run",
       note: "The public relay stays opt-in and preview-first, even after account recovery succeeds.",
       guardrail: "No c0vibe.app write before dry-run review.",
-      meter: input.state === "verified" ? 90 : 54,
+      meter: input.state === "asserted" ? 90 : 54,
       frames: recoveryFrames(["preview bundle", "c0vibe.app rail", "explicit publish"]),
       checklist: ["aggregate only", "review screen", "signed bundle", "manual publish"],
     },
@@ -370,7 +370,7 @@ export function buildPasskeyRecoveryRelay(input: PasskeyProofInput): PasskeyReco
     subline: "A passkey recovery drill for secure context checks, backup authenticators, CLI token refresh, dry-run review, and zero usage movement.",
     terminalLines: [
       "+--------------------------------------------------------------+",
-      frameLine("VTK://PASSKEY-RECOVERY-RELAY//IDENTITY-ONLY//NOT-USAGE"),
+      frameLine("VTK://PASSKEY-RECOVERY-RELAY//LOCAL-ONLY//NOT-USAGE"),
       "|--------------------------------------------------------------|",
       frameLine(`browser ${fit(browserValue, 18)} credential ${fit(credentialValue, 20)}`),
       frameLine("secure check -> local receipt -> backup key -> token"),
@@ -386,17 +386,17 @@ export function buildPasskeyRecoveryRelay(input: PasskeyProofInput): PasskeyReco
 export function buildPasskeyProofConsole(input: PasskeyProofInput): PasskeyProofConsole {
   const browserValue = input.supported ? "secure ready" : "secure context needed";
   const credentialValue = input.hasCredential ? "local id stored" : "no local proof";
-  const stateValue = input.state === "verified" ? "asserted" : input.state;
+  const stateValue = input.state;
   const rails: PasskeyProofRail[] = [
     {
       id: "browser-boundary",
       call: "BROWSER",
       label: "Authenticator boundary",
-      impact: "identity",
+      impact: "local_only",
       value: browserValue,
       command: "navigator.credentials.create",
-      note: "WebAuthn asks the platform authenticator to prove account control inside the browser boundary.",
-      guardrail: "Identity proof only.",
+      note: "WebAuthn asks the platform authenticator for a local response; this page does not send it to a verification server.",
+      guardrail: "Local authenticator check only; server identity remains unverified.",
       meter: input.supported ? 92 : 38,
       terminal: terminal(["secure context check", "platform auth prompt", "rp: VibeUsage", "attestation none"]),
     },
@@ -429,11 +429,11 @@ export function buildPasskeyProofConsole(input: PasskeyProofInput): PasskeyProof
       call: "CLI",
       label: "CLI approval handoff",
       impact: "privacy",
-      value: stateValue,
+      value: "GitHub/server required",
       command: "vibetracker login",
-      note: "The CLI can prove uploader identity without reading local usage until an explicit upload flow.",
-      guardrail: "Upload still needs preview.",
-      meter: input.state === "verified" ? 94 : input.state === "ready" ? 78 : 58,
+      note: "CLI uploader identity comes from the GitHub-first server flow, not this browser-local assertion.",
+      guardrail: "Local assertion grants no token; upload still needs preview.",
+      meter: input.state === "asserted" ? 94 : input.state === "ready" ? 78 : 58,
       terminal: terminal(["device code opens", "account approves", "token is scoped", "usage stays local"]),
     },
     {
@@ -458,14 +458,14 @@ export function buildPasskeyProofConsole(input: PasskeyProofInput): PasskeyProof
   }, { identity: 0, localOnly: 0, notUsage: 0, publish: 0 });
 
   return {
-    headline: "Passkey proof console",
+    headline: "Passkey boundary console",
     terminalLines: [
       "+--------------------------------------------------------------+",
-      frameLine("VTK://PASSKEY-PROOF//IDENTITY-ONLY//C0VIBE.APP"),
+      frameLine("VTK://PASSKEY-PROOF//LOCAL-ONLY//C0VIBE.APP"),
       "|--------------------------------------------------------------|",
       frameLine(`browser ${fit(browserValue, 20)} credential ${fit(credentialValue, 18)}`),
       frameLine(`state ${fit(stateValue, 14)} identity ${totals.identity} local ${totals.localOnly} not usage ${totals.notUsage}`),
-      frameLine("passkey proves account control; usage records stay separate"),
+      frameLine("local assertion is not server account or usage proof"),
       frameLine("Vibers Unite // dry-run before public profile"),
       "+--------------------------------------------------------------+",
     ],
