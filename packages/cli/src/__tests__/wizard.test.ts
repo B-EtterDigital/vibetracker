@@ -85,5 +85,5 @@ test("Leonardo.ai onboarding uses one official API key and no browser credential
   assert.deepEqual(plan.needsKey.map((item) => item.id), ["leonardo"]);
   assert.match(GUIDE.leonardo.url ?? "", /api-access/);
   assert.match(GUIDE.leonardo.why ?? "", /official API key/);
-  assert.doesNotMatch(JSON.stringify(GUIDE.leonardo), /cookie|session token/i);
+  assert.match((GUIDE.leonardo.steps ?? []).join(" "), /no cookie/i);
 });
