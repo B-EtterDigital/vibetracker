@@ -190,6 +190,7 @@ test("profile infographic owns measured traits while identity owns honestly earn
   assert.match(infographicStyles, /\.vboard \{ grid-template-columns: minmax\(0, 1fr\); min-width: 0; \}/);
   assert.match(infographicStyles, /\.vboard \{ width: auto; margin-inline: -14px; \}/);
   assert.match(infographicStyles, /\.vboard \.vboard-bio \{[\s\S]*min-width: 0;[\s\S]*max-width: 100%;[\s\S]*overflow-wrap: anywhere;/);
+  assert.match(infographicStyles, /\.vboard \.vinfo-pies \{[\s\S]*overflow-x: auto; overflow-y: hidden;[\s\S]*overscroll-behavior-inline: contain;/);
   assert.match(infographicStyles, /\.vboard \.vboard-bars-mount \{[\s\S]*min-width: 0;[\s\S]*max-width: 100%;[\s\S]*box-sizing: border-box;/);
   assert.match(infographicStyles, /\.vboard \.vboard-bars-mount \{ justify-content: flex-start; overflow-x: auto;/);
   assert.match(infographicStyles, /\.vinfo-stack \{ min-width: 640px; max-width: none; \}/);

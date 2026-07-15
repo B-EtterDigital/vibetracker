@@ -225,6 +225,7 @@
   .vboard .vinfo-pies {
     order: 1; min-width: 0; width: auto; max-width: calc(100% - 24px);
     margin: 16px 12px 0; justify-content: flex-start;
+    overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain;
   }
   .vboard .vinfo-spiral {
     order: 2; min-width: 0; width: calc(100% - 20px); max-width: calc(100% - 20px);
