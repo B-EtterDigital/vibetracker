@@ -200,6 +200,10 @@ test("compare route is real, discoverable, interactive, responsive, and honest w
   assert.match(responsive, /\.compare-picker \{ grid-template-columns: minmax\(0, 1fr\) 38px minmax\(0, 1fr\)/);
   assert.match(responsive, /\.compare-participant a \{ grid-column: 3; grid-row: 1;/);
   assert.match(responsive, /@media \(min-width: 2200px\)/);
+  assert.match(responsive, /@media \(min-width: 3000px\)/);
+  assert.match(responsive, /\.wrap:has\(> \.compare-lab\) \{ max-width: 3200px; \}/);
+  assert.match(responsive, /\.compare-panel \{ min-height: 560px; \}/);
+  assert.match(responsive, /\.compare-provider-row \{ min-height: 52px; \}/);
   assert.match(responsive, /@media \(prefers-reduced-motion: reduce\)/);
   assert.doesNotMatch(styles + responsive, /gradient\(/);
   assert.doesNotMatch(lab, /dangerouslySetInnerHTML/);
