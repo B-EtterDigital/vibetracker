@@ -271,15 +271,15 @@
   .vscan-hero { gap: 14px; }
   .vscan-hero-status { gap: 7px 12px; }
   .vscan-runway-head span:last-child { display: none; }
-  .vscan-runway-step { grid-template-columns: 48px minmax(0, 1fr); gap: 8px 10px; padding: 13px 0; }
-  .vscan-runway-index { grid-row: 1; align-self: start; padding-top: 8px; }
-  .vscan-runway-command { grid-column: 2; min-width: 0; }
+  .vscan-runway-step { grid-template-columns: 1fr; gap: 8px; padding: 13px 0; }
+  .vscan-runway-index { grid-column: 1; grid-row: auto; align-self: start; }
+  .vscan-runway-command { grid-column: 1; min-width: 0; }
   .vscan-runway-command .vscan-chip-wrap,
   .vscan-runway-command .vscan-chip { width: 100%; min-width: 0; }
   .vscan-runway-command .vscan-chip { justify-content: space-between; }
   .vscan-runway-command .vscan-chip code { min-width: 0; overflow-wrap: anywhere; text-align: left; line-height: 1.35; }
-  .vscan-runway-step p { grid-column: 2; }
-  .vscan-runway-signal { grid-column: 2; grid-row: auto; justify-self: start; }
+  .vscan-runway-step p { grid-column: 1; }
+  .vscan-runway-signal { grid-column: 1; grid-row: auto; justify-self: start; }
   .vscan-demo-launch { align-items: stretch; flex-direction: column; }
   .vscan-demo-launch .vscan-chip-wrap,
   .vscan-demo-launch .vscan-chip { width: 100%; min-width: 0; }

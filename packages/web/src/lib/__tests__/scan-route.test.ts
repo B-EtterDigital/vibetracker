@@ -39,6 +39,8 @@ test("scan route is the calm Make-your-scan page with a scripted local demo", ()
   assert.match(page, /import "\.\/scan-receipt\.css"/);
   assert.match(scan, /\.wrap:has\(> \.vscan\)::before/);
   assert.match(scan, /white-space: normal/);
+  assert.match(scan, /@media \(max-width: 560px\)[\s\S]*\.vscan-runway-step \{ grid-template-columns: 1fr;/);
+  assert.match(scan, /\.vscan-runway-command \{ grid-column: 1; min-width: 0; \}/);
   assert.match(page, /import \{ PROVIDERS \} from "\.\.\/\.\.\/\.\.\/\.\.\/adapters\/src\/index"/);
   assert.doesNotMatch(page, /adapters\/src\/registry/);
   assert.match(page, /<section className="vscan"/);
