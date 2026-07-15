@@ -8,8 +8,6 @@
 // Palette: the reference's warm contrast with the teal switched to blue/dark-blue (user order).
 // All marks re-present the same measured aggregates the text panels hold — never re-derived.
 
-import { Replay } from "./profile-replay";
-
 export const INFO_RAMP = ["#f0553d", "#f28c33", "#f2d5a3", "#2f7fd4", "#1d4e89", "#9f7cff"];
 
 function polar(cx: number, cy: number, r: number, deg: number): [number, number] {
@@ -52,21 +50,35 @@ function SharePie({ pct, color, size = 72 }: { pct: number; color: string; size?
   );
 }
 
-export function TraitPies({ traits }: { traits: TraitPie[] }) {
+// Clickable when onSelect is provided: each circle opens its specialization (hex + story + bars
+// switch); clicking the active circle returns to the overview. data-active drives the ring.
+export function TraitPies({
+  traits,
+  activeId,
+  onSelect,
+}: {
+  traits: TraitPie[];
+  activeId?: string | null;
+  onSelect?: (id: string) => void;
+}) {
   return (
-    <div className="vinfo-pies" role="img"
+    <div className="vinfo-pies" data-selected={activeId ? "true" : undefined}
       aria-label={`Trait mix: ${traits.map((t) => `${t.label} ${t.pct >= 1 ? Math.round(t.pct) : "<1"}%`).join(", ")}`}>
       {traits.map((trait, i) => (
-        <div
+        <button
+          type="button"
           className="vinfo-pie-item"
           key={trait.id}
+          data-active={trait.id === activeId ? "true" : undefined}
+          onClick={onSelect ? () => onSelect(trait.id) : undefined}
           style={{ "--i": i } as React.CSSProperties}
-          title={`${trait.label} — ${trait.pct >= 1 ? `${Math.round(trait.pct)}%` : "under 1%"} of all your operations. A trait pie only appears when you have real usage in that discipline — one dominant pie reads specialist, a full row reads all-rounder.`}
+          aria-pressed={trait.id === activeId}
+          title={`${trait.label} — ${trait.pct >= 1 ? `${Math.round(trait.pct)}%` : "under 1%"} of all your operations. Click to open this specialization (the hexagon, story and bars switch to it); click again for the overview.`}
         >
           <SharePie pct={trait.pct} color={trait.color} />
           <strong>{trait.pct >= 1 ? `${Math.round(trait.pct)}%` : "<1%"}</strong>
           <span>{trait.label}</span>
-        </div>
+        </button>
       ))}
     </div>
   );
@@ -79,16 +91,18 @@ export interface SpiralItem { label: string; pct: string; color?: string }
 // Big open hexagons anchored into the top-left corner; each coil's trace ends at its BOTTOM
 // vertex, so bigger coils exit lower and the solid leaders fan naturally to staircase dots —
 // no elbows, no crossings.
-export function PolygonSpiral({ items, sides = 6 }: { items: SpiralItem[]; sides?: number }) {
+// The dark navy coil keeps its weight as a shape, but navy TEXT and leader marks are unreadable
+// on the dark surface — those switch to a readable royal-blue ink.
+const readableInk = (color: string) => (color === "#1d4e89" ? "#7da4f0" : color);
+
+export function PolygonSpiral({ items, sides = 6, ariaContext }: { items: SpiralItem[]; sides?: number; ariaContext?: string }) {
   const shown = items.slice(0, 5);
-  // 30% bigger coils (user order), with the leader staircase tightened so the hexagon owns
-  // more of the canvas instead of the empty right margin.
   const base = 57;
   const step = 44;
   const rMax = base + (shown.length - 1) * step;
   const cx = rMax + 8;
   const cy = rMax + 8;
-  const W = 800;
+  const W = 880;
   const H = cy + rMax + 30;
   const angleStep = 360 / sides;
   const endAngle = sides === 6 ? 90 : 54; // hexagons end at the bottom vertex
@@ -96,26 +110,27 @@ export function PolygonSpiral({ items, sides = 6 }: { items: SpiralItem[]; sides
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="vinfo-spiral" role="img"
-      aria-label={`CLI distribution by active days: ${shown.map((s) => `${s.label} ${s.pct}`).join(", ")}`}>
+      aria-label={`${ariaContext ?? "Distribution"}: ${shown.map((s) => `${s.label} ${s.pct}`).join(", ")}`}>
       {shown.map((item, i) => {
         const r = base + i * step;
         const color = item.color ?? INFO_RAMP[i % INFO_RAMP.length];
+        const ink = readableInk(color);
         const pts = angles.map((deg) => polar(cx, cy, r, deg));
         const end = pts[pts.length - 1];
         const dotX = cx + rMax + 36 + i * 32; // the staircase: each row's dot lands further right
         const path = `M ${pts.map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" L ")}`;
-        const tip = `${item.label} — ${item.pct} of your agent-CLI active days (measured from cc.json agent metadata). Bigger coil = bigger share of your tool time.`;
+        const tip = `${item.label} — ${item.pct} of ${ariaContext ?? "this distribution"}. Bigger coil = bigger share.`;
         return (
           <g key={item.label} style={{ "--i": i } as React.CSSProperties} className="vinfo-coilgroup">
             <title>{tip}</title>
             {/* staged sequence per row: coil draws → stripe sweeps left→right → dot pops →
                 percentage fades in → tool name last (timing lives in the CSS classes) */}
             <path className="vinfo-coil" pathLength={1} d={path} fill="none" stroke={color} strokeWidth="7" strokeLinejoin="miter" />
-            <line className="vinfo-lead" pathLength={1} x1={end[0]} y1={end[1]} x2={dotX} y2={end[1]} stroke={color} strokeWidth="2.5" />
-            <circle className="vinfo-lead-dot" cx={dotX} cy={end[1]} r="5" fill={color} />
-            <text className="vinfo-spiral-pct" x={dotX + 14} y={end[1] + 1} dominantBaseline="middle">{item.pct}</text>
-            <circle className="vinfo-label-dot" cx={dotX + 66} cy={end[1]} r="2.5" fill={color} />
-            <text className="vinfo-spiral-label" x={dotX + 77} y={end[1] + 1} dominantBaseline="middle" fill={color}>{item.label}</text>
+            <line className="vinfo-lead" pathLength={1} x1={end[0]} y1={end[1]} x2={dotX} y2={end[1]} stroke={ink} strokeWidth="2.5" />
+            <circle className="vinfo-lead-dot" cx={dotX} cy={end[1]} r="5.5" fill={ink} />
+            <text className="vinfo-spiral-pct" x={dotX + 16} y={end[1] + 1} dominantBaseline="middle">{item.pct}</text>
+            <circle className="vinfo-label-dot" cx={dotX + 84} cy={end[1]} r="3" fill={ink} />
+            <text className="vinfo-spiral-label" x={dotX + 97} y={end[1] + 1} dominantBaseline="middle" fill={ink}>{item.label}</text>
           </g>
         );
       })}
@@ -224,49 +239,5 @@ export function SourceToolbar({ brands }: { brands: ToolbarBrand[] }) {
   );
 }
 
-// ---- the composed board -------------------------------------------------------------------------
-
-export function InfographicBoard({
-  traits,
-  bioTitle,
-  bioText,
-  cliSpiral,
-  months,
-}: {
-  traits: TraitPie[];
-  bioTitle: string;
-  bioText: string;
-  cliSpiral: SpiralItem[];
-  months: StackMonth[];
-}) {
-  return (
-    <section className="vprofile-panel vboard">
-      <div className="vboard-left">
-        {cliSpiral.length >= 2 ? (
-          <Replay hint="CLI distribution — how your agent-tool time splits across Codex, Claude, and the other CLIs">
-            <PolygonSpiral items={cliSpiral} sides={6} />
-          </Replay>
-        ) : null}
-        <div className="vboard-bio" title="Your bio — set it with: vibetracker profile --bio “…” and re-sync.">
-          <h2>{bioTitle}</h2>
-          <p>{bioText}</p>
-        </div>
-      </div>
-      <div className="vboard-right">
-        {traits.length ? (
-          <Replay hint="Trait pies — your disciplines at a glance; a pie only exists where you have real usage">
-            <TraitPies traits={traits} />
-          </Replay>
-        ) : null}
-        {months.length >= 2 ? (
-          <Replay hint="Monthly spend stacked by source — hover any segment for the exact source and amount">
-            <StackColumns
-              months={months}
-              ariaLabel={`Monthly spend: ${months.map((m) => `${m.label} ${Math.round(m.sharePct)}%`).join(", ")}`}
-            />
-          </Replay>
-        ) : null}
-      </div>
-    </section>
-  );
-}
+// The composed board itself is a client component (clickable specialization switching):
+// see profile-board.tsx. This file keeps the pure SVG instruments it composes.

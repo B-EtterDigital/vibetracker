@@ -32,7 +32,8 @@ import { SyncRhythm, GitHubContributions } from "./profile-heatmap";
 import { TokenBreakdown, Delegation } from "./profile-tokens";
 import { OrchestrationHours } from "./profile-orchestration";
 import { ViberIdentity } from "./profile-identity";
-import { InfographicBoard, SourceToolbar, INFO_RAMP, type StackMonth } from "./profile-infographic";
+import { SourceToolbar, INFO_RAMP, type StackMonth } from "./profile-infographic";
+import { InfographicBoard, type BoardSpec } from "./profile-board";
 import { SkillSignals } from "./profile-signals";
 import { computeProfileSignals } from "../../../lib/profile-signals";
 import { UsageTelemetry } from "./profile-telemetry";
@@ -451,7 +452,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
         color: INFO_RAMP[i % INFO_RAMP.length],
       };
     });
-  // monthly spend stacked by source — last 5 months from the same providerDays series the chart uses
+  // monthly spend stacked by source — last 12 months, filterable to one trait's sources
   const monthAgg = new Map<string, Map<string, number>>();
   for (const d of profile.providerDays) {
     const ym = d.date.slice(0, 7);
@@ -459,25 +460,95 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     per.set(d.provider, (per.get(d.provider) ?? 0) + d.usd);
     monthAgg.set(ym, per);
   }
-  const yms = [...monthAgg.keys()].sort().slice(-5);
-  const monthTotals = yms.map((ym) => [...monthAgg.get(ym)!.values()].reduce((s, v) => s + v, 0));
-  const windowSum = monthTotals.reduce((s, v) => s + v, 0);
-  const provWindow = new Map<string, number>();
-  for (const ym of yms) for (const [p, v] of monthAgg.get(ym)!) provWindow.set(p, (provWindow.get(p) ?? 0) + v);
-  const topProv = [...provWindow.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([p]) => p);
-  const months: StackMonth[] = yms.map((ym, i) => {
-    const per = monthAgg.get(ym)!;
-    const segments = topProv
-      .filter((p) => (per.get(p) ?? 0) > 0)
-      .map((p) => ({ id: p, label: providerLabel(p), value: per.get(p)!, color: INFO_RAMP[topProv.indexOf(p) % INFO_RAMP.length] }));
-    const other = [...per.entries()].filter(([p]) => !topProv.includes(p)).reduce((s, [, v]) => s + v, 0);
-    if (other > 0) segments.push({ id: "other", label: "Other sources", value: other, color: "rgba(217,255,242,0.25)" });
-    return {
-      label: MONTHS[Number(ym.slice(5)) - 1] ?? ym,
-      sharePct: windowSum > 0 ? (monthTotals[i] / windowSum) * 100 : 0,
-      segments,
+  const monthsFor = (provs?: Set<string>): StackMonth[] => {
+    const yms = [...monthAgg.keys()].sort().slice(-12);
+    const rowsOf = (ym: string) => [...monthAgg.get(ym)!.entries()].filter(([p, v]) => v > 0 && (!provs || provs.has(p)));
+    const totals = yms.map((ym) => rowsOf(ym).reduce((s, [, v]) => s + v, 0));
+    const windowSum = totals.reduce((s, v) => s + v, 0);
+    const provWindow = new Map<string, number>();
+    for (const ym of yms) for (const [p, v] of rowsOf(ym)) provWindow.set(p, (provWindow.get(p) ?? 0) + v);
+    const topProv = [...provWindow.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([p]) => p);
+    return yms.map((ym, i) => {
+      const rows = rowsOf(ym);
+      const segments = topProv
+        .filter((p) => rows.some(([q]) => q === p))
+        .map((p) => ({ id: p, label: providerLabel(p), value: rows.find(([q]) => q === p)![1], color: INFO_RAMP[topProv.indexOf(p) % INFO_RAMP.length] }));
+      const other = rows.filter(([p]) => !topProv.includes(p)).reduce((s, [, v]) => s + v, 0);
+      if (other > 0) segments.push({ id: "other", label: "Other sources", value: other, color: "rgba(217,255,242,0.25)" });
+      return {
+        label: MONTHS[Number(ym.slice(5)) - 1] ?? ym,
+        sharePct: windowSum > 0 ? (totals[i] / windowSum) * 100 : 0,
+        segments,
+      };
+    });
+  };
+  // sources per trait (by each source's primary discipline) + per-trait model distribution
+  const provsByCat = new Map<string, Set<string>>();
+  for (const p of profile.providers) {
+    const cat = primaryCategory(p.provider);
+    if (!provsByCat.has(cat)) provsByCat.set(cat, new Set());
+    provsByCat.get(cat)!.add(p.provider);
+  }
+  const spiralForCat = (cat: string) => {
+    const provs = provsByCat.get(cat);
+    if (!provs) return [];
+    const byModel = new Map<string, number>();
+    for (const m of profile.providerModels) {
+      if (!provs.has(m.provider)) continue;
+      const name = prettyModel(m.model);
+      byModel.set(name, (byModel.get(name) ?? 0) + m.ops);
+    }
+    const total = [...byModel.values()].reduce((s, v) => s + v, 0);
+    return [...byModel.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([model, ops], i) => ({
+      label: model.length > 16 ? `${model.slice(0, 15)}…` : model,
+      pct: total > 0 && (ops / total) * 100 >= 1 ? `${Math.round((ops / total) * 100)}%` : "<1%",
+      color: INFO_RAMP[i % INFO_RAMP.length],
+    }));
+  };
+  // one BoardSpec per trait + the overview — the hex, story and bars switch on circle click
+  const specs: Record<string, BoardSpec> = {
+    all: {
+      id: "all",
+      label: "Overview",
+      spiralTitle: "CLI distribution, share of active days",
+      spiral: cliSpiral,
+      months: monthsFor(),
+      story: {
+        title: "the whole practice",
+        intro: userBio || undefined,
+        bullets: [
+          `${facts.categories} disciplines across ${facts.providers} sources`,
+          `${opsCompact} operations · ${formatUsd(facts.usd)} API-equivalent`,
+          `${formatInt(facts.days)} active days`,
+        ],
+        foot: "click a circle to open that specialization — click it again to come back",
+      },
+    },
+  };
+  for (const c of categories) {
+    const provs = provsByCat.get(c.id);
+    const spiral = spiralForCat(c.id);
+    const sourceNames = provs ? [...provs].map((p) => providerLabel(p)) : [];
+    const topModelNames = spiral.slice(0, 3).map((s) => s.label);
+    specs[c.id] = {
+      id: c.id,
+      label: c.label,
+      spiralTitle: `${c.label} — model distribution by operations`,
+      spiral: spiral.length >= 2 ? spiral : cliSpiral,
+      months: provs?.size ? monthsFor(provs) : monthsFor(),
+      story: {
+        title: c.label.toLowerCase(),
+        bullets: [
+          `${c.share >= 1 ? Math.round(c.share) : "<1"}% of all operations — ${c.amount}`,
+          ...(topModelNames.length ? [`top models: ${topModelNames.join(" · ")}`] : []),
+          ...(sourceNames.length ? [`sources: ${sourceNames.join(" · ")}`] : []),
+        ],
+        foot: spiral.length >= 2
+          ? "the hexagon and bars are filtered to this specialization"
+          : "not enough distinct models to chart — the hexagon shows the CLI overview",
+      },
     };
-  });
+  }
 
   if (isDemo) add("hero", "full", <DemoBanner key="demo" />);
   add("hero", "full",
@@ -497,15 +568,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // Directly under the hero: the flat logo toolbar, then the composed infographic board
   // (pies=traits · bio · spiral=CLI distribution · columns=monthly spend) — the reference, 1:1.
   add("hero", "full", <SourceToolbar brands={brands} key="toolbar" />);
-  add("hero", "full",
-    <InfographicBoard
-      traits={traits}
-      bioTitle={`@${profile.handle}`}
-      bioText={userBio || `${opsCompact} operations across ${facts.providers} sources and ${facts.categories} disciplines — ${formatUsd(facts.usd)} tracked over ${facts.days} active days. Set your own bio with vibetracker profile --bio.`}
-      cliSpiral={cliSpiral}
-      months={months}
-      key="board"
-    />);
+  add("hero", "full", <InfographicBoard traits={traits} specs={specs} key="board" />);
   add("hero", "full",
     <ProfileReadout
       handle={profile.handle}

@@ -62,6 +62,8 @@
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; border-radius: 8px; z-index: 1;
 }
+/* once a real avatar image exists, the fallback initials disappear — never overlay a face */
+.vhero-avatar:has(.vhero-avatar-img) .vhero-avatar-mark { display: none; }
 /* discipline wash — the viber's own colour bleeding up from the avatar corner, plus a bottom
    scrim so the name and identity keep full contrast over the banner */
 .vhero-banner-wash {

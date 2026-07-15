@@ -1,7 +1,7 @@
-/* Flat-infographic board — hexagon anchored top-left, trait pies one line right, labelled stack
-   columns below them. Entrance animations are transform/opacity only, staggered, reduced-motion
-   aware, and replayable by click (the .vinfo-replay wrapper re-mounts its child).
-   Namespaced .vinfo* / .vboard* / .vtoolbar*. */
+/* Flat-infographic board — interactive: trait circles switch the hexagon, story and bars to that
+   specialization. Entrance animations are transform/opacity only and replay on every switch; the
+   FIRST build-up runs long, later switches run snappier (--vspd multiplier). Namespaced .vinfo* /
+   .vboard* / .vtoolbar*. */
 
 /* ---- logo toolbar with the brutalist nameplate ---- */
 .vtoolbar {
@@ -13,7 +13,7 @@
   text-transform: uppercase; letter-spacing: 0.04em; color: #f28c33;
   margin-right: clamp(4px, 1vw, 14px);
 }
-.vtoolbar-item { display: inline-flex; animation: vinfo-pop 0.5s ease-out both; animation-delay: calc(var(--i, 0) * 55ms); }
+.vtoolbar-item { display: inline-flex; animation: vinfo-pop calc(0.5s * var(--vspd, 1)) ease-out both; animation-delay: calc(var(--i, 0) * 55ms * var(--vspd, 1)); }
 .vtoolbar-item img {
   width: clamp(30px, 3.4vw, 42px); height: clamp(30px, 3.4vw, 42px);
   object-fit: contain; display: block; opacity: 0.85;
@@ -27,51 +27,87 @@
 }
 .vtoolbar-item:hover i { transform: translateY(-3px) scale(1.06); }
 
-/* ---- the board: hexagon flush into the top-left corner ---- */
+/* ---- the board: breaks out of the page column — much wider on big screens, full-bleed on small */
 .vboard {
-  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-  gap: 0; padding: 0; overflow: hidden;
+  --vspd: 1;
+  display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 0 clamp(8px, 1.5vw, 28px); padding: 0; overflow: hidden;
+  width: min(96vw, 1780px);
+  margin-left: calc((100% - min(96vw, 1780px)) / 2);
 }
-/* breathing room: the hexagon sits NEAR the corner, never flush against it */
+.vboard--fast { --vspd: 0.45; } /* after the first interaction, switches run snappier */
+
 .vboard-left { min-width: 0; display: flex; flex-direction: column; padding: 26px 0 22px 26px; }
 .vboard-left .vinfo-spiral { display: block; margin: 0; }
 .vboard-right {
   min-width: 0; display: flex; flex-direction: column; gap: 12px;
   padding: 26px 26px 22px 8px;
 }
-/* the trait pies slide LEFT into the empty air right of the hexagon's top; the row is packed
-   toward the column's content edge so the RIGHT-most pie's edge aligns with the RIGHT-most bar
-   (both sit flush to the same padding line — user order) */
-.vboard-right .vinfo-pies { margin-left: -55%; justify-content: flex-end; }
+/* the trait circles slide LEFT into the empty air right of the hexagon's top; packed to the
+   column's content edge so the RIGHT-most circle aligns with the RIGHT-most bar */
+.vboard-right .vinfo-pies { margin-left: -48%; justify-content: flex-end; }
 
-.vboard-bio { padding: 10px 24px 0 4px; max-width: 66ch; }
-.vboard-bio h2 {
+/* ---- the story block (adapts per specialization) ---- */
+.vboard-bio { padding: 12px 24px 0 4px; max-width: 72ch; }
+.vboard-story-title {
   margin: 0 0 10px;
-  font: 800 clamp(1.4rem, 2.4vw, 2rem) / 1.1 var(--vp-mono);
-  text-transform: uppercase; letter-spacing: 0.12em; color: #eafff8;
+  font: 800 clamp(1.3rem, 2.2vw, 1.8rem) / 1.1 var(--vp-mono);
+  text-transform: uppercase; letter-spacing: 0.1em; color: #eafff8;
+  opacity: 0; animation: vinfo-fade calc(0.5s * var(--vspd, 1)) ease-out both;
+  animation-delay: calc(0.3s * var(--vspd, 1));
 }
-.vboard-bio p { margin: 0; font: 500 14px/1.7 var(--vp-mono); color: rgba(217, 255, 242, 0.66); }
+.vboard-bio p {
+  margin: 0 0 8px; font: 500 14px/1.7 var(--vp-mono); color: rgba(217, 255, 242, 0.66);
+  opacity: 0; animation: vinfo-fade calc(0.5s * var(--vspd, 1)) ease-out both;
+  animation-delay: calc(0.45s * var(--vspd, 1));
+}
+.vboard-story-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.vboard-story-list li {
+  position: relative; padding-left: 20px;
+  font: 500 14px/1.6 var(--vp-mono); color: rgba(217, 255, 242, 0.72);
+  opacity: 0; animation: vinfo-slide calc(0.45s * var(--vspd, 1)) ease-out both;
+}
+.vboard-story-list li:nth-child(1) { animation-delay: calc(0.5s * var(--vspd, 1)); }
+.vboard-story-list li:nth-child(2) { animation-delay: calc(0.62s * var(--vspd, 1)); }
+.vboard-story-list li:nth-child(3) { animation-delay: calc(0.74s * var(--vspd, 1)); }
+.vboard-story-list li:nth-child(n+4) { animation-delay: calc(0.86s * var(--vspd, 1)); }
+.vboard-story-list li::before {
+  content: ""; position: absolute; left: 2px; top: 0.62em;
+  width: 8px; height: 8px; background: #f28c33;
+}
+.vboard-story-foot {
+  margin-top: 10px !important;
+  font-size: 11.5px !important; color: rgba(217, 255, 242, 0.45) !important;
+}
 
-/* ---- replay wrapper: subtle affordance, animations re-run on click ---- */
-.vinfo-replay { cursor: pointer; }
-.vinfo-replay:focus-visible { outline: 2px solid #2f7fd4; outline-offset: 3px; }
-
-/* ---- trait pies — ONE line, scroll if crowded ---- */
+/* ---- trait circles — ONE line, clickable, clear active state ---- */
 .vinfo-pies {
   display: flex; flex-wrap: nowrap; justify-content: flex-start; align-items: flex-start;
-  gap: clamp(8px, 1.2vw, 18px); padding: 4px 0 10px;
+  gap: clamp(8px, 1.2vw, 18px); padding: 6px 0 10px;
   overflow-x: auto; scrollbar-width: thin;
 }
 .vinfo-pie-item {
+  /* button reset — the circle IS the control */
+  appearance: none; background: none; border: 0; cursor: pointer;
   flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 6px;
-  min-width: 0;
-  animation: vinfo-pop 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-  animation-delay: calc(var(--i, 0) * 80ms);
-  transition: transform 220ms ease;
+  min-width: 0; padding: 4px;
+  font: inherit; color: inherit;
+  animation: vinfo-pop calc(0.55s * var(--vspd, 1)) cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 80ms * var(--vspd, 1));
+  transition: transform 220ms ease, opacity 220ms ease;
 }
 .vinfo-pie-item:hover { transform: translateY(-3px); }
-.vinfo-pie { width: clamp(52px, 4.8vw, 72px); height: auto; transition: transform 220ms ease; }
+.vinfo-pie-item:focus-visible { outline: 2px solid #f28c33; outline-offset: 3px; }
+.vinfo-pie { width: clamp(52px, 4.8vw, 72px); height: auto; transition: transform 220ms ease; border-radius: 50%; }
 .vinfo-pie-item:hover .vinfo-pie { transform: scale(1.07); }
+/* ACTIVE circle: an unmistakable orange ring + lifted; the others step back a little */
+.vinfo-pie-item[data-active="true"] .vinfo-pie {
+  outline: 3px solid #f28c33; outline-offset: 4px;
+  transform: scale(1.08);
+}
+.vinfo-pie-item[data-active="true"] span { color: #f28c33; }
+.vinfo-pies[data-selected="true"] .vinfo-pie-item:not([data-active="true"]) { opacity: 0.55; }
+.vinfo-pies[data-selected="true"] .vinfo-pie-item:not([data-active="true"]):hover { opacity: 0.9; }
 .vinfo-pie-item strong {
   font: 800 clamp(1rem, 1.5vw, 1.3rem) / 1 var(--vp-mono);
   letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: #eafff8;
@@ -80,6 +116,7 @@
   font: 700 9px/1.2 var(--vp-mono); text-transform: uppercase; letter-spacing: 0.1em;
   color: rgba(217, 255, 242, 0.5); text-align: center;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 82px;
+  transition: color 200ms ease;
 }
 
 /* ---- hexagon spiral: staged sequence per row —
@@ -87,59 +124,62 @@
 .vinfo-spiral { width: 100%; height: auto; }
 .vinfo-coil {
   stroke-dasharray: 1; stroke-dashoffset: 1;
-  animation: vinfo-draw 0.8s ease-out both;
-  animation-delay: calc(var(--i, 0) * 130ms);
+  animation: vinfo-draw calc(0.8s * var(--vspd, 1)) ease-out both;
+  animation-delay: calc(var(--i, 0) * 130ms * var(--vspd, 1));
+  transition: stroke-width 200ms ease, filter 200ms ease;
 }
 .vinfo-lead {
   stroke-dasharray: 1; stroke-dashoffset: 1;
-  animation: vinfo-draw 0.4s ease-out both;
-  animation-delay: calc(var(--i, 0) * 130ms + 0.62s);
+  animation: vinfo-draw calc(0.4s * var(--vspd, 1)) ease-out both;
+  animation-delay: calc((var(--i, 0) * 130ms + 620ms) * var(--vspd, 1));
 }
 .vinfo-lead-dot {
   transform-box: fill-box; transform-origin: center;
   opacity: 0; transform: scale(0);
-  animation: vinfo-dot 0.3s cubic-bezier(0.34, 1.4, 0.64, 1) both;
-  animation-delay: calc(var(--i, 0) * 130ms + 1s);
+  animation: vinfo-dot calc(0.3s * var(--vspd, 1)) cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  animation-delay: calc((var(--i, 0) * 130ms + 1000ms) * var(--vspd, 1));
 }
 .vinfo-spiral-pct {
   opacity: 0;
-  animation: vinfo-fade 0.35s ease-out both;
-  animation-delay: calc(var(--i, 0) * 130ms + 1.15s);
+  animation: vinfo-fade calc(0.35s * var(--vspd, 1)) ease-out both;
+  animation-delay: calc((var(--i, 0) * 130ms + 1150ms) * var(--vspd, 1));
 }
 .vinfo-label-dot, .vinfo-spiral-label {
   opacity: 0;
-  animation: vinfo-fade 0.35s ease-out both;
-  animation-delay: calc(var(--i, 0) * 130ms + 1.3s);
+  animation: vinfo-fade calc(0.35s * var(--vspd, 1)) ease-out both;
+  animation-delay: calc((var(--i, 0) * 130ms + 1300ms) * var(--vspd, 1));
 }
-.vinfo-coilgroup { transition: opacity 200ms ease; }
-.vinfo-spiral:hover .vinfo-coilgroup { opacity: 0.45; }
+/* hover highlight is POSITIVE: the hovered coil thickens + brightens; the rest barely steps back */
+.vinfo-spiral:hover .vinfo-coilgroup { opacity: 0.82; }
 .vinfo-spiral .vinfo-coilgroup:hover { opacity: 1; }
-.vinfo-spiral-pct { font: 800 17px var(--vp-mono); fill: #eafff8; letter-spacing: -0.02em; }
-.vinfo-spiral-label { font: 700 10.5px var(--vp-mono); text-transform: uppercase; letter-spacing: 0.13em; }
+.vinfo-spiral .vinfo-coilgroup:hover .vinfo-coil { stroke-width: 10; filter: brightness(1.22); }
+/* % same size as the circles' numbers; tool names bigger and readable */
+.vinfo-spiral-pct { font: 800 24px var(--vp-mono); fill: #eafff8; letter-spacing: -0.02em; }
+.vinfo-spiral-label { font: 700 14.5px var(--vp-mono); text-transform: uppercase; letter-spacing: 0.1em; }
 
-/* ---- stack columns: bars grow from the baseline, per-column stagger ---- */
-/* flush to the column's right content edge — the alignment line the pies share. overflow stays
-   visible so the last column's % and month labels can breathe past the box edge without moving it */
-.vinfo-stack { width: 100%; max-width: 480px; height: auto; align-self: flex-end; overflow: visible; }
+/* ---- stack columns: 12 months, bars grow from the baseline, per-column stagger ---- */
+.vinfo-stack { width: 100%; height: auto; align-self: flex-end; overflow: visible; }
 .vinfo-seg {
   transform-box: fill-box; transform-origin: center bottom;
-  animation: vinfo-grow 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-  animation-delay: calc(var(--i, 0) * 110ms);
+  animation: vinfo-grow calc(0.7s * var(--vspd, 1)) cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms * var(--vspd, 1));
   transition: opacity 180ms ease;
 }
 .vinfo-column:hover .vinfo-seg { opacity: 0.9; }
 .vinfo-column .vinfo-seg:hover { opacity: 1; }
+/* % numbers sized to match the trait circles' numbers at render scale */
 .vinfo-stack-pct {
-  font: 800 21px var(--vp-mono); fill: #eafff8; letter-spacing: -0.02em;
-  opacity: 0; animation: vinfo-fade 0.5s ease-out both; animation-delay: calc(var(--i, 0) * 110ms + 0.5s);
+  font: 800 30px var(--vp-mono); fill: #eafff8; letter-spacing: -0.02em;
+  opacity: 0; animation: vinfo-fade calc(0.5s * var(--vspd, 1)) ease-out both;
+  animation-delay: calc((var(--i, 0) * 70ms + 450ms) * var(--vspd, 1));
 }
-/* the date names, big — user order */
+/* the date names, big */
 .vinfo-stack-month {
-  font: 800 17px var(--vp-mono); fill: rgba(217, 255, 242, 0.75);
-  text-transform: uppercase; letter-spacing: 0.12em;
+  font: 800 21px var(--vp-mono); fill: rgba(217, 255, 242, 0.78);
+  text-transform: uppercase; letter-spacing: 0.1em;
 }
 
-/* ---- % donut: arc draws in ---- */
+/* ---- % donut (signal read) ---- */
 .vinfo-donut { width: 58px; height: 58px; flex: none; }
 .vinfo-donut-arc { stroke-dasharray: 1; stroke-dashoffset: 1; animation: vinfo-draw 0.9s ease-out 0.2s both; }
 .vinfo-donut-center { font: 800 12.5px var(--vp-mono); letter-spacing: -0.03em; }
@@ -152,6 +192,10 @@
 @keyframes vinfo-fade {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+@keyframes vinfo-slide {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 @keyframes vinfo-draw {
   from { stroke-dashoffset: 1; }
@@ -167,20 +211,23 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .vtoolbar-item, .vinfo-pie-item, .vinfo-coil, .vinfo-lead, .vinfo-lead-dot, .vinfo-label-dot,
-  .vinfo-spiral-pct, .vinfo-spiral-label, .vinfo-seg, .vinfo-stack-pct, .vinfo-donut-arc {
+  .vinfo-spiral-pct, .vinfo-spiral-label, .vinfo-seg, .vinfo-stack-pct, .vinfo-donut-arc,
+  .vboard-story-title, .vboard-bio p, .vboard-story-list li {
     animation: none; opacity: 1; stroke-dashoffset: 0; transform: none;
   }
 }
 
-/* ---- responsive: board unrolls — pies → bars → hexagon → bio ---- */
+/* ---- responsive: the board unrolls — circles → bars → hexagon → story ---- */
 @media (max-width: 980px) {
-  .vboard { grid-template-columns: 1fr; }
+  .vboard { grid-template-columns: 1fr; width: 100%; margin-left: 0; }
   .vboard-left { padding: 12px 0 18px 12px; }
   .vboard-right { padding: 18px 12px 6px; order: -1; }
-  .vboard-right .vinfo-pies { margin-left: 0; padding-right: 0; }
-  .vinfo-stack { max-width: 440px; align-self: center; }
+  .vboard-right .vinfo-pies { margin-left: 0; justify-content: flex-start; }
+  .vinfo-stack { align-self: center; }
 }
 @media (max-width: 700px) {
-  .vinfo-spiral-pct { font-size: 19px; }
-  .vinfo-spiral-label { font-size: 12px; }
+  /* small screens: the board goes truly full-bleed */
+  .vboard { width: 100vw; margin-left: calc((100% - 100vw) / 2); padding-inline: 10px; }
+  .vinfo-spiral-pct { font-size: 26px; }
+  .vinfo-spiral-label { font-size: 16px; }
 }
