@@ -53,6 +53,21 @@ export interface CompareProviderRow {
   presence: "shared" | "left_only" | "right_only";
 }
 
+export interface CompareBrief {
+  headline: string;
+  summary: string;
+  vectorLabel: string;
+  providerLabel: string;
+  scopeLabel: string;
+  decisiveLabel: string;
+  decisiveDetail: string;
+  nextAction: string;
+  nextView: "providers" | "evidence";
+  leftWins: number;
+  rightWins: number;
+  ties: number;
+}
+
 export interface PublicComparisonSnapshot {
   left: CompareParticipant;
   right: CompareParticipant;
@@ -64,8 +79,77 @@ export interface PublicComparisonSnapshot {
   commonProviders: number;
   leftOnlyProviders: number;
   rightOnlyProviders: number;
+  brief: CompareBrief;
   receipt: string;
   guardrails: string[];
+}
+
+function buildCompareBrief(
+  left: CompareParticipant,
+  right: CompareParticipant,
+  metricRows: CompareMetric[],
+  commonProviders: number,
+  leftOnlyProviders: number,
+  rightOnlyProviders: number,
+  crossTier: boolean,
+): CompareBrief {
+  const leftWins = metricRows.filter((row) => row.leader === "left").length;
+  const rightWins = metricRows.filter((row) => row.leader === "right").length;
+  const ties = metricRows.filter((row) => row.leader === "tie").length;
+  const uniqueProviders = leftOnlyProviders + rightOnlyProviders;
+  const vectorLabel = `L ${leftWins} // = ${ties} // R ${rightWins}`;
+  const providerLabel = `${commonProviders} shared // ${uniqueProviders} unique`;
+  const scopeLabel = crossTier ? "USAGE ONLY" : "SAME TIER";
+
+  if (ties === metricRows.length) {
+    return {
+      headline: "Public signals are currently indistinguishable.",
+      summary: `All ${metricRows.length} comparable aggregates match; the provider map contains ${commonProviders} shared rail${commonProviders === 1 ? "" : "s"}.`,
+      vectorLabel,
+      providerLabel,
+      scopeLabel,
+      decisiveLabel: "No decisive public metric",
+      decisiveDetail: "Every comparable aggregate resolves to the same published value.",
+      nextAction: "Inspect receipt fingerprints, publish dates, and evidence tiers before treating these handles as independent signals.",
+      nextView: "evidence",
+      leftWins,
+      rightWins,
+      ties,
+    };
+  }
+
+  const decisive = metricRows
+    .filter((row) => row.leader !== "tie")
+    .sort((a, b) => {
+      const aGap = Math.abs(a.leftValue - a.rightValue) / Math.max(a.leftValue, a.rightValue, 1);
+      const bGap = Math.abs(b.leftValue - b.rightValue) / Math.max(b.leftValue, b.rightValue, 1);
+      return bGap - aGap;
+    })[0];
+  const decisiveParticipant = decisive.leader === "left" ? left : right;
+  const headline = leftWins === rightWins
+    ? "The public signal is split across the measured dimensions."
+    : leftWins > rightWins
+      ? `@${left.handle} leads more published usage dimensions.`
+      : `@${right.handle} leads more published usage dimensions.`;
+
+  return {
+    headline,
+    summary: `${leftWins} left-leading, ${ties} tied, and ${rightWins} right-leading aggregate${metricRows.length === 1 ? "" : "s"}. This is a signal count, not a weighted score or rank.`,
+    vectorLabel,
+    providerLabel,
+    scopeLabel,
+    decisiveLabel: `@${decisiveParticipant.handle} leads on ${decisive.label}`,
+    decisiveDetail: `${decisive.deltaLabel} is the largest proportional gap across the ${metricRows.length} comparable aggregates.`,
+    nextAction: uniqueProviders > 0
+      ? "Open the provider matrix to locate which rails create the difference."
+      : crossTier
+        ? "Open the evidence boundary before interpreting board position across tiers."
+        : "Open the provider matrix to inspect the shared usage rails behind the aggregate gap.",
+    nextView: uniqueProviders > 0 || !crossTier ? "providers" : "evidence",
+    leftWins,
+    rightWins,
+    ties,
+  };
 }
 
 function int(value: number): string {
@@ -215,6 +299,7 @@ export function buildPublicComparison(leftProfile: ProfileView, rightProfile: Pr
   const commonProviders = providerRows.filter((provider) => provider.presence === "shared").length;
   const leftOnlyProviders = providerRows.filter((provider) => provider.presence === "left_only").length;
   const rightOnlyProviders = providerRows.filter((provider) => provider.presence === "right_only").length;
+  const brief = buildCompareBrief(left, right, metricRows, commonProviders, leftOnlyProviders, rightOnlyProviders, crossTier);
   const comparisonStatus = crossTier
     ? "USAGE COMPARABLE / RANKS STAY ON SEPARATE EVIDENCE BOARDS"
     : "USAGE AND BOARD POSITION SHARE THE SAME EVIDENCE TIER";
@@ -225,6 +310,7 @@ export function buildPublicComparison(leftProfile: ProfileView, rightProfile: Pr
     `left ${left.operations} ops | ${usd(left.spendUsd)} | score ${left.score}/100 | ${left.evidenceTier}`,
     `right ${right.operations} ops | ${usd(right.spendUsd)} | score ${right.score}/100 | ${right.evidenceTier}`,
     `provider_overlap ${commonProviders} shared | ${leftOnlyProviders} left-only | ${rightOnlyProviders} right-only`,
+    `signal_vector ${brief.vectorLabel}`,
     `trust ${left.trustSignals} vs ${right.trustSignals} (NOT USAGE / +0 SCORE)`,
     `rank_comparison ${crossTier ? "blocked_cross_tier" : "same_tier"}`,
     receiptUrl,
@@ -241,6 +327,7 @@ export function buildPublicComparison(leftProfile: ProfileView, rightProfile: Pr
     commonProviders,
     leftOnlyProviders,
     rightOnlyProviders,
+    brief,
     receipt,
     guardrails: [
       "USAGE: operations, estimated spend, credits, provider breadth, and activity compare accepted public aggregates only.",

@@ -1,0 +1,245 @@
+{
+  "schema_version": "1.0.0",
+  "brick": {
+    "id": "000-vibetracker.web.public-comparison-lab",
+    "name": "Public Comparison Lab",
+    "kind": "module",
+    "status": "project_bound",
+    "version": "0.1.0",
+    "language": ["typescript", "tsx", "css"],
+    "frameworks": ["next", "react"],
+    "domain": ["public-usage", "comparison", "evidence-boundaries"]
+  },
+  "hierarchy": {
+    "level": "brick",
+    "group_id": "000-vibetracker:packages/web/src/app",
+    "contains": ["route", "model", "component", "style", "test"],
+    "component_policy": "internal_by_default",
+    "notes": "A read-only comparison lab that derives an operator brief from two public usage receipts without recalculating rank or inventing a winner."
+  },
+  "source": {
+    "project": "000-vibetracker",
+    "repository": "https://github.com/B-EtterDigital/vibetracker.git",
+    "commit": "3eddab0",
+    "paths": [
+      "packages/web/src/app/compare",
+      "packages/web/src/lib/__tests__/compare-route.test.ts"
+    ]
+  },
+  "owner": {
+    "primary": "Cyrill",
+    "team": "Better Digital",
+    "reviewers": []
+  },
+  "boundaries": {
+    "owned_paths": [
+      "packages/web/src/app/compare",
+      "packages/web/src/lib/__tests__/compare-route.test.ts"
+    ],
+    "public_paths": [
+      "packages/web/src/app/compare/page.tsx",
+      "packages/web/src/app/compare/compare-model.ts",
+      "packages/web/src/app/compare/compare-lab.tsx",
+      "packages/web/src/app/compare/compare.css",
+      "packages/web/src/app/compare/compare-responsive.css"
+    ],
+    "private_paths": [
+      "packages/web/src/lib/__tests__/compare-route.test.ts"
+    ],
+    "forbidden_imports": [
+      "packages/web/src/lib/supabase-admin.ts",
+      "client-side service-role keys",
+      "provider credentials",
+      "rank mutation",
+      "undocumented cross-brick private imports"
+    ],
+    "allowed_side_effects": [
+      "two server-side lookups of sanitized public profile handles",
+      "user-initiated URL navigation and comparison form submission",
+      "user-initiated public comparison clipboard write"
+    ]
+  },
+  "classification": {
+    "data_classes": ["public"],
+    "risk": "low",
+    "notes": "The route reads two published aggregate profiles and renders a deterministic comparison. It never loads prompts, outputs, secrets, raw files, individual requests, or provider credentials."
+  },
+  "sweetspot": {
+    "ssa_v2": {
+      "status": "passing",
+      "score": 94,
+      "notes": "The server route, pure comparison model, client lab, responsive styles, and focused contract are route-local and remain below the project file ceiling.",
+      "evidence": ["packages/web/src/app/compare", "packages/web/src/lib/__tests__/compare-route.test.ts"]
+    },
+    "ssi": {
+      "status": "passing",
+      "score": 95,
+      "notes": "A pure model normalizes each profile and derives metrics, provider topology, evidence boundaries, and the operator brief before rendering.",
+      "evidence": ["packages/web/src/app/compare/compare-model.ts", "packages/web/src/app/compare/compare-lab.tsx"]
+    },
+    "sstf": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Focused contracts cover sanitizer behavior, authoritative operations, cross-tier rank isolation, identical-signal interpretation, route discovery, controls, and responsive constraints.",
+      "evidence": ["packages/web/src/lib/__tests__/compare-route.test.ts"]
+    },
+    "spe": {
+      "status": "passing",
+      "score": 96,
+      "notes": "Derivation is deterministic and linear across six metrics and the bounded public provider rows; runtime reads are limited to two profile lookups.",
+      "evidence": ["packages/web/src/app/compare/compare-model.ts", "packages/web/src/app/compare/page.tsx"]
+    },
+    "srs": {
+      "status": "passing",
+      "score": 96,
+      "notes": "The operator brief states the signal vector, provider overlap, strongest proportional gap, evidence scope, and next useful inspection while explicitly refusing a fake weighted winner.",
+      "evidence": ["packages/web/src/app/compare/compare-model.ts", "packages/web/src/app/compare/compare-lab.tsx"]
+    },
+    "ssra": {
+      "status": "pending",
+      "score": 0,
+      "notes": "Guarded production deployment and mobile, desktop, and 4K browser verification are required before release closeout.",
+      "evidence": ["packages/web/src/lib/__tests__/compare-route.test.ts"]
+    },
+    "sas": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Ownership, public seams, forbidden imports, and allowed public-read, navigation, and clipboard effects are explicit.",
+      "evidence": ["packages/web/src/app/compare/module.sweetspot.json"]
+    },
+    "sva": {
+      "status": "passing",
+      "score": 96,
+      "notes": "No secret, provider credential, raw request, prompt, local file, or privileged client reaches the browser.",
+      "evidence": ["packages/web/src/app/compare/page.tsx", "packages/web/src/app/compare/compare-model.ts"]
+    },
+    "srls": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The upstream public profile adapter owns data access policy; this brick imports no privileged client.",
+      "evidence": ["packages/web/src/lib/data.ts"]
+    },
+    "sev": {
+      "status": "not_applicable",
+      "score": 100,
+      "notes": "The brick requires no module-owned environment variables.",
+      "evidence": []
+    },
+    "ssc": {
+      "status": "passing",
+      "score": 92,
+      "notes": "Next and React are inherited from the web package and no new runtime dependency is introduced.",
+      "evidence": ["packages/web/package.json"]
+    },
+    "sai": {
+      "status": "passing",
+      "score": 95,
+      "notes": "Intent, lease, owned paths, source baseline, and focused verification are recorded for the active Gen3 edit.",
+      "evidence": [".smarch/agent-context/web-compare-operator-brief.ndjson"]
+    }
+  },
+  "interfaces": {
+    "public_api": ["GET /compare", "buildPublicComparison(leftProfile, rightProfile)", "<CompareLab />"],
+    "adapters": [
+      "packages/web/src/lib/data.ts#getProfile",
+      "packages/web/src/lib/profile-ops.ts#profileOps",
+      "packages/web/src/lib/profile-proof.ts#buildProfileBlackBoxReplay",
+      "packages/web/src/lib/vibe-score.ts#buildVibeScoreReceipt"
+    ],
+    "required_dependencies": ["next", "react"],
+    "forbidden_dependencies": ["supabase-admin", "service-role client", "provider SDKs", "rank mutation"]
+  },
+  "security": {
+    "rls": {
+      "required": false,
+      "status": "not_applicable",
+      "negative_tests": []
+    },
+    "env": {
+      "required": false,
+      "status": "not_applicable",
+      "variables": []
+    },
+    "vulnerability_findings": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "report_paths": []
+    }
+  },
+  "supply_chain": {
+    "dependencies": [
+      { "name": "next", "version": "^16.1.1", "purpose": "Server-rendered public comparison route.", "risk": "low" },
+      { "name": "react", "version": "^19.0.0", "purpose": "Interactive comparison controls and views.", "risk": "low" }
+    ],
+    "licenses": ["MIT"],
+    "checksums": [],
+    "sbom_path": ""
+  },
+  "quality": {
+    "score": 95,
+    "line_count": {
+      "max_file_lines": 342,
+      "over_600_count": 0
+    },
+    "code_budget": {
+      "status": "acceptable",
+      "feature_lines": 1158,
+      "file_count": 6,
+      "dependency_count": 2,
+      "notes": "The route, pure model, client lab, styles, and focused test remain separated by responsibility and below 600 lines."
+    },
+    "test_commands": [
+      "node --test packages/web/src/lib/__tests__/compare-route.test.ts",
+      "pnpm sma:release-gate",
+      "pnpm --filter @vibetracker/web build"
+    ],
+    "verification": [
+      {
+        "command": "node --test packages/web/src/lib/__tests__/compare-route.test.ts",
+        "status": "pass",
+        "timestamp": "2026-07-15T06:25:00Z",
+        "notes": "Six focused comparison contracts passed, including the explicit indistinguishable state and derived signal vector."
+      }
+    ]
+  },
+  "clone": {
+    "readiness": "project_bound",
+    "adaptation_points": ["public profile adapter", "public score receipt", "evidence-tier labels", "navigation links"],
+    "install_steps": ["Copy owned paths.", "Provide compatible public profile and score adapters.", "Run the focused contract and release gate."],
+    "known_traps": [
+      "Never convert the six-dimensional signal vector into a weighted winner without a published weighting contract.",
+      "Never compare board positions across evidence tiers.",
+      "Never load private usage events or provider credentials to enrich this public route."
+    ]
+  },
+  "provenance": {
+    "created_by": {
+      "actor_kind": "ai_model",
+      "actor_id": "codex",
+      "provider": "OpenAI",
+      "model": "gpt-5-codex",
+      "role": "implementer",
+      "session_id": "019f4b2d-8a2a-73b1-aa02-567e49241b65",
+      "commit": "3eddab0",
+      "files_touched": ["packages/web/src/app/compare/module.sweetspot.json"],
+      "verification": [
+        {
+          "command": "node --test packages/web/src/lib/__tests__/compare-route.test.ts",
+          "status": "pass",
+          "timestamp": "2026-07-15T06:25:00Z",
+          "notes": "Focused route and model contracts passed."
+        }
+      ],
+      "timestamp": "2026-07-15T06:25:00Z",
+      "summary": "Declared the Public Comparison Lab and its no-fake-winner evidence boundary as an explicit web brick.",
+      "intent": "Make two public usage receipts understandable without manufacturing rank or identity conclusions.",
+      "decision_rationale": "A pure derived brief exposes signal shape and the next useful inspection while retaining the existing public-data boundary.",
+      "lease_id": "lease-1784096338812-b2b33fdb",
+      "context_event_ids": [],
+      "attestation": { "method": "agent_runner", "reference": "lease-1784096338812-b2b33fdb" }
+    },
+    "touched_by": []
+  }
+}

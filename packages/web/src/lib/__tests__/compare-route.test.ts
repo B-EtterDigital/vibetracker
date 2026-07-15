@@ -93,13 +93,32 @@ test("public comparison separates comparable usage from cross-tier rank", () => 
   assert.equal(snapshot.commonProviders, 1);
   assert.equal(snapshot.leftOnlyProviders, 1);
   assert.equal(snapshot.rightOnlyProviders, 1);
+  assert.equal(snapshot.brief.leftWins + snapshot.brief.rightWins + snapshot.brief.ties, 6);
+  assert.equal(snapshot.brief.vectorLabel, "L 5 // = 1 // R 0");
+  assert.equal(snapshot.brief.scopeLabel, "USAGE ONLY");
+  assert.equal(snapshot.brief.nextView, "providers");
+  assert.match(snapshot.brief.decisiveLabel, /@left-viber leads on/);
   assert.equal(snapshot.providerRows.find((provider) => provider.provider === "codex")?.presence, "shared");
   assert.equal(snapshot.providerRows.find((provider) => provider.provider === "claude-code")?.presence, "left_only");
   assert.equal(snapshot.providerRows.find((provider) => provider.provider === "higgsfield")?.presence, "right_only");
   assert.match(snapshot.receipt, /rank_comparison blocked_cross_tier/);
+  assert.match(snapshot.receipt, /signal_vector L 5 \/\/ = 1 \/\/ R 0/);
   assert.match(snapshot.receipt, /NOT USAGE \/ \+0 SCORE/);
   assert.match(snapshot.guardrails.join("\n"), /never declares a rank winner/);
   assert.match(snapshot.guardrails.join("\n"), /prompts, outputs, secrets, raw files/);
+});
+
+test("identical public aggregates produce an explicit indistinguishable brief", () => {
+  const snapshot = buildPublicComparison(leftProfile, leftProfile);
+
+  assert.equal(snapshot.brief.leftWins, 0);
+  assert.equal(snapshot.brief.rightWins, 0);
+  assert.equal(snapshot.brief.ties, 6);
+  assert.equal(snapshot.brief.vectorLabel, "L 0 // = 6 // R 0");
+  assert.equal(snapshot.brief.nextView, "evidence");
+  assert.match(snapshot.brief.headline, /indistinguishable/);
+  assert.match(snapshot.brief.decisiveLabel, /No decisive public metric/);
+  assert.match(snapshot.brief.nextAction, /fingerprints, publish dates, and evidence tiers/);
 });
 
 test("same-tier comparison permits board context without recalculating rank", () => {
@@ -145,7 +164,12 @@ test("compare route is real, discoverable, interactive, responsive, and honest w
   assert.match(lab, /fabricated rank winners 0/);
   assert.match(lab, /No cached values substituted/);
   assert.match(lab, /Filter provider rows/);
+  assert.match(lab, /OPERATOR BRIEF \/ READ THIS FIRST/);
+  assert.match(lab, /SIGNAL VECTOR/);
+  assert.match(lab, /STRONGEST DIFFERENTIATOR/);
+  assert.match(lab, /snapshot\.brief\.nextView/);
   assert.match(styles, /\.compare-overview/);
+  assert.match(styles, /\.compare-brief/);
   assert.match(styles, /\.compare-provider-row/);
   assert.match(styles, /\.compare-evidence/);
   assert.match(responsive, /@media \(max-width: 640px\)/);

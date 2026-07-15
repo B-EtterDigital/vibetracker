@@ -163,6 +163,39 @@ export function CompareLab({ leftState, rightState, snapshot }: CompareLabProps)
             <small aria-live="polite">{copyState === "copied" ? "Public comparison copied to clipboard." : copyState === "blocked" ? "Clipboard permission was denied." : ""}</small>
           </div>
 
+          <section className="compare-brief" aria-labelledby="compare-brief-title">
+            <header>
+              <div>
+                <span>OPERATOR BRIEF / READ THIS FIRST</span>
+                <h2 id="compare-brief-title">{snapshot.brief.headline}</h2>
+              </div>
+              <b>{snapshot.brief.scopeLabel}</b>
+            </header>
+            <div className="compare-brief__grid">
+              <article data-tone="vector">
+                <small>SIGNAL VECTOR</small>
+                <strong>{snapshot.brief.vectorLabel}</strong>
+                <p>{snapshot.brief.summary}</p>
+              </article>
+              <article data-tone="providers">
+                <small>PROVIDER TOPOLOGY</small>
+                <strong>{snapshot.brief.providerLabel}</strong>
+                <p>{snapshot.commonProviders} common rail{snapshot.commonProviders === 1 ? "" : "s"}; {snapshot.leftOnlyProviders} left-only and {snapshot.rightOnlyProviders} right-only.</p>
+              </article>
+              <article data-tone="decisive">
+                <small>STRONGEST DIFFERENTIATOR</small>
+                <strong>{snapshot.brief.decisiveLabel}</strong>
+                <p>{snapshot.brief.decisiveDetail}</p>
+              </article>
+            </div>
+            <footer>
+              <div><b>NEXT INSPECTION</b><span>{snapshot.brief.nextAction}</span></div>
+              <button aria-controls={`compare-panel-${snapshot.brief.nextView}`} onClick={() => setView(snapshot.brief.nextView)} type="button">
+                OPEN {snapshot.brief.nextView === "providers" ? "PROVIDER MATRIX" : "EVIDENCE BOUNDARY"}
+              </button>
+            </footer>
+          </section>
+
           <nav className="compare-views" role="tablist" aria-label="Comparison views">
             {VIEWS.map((item, index) => (
               <button
