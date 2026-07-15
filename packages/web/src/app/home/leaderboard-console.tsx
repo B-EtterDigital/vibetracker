@@ -49,6 +49,13 @@ function identityProofLabel(row: HomeBoardRow): string {
   return `C0VIBE identity verified; ${usage}`;
 }
 
+function leaderEvidenceLabel(row: HomeBoardRow): string {
+  if (!row.identityVerified) return "CLI HANDLE · IDENTITY UNVERIFIED";
+  const provider = row.identityProvider === "github" ? "GITHUB" : "C0VIBE";
+  const usage = row.usageTier === "verified" ? "PROVIDER VERIFIED" : "IDENTITY ATTESTED";
+  return `${provider} VERIFIED · ${usage}`;
+}
+
 function IdentityProof({ row }: { row: HomeBoardRow }) {
   return row.identityVerified ? (
     <span className="home-board__identity-proof" data-provider={row.identityProvider ?? "c0vibe"} role="img" title={identityProofLabel(row)} aria-label={identityProofLabel(row)}>
@@ -87,6 +94,7 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
   const lens = useMemo(() => buildHomeBoardLens(active.rows, lensId), [active.rows, lensId]);
   const visibleRows = expanded ? filteredRows : filteredRows.slice(0, PAGE_SIZE);
   const isWaitingEmpty = active.status === "waiting" && active.rows.length === 0;
+  const leader = active.rows[0] ?? null;
 
   function selectTier(nextTier: HomeBoardTier) {
     setTier(nextTier);
@@ -146,6 +154,33 @@ export function LeaderboardConsole({ boards }: { boards: HomeBoardSnapshot[] }) 
           <b>{copyState === "copied" ? "COPIED" : copyState === "blocked" ? "COPY BLOCKED" : "COPY"}</b>
         </button>
       </div>
+
+      <section className="home-board__leader-lock" data-tier={active.tier} data-state={leader ? "live" : active.status} aria-label={`${active.label} lane leader`}>
+        <div className="home-board__leader-rank">
+          <span>LEADER LOCK</span>
+          <strong>{leader?.medal ?? "—"}</strong>
+        </div>
+        {leader ? (
+          <>
+            <div className="home-board__leader-identity">
+              <span>{active.label.toUpperCase()} LANE · RANK #{leader.rank}</span>
+              <div className="home-board__operator"><a href={`/u/${leader.handle}`}>@{leader.handle}</a><IdentityProof row={leader} /></div>
+              <small>{leaderEvidenceLabel(leader)}</small>
+            </div>
+            <dl className="home-board__leader-metrics">
+              <div><dt>SPEND</dt><dd>{leader.usdLabel}</dd></div>
+              <div><dt>RECORDS</dt><dd>{leader.opsLabel}</dd></div>
+              <div><dt>FIELD</dt><dd>{active.totals.operators}</dd></div>
+            </dl>
+            <a className="home-board__leader-open" href={`/u/${leader.handle}`}><span>OPEN PROFILE</span><b aria-hidden="true">-&gt;</b></a>
+          </>
+        ) : (
+          <div className="home-board__leader-waiting">
+            <span>{active.status === "error" ? "BOARD LINK DEGRADED" : "NO RANKED SIGNAL"}</span>
+            <strong>{active.status === "error" ? "The diagnostic is recorded; no fallback leader is shown." : "Waiting for the first accepted aggregate in this lane."}</strong>
+          </div>
+        )}
+      </section>
 
       <div className="home-board__boundary" data-tier={active.tier}>
         <div>

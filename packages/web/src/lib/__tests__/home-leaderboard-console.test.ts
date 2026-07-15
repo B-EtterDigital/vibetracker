@@ -77,6 +77,21 @@ test("leaderboard degraded and waiting states do not invent usage", () => {
   assert.doesNotMatch(uplink, /\$\d|total_usd|record_count/);
 });
 
+test("leader lock puts the real lane leader ahead of explanation without inventing empty data", () => {
+  assert.match(source, /const leader = active\.rows\[0\] \?\? null/);
+  assert.match(source, /className="home-board__leader-lock"/);
+  assert.match(source, /leader\.usdLabel/);
+  assert.match(source, /leader\.opsLabel/);
+  assert.match(source, /active\.totals\.operators/);
+  assert.match(source, /leaderEvidenceLabel\(leader\)/);
+  assert.match(source, /NO RANKED SIGNAL/);
+  assert.match(source, /no fallback leader is shown/);
+  assert.ok(source.indexOf("home-board__controls") < source.indexOf("home-board__leader-lock"));
+  assert.ok(source.indexOf("home-board__leader-lock") < source.indexOf("home-board__boundary"));
+  assert.match(homeCss, /\.home-board__leader-lock \{[\s\S]*grid-template-columns: 86px minmax\(190px, 1fr\) auto auto/);
+  assert.match(homeCss, /@media \(max-width: 680px\)[\s\S]*\.home-board__leader-lock \{ grid-template-columns: 42px minmax\(0, 1fr\) auto/);
+});
+
 test("empty leaderboard exposes a responsive accessible local-to-public uplink", () => {
   assert.match(uplink, /aria-label="Local usage to public leaderboard path"/);
   assert.match(uplink, /Usage records stay on this device/);
@@ -147,6 +162,7 @@ test("4K leaderboard becomes a two-channel broadcast wall without changing mobil
   assert.match(homeCss, /grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/);
   assert.match(homeCss, /\.home-board > \.home-readout \{ grid-column: 1; border-right: 1px solid var\(--hb-line\); \}/);
   assert.match(homeCss, /\.home-board > \.home-board__chart \{ grid-column: 2; min-width: 0; \}/);
+  assert.match(homeCss, /\.home-board__leader-lock,[\s\S]*\.home-board__boundary,[\s\S]*grid-column: 1 \/ -1/);
   assert.match(homeCss, /\.home-board__directory,[\s\S]*\.home-board__encore[\s\S]*grid-column: 1 \/ -1/);
   assert.match(homeCss, /@media \(max-width: 680px\)[\s\S]*\.home-surface \{ width: calc\(100vw - 20px\); \}/);
 });
