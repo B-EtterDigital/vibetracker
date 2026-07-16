@@ -1,5 +1,23 @@
 export const CAPTURE_ENDPOINT = "http://127.0.0.1:8765/capture";
 export const CONNECT_ENDPOINT = "http://127.0.0.1:8765/connect";
+export const HEALTH_ENDPOINT = "http://127.0.0.1:8765/health";
+
+// Human line for a page-read usage snapshot — the number and unit, never any page content.
+export function statusForRead(response) {
+  if (response?.ok) {
+    return {
+      state: "ok",
+      label: `${response.label || response.provider || "usage"} read`,
+      detail: `Recorded ${Number(response.value).toLocaleString("en-US")} ${response.unit}${response.value === 1 ? "" : "s"} as local usage. Run \`vibetracker sync\` then upload.`,
+    };
+  }
+  const status = response?.status || "offline";
+  return {
+    state: "error",
+    label: `read failed${response?.status ? ` (${status})` : ""}`,
+    detail: response?.error || "Run: vibetracker api serve --port 8765",
+  };
+}
 
 // A human line describing what a successful connect did — no credential value, names only.
 export function statusForConnect(response) {

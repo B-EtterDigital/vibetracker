@@ -1,0 +1,61 @@
+/* Browser Bridge install card — locked palette, square-ish plate, no animation beyond copy state. */
+.bridge-card {
+  --mono: var(--font-data), ui-monospace, SFMono-Regular, Menlo, monospace;
+  margin: 20px 0; padding: clamp(20px, 3vw, 30px);
+  border: 2px solid rgba(46, 232, 214, 0.22); border-radius: 12px;
+  background: linear-gradient(150deg, rgba(46, 232, 214, 0.05), transparent 60%), #0d1419;
+}
+.bridge-head { max-width: 62ch; }
+.bridge-eyebrow {
+  font: 800 10px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.24em; color: #f28c33;
+}
+.bridge-head h2 {
+  margin: 10px 0 8px; font: 800 clamp(1.4rem, 3vw, 2rem) / 1.1 var(--mono);
+  letter-spacing: -0.01em; color: #eafff8;
+}
+.bridge-head p { margin: 0; font: 500 13.5px/1.6 var(--mono); color: rgba(217, 255, 242, 0.62); }
+
+.bridge-steps {
+  list-style: none; margin: 22px 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px;
+}
+.bridge-steps li {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 16px; border: 1px solid rgba(217, 255, 242, 0.1); border-radius: 10px;
+  background: rgba(4, 6, 7, 0.35);
+}
+.bridge-steps b { font: 800 12px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: #2ee8d6; }
+.bridge-steps span { font: 500 12px/1.55 var(--mono); color: rgba(217, 255, 242, 0.6); }
+.bridge-steps code {
+  font: 700 12px/1 var(--mono); color: #2ee8d6; background: none;
+}
+.bridge-steps em { color: #f28c33; font-style: normal; }
+
+.bridge-cmd {
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; border: 1px solid rgba(46, 232, 214, 0.4); border-radius: 8px;
+  background: #04110d; width: 100%;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+.bridge-cmd:hover { border-color: #2ee8d6; transform: translateY(-1px); }
+.bridge-cmd i {
+  font-style: normal; font: 700 10px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em;
+  color: rgba(217, 255, 242, 0.5); white-space: nowrap;
+}
+
+.bridge-sources {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;
+  margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(217, 255, 242, 0.1);
+}
+.bridge-sources-head {
+  font: 800 9.5px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.16em;
+  color: rgba(217, 255, 242, 0.45);
+}
+.bridge-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.bridge-chips em {
+  font: 600 11px/1 var(--mono); font-style: normal; color: #d9fff2;
+  padding: 5px 9px; border: 1px solid rgba(46, 232, 214, 0.22); border-radius: 999px;
+}
+.bridge-foot {
+  margin: 18px 0 0; font: 500 10.5px/1.6 var(--mono); color: rgba(217, 255, 242, 0.4);
+}

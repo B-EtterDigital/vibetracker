@@ -1,44 +1,72 @@
-import { previewForTab, statusForCapture, statusForConnect } from "./popup-model.mjs";
+import { previewForTab, statusForCapture, statusForConnect, statusForRead } from "./popup-model.mjs";
 
-const button = document.getElementById("capture");
-const status = document.getElementById("status");
-const mark = document.getElementById("provider-mark");
-const host = document.getElementById("provider-host");
-const label = document.getElementById("provider-label");
-const category = document.getElementById("provider-category");
-const terminal = document.getElementById("terminal");
-const connectCard = document.getElementById("connect-card");
-const connectBtn = document.getElementById("connect");
-const connectLabel = document.getElementById("connect-label");
-const connectCta = document.getElementById("connect-cta");
+const $ = (id) => document.getElementById(id);
+const status = $("status");
+const mark = $("provider-mark");
+const host = $("provider-host");
+const label = $("provider-label");
+const category = $("provider-category");
+const terminal = $("terminal");
+const connectCard = $("connect-card");
+const connectBtn = $("connect");
+const connectLabel = $("connect-label");
+const connectCta = $("connect-cta");
+const readCard = $("read-card");
+const readBtn = $("read");
+const readLabel = $("read-label");
+const readHint = $("read-hint");
+const readCta = $("read-cta");
+const apiBanner = $("api-banner");
+const apiTitle = $("api-title");
+const apiDetail = $("api-detail");
+const apiCmd = $("api-cmd");
+const captureBtn = $("capture");
+
+function brand(from, to, ink) {
+  document.documentElement.style.setProperty("--brand-from", from);
+  document.documentElement.style.setProperty("--brand-to", to);
+  document.documentElement.style.setProperty("--brand-ink", ink || "#071013");
+}
 
 function setProvider(preview) {
-  document.documentElement.style.setProperty("--brand-from", preview.from);
-  document.documentElement.style.setProperty("--brand-to", preview.to);
-  document.documentElement.style.setProperty("--brand-ink", preview.ink || "#071013");
+  brand(preview.from, preview.to, preview.ink);
   mark.textContent = preview.mark;
   host.textContent = preview.host || "active tab";
   label.textContent = preview.label;
   category.textContent = `${preview.category} // local low-confidence`;
   terminal.textContent = preview.lines.join("\n");
-  button.disabled = !preview.ready;
+  captureBtn.disabled = !preview.ready;
 }
 
 function setConnector(connector) {
-  if (!connector) {
-    connectCard.hidden = true;
-    return;
-  }
+  if (!connector) { connectCard.hidden = true; return; }
   connectCard.hidden = false;
   connectLabel.textContent = connector.pending ? `${connector.label} (importer coming)` : connector.label;
   connectCta.textContent = `Connect ${connector.label}`;
-  // the connect card takes the connector's brand colours for a first-sight identity match
-  if (connector.brand) {
-    document.documentElement.style.setProperty("--brand-from", connector.brand.from);
-    document.documentElement.style.setProperty("--brand-to", connector.brand.to);
-    document.documentElement.style.setProperty("--brand-ink", connector.brand.ink || "#071013");
-  }
+  if (connector.brand) brand(connector.brand.from, connector.brand.to, connector.brand.ink);
   connectBtn.disabled = false;
+}
+
+function setReader(reader) {
+  if (!reader) { readCard.hidden = true; return; }
+  readCard.hidden = false;
+  readLabel.textContent = reader.label;
+  readHint.textContent = reader.hint || "Open the page that shows your usage number, then read it.";
+  readCta.textContent = `Read ${reader.label} usage`;
+  readBtn.disabled = false;
+}
+
+function setApi(up) {
+  apiBanner.dataset.state = up ? "up" : "down";
+  if (up) {
+    apiTitle.textContent = "Local app connected";
+    apiDetail.textContent = "Connect a source or read a usage page below.";
+    apiCmd.hidden = true;
+  } else {
+    apiTitle.textContent = "Local app not running";
+    apiDetail.textContent = "Run this once in your terminal, then reopen:";
+    apiCmd.hidden = false;
+  }
 }
 
 function setStatus(next) {
@@ -50,21 +78,31 @@ function send(message) {
   return new Promise((resolve) => chrome.runtime.sendMessage(message, resolve));
 }
 
-async function refreshPreview() {
+async function refresh() {
   const response = await send({ type: "preview-active-tab" });
   setProvider(response?.preview || previewForTab(null));
   setConnector(response?.connector || null);
+  setReader(response?.reader || null);
+  setApi(Boolean(response?.apiUp));
 }
 
-button.addEventListener("click", async () => {
-  button.disabled = true;
+apiCmd.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText("vibetracker start");
+    apiDetail.textContent = "Copied. Paste it in your terminal, then reopen this popup.";
+  } catch {
+    apiDetail.textContent = "Copy failed — run: vibetracker start";
+  }
+});
+
+captureBtn.addEventListener("click", async () => {
+  captureBtn.disabled = true;
   status.dataset.state = "";
   status.textContent = "capturing active AI tab locally...";
   try {
-    const response = await send({ type: "capture-active-tab" });
-    setStatus(statusForCapture(response));
+    setStatus(statusForCapture(await send({ type: "capture-active-tab" })));
   } finally {
-    await refreshPreview();
+    await refresh();
   }
 });
 
@@ -73,8 +111,7 @@ connectBtn.addEventListener("click", async () => {
   status.dataset.state = "";
   status.textContent = "reading session cookie locally...";
   try {
-    const response = await send({ type: "connect-active-site" });
-    setStatus(statusForConnect(response));
+    setStatus(statusForConnect(await send({ type: "connect-active-site" })));
   } catch (error) {
     setStatus(statusForConnect({ ok: false, error: String(error?.message || error) }));
   } finally {
@@ -82,8 +119,23 @@ connectBtn.addEventListener("click", async () => {
   }
 });
 
-refreshPreview().catch((error) => {
+readBtn.addEventListener("click", async () => {
+  readBtn.disabled = true;
+  status.dataset.state = "";
+  status.textContent = "reading the usage number off this page...";
+  try {
+    setStatus(statusForRead(await send({ type: "read-active-page" })));
+  } catch (error) {
+    setStatus(statusForRead({ ok: false, error: String(error?.message || error) }));
+  } finally {
+    readBtn.disabled = false;
+  }
+});
+
+refresh().catch((error) => {
   setProvider(previewForTab(null));
   setConnector(null);
+  setReader(null);
+  setApi(false);
   setStatus(statusForCapture({ ok: false, error: String(error?.message || error) }));
 });

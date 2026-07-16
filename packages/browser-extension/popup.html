@@ -14,6 +14,20 @@
       <p>Connect cookie-only AI sources in one click, or mark any AI tab as local usage. Nothing leaves your machine.</p>
     </header>
 
+    <!-- API status banner — the whole "is it set up?" answer, one glance. When the local API is
+         down, it becomes the setup helper with a one-click copy of the start command. -->
+    <section class="api-banner" id="api-banner" data-state="checking" aria-live="polite">
+      <span class="api-dot" aria-hidden="true"></span>
+      <div class="api-copy">
+        <b id="api-title">Checking local app…</b>
+        <small id="api-detail">One command starts the local bridge.</small>
+      </div>
+      <button id="api-cmd" type="button" hidden title="Copy the start command">
+        <code>vibetracker start</code>
+        <i aria-hidden="true">⧉</i>
+      </button>
+    </section>
+
     <section class="provider-card" aria-label="Active provider preview">
       <div class="provider-orb" id="provider-mark">AI</div>
       <div>
@@ -32,6 +46,18 @@
       <button id="connect" type="button" class="primary">
         <span id="connect-cta">Connect this site</span>
         <i aria-hidden="true">→</i>
+      </button>
+    </section>
+
+    <!-- Read card — appears when the active tab shows a usage number no API can reach -->
+    <section class="connect-card read-card" id="read-card" hidden aria-label="Read usage from this page">
+      <div class="connect-head">
+        <b id="read-label">Midjourney</b>
+        <small id="read-hint">Open the page that shows your usage number, then read it.</small>
+      </div>
+      <button id="read" type="button" class="primary">
+        <span id="read-cta">Read usage from this page</span>
+        <i aria-hidden="true">↧</i>
       </button>
     </section>
 

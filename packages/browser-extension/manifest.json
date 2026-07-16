@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "VibeTRACKER Capture",
-  "version": "0.2.0",
-  "description": "Capture explicit AI web activity and one-click connect cookie-only AI sources into your local VibeTRACKER ledger.",
+  "name": "VibeTRACKER Bridge",
+  "version": "0.3.0",
+  "description": "One-click connect cookie-only AI sources and read logged-in usage numbers into your local VibeTRACKER ledger. Local only.",
   "permissions": ["activeTab", "scripting", "cookies"],
   "host_permissions": [
     "http://127.0.0.1:8765/*",
@@ -21,11 +21,18 @@
     "https://www.vidu.com/*",
     "https://vidu.studio/*",
     "https://haiper.ai/*",
-    "https://app.haiper.ai/*"
+    "https://app.haiper.ai/*",
+    "https://midjourney.com/*",
+    "https://www.midjourney.com/*",
+    "https://higgsfield.ai/*",
+    "https://www.higgsfield.ai/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://elevenlabs.io/*"
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Capture AI activity"
+    "default_title": "VibeTRACKER Bridge — connect & read AI usage"
   },
   "background": {
     "service_worker": "background.js",

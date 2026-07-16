@@ -1,8 +1,19 @@
-import { CAPTURE_ENDPOINT, CONNECT_ENDPOINT, buildCapturePayload, previewForTab } from "./popup-model.mjs";
+import { CAPTURE_ENDPOINT, CONNECT_ENDPOINT, HEALTH_ENDPOINT, buildCapturePayload, previewForTab } from "./popup-model.mjs";
 import { CONNECTORS, connectorForUrl, cookieMatchesSpec } from "./connectors.mjs";
+import { READERS, readerForUrl } from "./readers.mjs";
 
 function activeTab() {
   return chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => tabs[0]);
+}
+
+// Is the local CLI API up? Powers the popup's "start the API" guidance so install is frictionless.
+async function localApiHealth() {
+  try {
+    const res = await fetch(HEALTH_ENDPOINT, { method: "GET" });
+    return { up: res.ok };
+  } catch {
+    return { up: false };
+  }
 }
 
 async function postJson(endpoint, payload) {
@@ -90,20 +101,96 @@ function connectorSummary(connector) {
     brand: connector.brand, hosts: connector.hosts, pending: Boolean(connector.pending),
   };
 }
+function readerSummary(reader) {
+  if (!reader) return null;
+  return { id: reader.id, label: reader.label, category: reader.category, hint: reader.hint };
+}
+
+// The function INJECTED into the page. It must be self-contained (no imports) — it receives the
+// reader's stat specs as plain data and pulls the first matching NUMBER from the page's visible
+// text. It reads document.body.innerText only, matches declared patterns, and returns one number.
+// It never touches inputs, prompts, conversation nodes, or anything beyond the declared stat.
+function pageStatExtractor(stats) {
+  const text = (document.body && document.body.innerText) || "";
+  for (const stat of stats) {
+    for (const source of stat.patterns) {
+      const match = new RegExp(source, "i").exec(text);
+      if (match && match[1]) {
+        const value = Number(match[1].replace(/,/g, ""));
+        if (Number.isFinite(value) && value >= 0) {
+          return { operation: stat.operation, unit: stat.unit, value };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// Read a declared usage number off the logged-in page and record it as a usage snapshot. Reaches
+// sources with no API and no adapter cookie (Midjourney lifetime images, Higgsfield credits, …).
+async function readActivePage(tab, scriptingApi) {
+  const reader = readerForUrl(tab?.url);
+  if (!reader) {
+    return { ok: false, error: "This page has no known usage number to read. Open Midjourney's /info, Higgsfield credits, or ChatGPT usage, then click Read." };
+  }
+  if (!tab?.id) return { ok: false, error: "No active tab to read." };
+  scriptingApi = scriptingApi ?? (typeof chrome !== "undefined" ? chrome.scripting : undefined);
+  let result = null;
+  try {
+    const injection = await scriptingApi.executeScript({
+      target: { tabId: tab.id },
+      func: pageStatExtractor,
+      args: [reader.stats],
+    });
+    result = injection?.[0]?.result ?? null;
+  } catch (error) {
+    return { ok: false, provider: reader.id, label: reader.label, error: `Couldn't read the ${reader.label} page — ${String(error?.message || error).slice(0, 120)}` };
+  }
+  if (!result) {
+    return { ok: false, provider: reader.id, label: reader.label, error: `No ${reader.label} usage number visible on this page. ${reader.hint}` };
+  }
+  const captured = await postCapture({
+    provider: reader.id,
+    category: reader.category,
+    operation: result.operation,
+    quantity: result.value,
+    unit: result.unit,
+    rawAmount: result.value,
+    rawUnit: result.unit,
+    url: tab.url,
+    title: tab.title,
+  });
+  return {
+    ...captured,
+    provider: reader.id,
+    label: reader.label,
+    value: result.value,
+    unit: result.unit,
+    operation: result.operation,
+  };
+}
 
 // Register the message router only in the extension runtime — guarded so the module stays
 // importable under Node for tests (where `chrome` does not exist).
 if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    const known = ["capture-active-tab", "preview-active-tab", "connect-active-site"];
+    const known = ["capture-active-tab", "preview-active-tab", "connect-active-site", "read-active-page"];
     if (!known.includes(message?.type)) return false;
 
     activeTab()
       .then(async (tab) => {
         if (message.type === "preview-active-tab") {
-          return { ok: true, preview: previewForTab(tab), connector: connectorSummary(connectorForUrl(tab?.url)) };
+          const health = await localApiHealth();
+          return {
+            ok: true,
+            preview: previewForTab(tab),
+            connector: connectorSummary(connectorForUrl(tab?.url)),
+            reader: readerSummary(readerForUrl(tab?.url)),
+            apiUp: health.up,
+          };
         }
         if (message.type === "connect-active-site") return connectActiveSite(tab);
+        if (message.type === "read-active-page") return readActivePage(tab);
         return postCapture(buildCapturePayload(tab));
       })
       .then(sendResponse)
@@ -113,4 +200,4 @@ if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
   });
 }
 
-export { readConnectorCookies, connectActiveSite, connectorSummary, CONNECTORS };
+export { readConnectorCookies, connectActiveSite, connectorSummary, readActivePage, pageStatExtractor, CONNECTORS, READERS };

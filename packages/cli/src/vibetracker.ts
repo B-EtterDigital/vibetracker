@@ -164,6 +164,7 @@ const USAGE = [
   "  fixture redact <in.json> [--out path]",
   "  telemetry status | telemetry opt-in | telemetry opt-out | telemetry preview",
   "  roi add --from YYYY-MM-DD --to YYYY-MM-DD --note text [--value-usd N] | roi list",
+  "  start                          load-unpacked path + open chrome://extensions + serve the bridge",
   "  api serve [--port 8765] | desktop scan [--record] | browser-extension path",
   "  plugins path",
   "  adapter scaffold <id> [--dir path] [--dry-run] [--force]",
@@ -1483,7 +1484,42 @@ async function main() {
 
   if (cmd === "browser-extension" && (argv[1] === "path" || !argv[1])) {
     console.log(browserExtensionDir());
-    console.log("Run `vibetracker api serve --port 8765`, then load this folder as an unpacked extension.");
+    console.log("Run `vibetracker start`, then load this folder as an unpacked extension.");
+    return;
+  }
+
+  // `vibetracker start` — the one command the browser Bridge tells users to run. It prints the
+  // exact load-unpacked path, opens chrome://extensions if it can, then serves the local API so the
+  // extension's Connect/Read buttons work. This is the whole "easy install" story in one verb.
+  if (cmd === "start") {
+    const port = Number(flag(argv, "--port") || 8765);
+    const extDir = browserExtensionDir();
+    console.log(rule("VIBETRACKER START"));
+    console.log(`  ${ok("1")} Load the extension (once):`);
+    console.log(`     ${dim("chrome://extensions → Developer mode → Load unpacked →")}`);
+    console.log(`     ${paint(extDir, 190)}`);
+    console.log(`  ${ok("2")} Then open Suno / Udio / Midjourney / Higgsfield, log in, and click the extension.`);
+    console.log(`  ${dim("Leaving this running keeps the local bridge on http://127.0.0.1:" + port)}`);
+    // best-effort: open the extensions page so step 1 is one click (never blocks the server)
+    try {
+      const opener = process.platform === "darwin" ? "open" : process.platform === "win32" ? "explorer" : "xdg-open";
+      spawnSync(opener, ["chrome://extensions"], { stdio: "ignore", timeout: 3000 });
+    } catch { /* opener unavailable — the printed path is the fallback */ }
+    await startLocalApiServer({
+      port,
+      deps: {
+        readRecords: () => readRecords(STORE),
+        appendRecords: (records) => appendRecords(STORE, records),
+        log: (line) => console.log(line),
+        connectProvider: (provider, fields) => {
+          const cfg = loadConfig();
+          const keyring = storeProviderCreds(cfg, provider, fields);
+          if (!cfg.enabled.includes(provider)) cfg.enabled.push(provider);
+          saveConfig(cfg);
+          return { stored: Object.keys(fields), keyring };
+        },
+      },
+    });
     return;
   }
 

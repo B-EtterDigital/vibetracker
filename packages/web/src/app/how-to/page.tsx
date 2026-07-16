@@ -4,7 +4,9 @@ import { buildInstallRunway } from "../../lib/install-runway";
 import { buildLaunchSequence } from "../../lib/launch-sequence";
 import { cliCommand, cliSequence } from "../../lib/cli-command.ts";
 import { HowToFastStart } from "./how-to-fast-start";
+import { BrowserBridgeCard } from "./browser-bridge-card";
 import "./how-to-fast-start.css";
+import "./browser-bridge-card.css";
 
 export const metadata = {
   title: "Install VibeTRACKER · VibeUsage",
@@ -260,6 +262,8 @@ export default function HowTo() {
   return (
     <>
       <HowToFastStart commands={quickCommands} />
+
+      <BrowserBridgeCard startCommand={cliCommand("start")} />
 
       <details className="howto-manual">
         <summary>
