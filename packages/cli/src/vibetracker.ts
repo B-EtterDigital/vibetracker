@@ -1456,6 +1456,11 @@ async function main() {
       deps: {
         readRecords: () => readRecords(STORE),
         appendRecords: (records) => appendRecords(STORE, records),
+        // Snapshot dedupe: a lifetime/balance read replaces the prior same provider+operation record.
+        replaceSnapshot: (record) => {
+          const kept = readRecords(STORE).filter((r) => !(r.source === "manual" && r.provider === record.provider && r.operation === record.operation));
+          writeRecords(STORE, [...kept, record]);
+        },
         log: (line) => console.log(line),
         // One-click connect from the browser extension: store the cookie in the keyring exactly as
         // `vibetracker connect` would. The value is written straight to the keyring and never logged.
@@ -1510,6 +1515,11 @@ async function main() {
       deps: {
         readRecords: () => readRecords(STORE),
         appendRecords: (records) => appendRecords(STORE, records),
+        // Snapshot dedupe: a lifetime/balance read replaces the prior same provider+operation record.
+        replaceSnapshot: (record) => {
+          const kept = readRecords(STORE).filter((r) => !(r.source === "manual" && r.provider === record.provider && r.operation === record.operation));
+          writeRecords(STORE, [...kept, record]);
+        },
         log: (line) => console.log(line),
         connectProvider: (provider, fields) => {
           const cfg = loadConfig();

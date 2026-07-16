@@ -143,6 +143,45 @@ test("local API /connect stores allowlisted cookie creds without leaking values"
   }
 });
 
+test("local API /capture replaces snapshots (re-reading a lifetime total never double-counts)", async () => {
+  let store: NormalizedRecord[] = [];
+  const session = await startLocalApiServer({
+    port: 0, token: "t",
+    deps: {
+      readRecords: () => store,
+      appendRecords: (records) => { store = [...store, ...records]; },
+      replaceSnapshot: (rec) => {
+        store = store.filter((r) => !(r.source === "manual" && r.provider === rec.provider && r.operation === rec.operation));
+        store.push(rec);
+      },
+      log: () => {},
+    },
+  });
+  const base = `http://127.0.0.1:${session.port}`;
+  const ext = "chrome-extension://x";
+  const readMidjourney = (n: number) => fetch(`${base}/capture`, {
+    method: "POST", headers: { origin: ext, "content-type": "application/json" },
+    body: JSON.stringify({ provider: "midjourney", category: "image", operation: "lifetime_images", quantity: n, unit: "image", snapshot: true }),
+  });
+  try {
+    await readMidjourney(3982);
+    await readMidjourney(4050); // re-read with a newer total
+    await readMidjourney(4120); // and again
+    const mj = store.filter((r) => r.provider === "midjourney" && r.operation === "lifetime_images");
+    assert.equal(mj.length, 1, "only ONE lifetime record survives");
+    assert.equal(mj[0].quantity, 4120, "it holds the latest value");
+
+    // a non-snapshot capture still appends normally
+    await fetch(`${base}/capture`, {
+      method: "POST", headers: { origin: ext, "content-type": "application/json" },
+      body: JSON.stringify({ provider: "browser-test", quantity: 1 }),
+    });
+    assert.equal(store.filter((r) => r.provider === "browser-test").length, 1);
+  } finally {
+    await new Promise<void>((resolve, reject) => session.server.close((error) => error ? reject(error) : resolve()));
+  }
+});
+
 test("local API /connect is disabled when the CLI does not provide connectProvider", async () => {
   const session = await startLocalApiServer({
     port: 0, token: "t",

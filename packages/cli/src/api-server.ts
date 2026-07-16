@@ -18,11 +18,17 @@ export interface BrowserCaptureEvent {
   url?: string;
   title?: string;
   ts?: string;
+  // a lifetime/balance figure — re-reading it REPLACES the prior snapshot for this
+  // provider+operation instead of appending a duplicate that would inflate totals
+  snapshot?: boolean;
 }
 
 export interface LocalApiDeps {
   readRecords: () => NormalizedRecord[];
   appendRecords: (records: NormalizedRecord[]) => void;
+  // Replace any prior snapshot record with the same provider+operation, then store this one.
+  // Absent → snapshots fall back to append (never worse than today).
+  replaceSnapshot?: (record: NormalizedRecord) => void;
   log: (line: string) => void;
   // Store cookie-only credentials handed over by the browser extension's one-click connect.
   // Returns the credential FIELD NAMES stored (never values) so the response can confirm without
@@ -221,8 +227,16 @@ export async function startLocalApiServer(opts: StartLocalApiOptions): Promise<L
       if (req.method === "POST" && url.pathname === "/capture") {
         const payload = JSON.parse(await readBody(req)) as BrowserCaptureEvent;
         const { accepted, rejected } = ingestRecords([captureEventToRecord(payload)], { untrustedSource: true });
-        if (accepted.length) opts.deps.appendRecords(accepted);
-        json(req, res, rejected.length ? 400 : 200, { accepted: accepted.length, rejected }, url.pathname);
+        if (accepted.length) {
+          // snapshot (lifetime/balance) → replace the prior value for this provider+operation so
+          // re-reading never double-counts; everything else appends
+          if (payload.snapshot && opts.deps.replaceSnapshot) {
+            for (const record of accepted) opts.deps.replaceSnapshot(record);
+          } else {
+            opts.deps.appendRecords(accepted);
+          }
+        }
+        json(req, res, rejected.length ? 400 : 200, { accepted: accepted.length, rejected, snapshot: Boolean(payload.snapshot) }, url.pathname);
         return;
       }
       if (req.method === "POST" && url.pathname === "/connect") {

@@ -177,6 +177,9 @@ async function readActivePage(tab, scriptingApi) {
     rawUnit: result.unit,
     url: tab.url,
     title: tab.title,
+    // a lifetime/balance figure is a SNAPSHOT — reading it again must REPLACE the prior value,
+    // never add a second record (which would inflate the total). The local API dedupes on this.
+    snapshot: true,
   });
   return {
     ...captured,
