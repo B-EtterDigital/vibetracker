@@ -84,8 +84,10 @@ function requestOrigin(req: IncomingMessage): string | undefined {
 function originAllowed(origin: string | undefined, pathname: string): boolean {
   if (!origin) return true;
   if (isDashboardOrigin(origin)) return true;
-  // the extension talks to /capture and /connect from its chrome-extension:// origin
-  return (pathname === "/capture" || pathname === "/connect") && origin.startsWith("chrome-extension://");
+  // the extension talks to /capture, /connect, and the /health liveness probe from its
+  // chrome-extension:// origin (the popup's "is the app running?" banner depends on /health)
+  return (pathname === "/capture" || pathname === "/connect" || pathname === "/health")
+    && origin.startsWith("chrome-extension://");
 }
 
 // Validate a /connect body: known provider, and only its allowlisted fields, each a non-empty
@@ -200,9 +202,12 @@ export async function startLocalApiServer(opts: StartLocalApiOptions): Promise<L
       return;
     }
 
+    // /health is a token-free liveness ping (returns no data) so the extension popup can show
+    // "app running" without holding the session token; writes still need the extension origin.
+    const healthPing = req.method === "GET" && url.pathname === "/health";
     const extensionWrite = (url.pathname === "/capture" || url.pathname === "/connect")
       && origin?.startsWith("chrome-extension://");
-    if (!extensionWrite && !bearerMatches(req, token)) {
+    if (!healthPing && !extensionWrite && !bearerMatches(req, token)) {
       json(req, res, 401, { error: "session token required" }, url.pathname);
       return;
     }

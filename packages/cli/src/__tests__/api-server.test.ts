@@ -182,6 +182,25 @@ test("local API /capture replaces snapshots (re-reading a lifetime total never d
   }
 });
 
+test("local API /health answers the extension's token-free liveness probe", async () => {
+  const session = await startLocalApiServer({
+    port: 0, token: "t",
+    deps: { readRecords: () => [], appendRecords: () => {}, log: () => {} },
+  });
+  const base = `http://127.0.0.1:${session.port}`;
+  try {
+    // the extension probes /health with NO bearer token — must succeed
+    const health = await fetch(`${base}/health`, { headers: { origin: "chrome-extension://x" } });
+    assert.equal(health.status, 200);
+    assert.equal((await health.json() as { ok: boolean }).ok, true);
+    // but a data read is not even reachable from the extension origin (stricter than 401)
+    const stats = await fetch(`${base}/stats`, { headers: { origin: "chrome-extension://x" } });
+    assert.equal(stats.status, 403);
+  } finally {
+    await new Promise<void>((resolve, reject) => session.server.close((error) => error ? reject(error) : resolve()));
+  }
+});
+
 test("local API /connect is disabled when the CLI does not provide connectProvider", async () => {
   const session = await startLocalApiServer({
     port: 0, token: "t",
