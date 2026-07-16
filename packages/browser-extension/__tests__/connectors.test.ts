@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CONNECTORS, connectorForUrl, cookieMatchesSpec, connectorHosts } from "../connectors.mjs";
-import { readConnectorCookies, connectActiveSite } from "../background.js";
+import { readConnectorCookies, connectActiveSite, scanAllTabs } from "../background.js";
 
 test("connectorForUrl matches supported sites (root, www, app subdomains) and rejects others", () => {
   assert.equal(connectorForUrl("https://suno.com/create")?.id, "suno");
@@ -84,4 +84,36 @@ test("connectActiveSite refuses a non-connectable tab", async () => {
   const result = await connectActiveSite({ url: "https://chatgpt.com/" }, fakeCookieApi({}));
   assert.equal(result.ok, false);
   assert.match(result.error, /not a connectable/i);
+});
+
+test("scanAllTabs connects every open cookie source once and reads usage pages, deduped", async () => {
+  const cookieApi = fakeCookieApi({ "suno.com": { __session: "S" }, "udio.com": { "sb-x-auth-token": "U" } });
+  const scriptingApi = { async executeScript() { return [{ result: { operation: "lifetime_images", unit: "image", value: 3982 } }]; } };
+  const tabsApi = {
+    async query() {
+      return [
+        { id: 1, url: "https://suno.com/create" },
+        { id: 2, url: "https://suno.com/library" }, // second Suno tab — must NOT double-connect
+        { id: 3, url: "https://udio.com/" },
+        { id: 4, url: "https://midjourney.com/account", title: "MJ" },
+        { id: 5, url: "https://example.com/" }, // unsupported — skipped
+      ];
+    },
+  };
+  const realFetch = globalThis.fetch;
+  const posted: string[] = [];
+  globalThis.fetch = (async (url: string) => {
+    posted.push(String(url));
+    return { ok: true, status: 200, text: async () => JSON.stringify({ ok: true, accepted: 1, rejected: [] }) };
+  }) as unknown as typeof fetch;
+  try {
+    const res = await scanAllTabs({ tabsApi, cookieApi, scriptingApi });
+    assert.equal(res.ok, true);
+    const providers = res.results.map((r: { provider: string }) => r.provider).sort();
+    assert.deepEqual(providers, ["midjourney", "suno", "udio"]); // suno once, example skipped
+    assert.equal(res.results.every((r: { ok: boolean }) => r.ok), true);
+    assert.equal(res.connected, 3);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });

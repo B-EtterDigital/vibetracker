@@ -170,12 +170,48 @@ async function readActivePage(tab, scriptingApi) {
   };
 }
 
+// One sweep across every open tab: connect each cookie source, read each usage-page source, in
+// one click. This is "retrieve all data from all sources very easily" made literal. De-duplicates
+// by source so ten Suno tabs connect once. Returns a per-source result list — value-free.
+async function scanAllTabs({ tabsApi, cookieApi, scriptingApi } = {}) {
+  tabsApi = tabsApi ?? (typeof chrome !== "undefined" ? chrome.tabs : undefined);
+  if (!tabsApi) return { ok: false, error: "tabs unavailable" };
+  const tabs = await tabsApi.query({}).catch(() => []);
+  const seenConnect = new Set();
+  const seenRead = new Set();
+  const results = [];
+
+  for (const tab of tabs || []) {
+    const connector = connectorForUrl(tab?.url);
+    if (connector && !seenConnect.has(connector.id)) {
+      seenConnect.add(connector.id);
+      const r = await connectActiveSite(tab, cookieApi ?? chrome.cookies);
+      results.push({ kind: "connect", provider: connector.id, label: connector.label, ok: Boolean(r.ok), detail: r.ok ? "session saved" : r.error });
+      continue;
+    }
+    const reader = readerForUrl(tab?.url);
+    if (reader && !seenRead.has(reader.id)) {
+      seenRead.add(reader.id);
+      const r = await readActivePage(tab, scriptingApi);
+      results.push({ kind: "read", provider: reader.id, label: reader.label, ok: Boolean(r.ok), detail: r.ok ? `${Number(r.value).toLocaleString("en-US")} ${r.unit}` : r.error });
+    }
+  }
+
+  const okCount = results.filter((r) => r.ok).length;
+  return { ok: true, results, connected: okCount, total: results.length };
+}
+
 // Register the message router only in the extension runtime — guarded so the module stays
 // importable under Node for tests (where `chrome` does not exist).
 if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    const known = ["capture-active-tab", "preview-active-tab", "connect-active-site", "read-active-page"];
+    const known = ["capture-active-tab", "preview-active-tab", "connect-active-site", "read-active-page", "scan-all-tabs"];
     if (!known.includes(message?.type)) return false;
+
+    if (message.type === "scan-all-tabs") {
+      scanAllTabs().then(sendResponse).catch((error) => sendResponse({ ok: false, error: String(error?.message || error) }));
+      return true;
+    }
 
     activeTab()
       .then(async (tab) => {
@@ -200,4 +236,4 @@ if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
   });
 }
 
-export { readConnectorCookies, connectActiveSite, connectorSummary, readActivePage, pageStatExtractor, CONNECTORS, READERS };
+export { readConnectorCookies, connectActiveSite, connectorSummary, readActivePage, pageStatExtractor, scanAllTabs, CONNECTORS, READERS };

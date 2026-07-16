@@ -21,6 +21,8 @@ const apiTitle = $("api-title");
 const apiDetail = $("api-detail");
 const apiCmd = $("api-cmd");
 const captureBtn = $("capture");
+const scanBtn = $("scan");
+const scanResults = $("scan-results");
 
 function brand(from, to, ink) {
   document.documentElement.style.setProperty("--brand-from", from);
@@ -116,6 +118,34 @@ connectBtn.addEventListener("click", async () => {
     setStatus(statusForConnect({ ok: false, error: String(error?.message || error) }));
   } finally {
     connectBtn.disabled = false;
+  }
+});
+
+scanBtn.addEventListener("click", async () => {
+  scanBtn.disabled = true;
+  status.dataset.state = "";
+  status.textContent = "scanning your open tabs...";
+  scanResults.hidden = true;
+  scanResults.textContent = "";
+  try {
+    const res = await send({ type: "scan-all-tabs" });
+    const results = res?.results || [];
+    if (!results.length) {
+      setStatus({ state: "error", label: "nothing found", detail: "No supported AI source is open. Open Suno, Midjourney, Higgsfield, and try again." });
+    } else {
+      for (const r of results) {
+        const li = document.createElement("li");
+        li.dataset.ok = r.ok ? "true" : "false";
+        li.innerHTML = `<b>${r.label}</b><span>${r.ok ? (r.kind === "read" ? "read " : "connected · ") : ""}${r.detail || ""}</span>`;
+        scanResults.appendChild(li);
+      }
+      scanResults.hidden = false;
+      setStatus({ state: res.connected ? "ok" : "error", label: `${res.connected}/${res.total} pulled`, detail: res.connected ? "Run `vibetracker sync` to fetch them all." : "Log in to those sources first, then scan again." });
+    }
+  } catch (error) {
+    setStatus({ state: "error", label: "scan failed", detail: String(error?.message || error) });
+  } finally {
+    scanBtn.disabled = false;
   }
 });
 
