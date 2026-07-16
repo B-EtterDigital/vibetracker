@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { READERS, readerForUrl, readerHosts, extractStat } from "../readers.mjs";
-import { readActivePage, pageStatExtractor } from "../background.js";
+import { readActivePage, pageStatExtractor, isPullableUrl, countPullableSources } from "../background.js";
 
 test("readerForUrl matches page-read sources and rejects others", () => {
   assert.equal(readerForUrl("https://www.midjourney.com/account")?.id, "midjourney");
@@ -76,4 +76,22 @@ test("readActivePage refuses a page with no known usage number", async () => {
   const result = await readActivePage({ id: 1, url: "https://example.com/" });
   assert.equal(result.ok, false);
   assert.match(result.error, /no known usage number/i);
+});
+
+test("isPullableUrl is true for cookie sources AND page-read sources, false otherwise", () => {
+  assert.equal(isPullableUrl("https://suno.com/create"), true);       // cookie connector
+  assert.equal(isPullableUrl("https://midjourney.com/account"), true); // page reader
+  assert.equal(isPullableUrl("https://perplexity.ai/settings"), true); // page reader
+  assert.equal(isPullableUrl("https://example.com/"), false);
+});
+
+test("countPullableSources counts DISTINCT sources across tabs (dedupes)", () => {
+  const count = countPullableSources([
+    { url: "https://suno.com/a" },
+    { url: "https://suno.com/b" },      // dupe
+    { url: "https://midjourney.com/" },
+    { url: "https://higgsfield.ai/" },
+    { url: "https://example.com/" },     // unsupported
+  ]);
+  assert.equal(count, 3); // suno + midjourney + higgsfield
 });

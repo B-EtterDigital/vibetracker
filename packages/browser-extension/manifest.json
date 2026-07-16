@@ -28,7 +28,13 @@
     "https://www.higgsfield.ai/*",
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
-    "https://elevenlabs.io/*"
+    "https://elevenlabs.io/*",
+    "https://app.leonardo.ai/*",
+    "https://leonardo.ai/*",
+    "https://app.runwayml.com/*",
+    "https://runwayml.com/*",
+    "https://perplexity.ai/*",
+    "https://www.perplexity.ai/*"
   ],
   "action": {
     "default_popup": "popup.html",

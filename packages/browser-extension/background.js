@@ -6,6 +6,24 @@ function activeTab() {
   return chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => tabs[0]);
 }
 
+// A tab is "pullable" if it's a cookie connector OR a usage-page reader — the two ways the Bridge
+// gets data. Pure + testable so the badge count is exercised without a browser.
+export function isPullableUrl(url) {
+  return Boolean(connectorForUrl(url) || readerForUrl(url));
+}
+
+// Count the DISTINCT pullable sources across a set of tabs — ten Suno tabs count once.
+export function countPullableSources(tabs) {
+  const seen = new Set();
+  for (const tab of tabs || []) {
+    const connector = connectorForUrl(tab?.url);
+    if (connector) { seen.add(`c:${connector.id}`); continue; }
+    const reader = readerForUrl(tab?.url);
+    if (reader) seen.add(`r:${reader.id}`);
+  }
+  return seen.size;
+}
+
 // Is the local CLI API up? Powers the popup's "start the API" guidance so install is frictionless.
 async function localApiHealth() {
   try {
@@ -204,6 +222,23 @@ async function scanAllTabs({ tabsApi, cookieApi, scriptingApi } = {}) {
 // Register the message router only in the extension runtime — guarded so the module stays
 // importable under Node for tests (where `chrome` does not exist).
 if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
+  // Ambient badge — the toolbar icon shows how many distinct pullable sources are open, so the
+  // user knows to act without opening the popup. Recomputed on any tab change.
+  async function refreshBadge() {
+    if (!chrome.action?.setBadgeText) return;
+    const tabs = await chrome.tabs.query({}).catch(() => []);
+    const count = countPullableSources(tabs);
+    chrome.action.setBadgeText({ text: count ? String(count) : "" });
+    chrome.action.setBadgeBackgroundColor?.({ color: "#2ee8d6" });
+    chrome.action.setTitle?.({ title: count ? `${count} AI source${count === 1 ? "" : "s"} ready to pull` : "VibeTRACKER Bridge" });
+  }
+  chrome.tabs?.onUpdated?.addListener((_id, info) => { if (info.status === "complete" || info.url) refreshBadge(); });
+  chrome.tabs?.onRemoved?.addListener(() => refreshBadge());
+  chrome.tabs?.onActivated?.addListener(() => refreshBadge());
+  chrome.runtime?.onInstalled?.addListener(() => refreshBadge());
+  chrome.runtime?.onStartup?.addListener(() => refreshBadge());
+  refreshBadge();
+
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const known = ["capture-active-tab", "preview-active-tab", "connect-active-site", "read-active-page", "scan-all-tabs"];
     if (!known.includes(message?.type)) return false;
