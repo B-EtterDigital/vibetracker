@@ -60,22 +60,46 @@ export function createCynaps3Adapter(client: Cynaps3Client, opts: Cynaps3Adapter
       let rangeSummary: Cynaps3StatsSummary | undefined;
       let exhausted = false;
 
+      // The stats API rejects ranges over 90 days with 400 (real incident 2026-07-19: the CLI
+      // syncs an all-time 2000..2100 range). Walk the effective range in ≤89-day windows, clamped
+      // to the platform epoch and now; windows are disjoint (from inclusive, to exclusive).
+      const PLATFORM_EPOCH = Date.parse("2025-01-01T00:00:00.000Z");
+      const WINDOW_MS = 89 * 24 * 60 * 60 * 1000;
+      const effFrom = Math.max(normalizedRange.fromT, PLATFORM_EPOCH);
+      const effTo = Math.min(normalizedRange.toT, Date.now());
+      if (effFrom >= effTo) return records;
+      let winStart = effFrom;
+      let winEnd = Math.min(winStart + WINDOW_MS, effTo);
+
       for (let pageNumber = 0; pageNumber < maxPages; pageNumber++) {
         let page;
         try {
           page = await client.stats({
-            from: normalizedRange.from,
-            to: normalizedRange.to,
+            from: new Date(winStart).toISOString(),
+            to: new Date(winEnd).toISOString(),
             cursor,
             limit: pageSize,
           });
         } catch (error) {
+          // A single server-broken era must not sink the whole history (real incident 2026-07-19:
+          // the 2025-09-25→12-23 window 500s server-side while every other window is healthy).
+          // 5xx on a window START (no cursor) → report loudly, skip that window, keep collecting.
+          const serverSide = /failed: 5\d\d/.test(error instanceof Error ? error.message : "");
           ctx.telemetry.captureError(error, {
             area: "adapter.cynaps3.stats",
-            severity: "error",
+            severity: serverSide && !cursor ? "warn" : "error",
             page: pageNumber,
             cursor,
+            window: `${new Date(winStart).toISOString()}..${new Date(winEnd).toISOString()}`,
           });
+          if (serverSide && !cursor) {
+            if (winEnd >= effTo) { exhausted = true; break; }
+            winStart = winEnd;
+            winEnd = Math.min(winStart + WINDOW_MS, effTo);
+            cursors.clear();
+            rangeSummary = undefined;
+            continue;
+          }
           throw error;
         }
 
@@ -124,8 +148,17 @@ export function createCynaps3Adapter(client: Cynaps3Client, opts: Cynaps3Adapter
         });
 
         if (!page.page.hasMore) {
-          exhausted = true;
-          break;
+          if (winEnd >= effTo) {
+            exhausted = true;
+            break;
+          }
+          // this window is drained — advance to the next disjoint ≤89-day window
+          winStart = winEnd;
+          winEnd = Math.min(winStart + WINDOW_MS, effTo);
+          cursor = undefined;
+          cursors.clear();
+          rangeSummary = undefined; // summary consistency is a per-window contract
+          continue;
         }
         const nextCursor = page.page.nextCursor!;
         if (cursors.has(nextCursor)) {
