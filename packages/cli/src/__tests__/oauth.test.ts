@@ -93,7 +93,7 @@ test("Cynaps3 preset pins the read-only producer contract and allows staged clie
   assert.equal(preset.redirectUri, "http://localhost:19876/callback");
   assert.equal(
     preset.authUrl,
-    "https://tvsvttguftnatztsedyx.supabase.co/functions/v1/oauth-server/authorize",
+    "https://content.7cycle.life/oauth/authorize",
   );
   assert.equal(
     preset.tokenUrl,

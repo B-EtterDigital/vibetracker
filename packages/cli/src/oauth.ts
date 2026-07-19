@@ -51,7 +51,12 @@ export function oauthProviderPreset(
   if (provider !== "cynaps3") return undefined;
   return {
     provider,
-    authUrl: `${CYNAPS3_OAUTH_BASE}/authorize`,
+    // The APP consent page, not the raw edge endpoint: the edge can't see the browser's Clerk
+    // session (cross-origin), so hitting it directly strands users at login forever. The app page
+    // (OAuthAuthorizePage) confirms consent with the live session, POSTs to the edge in JSON mode,
+    // and delivers the code to the CLI's localhost callback via iframe. Found 2026-07-19 after six
+    // timed-out authorize attempts.
+    authUrl: "https://content.7cycle.life/oauth/authorize",
     tokenUrl: `${CYNAPS3_OAUTH_BASE}/token`,
     clientId: env.VT_CYNAPS3_OAUTH_CLIENT_ID?.trim() || "musicmation-skill-4290992cf2f40370",
     scope: "usage:read",
