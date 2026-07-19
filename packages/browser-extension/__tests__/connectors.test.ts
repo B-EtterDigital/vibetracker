@@ -11,6 +11,7 @@ function isHealth(url: string): boolean { return String(url).endsWith("/health")
 
 test("connectorForUrl matches supported sites (root, www, app subdomains) and rejects others", () => {
   assert.equal(connectorForUrl("https://suno.com/create")?.id, "suno");
+  assert.equal(connectorForUrl("https://content.7cycle.life/library")?.id, "cynaps3");
   assert.equal(connectorForUrl("https://www.suno.com/library")?.id, "suno");
   assert.equal(connectorForUrl("https://app.pixverse.ai/")?.id, "pixverse");
   assert.equal(connectorForUrl("https://vidu.studio/create")?.id, "vidu");
@@ -29,6 +30,11 @@ test("cookie spec matching handles exact and prefix+suffix (Udio's sb-<ref>-auth
   // tensor.art's real session cookie, verified from a live sweep report 2026-07-19
   const ta = CONNECTORS.find((c) => c.id === "tensorart")!.cookies[0];
   assert.equal(cookieMatchesSpec("ta_token_prod", ta), true);
+  // cynaps3 hands over the live Clerk session for the first-party headless connect
+  const cy = CONNECTORS.find((c) => c.id === "cynaps3")!;
+  assert.equal(cy.cookies[0].field, "clerkToken");
+  assert.equal(cookieMatchesSpec("__session", cy.cookies[0]), true);
+  assert.equal(cy.pending, undefined, "cynaps3 is fully wired, not pending");
 });
 
 test("every connector host is declared for the manifest allowlist", () => {
@@ -160,7 +166,7 @@ test("buildSourceBoard covers every source with the right state precedence and r
   assert.match(byId.cynaps3.logo, /cynaps3\.png$/);
   assert.equal(byId.cynaps3.url, "https://content.7cycle.life/");
   // ALL connectors + readers + adapter sources — the board is the complete source map
-  assert.equal(tiles.length, CONNECTORS.length + 4 + 3, "4 readers + connectors + 3 adapter sources");
+  assert.equal(tiles.length, CONNECTORS.length + 4 + 2, "4 readers + connectors + 2 adapter sources (cynaps3 is a connector now)");
 });
 
 test("openAllSources opens one background tab per missing source and skips already-open ones", async () => {

@@ -319,7 +319,7 @@ async function getJson(path) {
 // or page readers — the CLI adapter (OAuth) does the syncing; the tile shows its state and links
 // to the product. Connect via `vibetracker oauth start <id>` in the terminal.
 const ADAPTER_SOURCES = [
-  { id: "cynaps3", label: "Cynaps3", url: "https://content.7cycle.life/" },
+  // (cynaps3 moved to CONNECTORS 2026-07-19: one-click Clerk-session connect + adapter sync)
   // no web-exposed numbers (user rule 2026-07-19) but fully tracked outside the browser:
   { id: "higgsfield", label: "Higgsfield", url: "https://higgsfield.ai" },       // MCP adapter syncs balance/transactions
   { id: "midjourney", label: "Midjourney", url: "https://www.midjourney.com" }, // CLI `import midjourney --images <n>` from Discord /info

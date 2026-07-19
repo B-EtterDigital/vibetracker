@@ -66,6 +66,66 @@ export function oauthProviderPreset(
   };
 }
 
+/**
+ * First-party headless connect: redeem a live Clerk session token (read by the browser extension
+ * from content.7cycle.life's `__session` cookie) for full rotating OAuth credentials — no browser
+ * flow, no localhost listener, no consent screen (the client is first-party, consent is skipped).
+ *
+ * Protocol (oauth-server, JSON mode): POST /authorize with Accept: application/json and the
+ * clerk_token in the body → { redirect_uri: "...?code=...&state=..." } → PKCE exchange at /token.
+ * Clerk session JWTs live ~60 seconds, so this MUST run immediately on /connect — never deferred.
+ * The clerk token and all minted credentials go straight to the keyring; nothing is ever logged.
+ */
+export async function redeemCynaps3WithClerkToken(
+  clerkToken: string,
+  opts: { fetchImpl?: typeof fetch } = {},
+): Promise<StoredOAuthCredentials> {
+  const preset = oauthProviderPreset("cynaps3")!;
+  const doFetch = opts.fetchImpl ?? fetch;
+  const verifier = createPkceVerifier();
+  const state = createPkceVerifier(); // 43 b64url chars — comfortably over the 32-char minimum
+  const authorizeUrl = preset.tokenUrl.replace(/\/token$/, "/authorize");
+
+  const authorize = await doFetch(authorizeUrl, {
+    method: "POST",
+    headers: { accept: "application/json", "content-type": "application/json" },
+    body: JSON.stringify({
+      response_type: "code",
+      client_id: preset.clientId,
+      redirect_uri: preset.redirectUri,
+      scope: preset.scope,
+      state,
+      code_challenge: pkceChallenge(verifier),
+      code_challenge_method: "S256",
+      clerk_token: clerkToken,
+    }),
+  });
+  if (!authorize.ok) {
+    const detail = safeOAuthDetail(await authorize.text());
+    throw new Error(
+      authorize.status === 401
+        ? "Cynaps3 session expired mid-connect — click Connect again (the extension reads a fresh session each click)."
+        : `Cynaps3 authorize failed ${authorize.status}${detail ? `: ${detail}` : ""}`,
+    );
+  }
+  const payload = await authorize.json() as { redirect_uri?: string };
+  if (!payload.redirect_uri) throw new Error("Cynaps3 authorize returned no redirect");
+  const callback = new URL(payload.redirect_uri);
+  const code = callback.searchParams.get("code");
+  if (!code) throw new Error("Cynaps3 authorize returned no code");
+  if (callback.searchParams.get("state") !== state) throw new Error("Cynaps3 authorize state mismatch");
+
+  const credentials = oauthCredentialsFromTokenResponse(await exchangeOAuthCode({
+    tokenUrl: preset.tokenUrl,
+    clientId: preset.clientId,
+    redirectUri: preset.redirectUri,
+    code,
+    verifier,
+    fetchImpl: doFetch,
+  }));
+  return validateOAuthCredentialsForPreset(preset, credentials);
+}
+
 function b64url(buffer: Buffer): string {
   return buffer.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }

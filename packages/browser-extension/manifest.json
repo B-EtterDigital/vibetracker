@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VibeTRACKER Bridge",
-  "version": "0.7.10",
+  "version": "0.7.11",
   "description": "One-click connect cookie-only AI sources and read logged-in usage numbers into your local VibeTRACKER ledger. Local only.",
   "icons": {
     "16": "icons/icon-16.png",
@@ -44,7 +44,8 @@
     "https://app.runwayml.com/*",
     "https://runwayml.com/*",
     "https://perplexity.ai/*",
-    "https://www.perplexity.ai/*"
+    "https://www.perplexity.ai/*",
+    "https://content.7cycle.life/*"
   ],
   "action": {
     "default_icon": {

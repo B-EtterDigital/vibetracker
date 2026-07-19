@@ -51,6 +51,7 @@ import {
   exchangeOAuthCode,
   oauthCredentialsFromTokenResponse,
   oauthProviderPreset,
+  redeemCynaps3WithClerkToken,
   refreshOAuthCredentials,
   validateOAuthCredentialsForPreset,
   waitForOAuthCallback,
@@ -719,8 +720,17 @@ function bridgeDeps(ctx: AdapterCtxLike): LocalApiDeps {
     log: (line) => console.log(line),
     // One-click connect from the browser extension: store the cookie in the keyring exactly as
     // `vibetracker connect` would. The value is written straight to the keyring and never logged.
-    connectProvider: (provider, fields) => {
+    // cynaps3 is special (first-party headless connect): the handed-over Clerk session token is
+    // redeemed IMMEDIATELY for rotating OAuth credentials — the token lives ~60s.
+    connectProvider: async (provider, fields) => {
       const cfg = loadConfig();
+      if (provider === "cynaps3" && fields.clerkToken) {
+        const credentials = await redeemCynaps3WithClerkToken(fields.clerkToken);
+        const keyring = storeProviderCreds(cfg, "cynaps3", credentials as unknown as Record<string, string>);
+        if (!cfg.enabled.includes("cynaps3")) cfg.enabled.push("cynaps3");
+        saveConfig(cfg);
+        return { stored: Object.keys(credentials), keyring };
+      }
       const keyring = storeProviderCreds(cfg, provider, fields);
       if (!cfg.enabled.includes(provider)) cfg.enabled.push(provider);
       saveConfig(cfg);

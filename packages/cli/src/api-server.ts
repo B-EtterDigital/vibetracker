@@ -33,7 +33,7 @@ export interface LocalApiDeps {
   // Store cookie-only credentials handed over by the browser extension's one-click connect.
   // Returns the credential FIELD NAMES stored (never values) so the response can confirm without
   // exposing the secret. Absent → the /connect route is disabled.
-  connectProvider?: (provider: string, fields: Record<string, string>) => { stored: string[]; keyring: boolean };
+  connectProvider?: (provider: string, fields: Record<string, string>) => { stored: string[]; keyring: boolean } | Promise<{ stored: string[]; keyring: boolean }>;
   // Per-provider sync state for the extension's source board: booleans + a timestamp only —
   // never counts, never values. Absent → /sources returns an empty map.
   sourceStatus?: () => Record<string, { hasData: boolean; connected: boolean; lastTs?: string }>;
@@ -48,6 +48,9 @@ export interface LocalApiDeps {
 // The cookie-only sources the extension may connect. Kept here (not from the adapter registry) so
 // the local API has an explicit allowlist — a rogue POST can never store creds for an arbitrary id.
 const CONNECTABLE_PROVIDERS: Record<string, string[]> = {
+  // cynaps3 hands over the live Clerk session token, which the CLI immediately redeems for
+  // rotating OAuth credentials (first-party headless connect — see oauth.ts).
+  cynaps3: ["clerkToken"],
   suno: ["sessionCookie"],
   udio: ["sessionToken"],
   seaart: ["sessionToken"],
@@ -291,9 +294,20 @@ export async function startLocalApiServer(opts: StartLocalApiOptions): Promise<L
           json(req, res, 400, { error: validated.error }, url.pathname);
           return;
         }
-        const { stored, keyring } = opts.deps.connectProvider(validated.provider, validated.fields);
-        opts.deps.log(`[vibetracker-api] connected ${validated.provider} — ${stored.length} secret(s) → ${keyring ? "keyring" : "config (mode 600)"}`);
-        json(req, res, 200, { ok: true, provider: validated.provider, stored, keyring }, url.pathname);
+        // connectProvider may be async: cynaps3 redeems the handed-over Clerk token for rotating
+        // OAuth credentials INSIDE this request (the token lives ~60s). Redemption failures get a
+        // friendly 502 with a value-free message instead of the generic 500.
+        let result: { stored: string[]; keyring: boolean };
+        try {
+          result = await opts.deps.connectProvider(validated.provider, validated.fields);
+        } catch (connectErr) {
+          const reason = (connectErr instanceof Error ? connectErr.message : "connect failed").slice(0, 200);
+          opts.deps.log(`[vibetracker-api] /connect ${validated.provider} failed: ${reason}`);
+          json(req, res, 502, { error: reason }, url.pathname);
+          return;
+        }
+        opts.deps.log(`[vibetracker-api] connected ${validated.provider} — ${result.stored.length} secret(s) → ${result.keyring ? "keyring" : "config (mode 600)"}`);
+        json(req, res, 200, { ok: true, provider: validated.provider, stored: result.stored, keyring: result.keyring }, url.pathname);
         return;
       }
       json(req, res, 404, { error: "not found" }, url.pathname);

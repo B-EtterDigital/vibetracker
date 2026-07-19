@@ -10,6 +10,19 @@
 
 export const CONNECTORS = [
   {
+    id: "cynaps3",
+    label: "Cynaps3",
+    category: "music",
+    brand: { from: "#22d3ee", to: "#3b82f6", ink: "#00131f" },
+    // First-party headless connect: the live Clerk `__session` JWT goes to the local CLI, which
+    // immediately redeems it server-side for rotating OAuth credentials (usage:read) — no browser
+    // OAuth flow, no consent screen (first-party client). The session JWT lives ~60s, so each
+    // Connect click reads a FRESH one.
+    hosts: ["content.7cycle.life"],
+    url: "https://content.7cycle.life/",
+    cookies: [{ name: "__session", field: "clerkToken", match: "exact" }],
+  },
+  {
     id: "suno",
     label: "Suno",
     category: "music",

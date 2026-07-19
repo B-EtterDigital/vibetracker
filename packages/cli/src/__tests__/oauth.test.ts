@@ -4,6 +4,7 @@ import http from "node:http";
 import { readFileSync } from "node:fs";
 
 import {
+  redeemCynaps3WithClerkToken,
   buildOAuthUrl,
   exchangeOAuthCode,
   oauthCredentialsFromTokenResponse,
@@ -245,4 +246,48 @@ test("OAuth callback reports cancellation immediately", async () => {
     ).on("error", reject);
   });
   await rejected;
+});
+
+test("redeemCynaps3WithClerkToken drives the first-party headless connect end to end", async () => {
+  const calls: Array<{ url: string; body: string }> = [];
+  let issuedState = "";
+  const fetchImpl = (async (url: string | URL, init?: { body?: unknown }) => {
+    const u = String(url);
+    const body = String(init?.body ?? "");
+    calls.push({ url: u, body });
+    if (u.endsWith("/authorize")) {
+      const parsed = JSON.parse(body) as Record<string, string>;
+      assert.equal(parsed.client_id, "musicmation-skill-4290992cf2f40370");
+      assert.equal(parsed.redirect_uri, "http://localhost:19876/callback");
+      assert.equal(parsed.clerk_token, "CLERK_SESSION_JWT");
+      assert.ok(parsed.state.length >= 32, "state respects the 32-char server minimum");
+      assert.equal(parsed.code_challenge_method, "S256");
+      issuedState = parsed.state;
+      return new Response(JSON.stringify({
+        redirect_uri: `http://localhost:19876/callback?code=AUTHCODE123&state=${parsed.state}`,
+      }), { status: 200 });
+    }
+    // token exchange
+    assert.match(body, /grant_type=authorization_code/);
+    assert.match(body, /code=AUTHCODE123/);
+    assert.match(body, /code_verifier=/);
+    return new Response(JSON.stringify({
+      access_token: "access-new", token_type: "Bearer", refresh_token: "refresh-new", expires_in: 3600,
+    }), { status: 200 });
+  }) as unknown as typeof fetch;
+
+  const credentials = await redeemCynaps3WithClerkToken("CLERK_SESSION_JWT", { fetchImpl });
+  assert.equal(credentials.token, "access-new");
+  assert.equal(credentials.refreshToken, "refresh-new");
+  assert.ok(credentials.expiresAt, "rotating credentials carry an expiry");
+  assert.equal(calls.length, 2, "authorize + token exchange, nothing else");
+  assert.ok(issuedState.length >= 32);
+});
+
+test("redeemCynaps3WithClerkToken maps a 401 to the friendly expired-session message", async () => {
+  const fetchImpl = (async () => new Response(JSON.stringify({ error: "login_required" }), { status: 401 })) as unknown as typeof fetch;
+  await assert.rejects(
+    () => redeemCynaps3WithClerkToken("stale", { fetchImpl }),
+    /session expired mid-connect — click Connect again/,
+  );
 });
