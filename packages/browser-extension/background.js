@@ -388,6 +388,14 @@ if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
   chrome.runtime?.onStartup?.addListener(() => refreshBadge());
   refreshBadge();
 
+  // Force the toolbar icon on every worker start. Chrome caches action icons aggressively for
+  // unpacked extensions — a changed default_icon in the manifest often keeps showing the OLD
+  // artwork until a full reinstall. setIcon overrides that cache unconditionally.
+  chrome.action?.setIcon?.({ path: { 16: "icons/icon-16.png", 32: "icons/icon-32.png", 48: "icons/icon-48.png", 128: "icons/icon-128.png" } })
+    ?.catch?.((error) => console.warn("[vibetracker] toolbar icon set failed", {
+      area: "browser-extension.icon", message: String(error?.message || error).slice(0, 120),
+    }));
+
   // Quiet auto-pull every 30 minutes: re-pull ONLY tabs that are already open — never opens tabs,
   // never wakes anything when the local bridge is down (one refused fetch per candidate port and
   // it goes back to sleep). Snapshot dedupe on the CLI side makes repeated reads free of
