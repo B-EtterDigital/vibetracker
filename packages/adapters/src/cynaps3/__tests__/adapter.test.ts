@@ -35,7 +35,7 @@ test("normalizes authoritative Musicmation operations without inventing USD", ()
   assert.equal(records.length, 3);
   assert.deepEqual(records.map((record) => record.quantity), [1, 1, 1]);
   assert.equal(records.reduce((sum, record) => sum + record.rawAmount, 0), 18);
-  assert.equal(records.reduce((sum, record) => sum + (record.outputQuantity ?? 0), 0), 3); // one native output per event (track|variation)
+  assert.equal(records.reduce((sum, record) => sum + (record.outputQuantity ?? 0), 0), 2); // one output per COMPLETED event; the failed one contributes 0 (audit #4)
   assert.equal(records.reduce((sum, record) => sum + (record.durationSeconds ?? 0), 0), 482.5);
   assert.ok(records.every((record) => record.provider === "cynaps3" && record.category === "music"));
   assert.ok(records.every((record) => record.unit === "request" && record.rawUnit === "credits"));
@@ -43,6 +43,19 @@ test("normalizes authoritative Musicmation operations without inventing USD", ()
   assert.ok(records.every((record) => record.source === "ledger" && record.confidence === "high"));
   assert.ok(records.every((record) => !record.verified && record.usdEst === undefined));
   assert.ok(records.every((record) => record.toolId === "cynaps3" && record.sourceEventId));
+});
+
+test("track vs variation vs failed: outputs typed and failures excluded", () => {
+  const records = normalizeEvents([
+    { id: "t1", occurredAt: "2026-07-01T00:00:00Z", operation: "track", status: "completed", tracksCreated: 1, audioSeconds: 120, creditsConsumed: 0, toolId: "cynaps3", providerId: "cynaps3", billingOwner: "cynaps3" },
+    { id: "v1", occurredAt: "2026-07-01T01:00:00Z", operation: "variation", status: "completed", tracksCreated: 0, audioSeconds: 60, creditsConsumed: 0, toolId: "cynaps3", providerId: "cynaps3", billingOwner: "cynaps3" },
+    { id: "f1", occurredAt: "2026-07-01T02:00:00Z", operation: "track", status: "failed", tracksCreated: 0, audioSeconds: 0, creditsConsumed: 0, toolId: "cynaps3", providerId: "cynaps3", billingOwner: "cynaps3" },
+  ], "acct");
+  assert.equal(records[0].outputUnit, "track");
+  assert.equal(records[0].outputQuantity, 1);
+  assert.equal(records[1].outputUnit, "variation");
+  assert.equal(records[1].outputQuantity, 1);
+  assert.equal(records[2].outputQuantity, 0, "failed events produce no native output");
 });
 
 test("schema v2 keeps Cynaps3 as the tool while upstream billing remains one provider event", () => {

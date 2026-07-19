@@ -641,23 +641,36 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     pm.set(m.provider, (pm.get(m.provider) ?? 0) + m.ops);
     providerModelOps.set(trait, pm);
   }
-  const catProviderOps = new Map<string, Map<string, number>>(); // cat -> provider -> category-exact ops
+  const catProviderOps = new Map<string, Map<string, { ops: number; usd: number }>>(); // cat -> prov -> {ops,usd}
   for (const d0 of profile.providerDays) {
-    if (!d0.category || d0.ops <= 0) continue;
+    if (!d0.category || (d0.ops <= 0 && d0.usd <= 0)) continue;
     const prov = canonicalProvider(d0.provider);
-    const cm = catProviderOps.get(d0.category) ?? new Map<string, number>();
-    cm.set(prov, (cm.get(prov) ?? 0) + d0.ops);
+    const cm = catProviderOps.get(d0.category) ?? new Map<string, { ops: number; usd: number }>();
+    const cur = cm.get(prov) ?? { ops: 0, usd: 0 };
+    cur.ops += d0.ops; cur.usd += d0.usd;
+    cm.set(prov, cur);
     catProviderOps.set(d0.category, cm);
+  }
+  const providerModelUsd = new Map<string, Map<string, number>>();
+  for (const m0 of profile.providerModels) {
+    const m = { ...m0, provider: canonicalProvider(m0.provider) };
+    const trait = m.category ?? traitOfModel(m.provider, m.model);
+    const pm = providerModelUsd.get(trait) ?? new Map<string, number>();
+    pm.set(m.provider, (pm.get(m.provider) ?? 0) + m.usd);
+    providerModelUsd.set(trait, pm);
   }
   for (const [cat, provs] of catProviderOps) {
     const bucket = modelsByTrait.get(cat) ?? new Map<string, { ops: number; usd: number }>();
-    const modelled = providerModelOps.get(cat);
-    for (const [prov, ops] of provs) {
-      const untagged = ops - (modelled?.get(prov) ?? 0);
-      if (untagged <= 0) continue;
+    const modelledOps = providerModelOps.get(cat);
+    const modelledUsd = providerModelUsd.get(cat);
+    for (const [prov, tot] of provs) {
+      const untaggedOps = tot.ops - (modelledOps?.get(prov) ?? 0);
+      const untaggedUsd = tot.usd - (modelledUsd?.get(prov) ?? 0);
+      if (untaggedOps <= 0 && untaggedUsd <= 0) continue;
       const label = providerLabel(prov); // name the SOURCE (Midjourney, Higgsfield) as its own coil
       const cur = bucket.get(label) ?? { ops: 0, usd: 0 };
-      cur.ops += untagged;
+      cur.ops += Math.max(untaggedOps, 0);
+      cur.usd += Math.max(untaggedUsd, 0); // carry USD so cost-weighted traits keep this source
       bucket.set(label, cur);
     }
     modelsByTrait.set(cat, bucket);

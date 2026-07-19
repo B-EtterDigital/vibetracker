@@ -16,10 +16,9 @@ export function normalizeEvents(events: Cynaps3UsageEvent[], accountId: string):
       unit: "request",
       rawAmount: event.creditsConsumed,
       rawUnit: "credits",
-      // the derived producer emits one event per completed track OR variation (operation carries
-      // which). Surface them SEPARATELY as native outputs so the profile can list both — a
-      // variation is a real generation the track count alone would hide (user rule 2026-07-19).
-      outputQuantity: 1,
+      // Native outputs count only COMPLETED generations (audit #4: failed events must never read
+      // as created tracks). One completed event = one output, typed by its operation.
+      outputQuantity: event.status === "completed" ? 1 : 0,
       outputUnit: event.operation === "variation" ? "variation" : "track",
       durationSeconds: event.audioSeconds,
       source: "ledger",
