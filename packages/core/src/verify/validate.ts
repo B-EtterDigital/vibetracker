@@ -16,7 +16,10 @@ const CATEGORIES = new Set<Category>(["llm", "coding", "image", "video", "music"
 const SOURCES = new Set<Source>(["ledger", "balance_delta", "log", "feed_recon", "proxy", "local", "manual"]);
 const CONFIDENCES = new Set<Confidence>(["high", "medium", "low"]);
 const UNITS = new Set<Unit>(["token", "image", "clip", "second", "character", "credit", "request"]);
-const NATIVE_OUTPUT_UNITS = new Set<NativeOutputUnit>(["track", "image", "clip", "file"]);
+// Keep in lockstep with NativeOutputUnit (schema/record.ts) AND the DB check on
+// vibetracker_submission_native_metrics — "variation" was missing here while the type and DB
+// already had it, and ingestRecords silently dropped every Cynaps3 variation (found 2026-07-20).
+const NATIVE_OUTPUT_UNITS = new Set<NativeOutputUnit>(["track", "variation", "image", "clip", "file"]);
 const DANGEROUS_KEYS = ["__proto__", "constructor", "prototype"];
 const MAX_AMOUNT = 1e13;   // beyond any real usage — anything larger is hostile/garbage
 const MAX_TEXT = 200;
