@@ -94,6 +94,14 @@ import { buildLiveConsoleFrame, parseLiveConsoleOptions } from "./live-console.t
 import { resolveUsageCompareCommand } from "./compare/usage-compare-command.ts";
 import { formatTable, money } from "./format.ts";
 import { renderUploadBlocked, renderUploadFailure, renderUploadPreview, renderUploadSuccess, resolveUploadEndpoint, type UploadResponseProof } from "./upload.ts";
+import {
+  loadToolStatements,
+  removeToolStatement,
+  renderToolStatements,
+  setToolStatement,
+  toolStatementsForUpload,
+  toolStatementsPath,
+} from "./statements.ts";
 import { runLogin, createHttpAuthTransport } from "./login.ts";
 import { readGitHubCliToken } from "./github-identity.ts";
 import { filterRecords, parseSince, type RecordFilter } from "../../core/src/filter.ts";
@@ -175,6 +183,7 @@ const USAGE = [
   "  live | watch [--once] [--interval N] [--budget N] [--no-trust]   auto-refresh local usage console",
   "  compare | delta | trend [--days N] [--as-of ISO] [--json] [--html --out path] [--open]   adjacent usage windows",
   "  total | stats | audit | trust | insights | profile | life | roadmap | privacy | detect [--target url] [--json] [--html --out path]",
+  "  statement <toolId> \"<text>\" | statement --list | statement --remove <toolId>",
   "    [--by provider|category|model|day] [--since 30d]",
   "    [--domain ai|dev|creative] [--provider a,b] [--category c]",
   "    [--model m] [--source s] [--account a] [--profile p] [--team t] [--min-usd N] [--json]",
@@ -466,6 +475,17 @@ async function promptSecret(query: string): Promise<string> {
 function flag(argv: string[], name: string): string | undefined {
   const i = argv.indexOf(name);
   return i >= 0 && i + 1 < argv.length ? argv[i + 1] : undefined;
+}
+
+function reportToolStatementFailure(error: unknown, backupPath?: string): void {
+  const message = error instanceof Error ? error.message : String(error);
+  console.warn(`warning: tool statements could not be read; continuing without them${backupPath ? ` (corrupt file preserved at ${backupPath})` : ""}`);
+  createConsoleTelemetry().captureError(error, {
+    area: "cli.statements",
+    severity: "warn",
+    error: message,
+    ...(backupPath ? { backupPath } : {}),
+  });
 }
 
 function multi(argv: string[], name: string): string[] | undefined {
@@ -1291,6 +1311,41 @@ async function main() {
     const opener = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
     spawnSync(opener, [out], { stdio: "ignore" });
     console.log(`  ${dim("opened in your browser · re-run anytime for fresh numbers")}`);
+    return;
+  }
+
+  if (cmd === "statement") {
+    if (argv.includes("--list")) {
+      let statements = [] as ReturnType<typeof loadToolStatements>;
+      try {
+        statements = loadToolStatements();
+      } catch (error) {
+        reportToolStatementFailure(error);
+      }
+      console.log(renderToolStatements(statements));
+      return;
+    }
+    if (argv.includes("--remove")) {
+      const toolId = flag(argv, "--remove");
+      if (!toolId) {
+        console.error("usage: vibetracker statement --remove <toolId>");
+        process.exit(2);
+      }
+      const removed = removeToolStatement(toolId, toolStatementsPath(), reportToolStatementFailure);
+      console.log(removed
+        ? `  ${ok("✓")} removed statement for ${toolId}`
+        : `  ${dim("no saved statement for")} ${toolId}`);
+      return;
+    }
+    const toolId = argv[1];
+    const statement = argv.slice(2).join(" ");
+    if (!toolId || !statement) {
+      console.error("usage: vibetracker statement <toolId> \"<text>\"");
+      process.exit(2);
+    }
+    setToolStatement(toolId, statement, toolStatementsPath(), reportToolStatementFailure);
+    console.log(`  ${ok("✓")} statement saved for ${toolId}`);
+    console.log(`  ${dim("included with attested uploads only")}`);
     return;
   }
 
@@ -2143,6 +2198,16 @@ async function main() {
     const orchestration = argv.includes("--no-orchestration")
       ? null
       : collectOrchestrationHours({ telemetry: createConsoleTelemetry() });
+    const statementPath = toolStatementsPath();
+    const statementsFileExists = Boolean(cfg.token) && existsSync(statementPath);
+    let toolStatements = [] as ReturnType<typeof loadToolStatements>;
+    if (statementsFileExists) {
+      try {
+        toolStatements = loadToolStatements(statementPath);
+      } catch (error) {
+        reportToolStatementFailure(error);
+      }
+    }
     const bundle = {
       schema: "vibetracker.upload/0.1",
       handle,
@@ -2153,6 +2218,7 @@ async function main() {
       trustSignals,
       ...(cfg.bio ? { bio: cfg.bio } : {}),
       ...(cfg.parallelAgents || cfg.subs ? { selfReported: { parallelAgents: cfg.parallelAgents, subs: cfg.subs } } : {}),
+      ...toolStatementsForUpload(Boolean(cfg.token), statementsFileExists, toolStatements),
       ...(coding ? { tokenBreakdown: coding.tokenBreakdown, agents: coding.agents, totalTokens: coding.totalTokens } : {}),
       ...(orchestration ? { orchestration } : {}),
       integrity: audit.integrity,

@@ -51,6 +51,7 @@ import {
   buildProfileChartSeries,
   buildToolBrands,
   canonicalProvider,
+  canonicalToolBrandId,
   heroTopModels,
   summarizeUsageDays,
   type ProfilePanel,
@@ -140,7 +141,20 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const usageTier = tierRaw === "verified" || tierRaw === "attested" ? tierRaw : "self_reported";
   const byUsd = profile.providers.slice().sort((a, b) => b.usd - a.usd);
 
-  const brands = buildToolBrands(profile, byUsd);
+  // Per-tool statements attach to their chip by the SAME fold buildToolBrands keys a brand with — the
+  // shared canonicalToolBrandId helper (tool alias, then -web merge) — so a viber's own words land on
+  // the right brand. When several raw tool ids fold onto one brand the winner is deterministic: a raw
+  // id exactly equal to the brand id wins, otherwise the lexicographically-first raw id does. Rows are
+  // sorted by tool_id so first-seen holds, and an already-set brand is only overwritten by an exact-id row.
+  const statementByBrandId = new Map<string, string>();
+  for (const s of (profile.toolStatements ?? []).slice().sort((a, b) => a.toolId.localeCompare(b.toolId))) {
+    const brandId = canonicalToolBrandId(s.toolId);
+    if (!statementByBrandId.has(brandId) || s.toolId === brandId) statementByBrandId.set(brandId, s.statement);
+  }
+  const brands = buildToolBrands(profile, byUsd).map((brand) => ({
+    ...brand,
+    statement: statementByBrandId.get(brand.id),
+  }));
   const chartSeries = buildProfileChartSeries(profile);
   const modelUsage = buildModelUsage(profile.providerModels);
   const nativeLedger = buildNativeLedgerRows(profile.nativeMetrics ?? []);
@@ -439,7 +453,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     />);
   // Directly under the hero: the flat logo toolbar, then the composed infographic board
   // (pies=traits · bio · spiral=CLI distribution · columns=monthly spend) — the reference, 1:1.
-  add("hero", "full", <ToolbarDock brands={brands} key="toolbar" />);
+  add("hero", "full", <ToolbarDock brands={brands} handle={profile.handle} key="toolbar" />);
   add("hero", "full", <InfographicBoard traits={traits} specs={specs} key="board" />);
   // User-ordered flow (2026-07-15): identity plate (archetype + badges) directly under the board,
   // then the two activity heatmaps — the poster's "who is this + how steady" chapter, up top.

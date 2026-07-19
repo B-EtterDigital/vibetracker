@@ -30,6 +30,8 @@ const nextConfig = readFileSync("packages/web/next.config.ts", "utf8");
 const usefulData = readFileSync("packages/web/src/app/u/[handle]/profile-useful-data.tsx", "utf8");
 const usefulDataStyles = readFileSync("packages/web/src/app/u/[handle]/profile-useful-data.css", "utf8");
 const globalStyles = readFileSync("packages/web/src/app/globals.css", "utf8");
+const toolbar = readFileSync("packages/web/src/app/u/[handle]/profile-toolbar.tsx", "utf8");
+const dataLib = readFileSync("packages/web/src/lib/data.ts", "utf8");
 
 function loadUsefulDataModule() {
   const projectRequire = createRequire(import.meta.url);
@@ -56,6 +58,65 @@ function loadUsefulDataModule() {
   };
   new Function("require", "exports", "module", source)(stubRequire, loaded.exports, loaded);
   return { exports: loaded.exports, jsxRuntime, renderToStaticMarkup: projectRequire("react-dom/server").renderToStaticMarkup as (node: unknown) => string };
+}
+
+function loadToolbarModule() {
+  const projectRequire = createRequire(import.meta.url);
+  const ts = projectRequire("typescript");
+  const react = projectRequire("react");
+  const jsxRuntime = projectRequire("react/jsx-runtime");
+  const source = ts.transpileModule(toolbar, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      jsx: ts.JsxEmit.ReactJSX,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  const loaded = { exports: {} as Record<string, unknown> };
+  const stubRequire = (id: string) => {
+    if (id === "react") return react;
+    if (id === "react/jsx-runtime") return jsxRuntime;
+    throw new Error(`unexpected profile-toolbar import: ${id}`);
+  };
+  new Function("require", "exports", "module", source)(stubRequire, loaded.exports, loaded);
+  return { exports: loaded.exports, jsxRuntime, renderToStaticMarkup: projectRequire("react-dom/server").renderToStaticMarkup as (node: unknown) => string };
+}
+
+// Loads the real data.ts against a stubbed supabase client so its loaders (e.g. toolStatementsFor)
+// can be exercised for their actual returned shape, not asserted against source text.
+function loadDataModule(supabaseServer: () => unknown) {
+  const projectRequire = createRequire(import.meta.url);
+  const ts = projectRequire("typescript");
+  const source = ts.transpileModule(dataLib, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  const loaded = { exports: {} as Record<string, unknown> };
+  const stubRequire = (id: string) => {
+    if (id === "./supabase") return { supabaseServer };
+    if (id === "./leaderboard") return {};
+    if (id === "./profile-trust") return { publicTrustSignals: (rows: unknown[]) => rows };
+    if (id === "../../../core/src/telemetry") return { createConsoleTelemetry: () => ({ addBreadcrumb() {}, captureError() {} }) };
+    if (id === "./profile-orchestration-data") return { normalizeOrchestration: () => undefined };
+    throw new Error(`unexpected data import: ${id}`);
+  };
+  new Function("require", "exports", "module", source)(stubRequire, loaded.exports, loaded);
+  return loaded.exports;
+}
+
+// A minimal supabase query builder whose terminal .limit() resolves to a fixed { data, error }.
+function mockSupabaseReturning(result: { data: unknown; error: unknown }) {
+  const client: Record<string, (...args: unknown[]) => unknown> = {
+    from: () => client,
+    select: () => client,
+    eq: () => client,
+    limit: () => Promise.resolve(result),
+  };
+  return () => client;
 }
 
 test("public profile route reveals panels from deterministic signal depth", () => {
@@ -547,4 +608,116 @@ test("profile useful facts, model coverage, banner removal, and file budget stay
   assert.ok(page.split("\n").length <= 600, `page.tsx is ${page.split("\n").length} lines`);
   assert.doesNotMatch(usefulDataStyles, /--vuse/);
   assert.doesNotMatch(usefulDataStyles, /@keyframes|animation:/);
+});
+
+test("My Tools dock renders a statement + @handle byline, the add-a-statement hint, and escapes HTML", () => {
+  const runtime = loadToolbarModule();
+  const ToolbarDock = runtime.exports.ToolbarDock as (props: unknown) => unknown;
+  const render = (props: Record<string, unknown>) => runtime.renderToStaticMarkup(runtime.jsxRuntime.jsx(ToolbarDock, props));
+  const brand = (over: Record<string, unknown> = {}) => ({ id: "codex", label: "Codex", mark: "CX", from: "#000000", blurb: "OpenAI's Codex agent.", ...over });
+
+  // Folds away entirely without brands; folded (no defaultActiveId) shows the rail but no panel card —
+  // proving defaultActiveId changes nothing when omitted.
+  assert.equal(render({ brands: [] }), "");
+  const folded = render({ handle: "cyrill-etter", brands: [brand({ statement: "codex writes my boring migrations" })] });
+  assert.match(folded, /My Tools/);
+  assert.match(folded, /vtoolbar-item/);
+  assert.doesNotMatch(folded, /codex writes my boring migrations/);
+
+  // (1) active brand WITH a statement + handle: the viber's own words, and the em-dash @handle byline.
+  const withStatement = render({
+    handle: "cyrill-etter",
+    defaultActiveId: "codex",
+    brands: [brand({ statement: "codex writes my boring migrations" })],
+  });
+  assert.match(withStatement, /codex writes my boring migrations/);
+  assert.match(withStatement, /class="vtooldock-byline">— @cyrill-etter/);
+
+  // (2) active brand with NO statement: the exact add-a-statement hint, and no byline element.
+  const noStatement = render({ handle: "cyrill-etter", defaultActiveId: "codex", brands: [brand()] });
+  assert.match(noStatement, /no personal statement yet — the profile owner can add one: vibetracker statement &lt;tool-id&gt;/);
+  assert.doesNotMatch(noStatement, /vtooldock-byline/);
+
+  // (3) a statement carrying markup is escaped by React — the raw <script> tag never reaches the HTML.
+  const xss = render({ handle: "cyrill-etter", defaultActiveId: "codex", brands: [brand({ statement: "<script>alert(1)</script>" })] });
+  assert.doesNotMatch(xss, /<script>/);
+  assert.match(xss, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+
+  // The byline mirrors the dim .vtooldock-hint caption (same mono stack + 0.42 dim), offset 6px below.
+  assert.match(infographicStyles, /\.vtooldock-byline \{[\s\S]*margin-top: 6px/);
+  assert.match(infographicStyles, /\.vtooldock-byline \{[\s\S]*var\(--vmono, ui-monospace, monospace\)/);
+});
+
+test("toolStatementsFor loads identity tool statements from a mocked supabase client", async () => {
+  const rows = [
+    { tool_id: "codex", statement: "codex writes my boring migrations" },
+    { tool_id: "suno", statement: "" },   // dropped: empty statement
+    { tool_id: "", statement: "orphan" }, // dropped: empty tool id
+  ];
+  const ok = loadDataModule(mockSupabaseReturning({ data: rows, error: null }));
+  const toolStatementsFor = ok.toolStatementsFor as (identityId: string) => Promise<Array<{ toolId: string; statement: string }>>;
+  assert.deepEqual(await toolStatementsFor("identity-123"), [
+    { toolId: "codex", statement: "codex writes my boring migrations" },
+  ]);
+
+  // Additive table absent → graceful empty array, never throwing the public profile.
+  const missing = loadDataModule(mockSupabaseReturning({ data: null, error: { message: "relation does not exist", code: "42P01" } }));
+  const toolStatementsForMissing = missing.toolStatementsFor as (identityId: string) => Promise<unknown[]>;
+  assert.deepEqual(await toolStatementsForMissing("identity-123"), []);
+});
+
+test("per-tool statement folding is deterministic when raw ids collide on one brand", () => {
+  const runtime = loadUsefulDataModule();
+  const canonicalToolBrandId = runtime.exports.canonicalToolBrandId as (id: string) => string;
+
+  // FIX A: the single shared fold — tool alias first, then the -web browser-capture strip.
+  assert.equal(canonicalToolBrandId("codex-web"), "codex");
+  assert.equal(canonicalToolBrandId("content"), "cynaps3");
+  assert.equal(canonicalToolBrandId("musicmation"), "cynaps3");
+  assert.equal(canonicalToolBrandId("suno"), "suno");
+
+  // Mirror page.tsx's fold exactly: shared helper + sort by tool_id + overwrite only on an exact-id row.
+  const fold = (statements: Array<{ toolId: string; statement: string }>) => {
+    const map = new Map<string, string>();
+    for (const s of statements.slice().sort((a, b) => a.toolId.localeCompare(b.toolId))) {
+      const brandId = canonicalToolBrandId(s.toolId);
+      if (!map.has(brandId) || s.toolId === brandId) map.set(brandId, s.statement);
+    }
+    return map;
+  };
+
+  // Rule 1: a raw id exactly equal to the brand id wins, regardless of input order.
+  assert.equal(fold([
+    { toolId: "musicmation", statement: "from musicmation" },
+    { toolId: "cynaps3", statement: "from cynaps3" },
+    { toolId: "content", statement: "from content" },
+  ]).get("cynaps3"), "from cynaps3");
+
+  // Rule 2: with no exact-id row, the lexicographically-first raw id wins (content < musicmation).
+  assert.equal(fold([
+    { toolId: "musicmation", statement: "from musicmation" },
+    { toolId: "content", statement: "from content" },
+  ]).get("cynaps3"), "from content");
+
+  // The winning statement is what actually renders on the folded brand's chip.
+  const toolbarRuntime = loadToolbarModule();
+  const ToolbarDock = toolbarRuntime.exports.ToolbarDock as (props: unknown) => unknown;
+  const winner = fold([
+    { toolId: "content", statement: "from content" },
+    { toolId: "cynaps3", statement: "from cynaps3" },
+  ]).get("cynaps3");
+  const html = toolbarRuntime.renderToStaticMarkup(toolbarRuntime.jsxRuntime.jsx(ToolbarDock, {
+    defaultActiveId: "cynaps3",
+    brands: [{ id: "cynaps3", label: "Cynaps3", mark: "CY", from: "#000", blurb: "Cynaps3 Musicmation.", statement: winner }],
+  }));
+  assert.match(html, /from cynaps3/);
+});
+
+test("page folds statements through the shared canonicalToolBrandId helper, not a mirrored alias map", () => {
+  assert.doesNotMatch(page, /TOOL_STATEMENT_ALIAS/);       // the mirrored alias map is gone (FIX A dedup)
+  assert.match(page, /canonicalToolBrandId\(s\.toolId\)/); // statements fold through the shared helper
+  assert.match(page, /<ToolbarDock brands=\{brands\} handle=\{profile\.handle\}/);
+  // data.ts still loads statements off the resolved identity, guarded for the additive table.
+  assert.match(dataLib, /const toolStatements = identity\?\.id \? await toolStatementsFor\(identity\.id\) : \[\]/);
+  assert.match(dataLib, /reportOptionalFallback\("profile\.tool-statements\.fallback", error\)/);
 });

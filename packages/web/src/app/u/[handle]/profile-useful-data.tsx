@@ -210,6 +210,13 @@ export function NativeOutputLedger({ rows }: { rows: readonly NativeLedgerRow[] 
 }
 
 const TOOL_ALIAS: Readonly<Record<string, string>> = { content: "cynaps3", musicmation: "cynaps3" };
+// The one canonical fold from a raw tool/provider id to its dock brand id: apply the tool alias
+// (content/musicmation → cynaps3), then strip the "-web" browser-capture suffix. buildToolBrands and
+// the page's per-tool statement folding MUST call this same helper so a viber's statement lands on
+// the exact brand its chip is keyed by (no mirrored alias map that can silently drift).
+export function canonicalToolBrandId(id: string): string {
+  return canonicalProvider(TOOL_ALIAS[id] ?? id);
+}
 const TOOL_BLURBS: Readonly<Record<string, string>> = {
   "claude-code": "Anthropic's agentic coding CLI — this viber's heavy-lift pair programmer.",
   claude: "Anthropic's Claude — long-form reasoning and building.",
@@ -244,7 +251,7 @@ const TOOL_BLURBS: Readonly<Record<string, string>> = {
 export function buildToolBrands(profile: ProfileView, providersByUsd: ProfileView["providers"]) {
   const totals = new Map<string, number>();
   const bump = (rawId: string, ops: number) => {
-    const id = canonicalProvider(TOOL_ALIAS[rawId] ?? rawId);
+    const id = canonicalToolBrandId(rawId);
     totals.set(id, (totals.get(id) ?? 0) + ops);
   };
   for (const row of profile.tools ?? []) bump(row.tool, row.ops);

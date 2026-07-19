@@ -8,6 +8,7 @@ const selfReportedMigration = readFileSync("supabase/migrations/012_vibetracker_
 const orchestrationMigration = readFileSync("supabase/migrations/013_vibetracker_orchestration.sql", "utf8");
 const nativeMetricsMigration = readFileSync("supabase/migrations/20260715131500_vibetracker_native_metrics.sql", "utf8");
 const toolsMigration = readFileSync("supabase/migrations/20260716183000_vibetracker_submission_tools.sql", "utf8");
+const toolStatementsMigration = readFileSync("supabase/migrations/20260720000000_vibetracker_tool_statements.sql", "utf8");
 const edgeBytes = readFileSync("supabase/functions/vibetracker-ingest/index.ts");
 const edge = edgeBytes.toString("utf8");
 
@@ -41,6 +42,7 @@ test("self-reported profile truths stay bounded, sanitized, and source-safe", ()
   assert.match(selfReportedMigration, /constraint vibetracker_submissions_self_reported_subs_check/);
   assert.match(edge, /selfAgentsRaw > 0 && selfAgentsRaw <= 1000/);
   assert.match(edge, /rawSelf\.subs\.replace\(\/\[\\x00-\\x1f\\x7f\]\+\/g, " "\)/);
+  assert.match(edge, /stripEdgeControlCharacters\(rawBio\)\.slice\(0, 280\)/);
 });
 
 test("local orchestration evidence stays numeric-only, invariant-safe, and explicitly derived", () => {
@@ -76,4 +78,13 @@ test("tool attribution is aggregate-only, public read-only, and independent from
   assert.doesNotMatch(toolsMigration, /for (insert|update|delete)/i);
   assert.match(edge, /vibetracker_submission_tools/);
   assert.match(edge, /result\.byTool/);
+});
+
+test("identity tool statements are public-read, service-write, and reconciled by the edge", () => {
+  assert.match(toolStatementsMigration, /primary key \(identity_id, tool_id\)/);
+  assert.match(toolStatementsMigration, /enable row level security/);
+  assert.match(toolStatementsMigration, /for select[\s\S]*to anon, authenticated/);
+  assert.doesNotMatch(toolStatementsMigration, /for (insert|update|delete|all)/i);
+  assert.match(edge, /reconcileIdentityToolStatements/);
+  assert.match(edge, /serverIdentityId: identityId/);
 });

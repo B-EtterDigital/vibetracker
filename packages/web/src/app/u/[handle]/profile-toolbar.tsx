@@ -27,8 +27,11 @@ function fmtUsd(n: number): string {
   return n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${Math.round(n)}`;
 }
 
-export function ToolbarDock({ brands }: { brands: DockBrand[] }) {
-  const [activeId, setActiveId] = useState<string | null>(null);
+// `defaultActiveId` only seeds the initially-open chip (the useState initial value); omitting it
+// keeps the dock folded on mount exactly as before. It exists so the panel can be rendered in an
+// open state without a click (server render, tests) — it never changes the click behaviour.
+export function ToolbarDock({ brands, handle, defaultActiveId }: { brands: DockBrand[]; handle?: string; defaultActiveId?: string }) {
+  const [activeId, setActiveId] = useState<string | null>(defaultActiveId ?? null);
   if (!brands.length) return null;
   const active = brands.find((b) => b.id === activeId) ?? null;
 
@@ -71,9 +74,11 @@ export function ToolbarDock({ brands }: { brands: DockBrand[] }) {
               ) : null}
             </div>
             <p className="vtooldock-text">{active.statement ?? active.blurb}</p>
-            {!active.statement ? (
-              <p className="vtooldock-hint">no personal statement for this tool yet — this is the general description</p>
-            ) : null}
+            {active.statement ? (
+              handle ? <p className="vtooldock-byline">— @{handle}</p> : null
+            ) : (
+              <p className="vtooldock-hint">no personal statement yet — the profile owner can add one: vibetracker statement &lt;tool-id&gt;</p>
+            )}
           </div>
         ) : null}
       </div>

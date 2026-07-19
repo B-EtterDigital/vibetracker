@@ -10,6 +10,11 @@
 //    this function (co-locate or vendor) when deploying into the C0X supabase project.
 
 import { handleIngest } from "../../../packages/backend/src/ingest.ts";
+import {
+  reconcileIdentityToolStatements,
+  stripEdgeControlCharacters,
+  type ToolStatementStore,
+} from "./tool-statements.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // @ts-ignore Deno global provided by the edge runtime
@@ -93,6 +98,17 @@ async function sha256Hex(input: string): Promise<string> {
     }
   }
 
+  // Older WorkOS-first CLI tokens may predate identity_id. Resolve their linked immutable
+  // identity before accepting identity-owned profile statements.
+  if (!identityId && userId) {
+    const { data: identity } = await admin.from("vibetracker_identities")
+      .select("id,user_id,canonical_handle").eq("user_id", userId).maybeSingle();
+    if (identity) {
+      identityId = typeof identity.id === "string" ? identity.id : undefined;
+      identityHandle = typeof identity.canonical_handle === "string" ? identity.canonical_handle : undefined;
+    }
+  }
+
   // aggregates only; tier from auth. handleIngest is also the shared handle guard:
   // it rejects the reserved "demo" handle (bundled sample profile) by defaulting it to
   // anonymous, so this write path can never insert a row that shadows /u/demo.
@@ -107,7 +123,7 @@ async function sha256Hex(input: string): Promise<string> {
   // profile decoration only — never usage — so it rides on the submission row, not the aggregates.
   const rawBio = (payload as { bio?: unknown } | null)?.bio;
   const bio = typeof rawBio === "string"
-    ? rawBio.replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 280) || null
+    ? stripEdgeControlCharacters(rawBio).slice(0, 280) || null
     : null;
 
   // Token-breakdown + agent (delegation) aggregates ride alongside the bundle as side-channels,
@@ -354,6 +370,37 @@ async function sha256Hex(input: string): Promise<string> {
     }
   }
 
+  const statementStore: ToolStatementStore = {
+    async upsert(rows) {
+      const { error } = await admin.from("vibetracker_identity_tool_statements")
+        .upsert(rows, { onConflict: "identity_id,tool_id" });
+      return error ? { error: error.message } : {};
+    },
+    async listToolIds(resolvedIdentityId) {
+      const { data, error } = await admin.from("vibetracker_identity_tool_statements")
+        .select("tool_id").eq("identity_id", resolvedIdentityId);
+      return error
+        ? { toolIds: [], error: error.message }
+        : { toolIds: (data ?? []).map((row: { tool_id: string }) => row.tool_id) };
+    },
+    async deleteAll(resolvedIdentityId) {
+      const { error, count } = await admin.from("vibetracker_identity_tool_statements")
+        .delete({ count: "exact" }).eq("identity_id", resolvedIdentityId);
+      return error ? { deleted: 0, error: error.message } : { deleted: count ?? 0 };
+    },
+    async deleteToolIds(resolvedIdentityId, toolIds) {
+      const { error, count } = await admin.from("vibetracker_identity_tool_statements")
+        .delete({ count: "exact" }).eq("identity_id", resolvedIdentityId).in("tool_id", toolIds);
+      return error ? { deleted: 0, error: error.message } : { deleted: count ?? 0 };
+    },
+  };
+  const toolStatementResult = await reconcileIdentityToolStatements({
+    payload,
+    serverIdentityId: identityId,
+    store: statementStore,
+    now: new Date().toISOString(),
+  });
+
   return json({
     ok: result.ok, handle: publicHandle, tier: result.tier,
     identityVerified: Boolean(userId || identityId),
@@ -382,6 +429,9 @@ async function sha256Hex(input: string): Promise<string> {
     tokensPersisted,
     agentsPersisted,
     crossProviderDays,
+    toolStatementsPersisted: toolStatementResult.persisted,
+    toolStatementsDeleted: toolStatementResult.deleted,
+    ...(toolStatementResult.warnings.length ? { warnings: toolStatementResult.warnings } : {}),
     profileUrl: `/u/${publicHandle}`,
   });
 });

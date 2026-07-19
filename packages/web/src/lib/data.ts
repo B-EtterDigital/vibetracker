@@ -76,6 +76,9 @@ export interface ProfileView {
   latest: { total_usd: number; total_credits: number; record_count: number; created_at: string; tier: string } | null;
   providers: Array<{ provider: string; ops: number; credits: number; usd: number }>;
   tools?: Array<{ tool: string; ops: number }>;
+  // The viber's own per-tool statements, authored from the CLI and keyed by tool id. Additive
+  // table — older deployments predate it and fall back to [] (blurb-only dock).
+  toolStatements?: Array<{ toolId: string; statement: string }>;
   usageDays: Array<{ date: string; ops: number; credits: number; usd: number }>;
   categories: Array<{ category: string; ops: number; credits: number; usd: number }>;
   providerDays: Array<{ provider: string; category?: string | null; date: string; ops: number; credits: number; usd: number }>;
@@ -321,6 +324,26 @@ async function toolsFor(submissionId: string): Promise<NonNullable<ProfileView["
   }).filter((row) => row.tool.length > 0 && row.ops > 0);
 }
 
+// Exported for the profile route test to exercise directly (mocked supabase client); otherwise
+// consumed only by getProfile below.
+export async function toolStatementsFor(identityId: string): Promise<NonNullable<ProfileView["toolStatements"]>> {
+  const { data, error } = await supabaseServer()
+    .from("vibetracker_identity_tool_statements")
+    .select("tool_id,statement")
+    .eq("identity_id", identityId)
+    .limit(200);
+  // Additive table — older C0VIBE deployments predate it. Profiles must still render (with the
+  // general tool descriptions) instead of failing when the statements table isn't there yet.
+  if (error) {
+    reportOptionalFallback("profile.tool-statements.fallback", error);
+    return [];
+  }
+  return (data ?? []).map((row) => {
+    const r = row as { tool_id?: string; statement?: string };
+    return { toolId: String(r.tool_id ?? ""), statement: String(r.statement ?? "") };
+  }).filter((row) => row.toolId.length > 0 && row.statement.length > 0);
+}
+
 export async function getProfile(handle: string): Promise<ProfileView | null> {
   try {
     const sb = supabaseServer();
@@ -358,6 +381,9 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
     const providerModels = latest ? await providerModelsFor(latest.id) : [];
     const nativeMetrics = latest ? await nativeMetricsFor(latest.id) : [];
     const tools = latest ? await toolsFor(latest.id) : [];
+    // Per-tool statements hang off the resolved identity (not the submission), so a viber's own
+    // words survive re-uploads. Only the identity bridge carries them; anonymous handles get [].
+    const toolStatements = identity?.id ? await toolStatementsFor(identity.id) : [];
     const trustSignals = latest ? await trustSignalsFor(latest.id) : [];
     const tokenBreakdown = latest ? await tokenBreakdownFor(latest.id) : [];
     const agents = latest ? await agentsFor(latest.id) : [];
@@ -381,6 +407,7 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
       providerModels,
       nativeMetrics,
       tools,
+      toolStatements,
       trustSignals,
       totalTokens: Number((latest as { total_tokens?: number } | null)?.total_tokens ?? 0),
       crossProviderDays: Number((latest as { cross_provider_days?: number } | null)?.cross_provider_days ?? 0),
