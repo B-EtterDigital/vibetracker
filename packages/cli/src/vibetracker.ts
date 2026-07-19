@@ -115,10 +115,14 @@ const LEDGER_SEAL = join(homedir(), ".vibetracker", "ledger-seal.json");
 const SIGNING_KEY = join(homedir(), ".vibetracker", "signing-key.json");
 const ROI_NOTES = join(homedir(), ".vibetracker", "roi-notes.json");
 function browserExtensionDir(): string {
+  // this module lives at <repo>/packages/cli/src — three levels up to the repo root, so the
+  // command works from ANY cwd (real incident 2026-07-19: `vibetracker start` from ~ resolved
+  // <cwd>/packages/browser-extension and died; the old relative candidates climbed too few levels)
+  const here = dirname(fileURLToPath(import.meta.url));
   const candidates = [
+    join(here, "..", "..", "..", "packages", "browser-extension"),
+    join(here, "..", "..", "packages", "browser-extension"),
     join(process.cwd(), "packages", "browser-extension"),
-    join(dirname(fileURLToPath(import.meta.url)), "..", "packages", "browser-extension"),
-    join(dirname(fileURLToPath(import.meta.url)), "..", "..", "packages", "browser-extension"),
   ];
   return candidates.find((candidate) => existsSync(join(candidate, "manifest.json"))) ?? candidates[0];
 }
