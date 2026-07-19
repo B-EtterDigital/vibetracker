@@ -6,7 +6,6 @@ const mark = $("provider-mark");
 const host = $("provider-host");
 const label = $("provider-label");
 const category = $("provider-category");
-const terminal = $("terminal");
 const connectCard = $("connect-card");
 const connectBtn = $("connect");
 const connectLabel = $("connect-label");
@@ -36,7 +35,6 @@ function setProvider(preview) {
   host.textContent = preview.host || "active tab";
   label.textContent = preview.label;
   category.textContent = `${preview.category} // local low-confidence`;
-  terminal.textContent = preview.lines.join("\n");
   captureBtn.disabled = !preview.ready;
 }
 

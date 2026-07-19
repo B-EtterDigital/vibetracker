@@ -48,7 +48,7 @@ export const READERS = [
     stats: [
       { operation: "plan_messages", unit: "request", patterns: ["([\\d,]+)\\s*(?:of|/)\\s*[\\d,]+\\s*messages?", "([\\d,]+)\\s*messages?\\b"] },
     ],
-    hint: "Open ChatGPT Settings and the usage/limits panel so the message count is visible, then read it.",
+    hint: "ChatGPT Plus/Free show no usage number on the web — only readable if a Team/Enterprise limits count is visible.",
   },
   {
     id: "elevenlabs",

@@ -25,7 +25,7 @@
           <h1>Vibe Bridge</h1>
         </div>
       </div>
-      <p>Connect cookie-only AI sources in one click, or mark any AI tab as local usage. Nothing leaves your machine.</p>
+      <p>Connect cookie-only AI sources in one click — or mark any AI tab as usage.</p>
     </header>
 
     <!-- API status banner — the whole "is it set up?" answer, one glance. When the local API is
@@ -42,11 +42,13 @@
       </button>
     </section>
 
-    <!-- Sweep — pull every supported source open in the browser, one click -->
-    <button id="scan" type="button" class="primary scan-btn">
-      <span>Pull everything open</span>
+    <!-- Sweep — connect/read every supported AI source open in the browser, one click -->
+    <button id="scan" type="button" class="primary scan-btn"
+            title="Go through every browser tab you have open and connect or read each supported AI source at once.">
+      <span>Pull from all open tabs</span>
       <i aria-hidden="true">⟲</i>
     </button>
+    <small class="scan-hint">One click: connect &amp; read every supported AI tab you have open.</small>
     <ul id="scan-results" class="scan-results" hidden aria-label="Scan results"></ul>
 
     <section class="provider-card" aria-label="Active provider preview">
@@ -82,14 +84,10 @@
       </button>
     </section>
 
-    <pre id="terminal" aria-label="Bridge terminal">VTRK://BROWSER-BRIDGE
-waiting for active tab
-run local API first</pre>
-
     <div class="rails" aria-label="Boundaries">
-      <div><b>Local</b><span>127.0.0.1 only — never the internet</span></div>
-      <div><b>Keyring</b><span>Session cookie → your OS keyring, never shown</span></div>
-      <div><b>Explicit</b><span>Only the site you're on, only its session cookie</span></div>
+      <div><b>Local</b><span>127.0.0.1 only</span></div>
+      <div><b>Keyring</b><span>→ your OS keyring</span></div>
+      <div><b>Explicit</b><span>this site's cookie only</span></div>
     </div>
 
     <details class="capture-fold">
