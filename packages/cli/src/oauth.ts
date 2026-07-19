@@ -26,6 +26,9 @@ export interface OAuthProviderPreset {
   clientId: string;
   scope: string;
   requireRotatingRefresh?: boolean;
+  // Exact registered redirect URI — OAuth servers with strict allowlists (cynaps3) match it
+  // verbatim, so the CLI must use THIS instead of composing http://127.0.0.1:<port>/callback.
+  redirectUri?: string;
 }
 
 export interface StoredOAuthCredentials {
@@ -34,8 +37,12 @@ export interface StoredOAuthCredentials {
   expiresAt?: string;
 }
 
+// PRODUCTION endpoints per the Cynaps3 integration contract
+// (sunomation/docs/integrations/vibeusage.md, 2026-07-15). These live on the Cynaps3/SUNOMATION
+// Supabase project — NOT on the VibeUsage backend (tnsaqsqajpjbvlpasojt, which hosts
+// vibetracker-ingest); pointing there answered invalid_client (real incident 2026-07-19).
 const CYNAPS3_OAUTH_BASE =
-  "https://tnsaqsqajpjbvlpasojt.supabase.co/functions/v1/oauth-server";
+  "https://tvsvttguftnatztsedyx.supabase.co/functions/v1/oauth-server";
 
 export function oauthProviderPreset(
   provider: string,
@@ -46,9 +53,11 @@ export function oauthProviderPreset(
     provider,
     authUrl: `${CYNAPS3_OAUTH_BASE}/authorize`,
     tokenUrl: `${CYNAPS3_OAUTH_BASE}/token`,
-    clientId: env.VT_CYNAPS3_OAUTH_CLIENT_ID?.trim() || "vibeusage-cli",
+    clientId: env.VT_CYNAPS3_OAUTH_CLIENT_ID?.trim() || "musicmation-skill-4290992cf2f40370",
     scope: "usage:read",
     requireRotatingRefresh: true,
+    // the client's allowlist matches redirect URIs verbatim; localhost:19876 is the CLI slot
+    redirectUri: "http://localhost:19876/callback",
   };
 }
 
@@ -65,7 +74,9 @@ export function pkceChallenge(verifier: string): string {
 }
 
 export function buildOAuthUrl(opts: OAuthStartOptions): OAuthUrlBundle {
-  const state = opts.state ?? b64url(randomBytes(18));
+  // 24 random bytes → 32 b64url chars: the Cynaps3 oauth-server requires state ≥ 32 characters
+  // (18 bytes = 24 chars was silently rejected with invalid_request — real incident 2026-07-19).
+  const state = opts.state ?? b64url(randomBytes(24));
   const verifier = opts.verifier ?? createPkceVerifier();
   const url = new URL(opts.authUrl);
   url.searchParams.set("response_type", "code");
@@ -203,6 +214,9 @@ export async function refreshOAuthCredentials(opts: {
 export function waitForOAuthCallback(opts: {
   port: number;
   state: string;
+  // omitted → 127.0.0.1 (safe default) · null → all interfaces (for `localhost` redirects that
+  // may resolve to ::1, where a 127.0.0.1-only listener would never see the callback)
+  host?: string | null;
   timeoutMs?: number;
 }): Promise<{ code: string; close: () => void }> {
   return new Promise((resolve, reject) => {
@@ -240,9 +254,11 @@ export function waitForOAuthCallback(opts: {
     const timer = setTimeout(() => {
       server.close();
       reject(new Error("OAuth callback timed out"));
-    }, opts.timeoutMs ?? 120_000);
+      // 5 minutes: a human has to notice the tab, log in, and approve — 2 minutes proved too short
+    }, opts.timeoutMs ?? 300_000);
     server.on("close", () => clearTimeout(timer));
     server.on("error", reject);
-    server.listen(opts.port, "127.0.0.1");
+    // default 127.0.0.1; explicit null = all interfaces (localhost redirects may resolve to ::1)
+    server.listen(opts.port, opts.host === null ? undefined : (opts.host ?? "127.0.0.1"));
   });
 }

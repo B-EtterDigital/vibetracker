@@ -1,5 +1,8 @@
+// PRODUCTION usage API per the Cynaps3 integration contract
+// (sunomation/docs/integrations/vibeusage.md) — lives on the Cynaps3/SUNOMATION project, not the
+// VibeUsage backend.
 export const CYNAPS3_STATS_URL =
-  "https://tnsaqsqajpjbvlpasojt.supabase.co/functions/v1/vibeusage-stats";
+  "https://tvsvttguftnatztsedyx.supabase.co/functions/v1/vibeusage-stats";
 
 export type Cynaps3UsageStatus = "completed" | "failed";
 export type Cynaps3BillingOwner = "cynaps3" | "upstream-provider";

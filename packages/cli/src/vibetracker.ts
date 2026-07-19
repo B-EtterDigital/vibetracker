@@ -582,11 +582,17 @@ async function authorizeOAuthProvider(
   port: number,
   scope = preset.scope,
 ): Promise<StoredOAuthCredentials> {
-  const redirectUri = `http://127.0.0.1:${port}/callback`;
+  // A preset with a registered redirect URI wins verbatim (strict-allowlist servers match it
+  // exactly); otherwise compose the loopback URI from the requested port.
+  const redirectUri = preset.redirectUri ?? `http://127.0.0.1:${port}/callback`;
+  const redirect = new URL(redirectUri);
+  const callbackPort = Number(redirect.port || port);
+  // `localhost` may resolve to ::1 in the browser — listen on all interfaces for that case only
+  const callbackHost = redirect.hostname === "localhost" ? null : undefined;
   const bundle = buildOAuthUrl({ ...preset, scope, redirectUri });
   console.log(`OAuth URL for ${preset.provider}: ${bundle.url}`);
   console.log(`listening on ${redirectUri}`);
-  const pendingCallback = waitForOAuthCallback({ port, state: bundle.state });
+  const pendingCallback = waitForOAuthCallback({ port: callbackPort, host: callbackHost, state: bundle.state });
   openBrowser(bundle.url);
   const callback = await pendingCallback;
   try {

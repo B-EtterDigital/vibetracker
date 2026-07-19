@@ -86,16 +86,18 @@ test("OAuth code exchange posts x-www-form-urlencoded PKCE payload", async () =>
 test("Cynaps3 preset pins the read-only producer contract and allows staged client overrides", () => {
   const preset = oauthProviderPreset("cynaps3", {});
   assert.ok(preset);
-  assert.equal(preset.clientId, "vibeusage-cli");
+  assert.equal(preset.clientId, "musicmation-skill-4290992cf2f40370");
   assert.equal(preset.scope, "usage:read");
   assert.equal(preset.requireRotatingRefresh, true);
+  // the oauth-server matches redirects verbatim; localhost:19876 is the registered CLI callback
+  assert.equal(preset.redirectUri, "http://localhost:19876/callback");
   assert.equal(
     preset.authUrl,
-    "https://tnsaqsqajpjbvlpasojt.supabase.co/functions/v1/oauth-server/authorize",
+    "https://tvsvttguftnatztsedyx.supabase.co/functions/v1/oauth-server/authorize",
   );
   assert.equal(
     preset.tokenUrl,
-    "https://tnsaqsqajpjbvlpasojt.supabase.co/functions/v1/oauth-server/token",
+    "https://tvsvttguftnatztsedyx.supabase.co/functions/v1/oauth-server/token",
   );
   assert.equal(
     oauthProviderPreset("cynaps3", { VT_CYNAPS3_OAUTH_CLIENT_ID: "staged-client" })?.clientId,
@@ -181,7 +183,7 @@ test("expired Cynaps3 OAuth credentials rotate before provider sync", async () =
     },
   });
   assert.match(requestBody, /grant_type=refresh_token/);
-  assert.match(requestBody, /client_id=vibeusage-cli/);
+  assert.match(requestBody, /client_id=musicmation-skill-4290992cf2f40370/);
   assert.match(requestBody, /refresh_token=refresh-old/);
   assert.deepEqual(refreshed, {
     token: "access-new",
