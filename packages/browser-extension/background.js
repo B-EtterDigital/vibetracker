@@ -263,6 +263,13 @@ async function getJson(path) {
   }
 }
 
+// First-party / adapter-backed sources that appear on the board without being cookie connectors
+// or page readers — the CLI adapter (OAuth) does the syncing; the tile shows its state and links
+// to the product. Connect via `vibetracker oauth start <id>` in the terminal.
+const ADAPTER_SOURCES = [
+  { id: "cynaps3", label: "Cynaps3", url: "https://content.7cycle.life/" },
+];
+
 // The source board: EVERY supported source as one tile — logo (or monogram), its page URL, and a
 // sync state for the green tick. Precedence: synced (local ledger has data) > connected (creds
 // stored, importer pending/next sync) > open (a tab is open, ready to pull) > idle.
@@ -270,6 +277,7 @@ export function buildSourceBoard(apiSources, openIds) {
   const sources = [
     ...CONNECTORS.map((c) => ({ id: c.id, label: c.label, url: c.url, mark: c.label.slice(0, 2).toUpperCase() })),
     ...READERS.map((r) => ({ id: r.id, label: r.label, url: r.url, mark: r.label.slice(0, 2).toUpperCase() })),
+    ...ADAPTER_SOURCES.map((a) => ({ id: a.id, label: a.label, url: a.url, mark: a.label.slice(0, 2).toUpperCase() })),
   ];
   return sources.map((s) => {
     const api = apiSources?.[s.id];

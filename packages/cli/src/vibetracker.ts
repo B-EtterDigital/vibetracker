@@ -1906,22 +1906,27 @@ async function main() {
 
   if (cmd === "oauth" && argv[1] === "start") {
     const provider = argv[2];
-    const authUrl = flag(argv, "--auth-url");
-    const tokenUrl = flag(argv, "--token-url");
-    const clientId = flag(argv, "--client-id");
+    // First-party providers (cynaps3) carry a built-in preset — flags only override it. Unknown
+    // providers still require the full set of flags.
+    const builtin = provider ? oauthProviderPreset(provider) : undefined;
+    const authUrl = flag(argv, "--auth-url") || builtin?.authUrl;
+    const tokenUrl = flag(argv, "--token-url") || builtin?.tokenUrl;
+    const clientId = flag(argv, "--client-id") || builtin?.clientId;
+    const scope = flag(argv, "--scope") || builtin?.scope || "";
     const port = Number(flag(argv, "--port") || 8787);
     if (!provider || !authUrl || !tokenUrl || !clientId) {
-      console.error("usage: vibetracker oauth start <provider> --auth-url <url> --token-url <url> --client-id <id> [--scope s] [--port 8787]");
+      console.error("usage: vibetracker oauth start <provider> [--auth-url <url> --token-url <url> --client-id <id>] [--scope s] [--port 8787]\n(cynaps3 needs no flags — its preset is built in)");
       process.exit(2);
     }
     try {
       const credentials = await authorizeOAuthProvider({
+        ...(builtin ?? {}),
         provider,
         authUrl,
         tokenUrl,
         clientId,
-        scope: flag(argv, "--scope") || "",
-      }, port, flag(argv, "--scope"));
+        scope,
+      }, port, scope);
       const cfg = loadConfig();
       const inKeyring = storeProviderCreds(cfg, provider, credentials as unknown as Record<string, string>);
       if (!cfg.enabled.includes(provider)) cfg.enabled.push(provider);

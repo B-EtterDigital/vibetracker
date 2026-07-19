@@ -151,8 +151,11 @@ test("buildSourceBoard covers every source with the right state precedence and r
   }
   assert.match(byId.suno.logo, /suno\.svg$/);
   assert.match(byId.midjourney.logo, /midjourney\.png$/);
-  // ALL connectors + ALL readers appear — the board is the complete source map
-  assert.equal(tiles.length, CONNECTORS.length + 7, "7 readers + all connectors");
+  // first-party adapter sources appear too — Cynaps3 syncs via OAuth, tile links to the product
+  assert.match(byId.cynaps3.logo, /cynaps3\.png$/);
+  assert.equal(byId.cynaps3.url, "https://content.7cycle.life/");
+  // ALL connectors + ALL readers + adapter sources — the board is the complete source map
+  assert.equal(tiles.length, CONNECTORS.length + 7 + 1, "7 readers + connectors + cynaps3");
 });
 
 test("openAllSources opens one background tab per missing source and skips already-open ones", async () => {
