@@ -247,7 +247,7 @@ async function sha256Hex(input: string): Promise<string> {
   let providerDailyWarning: string | undefined;
   if (result.byProviderDay.length) {
     const rows = result.byProviderDay.map((r) => ({
-      submission_id: sub.id, provider: r.provider, day: r.date, ops: r.ops, credits: r.credits, usd: r.usd ?? 0,
+      submission_id: sub.id, provider: r.provider, category: r.category, day: r.date, ops: r.ops, credits: r.credits, usd: r.usd ?? 0,
     }));
     const { error: pdErr } = await admin.from("vibetracker_submission_provider_daily").insert(rows);
     if (pdErr) {
@@ -263,7 +263,7 @@ async function sha256Hex(input: string): Promise<string> {
   let providerModelWarning: string | undefined;
   if (result.byProviderModel.length) {
     const rows = result.byProviderModel.map((r) => ({
-      submission_id: sub.id, provider: r.provider, model: r.model, ops: r.ops, credits: r.credits, usd: r.usd ?? 0,
+      submission_id: sub.id, provider: r.provider, model: r.model, category: r.category, ops: r.ops, credits: r.credits, usd: r.usd ?? 0,
     }));
     const { error: pmErr } = await admin.from("vibetracker_submission_provider_models").insert(rows);
     if (pmErr) {

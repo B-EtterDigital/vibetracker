@@ -27,8 +27,8 @@ export interface UploadBundle {
 export interface ProviderRollup { provider: string; ops: number; credits: number; usd?: number }
 export interface DailyRollup { date: string; ops: number; credits: number; usd?: number }
 export interface CategoryRollup { category: string; ops: number; credits: number; usd?: number }
-export interface ProviderDailyRollup { provider: string; date: string; ops: number; credits: number; usd?: number }
-export interface ProviderModelRollup { provider: string; model: string; ops: number; credits: number; usd?: number }
+export interface ProviderDailyRollup { provider: string; category: string; date: string; ops: number; credits: number; usd?: number }
+export interface ProviderModelRollup { provider: string; model: string; category: string; ops: number; credits: number; usd?: number }
 export interface NativeMetricRollup {
   provider: string;
   category: string;
@@ -230,8 +230,8 @@ export function handleIngest(payload: unknown, opts: { userId?: string; identity
   const providerDayMap = new Map<string, ProviderDailyRollup>();
   for (const r of accepted) {
     const date = r.ts.slice(0, 10);
-    const key = `${r.provider}\t${date}`;
-    const row = providerDayMap.get(key) ?? { provider: r.provider, date, ops: 0, credits: 0 };
+    const key = `${r.provider}\t${r.category}\t${date}`;
+    const row = providerDayMap.get(key) ?? { provider: r.provider, category: r.category, date, ops: 0, credits: 0 };
     row.ops += qtyOf(r);
     if (r.rawUnit === "credits") row.credits += r.rawAmount;
     if (r.usdEst != null) row.usd = Number(((row.usd ?? 0) + r.usdEst).toFixed(4));
@@ -246,8 +246,8 @@ export function handleIngest(payload: unknown, opts: { userId?: string; identity
   for (const r of accepted) {
     const model = (r.model ?? "").trim();
     if (!model) continue; // sources with no per-record model (e.g. lifetime backfill) are skipped
-    const key = `${r.provider}\t${model}`;
-    const row = providerModelMap.get(key) ?? { provider: r.provider, model, ops: 0, credits: 0 };
+    const key = `${r.provider}\t${r.category}\t${model}`;
+    const row = providerModelMap.get(key) ?? { provider: r.provider, model, category: r.category, ops: 0, credits: 0 };
     row.ops += qtyOf(r);
     if (r.rawUnit === "credits") row.credits += r.rawAmount;
     if (r.usdEst != null) row.usd = Number(((row.usd ?? 0) + r.usdEst).toFixed(4));

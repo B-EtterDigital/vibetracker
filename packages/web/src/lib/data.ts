@@ -61,8 +61,8 @@ export interface ProfileView {
   tools?: Array<{ tool: string; ops: number }>;
   usageDays: Array<{ date: string; ops: number; credits: number; usd: number }>;
   categories: Array<{ category: string; ops: number; credits: number; usd: number }>;
-  providerDays: Array<{ provider: string; date: string; ops: number; credits: number; usd: number }>;
-  providerModels: Array<{ provider: string; model: string; ops: number; credits: number; usd: number }>;
+  providerDays: Array<{ provider: string; category?: string | null; date: string; ops: number; credits: number; usd: number }>;
+  providerModels: Array<{ provider: string; model: string; category?: string | null; ops: number; credits: number; usd: number }>;
   nativeMetrics?: Array<{ provider: string; category: string; outputUnit: string; outputs: number; durationSeconds: number }>;
   trustSignals: ProfileTrustSignal[];
   // Additive aggregates — optional so demo/fixture ProfileView constructors need not supply them.
@@ -151,7 +151,7 @@ async function categoriesFor(submissionId: string): Promise<ProfileView["categor
 async function providerDaysFor(submissionId: string): Promise<ProfileView["providerDays"]> {
   const { data, error } = await supabaseServer()
     .from("vibetracker_submission_provider_daily")
-    .select("provider,day,ops,credits,usd")
+    .select("provider,category,day,ops,credits,usd")
     .eq("submission_id", submissionId)
     .order("provider", { ascending: true })
     .order("day", { ascending: true })
@@ -163,9 +163,10 @@ async function providerDaysFor(submissionId: string): Promise<ProfileView["provi
     return [];
   }
   return (data ?? []).map((row) => {
-    const r = row as { provider?: string; day?: string; ops?: number; credits?: number; usd?: number };
+    const r = row as { provider?: string; category?: string | null; day?: string; ops?: number; credits?: number; usd?: number };
     return {
       provider: String(r.provider ?? ""),
+      category: r.category ?? null,
       date: String(r.day ?? ""),
       ops: Number(r.ops ?? 0),
       credits: Number(r.credits ?? 0),
@@ -235,7 +236,7 @@ async function rankFor(handle: string, tier: string): Promise<number | null> {
 async function providerModelsFor(submissionId: string): Promise<ProfileView["providerModels"]> {
   const { data, error } = await supabaseServer()
     .from("vibetracker_submission_provider_models")
-    .select("provider,model,ops,credits,usd")
+    .select("provider,model,category,ops,credits,usd")
     .eq("submission_id", submissionId)
     .limit(2000);
   if (error) {
@@ -243,10 +244,11 @@ async function providerModelsFor(submissionId: string): Promise<ProfileView["pro
     return [];
   }
   return (data ?? []).map((row) => {
-    const r = row as { provider?: string; model?: string; ops?: number; credits?: number; usd?: number };
+    const r = row as { provider?: string; model?: string; category?: string | null; ops?: number; credits?: number; usd?: number };
     return {
       provider: String(r.provider ?? ""),
       model: String(r.model ?? ""),
+      category: r.category ?? null,
       ops: Number(r.ops ?? 0),
       credits: Number(r.credits ?? 0),
       usd: Number(r.usd ?? 0),

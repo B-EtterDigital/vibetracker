@@ -525,15 +525,28 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     });
   // monthly spend stacked by source — last 12 months, filterable to one trait's sources
   const monthAgg = new Map<string, Map<string, number>>();
+  // category-exact series (schema correction 2026-07-19): new submissions persist each daily
+  // row's category, so a trait's bars show ONLY that trait's spend — a multi-category provider
+  // (Higgsfield, fal.ai) can no longer paint its full total into every trait it touches.
+  const monthAggByCat = new Map<string, Map<string, Map<string, number>>>();
+  let hasCategoryDays = false;
   for (const d of profile.providerDays) {
     const ym = d.date.slice(0, 7);
     const per = monthAgg.get(ym) ?? new Map<string, number>();
     per.set(d.provider, (per.get(d.provider) ?? 0) + d.usd);
     monthAgg.set(ym, per);
+    if (d.category) {
+      hasCategoryDays = true;
+      const catMap = monthAggByCat.get(d.category) ?? new Map<string, Map<string, number>>();
+      const catPer = catMap.get(ym) ?? new Map<string, number>();
+      catPer.set(d.provider, (catPer.get(d.provider) ?? 0) + d.usd);
+      catMap.set(ym, catPer);
+      monthAggByCat.set(d.category, catMap);
+    }
   }
-  const monthsFor = (provs?: Set<string>): StackMonth[] => {
-    const yms = [...monthAgg.keys()].sort().slice(-12);
-    const rowsOf = (ym: string) => [...monthAgg.get(ym)!.entries()].filter(([p, v]) => v > 0 && (!provs || provs.has(p)));
+  const monthsFrom = (agg: Map<string, Map<string, number>>, provs?: Set<string>): StackMonth[] => {
+    const yms = [...agg.keys()].sort().slice(-12);
+    const rowsOf = (ym: string) => [...agg.get(ym)!.entries()].filter(([p, v]) => v > 0 && (!provs || provs.has(p)));
     const totals = yms.map((ym) => rowsOf(ym).reduce((s, [, v]) => s + v, 0));
     const windowSum = totals.reduce((s, v) => s + v, 0);
     const provWindow = new Map<string, number>();
@@ -552,6 +565,15 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
         segments,
       };
     });
+  };
+  const monthsFor = (provs?: Set<string>): StackMonth[] => monthsFrom(monthAgg, provs);
+  // exact per-trait bars from persisted categories; legacy submissions fall back to the
+  // provider-filtered series (never the global one — audit finding #6)
+  const monthsForCat = (cat: string, provs?: Set<string>): StackMonth[] => {
+    const catAgg = monthAggByCat.get(cat);
+    if (catAgg) return monthsFrom(catAgg);
+    if (hasCategoryDays) return []; // categories exist but not this one → honestly empty
+    return provs?.size ? monthsFrom(monthAgg, provs) : [];
   };
   // sources per trait (by each source's primary discipline — the fallback map)
   const provsByCat = new Map<string, Set<string>>();
@@ -580,7 +602,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const provsByTrait = new Map<string, Set<string>>();
   const provOpsByTrait = new Map<string, Map<string, number>>();
   for (const m of profile.providerModels) {
-    const trait = traitOfModel(m.provider, m.model);
+    const trait = m.category ?? traitOfModel(m.provider, m.model);
     const name = prettyModel(m.model);
     if (!modelsByTrait.has(trait)) modelsByTrait.set(trait, new Map());
     const bucket = modelsByTrait.get(trait)!;
@@ -596,7 +618,12 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // sources whose category records carry no model split fall back to their total ops so every
   // contributing platform still appears.
   const providerDistFor = (cat: string) => {
-    const byProv = new Map<string, number>(provOpsByTrait.get(cat) ?? []);
+    // exact lane first: category-tagged daily rows sum ops per provider for this trait
+    const exact = new Map<string, number>();
+    for (const d of profile.providerDays) {
+      if (d.category === cat && d.ops > 0) exact.set(d.provider, (exact.get(d.provider) ?? 0) + d.ops);
+    }
+    const byProv = exact.size ? exact : new Map<string, number>(provOpsByTrait.get(cat) ?? []);
     for (const p of profile.providers) {
       if (!byProv.has(p.provider) && primaryCategory(p.provider) === cat && p.ops > 0) {
         byProv.set(p.provider, p.ops);
@@ -656,9 +683,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       spiral,
       // second click: the SOURCE distribution behind this trait (who powers it)
       providerDist: providerDistFor(c.id),
-      // no resolved sources → NO bars (global months here painted Codex/Claude spend
-      // into empty traits — audit finding #6, "full bars with an empty hex")
-      months: provs?.size ? monthsFor(provs) : [],
+      months: monthsForCat(c.id, provs),
       story: {
         title: c.label.toLowerCase(),
         bullets: [
