@@ -167,7 +167,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     "claude-code": "Anthropic's agentic coding CLI — this viber's heavy-lift pair programmer.",
     claude: "Anthropic's Claude — long-form reasoning and building.",
     codex: "OpenAI's Codex agent — autonomous implementation runs.",
-    "gemini-cli": "Google's Gemini CLI agent for terminal-first coding.",
+    "gemini-cli": "Antigravity CLI — Google's agentic coding CLI (successor to Gemini CLI).",
     hermes: "Nous Research's Hermes agent — open-model agentic runs.",
     openclaw: "OpenClaw — autonomous browser-native agent work.",
     opencode: "OpenCode — open-source terminal coding agent.",
@@ -507,7 +507,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       : formatInt(Math.round(facts.ops));
   const AGENT_NAME: Record<string, string> = {
     codex: "Codex", claude: "Claude", "claude-code": "Claude", hermes: "Hermes",
-    openclaw: "OpenClaw", gemini: "Gemini", "gemini-cli": "Gemini", opencode: "OpenCode",
+    openclaw: "OpenClaw", gemini: "Gemini", "gemini-cli": "Antigravity", opencode: "OpenCode",
   };
   const agentRows = (profile.agents ?? []).filter((a) => a.activeDays > 0);
   const agentDaysTotal = agentRows.reduce((s, a) => s + a.activeDays, 0);

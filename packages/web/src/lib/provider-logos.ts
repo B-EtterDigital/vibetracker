@@ -17,8 +17,8 @@ const LOGO_FILES: Readonly<Record<string, string>> = {
   "codex-cli": "codex-cli.svg",
   deepseek: "deepseek.svg",
   elevenlabs: "elevenlabs.svg",
-  gemini: "gemini.svg",
-  "gemini-cli": "gemini-cli.svg",
+  gemini: "gemini.png",
+  "gemini-cli": "gemini.png",
   grok: "grok.svg",
   huggingface: "huggingface.svg",
   lmstudio: "lmstudio.svg",
@@ -45,6 +45,8 @@ const LOGO_FILES: Readonly<Record<string, string>> = {
   vidu: "vidu.png",
   cynaps3: "cynaps3.png",
   browserbase: "browserbase.png",
+  hermes: "hermes.png",
+  opencode: "opencode.png",
 };
 
 /** True when a real brand logo asset exists for this provider id. */
