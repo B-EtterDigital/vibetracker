@@ -227,20 +227,40 @@ export function waitForOAuthCallback(opts: {
   return new Promise((resolve, reject) => {
     const server = createServer((req, res) => {
       const url = new URL(req.url ?? "/", `http://127.0.0.1:${opts.port}`);
+      // Chrome's Private-Network-Access sends a preflight before letting an https page (the
+      // consent page) deliver to http://localhost — without these headers the delivery is
+      // BLOCKED SILENTLY and the flow times out while the page shows success (real incident
+      // 2026-07-19). The response carries no secrets; the code arrives via the request URL.
+      const pnaHeaders = {
+        "access-control-allow-origin": req.headers.origin ?? "*",
+        "access-control-allow-methods": "GET,OPTIONS",
+        "access-control-allow-headers": "content-type",
+        "access-control-allow-private-network": "true",
+      };
+      if (req.method === "OPTIONS") {
+        console.log("[oauth] browser preflight received — allowing private-network delivery");
+        res.writeHead(204, pnaHeaders);
+        res.end();
+        return;
+      }
+      console.log(`[oauth] callback contact: ${url.pathname}`);
       if (url.pathname !== "/callback") {
-        res.writeHead(404, { "content-type": "text/plain" });
+        res.writeHead(404, { "content-type": "text/plain", ...pnaHeaders });
         res.end("not found");
         return;
       }
       if (url.searchParams.get("state") !== opts.state) {
-        res.writeHead(400, { "content-type": "text/plain" });
-        res.end("invalid state");
+        // an old consent tab from a previous run delivered a stale state — say so LOUDLY,
+        // because from the browser this failure is completely invisible
+        console.error("[oauth] received a code with a STALE state (an old tab from a previous run?) — keep waiting; complete the flow in the NEWEST tab only");
+        res.writeHead(400, { "content-type": "text/plain", ...pnaHeaders });
+        res.end("stale authorization state — run `vibetracker oauth start` again and use the newest tab");
         return;
       }
       const providerError = url.searchParams.get("error");
       if (providerError) {
         const detail = safeOAuthDetail(url.searchParams.get("error_description") ?? providerError);
-        res.writeHead(400, { "content-type": "text/plain" });
+        res.writeHead(400, { "content-type": "text/plain", ...pnaHeaders });
         res.end("VibeTRACKER OAuth authorization was not completed. You can close this tab.");
         server.close();
         reject(new Error(`OAuth authorization failed${detail ? `: ${detail}` : ""}`));
@@ -252,7 +272,7 @@ export function waitForOAuthCallback(opts: {
         res.end("missing code");
         return;
       }
-      res.writeHead(200, { "content-type": "text/plain" });
+      res.writeHead(200, { "content-type": "text/plain", ...pnaHeaders });
       res.end("VibeTRACKER OAuth connected. You can close this tab.");
       resolve({ code, close: () => server.close() });
     });
