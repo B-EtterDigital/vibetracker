@@ -4,7 +4,7 @@
 // know → undefined replies → "nothing found"). The popup compares its own build against the
 // worker's and triggers chrome.runtime.reload() on mismatch. MUST equal manifest.json "version"
 // (locked by a test).
-export const BRIDGE_BUILD = "0.7.5";
+export const BRIDGE_BUILD = "0.7.6";
 
 // Candidate ports the local bridge may bind, in preference order. The CLI binds the first FREE
 // one; the extension probes for the first that answers /health. This makes a port collision (a

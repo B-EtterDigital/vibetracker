@@ -121,11 +121,23 @@ async function connectActiveSite(tab, cookieApi = chrome.cookies) {
   }
   const { fields, missing } = await readConnectorCookies(connector, cookieApi);
   if (!Object.keys(fields).length) {
+    // Diagnostics: list the cookie NAMES present on the site (never values) so a wrong spec can be
+    // fixed from the sweep report instead of guessed at. Names are identifiers, not secrets — the
+    // same line the server logs already hold.
+    const names = new Set();
+    for (const host of connector.hosts) {
+      const all = await cookieApi.getAll({ domain: host }).catch(() => []);
+      for (const c of all || []) names.add(c.name);
+    }
+    const present = [...names].slice(0, 15);
+    const diag = present.length
+      ? ` [diag: cookies present on ${connector.hosts[0]}: ${present.join(", ")}]`
+      : ` [diag: NO cookies at all on ${connector.hosts[0]} — not logged in there in this browser profile]`;
     // Pending sources have UNVERIFIED cookie shapes — if the user is logged in and we still find
     // nothing, that's on us, not them. Say so instead of sending them to log in again.
-    const error = connector.pending
-      ? `Couldn't find a ${connector.label} session cookie. If you ARE logged in, this source's cookie shape needs an update on our side — it will land in a future version.`
-      : `No ${connector.label} session cookie found — log in at ${connector.hosts[0]} first, then pull again.`;
+    const error = (connector.pending
+      ? `Couldn't find a ${connector.label} session cookie. If you ARE logged in, this source's cookie shape needs an update on our side.`
+      : `No ${connector.label} session cookie found — log in at ${connector.hosts[0]} first, then pull again.`) + diag;
     return { ok: false, provider: connector.id, label: connector.label, error };
   }
   const result = await postJson("/connect", { provider: connector.id, fields });
@@ -169,7 +181,16 @@ function pageStatExtractor(stats) {
       }
     }
   }
-  return null;
+  // MISS diagnostics — content-free by construction: only the text LENGTH and whether the stat's
+  // unit keyword (e.g. "credit") appears anywhere. Tells us "wrong page" vs "number not readable"
+  // without ever shipping page content.
+  const keyword = stats[0] && stats[0].unit ? stats[0].unit : "";
+  return {
+    miss: true,
+    textLen: text.length,
+    keywordFound: keyword ? new RegExp(keyword, "i").test(text) : false,
+    keyword,
+  };
 }
 
 // Read a declared usage number off the logged-in page and record it as a usage snapshot. Reaches
@@ -192,8 +213,16 @@ async function readActivePage(tab, scriptingApi) {
   } catch (error) {
     return { ok: false, provider: reader.id, label: reader.label, error: `Couldn't read the ${reader.label} page — ${String(error?.message || error).slice(0, 120)}` };
   }
-  if (!result) {
-    return { ok: false, provider: reader.id, label: reader.label, error: `No ${reader.label} usage number visible on this page. ${reader.hint}` };
+  if (!result || result.miss) {
+    // Content-free diagnostics: distinguishes "wrong page open" from "number not machine-readable"
+    const diag = result?.miss
+      ? (result.textLen < 200
+        ? " [diag: page nearly empty — still loading or not logged in]"
+        : result.keywordFound
+          ? ` [diag: the word “${result.keyword}” is on the page but no number pattern matched — copy the report below so we can fix the pattern]`
+          : ` [diag: page loaded (${result.textLen} chars) but no “${result.keyword}” text — the usage view isn't on this page]`)
+      : "";
+    return { ok: false, provider: reader.id, label: reader.label, error: `No ${reader.label} usage number visible. ${reader.hint}${diag}` };
   }
   const captured = await postCapture({
     provider: reader.id,

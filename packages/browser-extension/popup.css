@@ -278,6 +278,7 @@ button.chip {
 }
 button.chip:hover { background: rgba(46,232,214,.12); }
 button.chip:disabled { opacity: .55; cursor: wait; filter: none; }
+button.report-chip { margin: 0 auto 9px; display: block; width: auto; }
 .api-banner .api-dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(217,255,242,0.35); }
 .api-banner[data-state="up"] { border-color: rgba(54,227,155,0.4); }
 .api-banner[data-state="up"] .api-dot { background: #36e39b; box-shadow: 0 0 10px #36e39b; }

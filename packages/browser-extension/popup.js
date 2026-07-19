@@ -189,6 +189,15 @@ syncNowBtn.addEventListener("click", async () => {
   }
 });
 
+copyReportBtn.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(sweepReport());
+    copyReportBtn.textContent = "Report copied ✓ — paste it in chat";
+  } catch {
+    copyReportBtn.textContent = "Copy failed — screenshot the list instead";
+  }
+});
+
 viewProfileBtn.addEventListener("click", () => {
   chrome.tabs.create({ url: profileUrl || "https://vibeusage.c0vibe.app", active: true }).catch((error) => console.debug("[vibetracker] profile open failed", {
     area: "browser-extension.popup", message: String(error?.message || error).slice(0, 120),
@@ -229,8 +238,23 @@ connectBtn.addEventListener("click", async () => {
 });
 
 // Shared renderer for both sweep flows (pull open tabs / open everything then pull).
+let lastSweep = null; // kept so "Copy sweep report" can hand the full per-source detail to support
+const copyReportBtn = $("copy-report");
+
+function sweepReport() {
+  if (!lastSweep) return "";
+  const lines = [
+    `VibeTRACKER Bridge sweep report — build ${BRIDGE_BUILD}`,
+    `${lastSweep.connected}/${lastSweep.total} pulled${lastSweep.opened?.length ? ` · opened ${lastSweep.opened.length} tab(s)` : ""}`,
+    ...(lastSweep.results || []).map((r) => `${r.ok ? "OK  " : "MISS"} ${r.label} [${r.provider}/${r.kind}]: ${r.detail || ""}`),
+  ];
+  return lines.join("\n");
+}
+
 function renderSweep(res, emptyDetail) {
   const results = res?.results || [];
+  lastSweep = res;
+  copyReportBtn.hidden = !results.length;
   if (!results.length) {
     setStatus({ state: "error", label: "nothing found", detail: emptyDetail });
     return;

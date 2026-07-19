@@ -43,6 +43,7 @@ const LOGO_FILES: Readonly<Record<string, string>> = {
   tensorart: "tensorart.png",
   pixverse: "pixverse.png",
   vidu: "vidu.png",
+  cynaps3: "cynaps3.png",
 };
 
 /** True when a real brand logo asset exists for this provider id. */

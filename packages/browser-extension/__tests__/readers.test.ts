@@ -51,6 +51,28 @@ test("pageStatExtractor (the injected function) works over a fake document body"
   }
 });
 
+test("pageStatExtractor returns content-free miss diagnostics (length + keyword only)", () => {
+  const restore = globalThis.document;
+  const hf = READERS.find((r) => r.id === "higgsfield")!;
+  try {
+    // keyword present but number unreadable
+    // @ts-expect-error shim
+    globalThis.document = { body: { innerText: "Your credits are shown in the widget above. ".repeat(10) } };
+    const withKeyword = pageStatExtractor(hf.stats) as { miss: boolean; keywordFound: boolean; textLen: number };
+    assert.equal(withKeyword.miss, true);
+    assert.equal(withKeyword.keywordFound, true, "the unit keyword was on the page");
+    assert.ok(withKeyword.textLen > 200);
+    // wrong page entirely
+    // @ts-expect-error shim
+    globalThis.document = { body: { innerText: "welcome to the gallery homepage with lots of unrelated text ".repeat(10) } };
+    const wrongPage = pageStatExtractor(hf.stats) as { miss: boolean; keywordFound: boolean };
+    assert.equal(wrongPage.miss, true);
+    assert.equal(wrongPage.keywordFound, false, "no keyword → the usage view isn't open");
+  } finally {
+    globalThis.document = restore;
+  }
+});
+
 test("all reader hosts are unique for the manifest allowlist", () => {
   const hosts = readerHosts();
   assert.ok(hosts.includes("midjourney.com"));
