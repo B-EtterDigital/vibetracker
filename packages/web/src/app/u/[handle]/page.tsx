@@ -409,11 +409,19 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     if (magnitude >= 1_000) return `${sign}$${(magnitude / 1_000).toFixed(1)}k`;
     return formatUsd(n);
   };
-  const topModels = profile.providerModels
-    .slice()
-    .sort((a, b) => b.usd - a.usd || b.ops - a.ops)
+  // sum each model across ALL its provider/category rows before ranking, so a model used in more
+  // than one lane isn't split into two smaller entries and under-ranked.
+  const modelSpend = new Map<string, { usd: number; ops: number }>();
+  for (const m of profile.providerModels) {
+    const name = prettyModel(m.model);
+    const cur = modelSpend.get(name) ?? { usd: 0, ops: 0 };
+    cur.usd += m.usd; cur.ops += m.ops;
+    modelSpend.set(name, cur);
+  }
+  const topModels = [...modelSpend.entries()]
+    .sort((a, b) => b[1].usd - a[1].usd || b[1].ops - a[1].ops)
     .slice(0, 5)
-    .map((m) => ({ model: prettyModel(m.model), spend: compactUsd(m.usd) }));
+    .map(([model, v]) => ({ model, spend: compactUsd(v.usd) }));
   const exactOps = Math.round(facts.ops).toLocaleString("en-US");
   const heroState: HeroState[] = [
     { label: "signal", value: read.tier },
