@@ -73,6 +73,8 @@ function setApi(up) {
     apiTitle.textContent = "Local app connected";
     apiDetail.textContent = "Connect a source or read a usage page below.";
     apiCmd.hidden = true;
+    // the pristine status still shows the setup hint — swap it for a ready line once connected
+    if (status.textContent.startsWith("Run: vibetracker start")) status.textContent = "Ready — pull when you are.";
   } else {
     apiTitle.textContent = "Local app not running";
     apiDetail.textContent = "Run this once in your terminal, then reopen:";
@@ -137,7 +139,7 @@ async function loadBoard() {
     const li = document.createElement("li");
     li.dataset.state = tile.state;
     const glyph = tile.logo ? `<img src="${tile.logo}" alt="">` : `<span class="tmark">${tile.mark}</span>`;
-    li.innerHTML = `<button type="button" class="tile" title="${tile.label} — ${STATE_HINT[tile.state] || tile.state}">${glyph}</button><span class="tile-tick" aria-hidden="true">✓</span>`;
+    li.innerHTML = `<button type="button" class="tile" title="${tile.label} — ${STATE_HINT[tile.state] || tile.state}">${glyph}</button><span class="tile-badge" aria-hidden="true"></span>`;
     li.querySelector("button").addEventListener("click", () => {
       chrome.tabs.create({ url: tile.url, active: true }).catch((error) => console.debug("[vibetracker] tile open failed", {
         area: "browser-extension.board", provider: tile.id, message: String(error?.message || error).slice(0, 120),

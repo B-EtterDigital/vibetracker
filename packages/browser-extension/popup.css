@@ -138,23 +138,38 @@ p { margin: 0; color: var(--muted); }
 .source-board li { position: relative; }
 button.tile {
   width: 100%; min-height: 0; aspect-ratio: 1;
-  display: grid; place-items: center; padding: 0;
+  /* explicit centering on BOTH axes — the global `button` rule sets justify-content:
+     space-between, which pins a lone grid track to the left (the off-center-icons bug) */
+  display: flex; align-items: center; justify-content: center; padding: 0; gap: 0;
   border: 1px solid rgba(217,255,242,.12); border-radius: 10px;
   background: rgba(0,0,0,.28); cursor: pointer;
   transition: transform .16s ease, border-color .16s ease;
 }
 button.tile:hover { transform: translateY(-1px); border-color: rgba(46,232,214,.5); }
-.tile img { width: 22px; height: 22px; object-fit: contain; border-radius: 5px; }
+.tile img { width: 22px; height: 22px; object-fit: contain; border-radius: 5px; margin: 0 auto; }
 .tile .tmark { color: var(--muted); font: 900 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
 .source-board li[data-state="synced"] .tile { border-color: rgba(54,227,155,.55); }
 .source-board li[data-state="connected"] .tile { border-color: rgba(46,232,214,.4); }
-.source-board li[data-state="open"] .tile { border-color: rgba(255,198,64,.4); }
-.tile-tick {
+.source-board li[data-state="open"] .tile { border-color: rgba(255,198,64,.5); }
+/* one corner badge, colored by state: green ✓ synced · cyan dot connected · gold dot tab-open */
+.tile-badge {
   position: absolute; top: -4px; right: -4px; width: 13px; height: 13px; border-radius: 50%;
-  background: #36e39b; color: #04110d; font: 900 9px/13px ui-monospace, monospace; text-align: center;
-  box-shadow: 0 0 8px rgba(54,227,155,.6); display: none; pointer-events: none;
+  color: #04110d; font: 900 9px/13px ui-monospace, monospace; text-align: center;
+  display: none; pointer-events: none;
 }
-.source-board li[data-state="synced"] .tile-tick { display: block; }
+.source-board li[data-state="synced"] .tile-badge { display: block; background: #36e39b; box-shadow: 0 0 8px rgba(54,227,155,.6); }
+.source-board li[data-state="synced"] .tile-badge::after { content: "✓"; }
+.source-board li[data-state="connected"] .tile-badge { display: block; background: #2ee8d6; box-shadow: 0 0 8px rgba(46,232,214,.55); }
+.source-board li[data-state="open"] .tile-badge { display: block; background: #ffc64d; box-shadow: 0 0 8px rgba(255,198,64,.55); }
+.board-legend {
+  display: flex; justify-content: center; gap: 12px; margin: 0 0 9px;
+  color: rgba(217,255,242,.5); font: 600 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.board-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; font-style: normal; }
+.board-legend .lg-synced { background: #36e39b; }
+.board-legend .lg-connected { background: #2ee8d6; }
+.board-legend .lg-open { background: #ffc64d; }
 
 button {
   width: 100%;
@@ -272,15 +287,15 @@ button.primary:disabled { opacity: 0.6; cursor: default; transform: none; }
 #api-cmd code { color: #2ee8d6; background: none; }
 .read-card { border-color: rgba(159,124,255,0.35); background: linear-gradient(145deg, rgba(159,124,255,0.06), transparent); }
 
-/* ---- scan-all sweep + open-all secondary ---- */
-.scan-btn { margin-bottom: 5px; }
-button.secondary.open-all-btn {
+/* ---- open-all hero action (top) + pull-open-tabs secondary (below the board) ---- */
+.open-all-btn { margin-bottom: 9px; }
+button.secondary.scan-btn {
   min-height: 32px; margin-bottom: 9px; padding: 7px 12px;
   background: rgba(46,232,214,.07); color: var(--cyan);
   border: 1px solid rgba(46,232,214,.35);
   font: 800 10.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
 }
-button.secondary.open-all-btn:hover { background: rgba(46,232,214,.13); }
+button.secondary.scan-btn:hover { background: rgba(46,232,214,.13); }
 .scan-results {
   list-style: none; margin: 0 0 9px; padding: 0 2px 0 0;
   display: grid; gap: 4px;

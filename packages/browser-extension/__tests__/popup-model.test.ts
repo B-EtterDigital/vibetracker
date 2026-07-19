@@ -79,9 +79,12 @@ test("browser extension manifest and popup load the module cockpit", () => {
     assert.ok(manifest.host_permissions.includes(`http://127.0.0.1:${port}/*`), `missing host_permission for 127.0.0.1:${port}`);
     assert.ok(manifest.host_permissions.includes(`http://localhost:${port}/*`), `missing host_permission for localhost:${port}`);
   }
-  // branded toolbar/extension icons must be declared at every size (no generic puzzle piece)
+  // branded toolbar/extension icons must be declared at every size (no generic puzzle piece).
+  // action.default_icon drives the BROWSER TOOLBAR — Chrome does not fall back to `icons` there,
+  // so omitting it shows the wrong icon in the header (real regression, 2026-07-19).
   for (const size of ["16", "32", "48", "128"]) {
     assert.equal(manifest.icons?.[size], `icons/icon-${size}.png`, `manifest.icons missing ${size}`);
+    assert.equal(manifest.action?.default_icon?.[size], `icons/icon-${size}.png`, `action.default_icon missing ${size}`);
   }
   // the popup ↔ worker handshake only works if the two builds can ever match — lock them together
   assert.equal(manifest.version, BRIDGE_BUILD, "manifest.json version must equal BRIDGE_BUILD");

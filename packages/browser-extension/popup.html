@@ -31,21 +31,28 @@
       </button>
     </section>
 
-    <!-- Sweep — connect/read every supported AI source open in the browser, one click -->
-    <button id="scan" type="button" class="primary scan-btn"
-            title="Go through every browser tab you have open and connect or read each supported AI source at once.">
-      <span>Pull from all open tabs</span>
-      <i aria-hidden="true">⟲</i>
-    </button>
-    <button id="open-all" type="button" class="secondary open-all-btn"
+    <!-- Top action: open every supported source, then pull them all automatically -->
+    <button id="open-all" type="button" class="primary open-all-btn"
             title="Open a tab for every supported AI source, wait for them to load, then connect &amp; read them all automatically.">
       <span>Open all sources + pull</span>
       <i aria-hidden="true">↗</i>
     </button>
 
-    <!-- The source board: every supported source, its real logo, and a green tick once synced.
+    <!-- The source board: every supported source, its real logo, and a status badge.
          Click a tile to open that source's page (e.g. to log in). Auto-pull refreshes half-hourly. -->
     <ul id="source-board" class="source-board" aria-label="All sources — green tick means synced"></ul>
+    <small class="board-legend" aria-hidden="true">
+      <span><i class="lg-synced"></i>synced</span>
+      <span><i class="lg-connected"></i>connected</span>
+      <span><i class="lg-open"></i>tab open</span>
+    </small>
+
+    <!-- Sweep — connect/read every supported AI source open in the browser, one click -->
+    <button id="scan" type="button" class="secondary scan-btn"
+            title="Go through every browser tab you have open and connect or read each supported AI source at once.">
+      <span>Pull from all open tabs</span>
+      <i aria-hidden="true">⟲</i>
+    </button>
 
     <ul id="scan-results" class="scan-results" hidden aria-label="Scan results"></ul>
 

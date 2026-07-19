@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VibeTRACKER Bridge",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "One-click connect cookie-only AI sources and read logged-in usage numbers into your local VibeTRACKER ledger. Local only.",
   "icons": {
     "16": "icons/icon-16.png",
@@ -49,6 +49,12 @@
     "https://www.perplexity.ai/*"
   ],
   "action": {
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
     "default_popup": "popup.html",
     "default_title": "VibeTRACKER Bridge — connect & read AI usage"
   },
