@@ -223,6 +223,7 @@ export function createHttpClient(opts: Cynaps3HttpOpts): Cynaps3Client {
     throw new Error("Cynaps3 adapter: global fetch unavailable; pass fetchImpl");
   }
 
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
   return {
     async stats(args) {
       const url = new URL(baseUrl);
@@ -230,21 +231,28 @@ export function createHttpClient(opts: Cynaps3HttpOpts): Cynaps3Client {
       url.searchParams.set("to", args.to);
       url.searchParams.set("limit", String(args.limit));
       if (args.cursor) url.searchParams.set("cursor", args.cursor);
-      const response = await doFetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: "application/json",
-        },
-      });
-      if (!response.ok) {
+      // The producer's auth path is nondeterministic (its Clerk metadata fetch flakes → sporadic
+      // 401 with a VALID token — verified live 2026-07-19: same token, 401 then 200 twice). Retry
+      // 401/5xx twice with backoff before failing, so one flake can't sink a whole sync.
+      let lastError: Error | undefined;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) await sleep(attempt * 2_000);
+        const response = await doFetch(url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: "application/json",
+          },
+        });
+        if (response.ok) return parseStatsPage(await response.json());
         const detail = (await response.text()).slice(0, 500);
-        throw new Error(
+        lastError = new Error(
           `Cynaps3 stats request failed: ${response.status} ${response.statusText}` +
             (detail ? ` - ${detail}` : ""),
         );
+        if (response.status !== 401 && response.status < 500) break; // real client errors don't retry
       }
-      return parseStatsPage(await response.json());
+      throw lastError ?? new Error("Cynaps3 stats request failed");
     },
   };
 }
