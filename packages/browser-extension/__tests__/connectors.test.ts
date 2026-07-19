@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { CONNECTORS, connectorForUrl, cookieMatchesSpec, connectorHosts } from "../connectors.mjs";
-import { readConnectorCookies, connectActiveSite, scanAllTabs, resetBridgePort } from "../background.js";
+import { readConnectorCookies, connectActiveSite, scanAllTabs, autoOpenSources, openAllSources, openAndPullAll, resetBridgePort } from "../background.js";
 
 // The bridge auto-discovers its port by probing /health across candidates; the first is 8799.
 // A fetch mock must answer the GET /health probe (ok) before the POST it actually asserts on.
@@ -91,6 +92,76 @@ test("connectActiveSite refuses a non-connectable tab", async () => {
   const result = await connectActiveSite({ url: "https://chatgpt.com/" }, fakeCookieApi({}));
   assert.equal(result.ok, false);
   assert.match(result.error, /not a connectable/i);
+});
+
+// A fake chrome.tabs backed by a mutable tab list — create() adds a loaded tab, get() looks up.
+function fakeTabsApi(initialTabs: Array<{ id: number; url: string; status?: string }>) {
+  const tabs = [...initialTabs];
+  let nextId = 1000;
+  const created: string[] = [];
+  return {
+    tabs,
+    created,
+    async query() { return tabs; },
+    async create({ url }: { url: string }) {
+      const tab = { id: nextId++, url, status: "complete" };
+      tabs.push(tab);
+      created.push(url);
+      return tab;
+    },
+    async get(id: number) { return tabs.find((t) => t.id === id) ?? Promise.reject(new Error("no tab")); },
+  };
+}
+
+test("autoOpenSources lists every connector + web-readable reader, and skips off-web numbers", () => {
+  const sources = autoOpenSources();
+  const ids = sources.map((s: { id: string }) => s.id);
+  for (const c of CONNECTORS) assert.ok(ids.includes(c.id), `connector ${c.id} must auto-open`);
+  assert.ok(ids.includes("higgsfield") && ids.includes("elevenlabs") && ids.includes("leonardo"));
+  // Midjourney/ChatGPT keep their numbers off the web — auto-opening them would only report misses
+  assert.equal(ids.includes("midjourney"), false);
+  assert.equal(ids.includes("openai-web"), false);
+  for (const s of sources) assert.match(s.url, /^https:\/\//, `${s.id} needs an https url`);
+});
+
+test("every auto-open URL's host is granted in the manifest (so its tab is connect/read-able)", () => {
+  const manifest = JSON.parse(readFileSync(new URL("../manifest.json", import.meta.url), "utf8"));
+  const granted = (manifest.host_permissions as string[]).map((h) => h.replace(/^https:\/\//, "").replace(/\/\*$/, ""));
+  for (const s of autoOpenSources()) {
+    const host = new URL(s.url).hostname;
+    assert.ok(granted.includes(host), `manifest missing host_permission for ${s.id}'s ${host}`);
+  }
+});
+
+test("openAllSources opens one background tab per missing source and skips already-open ones", async () => {
+  const tabsApi = fakeTabsApi([{ id: 1, url: "https://suno.com/create", status: "complete" }]);
+  const res = await openAllSources({ tabsApi });
+  assert.equal(res.ok, true);
+  assert.ok(res.already.includes("Suno"), "existing Suno tab is not re-opened");
+  assert.ok(res.opened.includes("Udio") && res.opened.includes("Higgsfield"));
+  assert.equal(tabsApi.created.some((u: string) => u.includes("suno.com")), false);
+  assert.equal(res.createdTabIds.length, res.opened.length, "one created tab per opened source");
+});
+
+test("openAndPullAll opens missing sources, waits, then sweeps them in one automatic action", async () => {
+  const tabsApi = fakeTabsApi([]);
+  // logged in on Suno only — its exact-match `__session` cookie resolves; every other site is empty
+  const cookieApi = fakeCookieApi({ "suno.com": { __session: "S" } });
+  const scriptingApi = { async executeScript() { return [{ result: null }]; } }; // pages show no number
+  const realFetch = globalThis.fetch;
+  resetBridgePort();
+  globalThis.fetch = (async () => ({ ok: true, status: 200, text: async () => JSON.stringify({ ok: true }) })) as unknown as typeof fetch;
+  try {
+    const res = await openAndPullAll({ tabsApi, cookieApi, scriptingApi, waitOpts: { timeoutMs: 200, pollMs: 10 } });
+    assert.equal(res.ok, true);
+    assert.ok(res.opened.length >= 8, "every supported source tab was opened");
+    const suno = res.results.find((r: { provider: string }) => r.provider === "suno");
+    assert.equal(suno?.ok, true, "logged-in Suno connects during the same click");
+    const udio = res.results.find((r: { provider: string }) => r.provider === "udio");
+    assert.equal(udio?.ok, false, "not-logged-in source reports an honest miss");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
 
 test("scanAllTabs connects every open cookie source once and reads usage pages, deduped", async () => {

@@ -15,6 +15,8 @@ export const READERS = [
     label: "Midjourney",
     category: "image",
     hosts: ["midjourney.com", "www.midjourney.com"],
+    url: "https://www.midjourney.com/account",
+    autoOpen: false, // lifetime total is a Discord /info stat — auto-opening the web page would just report a miss
     // Midjourney prints "Lifetime Usage: 3,982 images" via the Discord /info command; some account
     // pages echo a "Lifetime" total. Match those anchored phrasings only — never a bare "N images",
     // which would grab an unrelated gallery/explore count.
@@ -33,6 +35,7 @@ export const READERS = [
     label: "Higgsfield",
     category: "video",
     hosts: ["higgsfield.ai", "www.higgsfield.ai"],
+    url: "https://higgsfield.ai/account", // the page that shows the usage number
     // account/credits surface shows a credit balance
     stats: [
       { operation: "credit_balance", unit: "credit", patterns: ["([\\d,]+(?:\\.\\d+)?)\\s*credits?\\b", "credits?[:\\s]*([\\d,]+(?:\\.\\d+)?)"] },
@@ -44,6 +47,8 @@ export const READERS = [
     label: "ChatGPT",
     category: "llm",
     hosts: ["chatgpt.com", "chat.openai.com"],
+    url: "https://chatgpt.com", // the page that shows the usage number
+    autoOpen: false, // Plus/Free show no usage number on the web — auto-opening would just report a miss
     // the settings → usage panel shows message/request counts for the current window
     stats: [
       { operation: "plan_messages", unit: "request", patterns: ["([\\d,]+)\\s*(?:of|/)\\s*[\\d,]+\\s*messages?", "([\\d,]+)\\s*messages?\\b"] },
@@ -55,6 +60,7 @@ export const READERS = [
     label: "ElevenLabs",
     category: "voice",
     hosts: ["elevenlabs.io"],
+    url: "https://elevenlabs.io/app/usage", // the page that shows the usage number
     stats: [
       { operation: "character_usage", unit: "credit", patterns: ["([\\d,]+)\\s*/\\s*[\\d,]+\\s*credits?", "([\\d,]+)\\s*characters?\\s*used"] },
     ],
@@ -65,6 +71,7 @@ export const READERS = [
     label: "Leonardo.ai",
     category: "image",
     hosts: ["app.leonardo.ai", "leonardo.ai"],
+    url: "https://app.leonardo.ai/account", // the page that shows the usage number
     // web credit balance — the API adapter needs a key, so page-read is the no-key fallback
     stats: [
       { operation: "credit_balance", unit: "credit", patterns: ["([\\d,]+)\\s*(?:API\\s*)?(?:training\\s*)?tokens?\\b", "([\\d,]+)\\s*credits?\\b"] },
@@ -76,6 +83,7 @@ export const READERS = [
     label: "Runway",
     category: "video",
     hosts: ["app.runwayml.com", "runwayml.com"],
+    url: "https://app.runwayml.com/account", // the page that shows the usage number
     stats: [
       { operation: "credit_balance", unit: "credit", patterns: ["([\\d,]+)\\s*credits?\\b", "credits?[:\\s]*([\\d,]+)"] },
     ],
@@ -86,6 +94,7 @@ export const READERS = [
     label: "Perplexity",
     category: "llm",
     hosts: ["perplexity.ai", "www.perplexity.ai"],
+    url: "https://www.perplexity.ai/settings/account", // the page that shows the usage number
     stats: [
       { operation: "pro_searches", unit: "request", patterns: ["([\\d,]+)\\s*(?:Pro\\s*)?searches?\\s*(?:used|remaining|left)", "([\\d,]+)\\s*/\\s*[\\d,]+\\s*searches?"] },
     ],

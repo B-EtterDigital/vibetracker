@@ -21,6 +21,11 @@
 [hidden] { display: none !important; }
 body {
   width: 400px;
+  /* HARD invariant: never exceed Chrome's 600px popup cap, so the page itself never scrolls.
+     When content would overflow (e.g. a long sweep-result list), .scan-results shrinks and
+     scrolls internally instead — see the flex rules on .capture-shell below. */
+  max-height: 600px;
+  overflow: hidden;
   margin: 0;
   background: radial-gradient(circle at 22% 0, rgba(255,79,216,.13), transparent 36%), var(--bg);
   color: var(--fg);
@@ -29,9 +34,15 @@ body {
 
 .capture-shell {
   position: relative;
-  padding: 11px 14px;
+  padding: 10px 14px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
 }
+/* fixed-size children; only the sweep-result list may shrink (and then scrolls internally) */
+.capture-shell > * { flex: 0 0 auto; }
+.capture-shell > .scan-results { flex: 0 1 auto; min-height: 0; overflow-y: auto; }
 
 .capture-shell::before {
   content: "";
@@ -194,7 +205,7 @@ footer {
 
 /* ---- one-click connect card ---- */
 .connect-card {
-  margin: 9px 0;
+  margin: 7px 0;
   border: 1px solid rgba(46, 232, 214, 0.35);
   border-radius: 10px;
   padding: 10px;
@@ -259,10 +270,20 @@ button.primary:disabled { opacity: 0.6; cursor: default; transform: none; }
   display: block; margin: 0 2px 8px; text-align: center;
   color: rgba(217,255,242,0.5); font: 500 9.5px/1.3 var(--font, ui-monospace, monospace);
 }
-.scan-results {
-  list-style: none; margin: 0 0 12px; padding: 0;
-  display: grid; gap: 4px;
+/* inline text-link button inside the hint — must undo the global full-width button styling */
+button.linklike {
+  display: inline; width: auto; min-height: 0; padding: 0; border: 0; border-radius: 0;
+  background: none; color: var(--cyan); font: inherit; font-weight: 700;
+  text-transform: none; text-decoration: underline; cursor: pointer;
 }
+button.linklike:disabled { opacity: .55; cursor: wait; filter: none; }
+.scan-results {
+  list-style: none; margin: 0 0 9px; padding: 0 2px 0 0;
+  display: grid; gap: 4px;
+  scrollbar-width: thin; scrollbar-color: rgba(46,232,214,.35) transparent;
+}
+.scan-results::-webkit-scrollbar { width: 5px; }
+.scan-results::-webkit-scrollbar-thumb { background: rgba(46,232,214,.35); border-radius: 3px; }
 .scan-results li {
   display: flex; align-items: baseline; gap: 8px;
   padding: 7px 10px; border-radius: 7px;

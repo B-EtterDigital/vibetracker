@@ -119,33 +119,59 @@ connectBtn.addEventListener("click", async () => {
   }
 });
 
-scanBtn.addEventListener("click", async () => {
-  scanBtn.disabled = true;
+// Shared renderer for both sweep flows (pull open tabs / open everything then pull).
+function renderSweep(res, emptyDetail) {
+  const results = res?.results || [];
+  if (!results.length) {
+    setStatus({ state: "error", label: "nothing found", detail: emptyDetail });
+    return;
+  }
+  for (const r of results) {
+    const li = document.createElement("li");
+    li.dataset.ok = r.ok ? "true" : "false";
+    li.innerHTML = `<b>${r.label}</b><span>${r.ok ? (r.kind === "read" ? "read " : "connected · ") : ""}${r.detail || ""}</span>`;
+    scanResults.appendChild(li);
+  }
+  scanResults.hidden = false;
+  const openedNote = res.opened?.length ? `Opened ${res.opened.length} source tab${res.opened.length === 1 ? "" : "s"}. ` : "";
+  setStatus({
+    state: res.connected ? "ok" : "error",
+    label: `${res.connected}/${res.total} pulled`,
+    detail: res.connected
+      ? `${openedNote}Run \`vibetracker sync\` to fetch them all.`
+      : `${openedNote}Log in on the tabs that missed, then pull again.`,
+  });
+}
+
+async function runSweep(messageType, busyText, emptyDetail, btn) {
+  btn.disabled = true;
   status.dataset.state = "";
-  status.textContent = "scanning your open tabs...";
+  status.textContent = busyText;
   scanResults.hidden = true;
   scanResults.textContent = "";
   try {
-    const res = await send({ type: "scan-all-tabs" });
-    const results = res?.results || [];
-    if (!results.length) {
-      setStatus({ state: "error", label: "nothing found", detail: "No supported AI source is open. Open Suno, Midjourney, Higgsfield, and try again." });
-    } else {
-      for (const r of results) {
-        const li = document.createElement("li");
-        li.dataset.ok = r.ok ? "true" : "false";
-        li.innerHTML = `<b>${r.label}</b><span>${r.ok ? (r.kind === "read" ? "read " : "connected · ") : ""}${r.detail || ""}</span>`;
-        scanResults.appendChild(li);
-      }
-      scanResults.hidden = false;
-      setStatus({ state: res.connected ? "ok" : "error", label: `${res.connected}/${res.total} pulled`, detail: res.connected ? "Run `vibetracker sync` to fetch them all." : "Log in to those sources first, then scan again." });
-    }
+    renderSweep(await send({ type: messageType }), emptyDetail);
   } catch (error) {
-    setStatus({ state: "error", label: "scan failed", detail: String(error?.message || error) });
+    setStatus({ state: "error", label: "sweep failed", detail: String(error?.message || error) });
   } finally {
-    scanBtn.disabled = false;
+    btn.disabled = false;
   }
-});
+}
+
+scanBtn.addEventListener("click", () => runSweep(
+  "scan-all-tabs",
+  "scanning your open tabs...",
+  "No supported AI source is open. Click “Open all sources first” below, or open Suno / Higgsfield / ElevenLabs and try again.",
+  scanBtn,
+));
+
+const openAllBtn = $("open-all");
+openAllBtn.addEventListener("click", () => runSweep(
+  "open-and-pull-all",
+  "opening every supported source, waiting for them to load, then pulling...",
+  "Could not open any source tab.",
+  openAllBtn,
+));
 
 readBtn.addEventListener("click", async () => {
   readBtn.disabled = true;

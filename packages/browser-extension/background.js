@@ -245,6 +245,84 @@ async function scanAllTabs({ tabsApi, cookieApi, scriptingApi } = {}) {
   return { ok: true, results, connected: okCount, total: results.length };
 }
 
+// Every source worth auto-opening: all cookie connectors (a login cookie works from any page of the
+// site) plus the readers whose usage number actually appears on the web (autoOpen !== false —
+// Midjourney/ChatGPT keep their numbers off the web, so opening them would only report misses).
+export function autoOpenSources() {
+  return [
+    ...CONNECTORS.map((c) => ({ kind: "connect", id: c.id, label: c.label, url: c.url })),
+    ...READERS.filter((r) => r.autoOpen !== false).map((r) => ({ kind: "read", id: r.id, label: r.label, url: r.url })),
+  ].filter((s) => Boolean(s.url));
+}
+
+// Open a background tab for every supported source that is NOT already open somewhere. The user's
+// current tab keeps focus; ten Suno tabs still mean zero new Suno tabs. Returns what was opened.
+async function openAllSources({ tabsApi } = {}) {
+  tabsApi = tabsApi ?? (typeof chrome !== "undefined" ? chrome.tabs : undefined);
+  if (!tabsApi) return { ok: false, error: "tabs unavailable" };
+  const tabs = await tabsApi.query({}).catch(() => []);
+  const openIds = new Set();
+  for (const tab of tabs || []) {
+    const c = connectorForUrl(tab?.url);
+    if (c) openIds.add(c.id);
+    const r = readerForUrl(tab?.url);
+    if (r) openIds.add(r.id);
+  }
+  const opened = [];
+  const already = [];
+  const createdTabIds = [];
+  for (const source of autoOpenSources()) {
+    if (openIds.has(source.id)) { already.push(source.label); continue; }
+    try {
+      const tab = await tabsApi.create({ url: source.url, active: false });
+      if (tab?.id != null) createdTabIds.push(tab.id);
+      opened.push(source.label);
+    } catch (error) {
+      // tab create refused (rare: incognito-only window, policy) — the sweep just skips this source
+      console.warn("[vibetracker] could not open source tab", {
+        area: "browser-extension.open-all", provider: source.id, message: String(error?.message || error).slice(0, 120),
+      });
+    }
+  }
+  return { ok: true, opened, already, createdTabIds };
+}
+
+// Wait (bounded) for freshly created tabs to finish loading so page-reads see real content.
+// Cookie connects don't need a loaded page, so a slow site can't stall those.
+async function waitForTabs(tabIds, { tabsApi, timeoutMs = 12000, pollMs = 400, sleep } = {}) {
+  tabsApi = tabsApi ?? (typeof chrome !== "undefined" ? chrome.tabs : undefined);
+  sleep = sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+  const deadline = Date.now() + timeoutMs;
+  let pending = [...(tabIds || [])];
+  while (pending.length && Date.now() < deadline) {
+    const still = [];
+    for (const id of pending) {
+      const tab = await tabsApi.get(id).catch((error) => {
+        // a user-closed tab is expected mid-wait — breadcrumb it and stop waiting on that tab
+        console.debug("[vibetracker] tab gone while waiting for load", {
+          area: "browser-extension.open-all", tabId: id, message: String(error?.message || error).slice(0, 120),
+        });
+        return null;
+      });
+      if (tab && tab.status !== "complete") still.push(id);
+    }
+    pending = still;
+    if (pending.length) await sleep(pollMs);
+  }
+  return { loaded: (tabIds || []).length - pending.length, stillLoading: pending.length };
+}
+
+// The fully automatic flow behind one click: open every missing supported source, wait for the
+// pages to load, then run the sweep — connect + read everything reachable in a single action.
+// Sources that need a login report an honest miss; log in there and pull again.
+async function openAndPullAll({ tabsApi, cookieApi, scriptingApi, waitOpts } = {}) {
+  const openedRes = await openAllSources({ tabsApi });
+  if (!openedRes.ok) return openedRes;
+  if (openedRes.createdTabIds.length) await waitForTabs(openedRes.createdTabIds, { tabsApi, ...(waitOpts || {}) });
+  const sweep = await scanAllTabs({ tabsApi, cookieApi, scriptingApi });
+  return { ...sweep, opened: openedRes.opened, already: openedRes.already };
+}
+
 // Register the message router only in the extension runtime — guarded so the module stays
 // importable under Node for tests (where `chrome` does not exist).
 if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
@@ -266,11 +344,16 @@ if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
   refreshBadge();
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    const known = ["capture-active-tab", "preview-active-tab", "connect-active-site", "read-active-page", "scan-all-tabs"];
+    const known = ["capture-active-tab", "preview-active-tab", "connect-active-site", "read-active-page", "scan-all-tabs", "open-and-pull-all"];
     if (!known.includes(message?.type)) return false;
 
     if (message.type === "scan-all-tabs") {
       scanAllTabs().then(sendResponse).catch((error) => sendResponse({ ok: false, error: String(error?.message || error) }));
+      return true;
+    }
+
+    if (message.type === "open-and-pull-all") {
+      openAndPullAll().then(sendResponse).catch((error) => sendResponse({ ok: false, error: String(error?.message || error) }));
       return true;
     }
 
@@ -297,4 +380,4 @@ if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
   });
 }
 
-export { readConnectorCookies, connectActiveSite, connectorSummary, readActivePage, pageStatExtractor, scanAllTabs, CONNECTORS, READERS };
+export { readConnectorCookies, connectActiveSite, connectorSummary, readActivePage, pageStatExtractor, scanAllTabs, openAllSources, openAndPullAll, CONNECTORS, READERS };

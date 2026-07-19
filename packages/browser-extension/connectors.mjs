@@ -16,6 +16,7 @@ export const CONNECTORS = [
     brand: { from: "#ff7b3d", to: "#ffb347", ink: "#1a0d00" },
     // suno.com stores its session as the `__session` cookie
     hosts: ["suno.com", "www.suno.com"],
+    url: "https://suno.com", // page to open for one-click connect (any page works once logged in)
     cookies: [{ name: "__session", field: "sessionCookie", match: "exact" }],
   },
   {
@@ -25,6 +26,7 @@ export const CONNECTORS = [
     brand: { from: "#8b5cf6", to: "#d946ef", ink: "#12001f" },
     // Udio uses a Supabase auth cookie whose name is `sb-<ref>-auth-token`
     hosts: ["udio.com", "www.udio.com"],
+    url: "https://www.udio.com", // page to open for one-click connect (any page works once logged in)
     cookies: [{ name: "sb-", field: "sessionToken", match: "prefix", suffix: "-auth-token" }],
   },
   {
@@ -33,6 +35,7 @@ export const CONNECTORS = [
     category: "image",
     brand: { from: "#2dd4bf", to: "#3b82f6", ink: "#001014" },
     hosts: ["seaart.ai", "www.seaart.ai"],
+    url: "https://www.seaart.ai", // page to open for one-click connect (any page works once logged in)
     cookies: [{ name: "T", field: "sessionToken", match: "exact" }],
     pending: true, // adapter not built yet; cookie is stored for when it lands
   },
@@ -42,6 +45,7 @@ export const CONNECTORS = [
     category: "image",
     brand: { from: "#f59e0b", to: "#ef4444", ink: "#1a0800" },
     hosts: ["tensor.art", "www.tensor.art"],
+    url: "https://tensor.art", // page to open for one-click connect (any page works once logged in)
     cookies: [{ name: "_tusd", field: "sessionToken", match: "exact" }],
     pending: true,
   },
@@ -51,6 +55,7 @@ export const CONNECTORS = [
     category: "video",
     brand: { from: "#a855f7", to: "#6366f1", ink: "#0d0020" },
     hosts: ["pixverse.ai", "app.pixverse.ai"],
+    url: "https://app.pixverse.ai", // page to open for one-click connect (any page works once logged in)
     cookies: [{ name: "token", field: "sessionToken", match: "exact" }],
     pending: true,
   },
@@ -60,6 +65,7 @@ export const CONNECTORS = [
     category: "video",
     brand: { from: "#22d3ee", to: "#0ea5e9", ink: "#001420" },
     hosts: ["vidu.com", "www.vidu.com", "vidu.studio"],
+    url: "https://www.vidu.com", // page to open for one-click connect (any page works once logged in)
     cookies: [{ name: "JWT-TOKEN", field: "sessionToken", match: "exact" }],
     pending: true,
   },
@@ -69,6 +75,7 @@ export const CONNECTORS = [
     category: "video",
     brand: { from: "#34d399", to: "#10b981", ink: "#001a10" },
     hosts: ["haiper.ai", "app.haiper.ai"],
+    url: "https://app.haiper.ai", // page to open for one-click connect (any page works once logged in)
     cookies: [{ name: "haiper.session-token", field: "sessionToken", match: "exact" }],
     pending: true,
   },
