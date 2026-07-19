@@ -120,10 +120,12 @@ test("autoOpenSources lists every connector + web-readable reader, and skips off
   const sources = autoOpenSources();
   const ids = sources.map((s: { id: string }) => s.id);
   for (const c of CONNECTORS) assert.ok(ids.includes(c.id), `connector ${c.id} must auto-open`);
-  assert.ok(ids.includes("higgsfield") && ids.includes("elevenlabs") && ids.includes("leonardo"));
-  // Midjourney/ChatGPT keep their numbers off the web — auto-opening them would only report misses
+  assert.ok(ids.includes("elevenlabs") && ids.includes("leonardo") && ids.includes("runway"));
+  // Midjourney/ChatGPT keep their numbers off the web; Higgsfield's root page shows no credit
+  // figure and its MCP/CLI adapter already syncs it — auto-opening these only reports misses
   assert.equal(ids.includes("midjourney"), false);
   assert.equal(ids.includes("openai-web"), false);
+  assert.equal(ids.includes("higgsfield"), false);
   for (const s of sources) assert.match(s.url, /^https:\/\//, `${s.id} needs an https url`);
 });
 
@@ -166,7 +168,7 @@ test("openAllSources opens one background tab per missing source and skips alrea
   const res = await openAllSources({ tabsApi });
   assert.equal(res.ok, true);
   assert.ok(res.already.includes("Suno"), "existing Suno tab is not re-opened");
-  assert.ok(res.opened.includes("Udio") && res.opened.includes("Higgsfield"));
+  assert.ok(res.opened.includes("Udio") && res.opened.includes("ElevenLabs"));
   assert.equal(tabsApi.created.some((u: string) => u.includes("suno.com")), false);
   assert.equal(res.createdTabIds.length, res.opened.length, "one created tab per opened source");
 });
