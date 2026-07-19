@@ -38,6 +38,14 @@ function fmtUsd(n: number): string {
   if (n >= 1000) return `$${Math.round(n / 1000)}k`;
   return `$${Math.round(n)}`;
 }
+// Share of prompt tokens served from cache (cacheRead / (input + cacheRead)), rounded.
+// Null when there are no prompt tokens or the share rounds below 1%.
+function cacheServedPct(input: number, cacheRead: number): number | null {
+  const denom = input + cacheRead;
+  if (denom <= 0) return null;
+  const pct = Math.round((100 * cacheRead) / denom);
+  return pct >= 1 ? pct : null;
+}
 
 export interface TokenScope {
   scope: string;
@@ -55,12 +63,13 @@ export function TokenBreakdown({ breakdown, totalTokens }: { breakdown: TokenSco
     .map((t) => ({ ...t, sum: t.input + t.output + t.cacheRead + t.cacheCreation }))
     .sort((a, b) => b.sum - a.sum);
   const max = Math.max(total.input, total.output, total.cacheRead, total.cacheCreation, 1);
+  const cacheServed = cacheServedPct(total.input, total.cacheRead);
 
   return (
     <section className="vprofile-panel vtok">
       <header className="vprofile-panel-head">
         <h2 className="vprofile-panel-title">Token breakdown</h2>
-        <span className="vprofile-panel-sub">{fmtTokens(totalTokens)} tokens total</span>
+        <span className="vprofile-panel-sub">{fmtTokens(totalTokens)} tokens total{cacheServed !== null ? ` · cache served ${cacheServed}% of prompt tokens` : ""}</span>
       </header>
 
       <div className="vtok-rows">
@@ -83,12 +92,16 @@ export function TokenBreakdown({ breakdown, totalTokens }: { breakdown: TokenSco
       {byProvider.length ? (
         <div className="vtok-providers">
           <span className="vtok-providers-head">by provider</span>
-          {byProvider.map((p) => (
-            <span className="vtok-provider" key={p.scope}>
-              {PROVIDER_LABEL[p.scope] ?? p.scope}
-              <b>{fmtTokens(p.sum)}</b>
-            </span>
-          ))}
+          {byProvider.map((p) => {
+            const cached = cacheServedPct(p.input, p.cacheRead);
+            return (
+              <span className="vtok-provider" key={p.scope}>
+                {PROVIDER_LABEL[p.scope] ?? p.scope}
+                <b>{fmtTokens(p.sum)}</b>
+                {cached !== null ? ` · ${cached}% cached` : ""}
+              </span>
+            );
+          })}
         </div>
       ) : null}
     </section>

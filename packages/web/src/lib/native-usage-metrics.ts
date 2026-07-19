@@ -12,13 +12,14 @@ function formatCount(value: number): string {
 
 function pluralUnit(unit: string, count: number): string {
   const normalized = unit.trim().toLowerCase();
+  if (normalized === "lyrics") return "lyrics"; // uncountable noun — never "lyricss", at any count
   if (count === 1) return normalized;
   if (normalized === "file") return "files";
   if (normalized === "track") return "tracks";
   if (normalized === "variation") return count === 1 ? "variation" : "variations";
   if (normalized === "image") return "images";
   if (normalized === "clip") return "clips";
-  return `${normalized || "output"}s`;
+  return `${normalized || "output"}s`; // 'import' → 'imports', and any other future op type
 }
 
 export function formatMediaDuration(seconds: number): string {

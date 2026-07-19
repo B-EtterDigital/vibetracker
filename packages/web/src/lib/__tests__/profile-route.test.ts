@@ -314,7 +314,60 @@ test("token breakdown + measured multi-CLI activity render without inferred dele
   assert.match(page, /crossProviderDays=\{profile\.crossProviderDays/);
   // total tokens is a stat headline in the breakdown panel; global rank rides the hero state rail
   assert.match(tokensSrc, /tokens total/);
+  // cache-served ratio extends the same sub line and each provider pill, no new classes
+  assert.match(tokensSrc, /cache served \$\{cacheServed\}% of prompt tokens/);
+  assert.match(tokensSrc, /\$\{cached\}% cached/);
   assert.match(page, /label: "global rank", value: `#\$\{profile\.rank\}`/);
+});
+
+// profile-tokens.tsx has no external imports, so TokenBreakdown can be rendered behaviorally
+// (like the toolbar dock) to prove the cache-served ratio math and its guard conditions.
+function loadTokensModule() {
+  const projectRequire = createRequire(import.meta.url);
+  const ts = projectRequire("typescript");
+  const jsxRuntime = projectRequire("react/jsx-runtime");
+  const source = ts.transpileModule(tokensSrc, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      jsx: ts.JsxEmit.ReactJSX,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  const loaded = { exports: {} as Record<string, unknown> };
+  const stubRequire = (id: string) => {
+    if (id === "react/jsx-runtime") return jsxRuntime;
+    throw new Error(`unexpected profile-tokens import: ${id}`);
+  };
+  new Function("require", "exports", "module", source)(stubRequire, loaded.exports, loaded);
+  return { exports: loaded.exports, jsxRuntime, renderToStaticMarkup: projectRequire("react-dom/server").renderToStaticMarkup as (node: unknown) => string };
+}
+
+test("token breakdown surfaces the cache-served ratio in the header sub and per provider", () => {
+  const runtime = loadTokensModule();
+  const TokenBreakdown = runtime.exports.TokenBreakdown as (props: unknown) => unknown;
+  const render = (props: Record<string, unknown>) => runtime.renderToStaticMarkup(runtime.jsxRuntime.jsx(TokenBreakdown, props));
+
+  const html = render({
+    totalTokens: 12_000_000,
+    breakdown: [
+      { scope: "total", input: 300, output: 100, cacheRead: 700, cacheCreation: 50 },   // 700/1000 → 70%
+      { scope: "codex", input: 100, output: 40, cacheRead: 900, cacheCreation: 10 },     // 900/1000 → 90%
+      { scope: "openai", input: 500, output: 20, cacheRead: 0, cacheCreation: 0 },       // 0/500 → hidden
+    ],
+  });
+  assert.match(html, /tokens total/);
+  assert.match(html, /cache served 70% of prompt tokens/);
+  assert.match(html, /· 90% cached/);
+  assert.match(html, /OpenAI<b>520<\/b><\/span>/); // the 0%-cache provider pill carries no cached suffix
+
+  // no prompt tokens at all → the header stays the bare total, no cache-served clause
+  const noPrompt = render({
+    totalTokens: 1000,
+    breakdown: [{ scope: "total", input: 0, output: 100, cacheRead: 0, cacheCreation: 0 }],
+  });
+  assert.match(noPrompt, /tokens total/);
+  assert.doesNotMatch(noPrompt, /cache served/);
 });
 
 test("orchestration trace explains its bounded local evidence without runtime or effort overclaims", () => {

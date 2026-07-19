@@ -4,6 +4,7 @@ import type { Cynaps3UsageEvent } from "./client.ts";
 export function normalizeEvents(events: Cynaps3UsageEvent[], accountId: string): NormalizedRecord[] {
   return events.map((event) => {
     const billedProvider = event.billingOwner === "upstream-provider" ? event.providerId : "cynaps3";
+    const isNativeOutput = event.operation === "track" || event.operation === "variation";
     return {
       ts: new Date(event.occurredAt).toISOString(),
       provider: billedProvider,
@@ -16,11 +17,13 @@ export function normalizeEvents(events: Cynaps3UsageEvent[], accountId: string):
       unit: "request",
       rawAmount: event.creditsConsumed,
       rawUnit: "credits",
-      // Native outputs count only COMPLETED generations (audit #4: failed events must never read
-      // as created tracks). One completed event = one output, typed by its operation.
-      outputQuantity: event.status === "completed" ? 1 : 0,
-      outputUnit: event.operation === "variation" ? "variation" : "track",
-      durationSeconds: event.audioSeconds,
+      // Only track/variation events are native audio outputs. Lyrics, imports, and future
+      // operation strings remain requests without fabricated output or duration metadata.
+      ...(isNativeOutput ? {
+        outputQuantity: event.status === "completed" ? 1 : 0,
+        outputUnit: event.operation === "variation" ? "variation" : "track",
+        durationSeconds: event.audioSeconds,
+      } : {}),
       source: "ledger",
       confidence: "high",
       verified: false,

@@ -30,16 +30,23 @@ function page(events: Cynaps3StatsPage["events"], nextCursor: string | null): Cy
   };
 }
 
-test("normalizes authoritative Musicmation operations without inventing USD", () => {
+test("normalizes mixed Musicmation operations without inventing native outputs or USD", () => {
   const records = normalizeEvents(fixture.events, fixture.account.id);
-  assert.equal(records.length, 3);
-  assert.deepEqual(records.map((record) => record.quantity), [1, 1, 1]);
-  assert.equal(records.reduce((sum, record) => sum + record.rawAmount, 0), 18);
-  assert.equal(records.reduce((sum, record) => sum + (record.outputQuantity ?? 0), 0), 2); // one output per COMPLETED event; the failed one contributes 0 (audit #4)
-  assert.equal(records.reduce((sum, record) => sum + (record.durationSeconds ?? 0), 0), 482.5);
+  assert.equal(records.length, 4);
+  assert.deepEqual(records.map((record) => record.quantity), [1, 1, 1, 1]);
+  assert.equal(records.reduce((sum, record) => sum + record.rawAmount, 0), 0);
+  assert.equal(records.reduce((sum, record) => sum + (record.outputQuantity ?? 0), 0), 2);
+  assert.equal(records.reduce((sum, record) => sum + (record.durationSeconds ?? 0), 0), 301.5);
   assert.ok(records.every((record) => record.provider === "cynaps3" && record.category === "music"));
   assert.ok(records.every((record) => record.unit === "request" && record.rawUnit === "credits"));
-  assert.ok(records.every((record) => record.outputUnit === "track"));
+  assert.deepEqual(records.map((record) => record.operation), ["track", "variation", "lyrics", "import"]);
+  assert.equal(records[0]?.outputUnit, "track");
+  assert.equal(records[1]?.outputUnit, "variation");
+  for (const record of records.slice(2)) {
+    assert.equal(record.outputQuantity, undefined);
+    assert.equal(record.outputUnit, undefined);
+    assert.equal(record.durationSeconds, undefined);
+  }
   assert.ok(records.every((record) => record.source === "ledger" && record.confidence === "high"));
   assert.ok(records.every((record) => !record.verified && record.usdEst === undefined));
   assert.ok(records.every((record) => record.toolId === "cynaps3" && record.sourceEventId));
@@ -56,6 +63,21 @@ test("track vs variation vs failed: outputs typed and failures excluded", () => 
   assert.equal(records[1].outputUnit, "variation");
   assert.equal(records[1].outputQuantity, 1);
   assert.equal(records[2].outputQuantity, 0, "failed events produce no native output");
+});
+
+test("unknown future operations stay request-only and do not throw", () => {
+  const parsed = parseStatsPage({
+    ...fixture,
+    summary: { ...fixture.summary, operations: 1, successfulOperations: 1 },
+    events: [{ ...fixture.events[0], id: "future-1", operation: "future-remaster" }],
+  });
+  const [record] = normalizeEvents(parsed.events, parsed.account.id);
+  assert.equal(record?.operation, "future-remaster");
+  assert.equal(record?.quantity, 1);
+  assert.equal(record?.unit, "request");
+  assert.equal(record?.outputQuantity, undefined);
+  assert.equal(record?.outputUnit, undefined);
+  assert.equal(record?.durationSeconds, undefined);
 });
 
 test("schema v2 keeps Cynaps3 as the tool while upstream billing remains one provider event", () => {
@@ -95,9 +117,29 @@ test("paginates exact range records and keeps one operation per source event", a
     { from: "2026-07-14T00:00:00Z", to: "2026-07-14T23:59:59Z" },
     ctx,
   );
-  assert.equal(records.length, 3);
-  assert.equal(records.reduce((sum, record) => sum + record.quantity, 0), 3);
+  assert.equal(records.length, 4);
+  assert.equal(records.reduce((sum, record) => sum + record.quantity, 0), 4);
   assert.ok(records.every((record) => record.accountId === "acct_musicmation_fixture"));
+});
+
+test("mixed track, variation, lyrics, and import page reconciles without a warning", async () => {
+  const captured: Array<{ error: Error; context: { area: string; severity: string } }> = [];
+  const mixedCtx = {
+    getSecret: async () => undefined,
+    telemetry: {
+      captureError(error: Error, context: { area: string; severity: string }) {
+        captured.push({ error, context });
+      },
+      addBreadcrumb() {},
+    },
+  };
+  const adapter = createCynaps3Adapter(createFixtureClient([fixture]));
+  const records = await adapter.getUsage(
+    { from: "2026-07-14T00:00:00Z", to: "2026-07-14T23:59:59Z" },
+    mixedCtx,
+  );
+  assert.deepEqual(records.map((record) => record.operation), ["track", "variation", "lyrics", "import"]);
+  assert.equal(captured.some(({ context }) => context.area === "adapter.cynaps3.reconcile"), false);
 });
 
 test("fails closed on schema drift and inconsistent summary math", () => {
