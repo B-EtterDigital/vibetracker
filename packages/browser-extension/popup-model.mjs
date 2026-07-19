@@ -1,6 +1,15 @@
-export const CAPTURE_ENDPOINT = "http://127.0.0.1:8765/capture";
-export const CONNECT_ENDPOINT = "http://127.0.0.1:8765/connect";
-export const HEALTH_ENDPOINT = "http://127.0.0.1:8765/health";
+// Candidate ports the local bridge may bind, in preference order. The CLI binds the first FREE
+// one; the extension probes for the first that answers /health. This makes a port collision (a
+// user's other service already on 8765 — watchdog_bd, etc.) self-heal instead of dead-ending.
+// MUST stay in sync with BRIDGE_PORTS in packages/cli/src/api-server.ts.
+export const CANDIDATE_PORTS = [8799, 8765, 8787, 8123];
+export const pathUrl = (port, path) => `http://127.0.0.1:${port}${path}`;
+
+// Default endpoints (first candidate) — used as the fallback before/without live discovery and by
+// tests. Live traffic in the extension goes through the resolved port (see background.js).
+export const CAPTURE_ENDPOINT = pathUrl(CANDIDATE_PORTS[0], "/capture");
+export const CONNECT_ENDPOINT = pathUrl(CANDIDATE_PORTS[0], "/connect");
+export const HEALTH_ENDPOINT = pathUrl(CANDIDATE_PORTS[0], "/health");
 
 // Human line for a page-read usage snapshot — the number and unit, never any page content.
 export function statusForRead(response) {
@@ -15,7 +24,7 @@ export function statusForRead(response) {
   return {
     state: "error",
     label: `read failed${response?.status ? ` (${status})` : ""}`,
-    detail: response?.error || "Run: vibetracker api serve --port 8765",
+    detail: response?.error || "Run: vibetracker start",
   };
 }
 
@@ -35,7 +44,7 @@ export function statusForConnect(response) {
   return {
     state: "error",
     label: `connect failed${response?.status ? ` (${status})` : ""}`,
-    detail: response?.error || "Run: vibetracker api serve --port 8765",
+    detail: response?.error || "Run: vibetracker start",
   };
 }
 
@@ -125,6 +134,6 @@ export function statusForCapture(response) {
   return {
     state: "error",
     label: `capture failed (${status})`,
-    detail: response?.error || "Run: vibetracker api serve --port 8765",
+    detail: response?.error || "Run: vibetracker start",
   };
 }

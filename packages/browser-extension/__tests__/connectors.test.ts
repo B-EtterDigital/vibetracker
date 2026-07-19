@@ -1,7 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CONNECTORS, connectorForUrl, cookieMatchesSpec, connectorHosts } from "../connectors.mjs";
-import { readConnectorCookies, connectActiveSite, scanAllTabs } from "../background.js";
+import { readConnectorCookies, connectActiveSite, scanAllTabs, resetBridgePort } from "../background.js";
+
+// The bridge auto-discovers its port by probing /health across candidates; the first is 8799.
+// A fetch mock must answer the GET /health probe (ok) before the POST it actually asserts on.
+const HEALTH = "http://127.0.0.1:8799/health";
+function isHealth(url: string): boolean { return String(url).endsWith("/health"); }
 
 test("connectorForUrl matches supported sites (root, www, app subdomains) and rejects others", () => {
   assert.equal(connectorForUrl("https://suno.com/create")?.id, "suno");
@@ -63,7 +68,9 @@ test("connectActiveSite POSTs the credential to the local endpoint and returns o
   const api = fakeCookieApi({ "suno.com": { __session: "SECRET_TOKEN_VALUE" } });
   const posted: Array<{ url: string; body: unknown }> = [];
   const realFetch = globalThis.fetch;
+  resetBridgePort();
   globalThis.fetch = (async (url: string, init: { body: string }) => {
+    if (isHealth(url)) return { ok: true, status: 200, text: async () => "{}" };
     posted.push({ url: String(url), body: JSON.parse(init.body) });
     return { ok: true, status: 200, text: async () => JSON.stringify({ ok: true, provider: "suno", stored: ["sessionCookie"] }) };
   }) as unknown as typeof fetch;
@@ -73,7 +80,7 @@ test("connectActiveSite POSTs the credential to the local endpoint and returns o
     assert.equal(result.provider, "suno");
     assert.deepEqual(result.captured, ["sessionCookie"]); // NAMES, not values
     assert.equal(JSON.stringify(result).includes("SECRET_TOKEN_VALUE"), false, "value never leaks into the response");
-    assert.equal(posted[0].url, "http://127.0.0.1:8765/connect");
+    assert.equal(posted[0].url, "http://127.0.0.1:8799/connect");
     assert.deepEqual((posted[0].body as { fields: unknown }).fields, { sessionCookie: "SECRET_TOKEN_VALUE" });
   } finally {
     globalThis.fetch = realFetch;
@@ -102,6 +109,7 @@ test("scanAllTabs connects every open cookie source once and reads usage pages, 
   };
   const realFetch = globalThis.fetch;
   const posted: string[] = [];
+  resetBridgePort();
   globalThis.fetch = (async (url: string) => {
     posted.push(String(url));
     return { ok: true, status: 200, text: async () => JSON.stringify({ ok: true, accepted: 1, rejected: [] }) };

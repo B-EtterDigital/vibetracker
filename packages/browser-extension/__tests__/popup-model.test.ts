@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { buildCapturePayload, inferProvider, previewForTab, statusForCapture } from "../popup-model.mjs";
+import { buildCapturePayload, inferProvider, previewForTab, statusForCapture, CANDIDATE_PORTS } from "../popup-model.mjs";
 
 test("browser extension infers branded AI providers without scraping content", () => {
   assert.deepEqual(
@@ -46,7 +46,7 @@ test("browser extension preview and status copy keep privacy boundaries visible"
   assert.equal(statusForCapture({ ok: true }).state, "ok");
   assert.match(statusForCapture({ ok: true }).detail, /local VibeTRACKER ledger/);
   assert.equal(statusForCapture({ ok: false, status: 503 }).state, "error");
-  assert.match(statusForCapture({ ok: false, status: 503 }).detail, /api serve/);
+  assert.match(statusForCapture({ ok: false, status: 503 }).detail, /vibetracker start/);
 });
 
 test("browser extension manifest and popup load the module cockpit", () => {
@@ -62,6 +62,12 @@ test("browser extension manifest and popup load the module cockpit", () => {
   assert.ok(manifest.host_permissions.includes("https://suno.com/*"));
   assert.ok(manifest.host_permissions.includes("https://udio.com/*"));
   assert.ok(manifest.host_permissions.includes("https://midjourney.com/*")); // page-read source
+  // every candidate bridge port the extension probes must be granted in host_permissions, or the
+  // fetch to that port is silently blocked — this guards against port-list drift.
+  for (const port of CANDIDATE_PORTS) {
+    assert.ok(manifest.host_permissions.includes(`http://127.0.0.1:${port}/*`), `missing host_permission for 127.0.0.1:${port}`);
+    assert.ok(manifest.host_permissions.includes(`http://localhost:${port}/*`), `missing host_permission for localhost:${port}`);
+  }
   assert.match(popup, /popup\.css/);
   assert.match(popup, /type="module" src="popup\.js"/);
   assert.match(popup, /Nothing leaves your machine/);

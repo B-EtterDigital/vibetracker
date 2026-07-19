@@ -12,7 +12,8 @@ npx vibetracker sync                # refresh local ledger from connected adapte
 npx vibetracker live                # read-only TUI: ledger, burn, proof, freshness, next moves
 npx vibetracker live --once         # deterministic one-frame snapshot for scripts and logs
 npx vibetracker live --budget 100   # add a monthly budget gate; refreshes every 5s in a TTY
-npx vibetrack api serve --port 8765 # tokenized local API + private /life cockpit link
+npx vibetracker start               # easiest: ASCII splash, auto-free-port bridge, copies the load-unpacked path
+npx vibetracker api serve           # tokenized local API (auto-picks a free port; --port N to pin)
 npx vibetracker export --json|csv
 npx vibetracker upload              # opt-in push to the VibeTRACKER leaderboard
 npx vibetracker login               # reuse an existing `gh auth` session; browser/C0VIBE fallback

@@ -1,10 +1,27 @@
-import { CAPTURE_ENDPOINT, CONNECT_ENDPOINT, HEALTH_ENDPOINT, buildCapturePayload, previewForTab } from "./popup-model.mjs";
+import { CANDIDATE_PORTS, pathUrl, buildCapturePayload, previewForTab } from "./popup-model.mjs";
 import { CONNECTORS, connectorForUrl, cookieMatchesSpec } from "./connectors.mjs";
 import { READERS, readerForUrl } from "./readers.mjs";
 
 function activeTab() {
   return chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => tabs[0]);
 }
+
+// Discover which candidate port the local bridge is actually on by probing /health. Cached once
+// found; re-probed if a later call fails. Returns null when no candidate answers (API is down).
+let resolvedPort = null;
+async function resolveApiPort() {
+  if (resolvedPort) return resolvedPort;
+  for (const port of CANDIDATE_PORTS) {
+    try {
+      const res = await fetch(pathUrl(port, "/health"), { method: "GET" });
+      if (res.ok) { resolvedPort = port; return port; }
+    } catch { /* this candidate isn't listening — try the next */ }
+  }
+  return null;
+}
+
+// Test hook only — clears the cached port so each fetch-mocking test starts from a fresh probe.
+export function resetBridgePort() { resolvedPort = null; }
 
 // A tab is "pullable" if it's a cookie connector OR a usage-page reader — the two ways the Bridge
 // gets data. Pure + testable so the badge count is exercised without a browser.
@@ -24,30 +41,36 @@ export function countPullableSources(tabs) {
   return seen.size;
 }
 
-// Is the local CLI API up? Powers the popup's "start the API" guidance so install is frictionless.
+// Is the local CLI API up (on any candidate port)? Powers the popup's setup guidance.
 async function localApiHealth() {
-  try {
-    const res = await fetch(HEALTH_ENDPOINT, { method: "GET" });
-    return { up: res.ok };
-  } catch {
-    return { up: false };
-  }
+  const port = await resolveApiPort();
+  return { up: port !== null, port };
 }
 
-async function postJson(endpoint, payload) {
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+async function postJson(path, payload) {
+  const port = await resolveApiPort();
+  if (port === null) {
+    return { ok: false, status: 0, body: { error: "The local app is not running. Run `vibetracker start` in your terminal, then try again." }, error: "The local app is not running. Run `vibetracker start`, then try again." };
+  }
+  let res;
+  try {
+    res = await fetch(pathUrl(port, path), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    resolvedPort = null; // the cached port died — force a re-probe next time
+    return { ok: false, status: 0, error: `Couldn't reach the local app — ${String(error?.message || error).slice(0, 120)}` };
+  }
   const text = await res.text();
   let body = null;
   try { body = text ? JSON.parse(text) : null; } catch { body = { raw: text }; }
-  return { ok: res.ok, status: res.status, body };
+  return { ok: res.ok, status: res.status, body, error: res.ok ? undefined : body?.error };
 }
 
 async function postCapture(payload) {
-  const result = await postJson(CAPTURE_ENDPOINT, payload);
+  const result = await postJson("/capture", payload);
   return { ...result, payload };
 }
 
@@ -100,7 +123,7 @@ async function connectActiveSite(tab, cookieApi = chrome.cookies) {
   if (!Object.keys(fields).length) {
     return { ok: false, provider: connector.id, label: connector.label, error: `No ${connector.label} session cookie found — log in at ${connector.hosts[0]} first, then click Connect.` };
   }
-  const result = await postJson(CONNECT_ENDPOINT, { provider: connector.id, fields });
+  const result = await postJson("/connect", { provider: connector.id, fields });
   return {
     ...result,
     provider: connector.id,

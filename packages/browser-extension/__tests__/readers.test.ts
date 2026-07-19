@@ -1,7 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { READERS, readerForUrl, readerHosts, extractStat } from "../readers.mjs";
-import { readActivePage, pageStatExtractor, isPullableUrl, countPullableSources } from "../background.js";
+import { readActivePage, pageStatExtractor, isPullableUrl, countPullableSources, resetBridgePort } from "../background.js";
+
+// The bridge auto-discovers its port by probing /health across candidates; the first is 8799.
+function isHealth(url: string): boolean { return String(url).endsWith("/health"); }
 
 test("readerForUrl matches page-read sources and rejects others", () => {
   assert.equal(readerForUrl("https://www.midjourney.com/account")?.id, "midjourney");
@@ -55,7 +58,9 @@ test("readActivePage records the read number as a usage snapshot", async () => {
   };
   const posted: Array<{ url: string; body: any }> = [];
   const realFetch = globalThis.fetch;
+  resetBridgePort();
   globalThis.fetch = (async (url: string, init: { body: string }) => {
+    if (isHealth(url)) return { ok: true, status: 200, text: async () => "{}" };
     posted.push({ url: String(url), body: JSON.parse(init.body) });
     return { ok: true, status: 200, text: async () => JSON.stringify({ accepted: 1, rejected: [] }) };
   }) as unknown as typeof fetch;
@@ -64,7 +69,7 @@ test("readActivePage records the read number as a usage snapshot", async () => {
     assert.equal(result.ok, true);
     assert.equal(result.provider, "midjourney");
     assert.equal(result.value, 3982);
-    assert.equal(posted[0].url, "http://127.0.0.1:8765/capture");
+    assert.equal(posted[0].url, "http://127.0.0.1:8799/capture");
     assert.equal(posted[0].body.quantity, 3982);
     assert.equal(posted[0].body.operation, "lifetime_images");
   } finally {

@@ -43,7 +43,7 @@ import { loadOrCreateSigningKey, readSignedBundle, signBundle, verifySignedBundl
 import { providerCapabilityChecks, renderCapabilityChecks } from "./capability-check.ts";
 import { redactFixture, renderFixtureRedaction } from "./fixture.ts";
 import { createRoiNote, loadRoiNotes, renderRoiNotes, saveRoiNotes } from "./roi-notes.ts";
-import { startLocalApiServer } from "./api-server.ts";
+import { startLocalApiServer, BRIDGE_PORTS, type LocalApiDeps, type LocalApiSession } from "./api-server.ts";
 import { desktopActivitiesToRecords, renderDesktopActivity, scanDesktopActivity } from "./desktop-activity.ts";
 import {
   buildOAuthUrl,
@@ -164,8 +164,8 @@ const USAGE = [
   "  fixture redact <in.json> [--out path]",
   "  telemetry status | telemetry opt-in | telemetry opt-out | telemetry preview",
   "  roi add --from YYYY-MM-DD --to YYYY-MM-DD --note text [--value-usd N] | roi list",
-  "  start                          load-unpacked path + open chrome://extensions + serve the bridge",
-  "  api serve [--port 8765] | desktop scan [--record] | browser-extension path",
+  "  start                          ASCII splash + copy load-unpacked path + open chrome://extensions + serve the bridge",
+  "  api serve [--port N] | desktop scan [--record] | browser-extension path",
   "  plugins path",
   "  adapter scaffold <id> [--dir path] [--dry-run] [--force]",
   "  subscription add <provider> --usd N --from YYYY-MM-DD --to YYYY-MM-DD",
@@ -629,6 +629,71 @@ function renderImpressLaunchReceipt(paths: { outDir: string }): string {
   ].join("\n");
 }
 
+// Copy text to the OS clipboard, best-effort across platforms. Returns true only if a copier
+// actually ran without error — so "Load unpacked" becomes a paste instead of typing a long path.
+// Never throws: a missing clipboard tool must not stop the bridge from serving.
+function copyToClipboard(text: string): boolean {
+  const tries: Array<[string, string[]]> = process.platform === "darwin"
+    ? [["pbcopy", []]]
+    : process.platform === "win32"
+      ? [["clip", []]]
+      : [["wl-copy", []], ["xclip", ["-selection", "clipboard"]], ["xsel", ["--clipboard", "--input"]]];
+  for (const [bin, cmdArgs] of tries) {
+    try {
+      const r = spawnSync(bin, cmdArgs, { input: text, stdio: ["pipe", "ignore", "ignore"], timeout: 2000 });
+      if (!r.error && r.status === 0) return true;
+    } catch { /* this copier isn't installed — try the next */ }
+  }
+  return false;
+}
+
+// The dependency wiring the bridge needs — identical for `start` and `api serve`. Reads/writes the
+// local ledger, dedupes snapshots, and stores one-click cookie connects straight to the keyring
+// (values never logged). Factored out so the two commands can't drift apart.
+function bridgeDeps(): LocalApiDeps {
+  return {
+    readRecords: () => readRecords(STORE),
+    appendRecords: (records) => appendRecords(STORE, records),
+    // Snapshot dedupe: a lifetime/balance read replaces the prior same provider+operation record.
+    replaceSnapshot: (record) => {
+      const kept = readRecords(STORE).filter((r) => !(r.source === "manual" && r.provider === record.provider && r.operation === record.operation));
+      writeRecords(STORE, [...kept, record]);
+    },
+    log: (line) => console.log(line),
+    // One-click connect from the browser extension: store the cookie in the keyring exactly as
+    // `vibetracker connect` would. The value is written straight to the keyring and never logged.
+    connectProvider: (provider, fields) => {
+      const cfg = loadConfig();
+      const keyring = storeProviderCreds(cfg, provider, fields);
+      if (!cfg.enabled.includes(provider)) cfg.enabled.push(provider);
+      saveConfig(cfg);
+      return { stored: Object.keys(fields), keyring };
+    },
+  };
+}
+
+// Bind the bridge on a free port. An explicit `--port` is honored exactly (fail loudly on
+// collision). Otherwise walk BRIDGE_PORTS and take the first FREE one, so a busy 8765 (watchdog_bd
+// and friends) self-heals to 8799/8787/8123 instead of dead-ending with EADDRINUSE. The extension
+// probes the same list, so discovery stays consistent without any config.
+async function serveBridgeOnFreePort(requestedPort: number | null): Promise<LocalApiSession> {
+  const candidates = requestedPort ? [requestedPort] : BRIDGE_PORTS;
+  let lastErr: unknown;
+  for (const port of candidates) {
+    try {
+      return await startLocalApiServer({ port, deps: bridgeDeps() });
+    } catch (err) {
+      lastErr = err;
+      if ((err as NodeJS.ErrnoException)?.code === "EADDRINUSE" && !requestedPort) {
+        console.log(dim(`  port ${port} is busy — trying the next candidate…`));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr ?? new Error("no free bridge port among " + BRIDGE_PORTS.join(", "));
+}
+
 async function main() {
   const argv = process.argv.slice(2);
   // First run (no config yet) → onboarding wizard; otherwise → your totals.
@@ -713,7 +778,7 @@ async function main() {
       pluginsDirExists: existsSync(join(pluginsDir(), "manifest.schema.json")),
       providers: PROVIDERS,
       localEndpointCount: LOCAL_ENDPOINTS.length,
-      localApiPort: Number(flag(argv, "--port") || 8765),
+      localApiPort: Number(flag(argv, "--port") || BRIDGE_PORTS[0]),
       includeSurprisePreview: !argv.includes("--compact"),
     }));
     return;
@@ -1450,29 +1515,8 @@ async function main() {
   }
 
   if (cmd === "api" && argv[1] === "serve") {
-    const port = Number(flag(argv, "--port") || 8765);
-    await startLocalApiServer({
-      port,
-      deps: {
-        readRecords: () => readRecords(STORE),
-        appendRecords: (records) => appendRecords(STORE, records),
-        // Snapshot dedupe: a lifetime/balance read replaces the prior same provider+operation record.
-        replaceSnapshot: (record) => {
-          const kept = readRecords(STORE).filter((r) => !(r.source === "manual" && r.provider === record.provider && r.operation === record.operation));
-          writeRecords(STORE, [...kept, record]);
-        },
-        log: (line) => console.log(line),
-        // One-click connect from the browser extension: store the cookie in the keyring exactly as
-        // `vibetracker connect` would. The value is written straight to the keyring and never logged.
-        connectProvider: (provider, fields) => {
-          const cfg = loadConfig();
-          const keyring = storeProviderCreds(cfg, provider, fields);
-          if (!cfg.enabled.includes(provider)) cfg.enabled.push(provider);
-          saveConfig(cfg);
-          return { stored: Object.keys(fields), keyring };
-        },
-      },
-    });
+    const portFlag = flag(argv, "--port");
+    await serveBridgeOnFreePort(portFlag ? Number(portFlag) : null);
     return;
   }
 
@@ -1493,43 +1537,31 @@ async function main() {
     return;
   }
 
-  // `vibetracker start` — the one command the browser Bridge tells users to run. It prints the
-  // exact load-unpacked path, opens chrome://extensions if it can, then serves the local API so the
-  // extension's Connect/Read buttons work. This is the whole "easy install" story in one verb.
+  // `vibetracker start` — the one command the browser Bridge tells users to run. It shows the ASCII
+  // splash, auto-binds a free bridge port, copies the load-unpacked path to the clipboard, opens
+  // chrome://extensions, then serves the local API so the extension's Connect/Read buttons work.
+  // This is the whole "easy install" story in one verb — as automated as Chrome's dev-mode allows.
   if (cmd === "start") {
-    const port = Number(flag(argv, "--port") || 8765);
+    const portFlag = flag(argv, "--port");
     const extDir = browserExtensionDir();
+    // The ASCII splash — the same animated VIBE·USAGE logo the top-level banner shows (TTY only).
+    await showBanner();
+    // Bind FIRST so we can print the real port (and prove the bridge is live before the guide).
+    const session = await serveBridgeOnFreePort(portFlag ? Number(portFlag) : null);
+    const copied = copyToClipboard(extDir);
+    console.log("");
     console.log(rule("VIBETRACKER START"));
     console.log(`  ${ok("1")} Load the extension (once):`);
-    console.log(`     ${dim("chrome://extensions → Developer mode → Load unpacked →")}`);
+    console.log(`     ${dim("chrome://extensions → Developer mode (top-right) → Load unpacked →")}`);
     console.log(`     ${paint(extDir, 190)}`);
+    if (copied) console.log(`     ${gold("↑ path copied to your clipboard")} ${dim("— just paste it in the folder picker")}`);
     console.log(`  ${ok("2")} Then open Suno / Udio / Midjourney / Higgsfield, log in, and click the extension.`);
-    console.log(`  ${dim("Leaving this running keeps the local bridge on http://127.0.0.1:" + port)}`);
+    console.log(`  ${dim("Leaving this window running keeps the local bridge on http://127.0.0.1:" + session.port)}`);
     // best-effort: open the extensions page so step 1 is one click (never blocks the server)
     try {
       const opener = process.platform === "darwin" ? "open" : process.platform === "win32" ? "explorer" : "xdg-open";
       spawnSync(opener, ["chrome://extensions"], { stdio: "ignore", timeout: 3000 });
     } catch { /* opener unavailable — the printed path is the fallback */ }
-    await startLocalApiServer({
-      port,
-      deps: {
-        readRecords: () => readRecords(STORE),
-        appendRecords: (records) => appendRecords(STORE, records),
-        // Snapshot dedupe: a lifetime/balance read replaces the prior same provider+operation record.
-        replaceSnapshot: (record) => {
-          const kept = readRecords(STORE).filter((r) => !(r.source === "manual" && r.provider === record.provider && r.operation === record.operation));
-          writeRecords(STORE, [...kept, record]);
-        },
-        log: (line) => console.log(line),
-        connectProvider: (provider, fields) => {
-          const cfg = loadConfig();
-          const keyring = storeProviderCreds(cfg, provider, fields);
-          if (!cfg.enabled.includes(provider)) cfg.enabled.push(provider);
-          saveConfig(cfg);
-          return { stored: Object.keys(fields), keyring };
-        },
-      },
-    });
     return;
   }
 

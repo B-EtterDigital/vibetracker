@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { NormalizedRecord } from "../../../core/src/schema/record.ts";
-import { startLocalApiServer } from "../api-server.ts";
+import { startLocalApiServer, BRIDGE_PORTS } from "../api-server.ts";
 
 const record: NormalizedRecord = {
   ts: "2026-07-14T00:00:00.000Z",
@@ -17,6 +17,12 @@ const record: NormalizedRecord = {
   confidence: "high",
   verified: false,
 };
+
+test("BRIDGE_PORTS is the canonical candidate list the extension mirrors (8799 first)", () => {
+  // MUST stay in sync with CANDIDATE_PORTS in packages/browser-extension/popup-model.mjs.
+  assert.deepEqual(BRIDGE_PORTS, [8799, 8765, 8787, 8123]);
+  assert.equal(BRIDGE_PORTS[0], 8799, "first candidate is the default the CLI prefers");
+});
 
 test("local API protects usage reads and issues a fragment-only dashboard session", async () => {
   const appended: NormalizedRecord[] = [];

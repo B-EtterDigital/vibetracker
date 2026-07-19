@@ -48,6 +48,13 @@ const CONNECTABLE_PROVIDERS: Record<string, string[]> = {
   haiper: ["sessionToken"],
 };
 
+// Candidate ports the local bridge tries to bind, in preference order. The CLI walks this list and
+// binds the first FREE one; the extension probes the same list for the first that answers /health.
+// So a collision (something already on 8765 — e.g. watchdog_bd) self-heals to the next port instead
+// of dead-ending with EADDRINUSE. MUST stay in sync with CANDIDATE_PORTS in
+// packages/browser-extension/popup-model.mjs.
+export const BRIDGE_PORTS = [8799, 8765, 8787, 8123];
+
 export interface LocalApiSession {
   server: Server;
   token: string;
