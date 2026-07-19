@@ -598,7 +598,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     for (const [re, trait] of MODEL_TRAIT_HINTS) if (re.test(model)) return trait;
     return primaryCategory(providerId);
   };
-  const modelsByTrait = new Map<string, Map<string, number>>();
+  const modelsByTrait = new Map<string, Map<string, { ops: number; usd: number }>>();
   const provsByTrait = new Map<string, Set<string>>();
   const provOpsByTrait = new Map<string, Map<string, number>>();
   for (const m of profile.providerModels) {
@@ -606,7 +606,10 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     const name = prettyModel(m.model);
     if (!modelsByTrait.has(trait)) modelsByTrait.set(trait, new Map());
     const bucket = modelsByTrait.get(trait)!;
-    bucket.set(name, (bucket.get(name) ?? 0) + m.ops);
+    const cur = bucket.get(name) ?? { ops: 0, usd: 0 };
+    cur.ops += m.ops;
+    cur.usd += m.usd;
+    bucket.set(name, cur);
     if (!provsByTrait.has(trait)) provsByTrait.set(trait, new Set());
     provsByTrait.get(trait)!.add(m.provider);
     if (!provOpsByTrait.has(trait)) provOpsByTrait.set(trait, new Map());
@@ -636,14 +639,25 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       color: INFO_RAMP[i % INFO_RAMP.length],
     }));
   };
+  // Model share weighting (user report 2026-07-19: "haiku is definitely not my nr.1"): record
+  // COUNT misrepresents coding — Haiku fires many tiny calls while one Codex session is a single
+  // record worth ~200M tokens. When a trait carries real spend, COST is the honest weight (matches
+  // the reference "Models by cost"); zero-spend media traits keep operations.
+  const traitWeighsByCost = (cat: string): boolean => {
+    const byModel = modelsByTrait.get(cat);
+    if (!byModel) return false;
+    return [...byModel.values()].reduce((s, v) => s + v.usd, 0) >= 1;
+  };
   const spiralForCat = (cat: string) => {
     const byModel = modelsByTrait.get(cat);
     if (!byModel) return [];
-    const total = [...byModel.values()].reduce((s, v) => s + v, 0);
-    return [...byModel.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([model, ops], i) => ({
+    const byCost = traitWeighsByCost(cat);
+    const weightOf = (v: { ops: number; usd: number }) => (byCost ? v.usd : v.ops);
+    const total = [...byModel.values()].reduce((s, v) => s + weightOf(v), 0);
+    return [...byModel.entries()].sort((a, b) => weightOf(b[1]) - weightOf(a[1])).slice(0, 10).map(([model, v], i) => ({
       // keep the END of long model ids — "…nano-banana" and "…nano-banana-pro" must stay distinct
       label: model.length > 18 ? `…${model.slice(-17)}` : model,
-      pct: total > 0 && (ops / total) * 100 >= 1 ? `${Math.round((ops / total) * 100)}%` : "<1%",
+      pct: total > 0 && (weightOf(v) / total) * 100 >= 1 ? `${Math.round((weightOf(v) / total) * 100)}%` : "<1%",
       color: INFO_RAMP[i % INFO_RAMP.length],
     }));
   };
@@ -677,7 +691,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     specs[c.id] = {
       id: c.id,
       label: c.label,
-      spiralTitle: `${c.label} — model distribution by operations`,
+      spiralTitle: `${c.label} — model distribution by ${traitWeighsByCost(c.id) ? "cost" : "operations"}`,
       // a thin trait NEVER borrows the CLI coils (that read as wrong content): one model = one
       // coil, zero models = no hexagon at all, and the story says so
       spiral,
