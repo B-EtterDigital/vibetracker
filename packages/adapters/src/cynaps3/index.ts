@@ -148,6 +148,15 @@ export function createCynaps3Adapter(client: Cynaps3Client, opts: Cynaps3Adapter
         });
 
         if (!page.page.hasMore) {
+          // audit #11: when a window is exhausted, its summary must reconcile with what it
+          // actually delivered — a contradictory producer (summary 72 / events 18) must be VISIBLE
+          const windowFetched = cursors.size * pageSize + page.events.length; // pages before + this one
+          if (rangeSummary && rangeSummary.operations !== windowFetched && page.events.length < pageSize) {
+            ctx.telemetry.captureError(new Error(`Cynaps3 window summary/events mismatch: summary ${rangeSummary.operations} vs fetched ${windowFetched}`), {
+              area: "adapter.cynaps3.reconcile", severity: "warn",
+              window: `${new Date(winStart).toISOString()}..${new Date(winEnd).toISOString()}`,
+            });
+          }
           if (winEnd >= effTo) {
             exhausted = true;
             break;
