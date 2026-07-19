@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VibeTRACKER Bridge",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "description": "One-click connect cookie-only AI sources and read logged-in usage numbers into your local VibeTRACKER ledger. Local only.",
   "icons": {
     "16": "icons/icon-16.png",
@@ -9,7 +9,13 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "permissions": ["activeTab", "tabs", "scripting", "cookies", "alarms"],
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "scripting",
+    "cookies",
+    "alarms"
+  ],
   "host_permissions": [
     "http://127.0.0.1:8799/*",
     "http://localhost:8799/*",
@@ -32,12 +38,6 @@
     "https://vidu.com/*",
     "https://www.vidu.com/*",
     "https://vidu.studio/*",
-    "https://midjourney.com/*",
-    "https://www.midjourney.com/*",
-    "https://higgsfield.ai/*",
-    "https://www.higgsfield.ai/*",
-    "https://chatgpt.com/*",
-    "https://chat.openai.com/*",
     "https://elevenlabs.io/*",
     "https://app.leonardo.ai/*",
     "https://leonardo.ai/*",
@@ -54,7 +54,7 @@
       "128": "icons/icon-128.png"
     },
     "default_popup": "popup.html",
-    "default_title": "VibeTRACKER Bridge — connect & read AI usage"
+    "default_title": "VibeTRACKER Bridge \u2014 connect & read AI usage"
   },
   "background": {
     "service_worker": "background.js",

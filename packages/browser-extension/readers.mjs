@@ -1,6 +1,8 @@
 // Page-read registry — the second retrieval lever, for sources whose real usage numbers live
-// ONLY on a logged-in page and are reachable by no API and no adapter cookie (Midjourney lifetime
-// images, Higgsfield credit balance, ChatGPT plan usage). A reader declares, per site, exactly
+// ONLY on a logged-in page and are reachable by no API and no adapter cookie.
+// Removed 2026-07-19 (user rule: only sources that EXPOSE a number over the web belong here):
+// midjourney (Discord-only /info — CLI `import midjourney` covers it), openai-web (Plus/Free
+// publish no counts), higgsfield (root page shows no figure; the MCP/CLI adapter syncs it). A reader declares, per site, exactly
 // which NUMBER to pull and what it means. It reads that one figure and nothing else — never prompt
 // text, never conversation content, never the page beyond the declared stat. User-initiated,
 // stored as low-confidence manual evidence, same honesty tier as the CLI's Midjourney import.
@@ -10,53 +12,6 @@
 // chrome.scripting.executeScript.
 
 export const READERS = [
-  {
-    id: "midjourney",
-    label: "Midjourney",
-    category: "image",
-    hosts: ["midjourney.com", "www.midjourney.com"],
-    url: "https://www.midjourney.com/account",
-    autoOpen: false, // lifetime total is a Discord /info stat — auto-opening the web page would just report a miss
-    // Midjourney prints "Lifetime Usage: 3,982 images" via the Discord /info command; some account
-    // pages echo a "Lifetime" total. Match those anchored phrasings only — never a bare "N images",
-    // which would grab an unrelated gallery/explore count.
-    stats: [
-      { operation: "lifetime_images", unit: "image", patterns: [
-        "Lifetime Usage[:\\s]*([\\d,]+)\\s*images?",
-        "Lifetime\\s+Images?[:\\s]*([\\d,]+)",
-        "Lifetime[^\\d]{0,20}([\\d,]+)\\s*images?",
-        "([\\d,]+)\\s*images?\\s*generated\\s*(?:in\\s*total|all[\\s-]*time|lifetime)",
-      ] },
-    ],
-    hint: "Midjourney shows this via /info in Discord — the web account page usually doesn't. If a 'Lifetime' image total is visible on the page, read it; otherwise run: vibetracker import midjourney --images <number from /info>.",
-  },
-  {
-    id: "higgsfield",
-    label: "Higgsfield",
-    category: "video",
-    hosts: ["higgsfield.ai", "www.higgsfield.ai"],
-    url: "https://higgsfield.ai", // app root — /account 404s
-    autoOpen: false, // live sweep 2026-07-19: root page text carries no credit figure — and the
-    // CLI's MCP adapter already syncs higgsfield balance/transactions, so auto-opening only adds noise
-    // account/credits surface shows a credit balance
-    stats: [
-      { operation: "credit_balance", unit: "credit", patterns: ["([\\d,]+(?:\\.\\d+)?)\\s*credits?\\b", "credits?[:\\s]*([\\d,]+(?:\\.\\d+)?)"] },
-    ],
-    hint: "Open your Higgsfield account/credits page so the balance is visible, then read it.",
-  },
-  {
-    id: "openai-web",
-    label: "ChatGPT",
-    category: "llm",
-    hosts: ["chatgpt.com", "chat.openai.com"],
-    url: "https://chatgpt.com", // the page that shows the usage number
-    autoOpen: false, // Plus/Free show no usage number on the web — auto-opening would just report a miss
-    // the settings → usage panel shows message/request counts for the current window
-    stats: [
-      { operation: "plan_messages", unit: "request", patterns: ["([\\d,]+)\\s*(?:of|/)\\s*[\\d,]+\\s*messages?", "([\\d,]+)\\s*messages?\\b"] },
-    ],
-    hint: "ChatGPT Plus/Free show no usage number on the web — only readable if a Team/Enterprise limits count is visible.",
-  },
   {
     id: "elevenlabs",
     label: "ElevenLabs",

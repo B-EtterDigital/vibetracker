@@ -159,8 +159,8 @@ test("buildSourceBoard covers every source with the right state precedence and r
   // first-party adapter sources appear too — Cynaps3 syncs via OAuth, tile links to the product
   assert.match(byId.cynaps3.logo, /cynaps3\.png$/);
   assert.equal(byId.cynaps3.url, "https://content.7cycle.life/");
-  // ALL connectors + ALL readers + adapter sources — the board is the complete source map
-  assert.equal(tiles.length, CONNECTORS.length + 7 + 1, "7 readers + connectors + cynaps3");
+  // ALL connectors + readers + adapter sources — the board is the complete source map
+  assert.equal(tiles.length, CONNECTORS.length + 4 + 3, "4 readers + connectors + 3 adapter sources");
 });
 
 test("openAllSources opens one background tab per missing source and skips already-open ones", async () => {
@@ -196,14 +196,14 @@ test("openAndPullAll opens missing sources, waits, then sweeps them in one autom
 
 test("scanAllTabs connects every open cookie source once and reads usage pages, deduped", async () => {
   const cookieApi = fakeCookieApi({ "suno.com": { __session: "S" }, "udio.com": { "sb-x-auth-token": "U" } });
-  const scriptingApi = { async executeScript() { return [{ result: { operation: "lifetime_images", unit: "image", value: 3982 } }]; } };
+  const scriptingApi = { async executeScript() { return [{ result: { operation: "character_usage", unit: "credit", value: 3982 } }]; } };
   const tabsApi = {
     async query() {
       return [
         { id: 1, url: "https://suno.com/create" },
         { id: 2, url: "https://suno.com/library" }, // second Suno tab — must NOT double-connect
         { id: 3, url: "https://udio.com/" },
-        { id: 4, url: "https://midjourney.com/account", title: "MJ" },
+        { id: 4, url: "https://elevenlabs.io/app/usage", title: "Usage" },
         { id: 5, url: "https://example.com/" }, // unsupported — skipped
       ];
     },
@@ -219,7 +219,7 @@ test("scanAllTabs connects every open cookie source once and reads usage pages, 
     const res = await scanAllTabs({ tabsApi, cookieApi, scriptingApi });
     assert.equal(res.ok, true);
     const providers = res.results.map((r: { provider: string }) => r.provider).sort();
-    assert.deepEqual(providers, ["midjourney", "suno", "udio"]); // suno once, example skipped
+    assert.deepEqual(providers, ["elevenlabs", "suno", "udio"]); // suno once, example skipped
     assert.equal(res.results.every((r: { ok: boolean }) => r.ok), true);
     assert.equal(res.connected, 3);
   } finally {

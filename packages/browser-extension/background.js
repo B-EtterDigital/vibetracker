@@ -306,6 +306,9 @@ async function getJson(path) {
 // to the product. Connect via `vibetracker oauth start <id>` in the terminal.
 const ADAPTER_SOURCES = [
   { id: "cynaps3", label: "Cynaps3", url: "https://content.7cycle.life/" },
+  // no web-exposed numbers (user rule 2026-07-19) but fully tracked outside the browser:
+  { id: "higgsfield", label: "Higgsfield", url: "https://higgsfield.ai" },       // MCP adapter syncs balance/transactions
+  { id: "midjourney", label: "Midjourney", url: "https://www.midjourney.com" }, // CLI `import midjourney --images <n>` from Discord /info
 ];
 
 // The source board: EVERY supported source as one tile — logo (or monogram), its page URL, and a

@@ -86,7 +86,10 @@ test("browser extension manifest and popup load the module cockpit", () => {
   assert.ok(manifest.permissions.includes("tabs"));
   assert.ok(manifest.host_permissions.includes("https://suno.com/*"));
   assert.ok(manifest.host_permissions.includes("https://udio.com/*"));
-  assert.ok(manifest.host_permissions.includes("https://midjourney.com/*")); // page-read source
+  // no-web-number sources carry no host grants (user rule 2026-07-19)
+  assert.equal(manifest.host_permissions.includes("https://midjourney.com/*"), false);
+  assert.equal(manifest.host_permissions.includes("https://chatgpt.com/*"), false);
+  assert.ok(manifest.host_permissions.includes("https://elevenlabs.io/*")); // page-read source
   // every candidate bridge port the extension probes must be granted in host_permissions, or the
   // fetch to that port is silently blocked — this guards against port-list drift.
   for (const port of CANDIDATE_PORTS) {
