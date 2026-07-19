@@ -15,6 +15,7 @@ function pluralUnit(unit: string, count: number): string {
   if (count === 1) return normalized;
   if (normalized === "file") return "files";
   if (normalized === "track") return "tracks";
+  if (normalized === "variation") return count === 1 ? "variation" : "variations";
   if (normalized === "image") return "images";
   if (normalized === "clip") return "clips";
   return `${normalized || "output"}s`;

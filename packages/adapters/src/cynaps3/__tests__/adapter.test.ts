@@ -35,7 +35,7 @@ test("normalizes authoritative Musicmation operations without inventing USD", ()
   assert.equal(records.length, 3);
   assert.deepEqual(records.map((record) => record.quantity), [1, 1, 1]);
   assert.equal(records.reduce((sum, record) => sum + record.rawAmount, 0), 18);
-  assert.equal(records.reduce((sum, record) => sum + (record.outputQuantity ?? 0), 0), 4);
+  assert.equal(records.reduce((sum, record) => sum + (record.outputQuantity ?? 0), 0), 3); // one native output per event (track|variation)
   assert.equal(records.reduce((sum, record) => sum + (record.durationSeconds ?? 0), 0), 482.5);
   assert.ok(records.every((record) => record.provider === "cynaps3" && record.category === "music"));
   assert.ok(records.every((record) => record.unit === "request" && record.rawUnit === "credits"));

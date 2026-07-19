@@ -9,7 +9,7 @@ export type Unit =
 
 // A provider-native creation count kept separate from quantity. `quantity` remains the
 // operation/billing unit used by every existing rollup; this field answers what was made.
-export type NativeOutputUnit = "track" | "image" | "clip" | "file";
+export type NativeOutputUnit = "track" | "variation" | "image" | "clip" | "file";
 
 /** How the record was obtained — drives the trust/confidence UI. */
 export type Source =

@@ -113,10 +113,13 @@ function compactNumber(value: number): string {
   }).format(value);
 }
 
+// browser-capture ids carry a "-web" suffix — the same tool as the base id (audit #10). Canonicalize
+// everywhere we aggregate or label so a source never splits into two coils/rows.
+function canonicalProvider(id: string): string {
+  return id.endsWith("-web") ? id.slice(0, -4) : id;
+}
 function primaryCategory(id: string): string {
-  // browser-capture ids carry a "-web" suffix; the registry keys are the base ids (audit #10)
-  const base = id.endsWith("-web") ? id.slice(0, -4) : id;
-  return PROVIDERS.find((d) => d.id === base || d.id === id)?.categories[0] ?? "other";
+  return PROVIDERS.find((d) => d.id === canonicalProvider(id) || d.id === id)?.categories[0] ?? "other";
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }) {
@@ -530,7 +533,8 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // (Higgsfield, fal.ai) can no longer paint its full total into every trait it touches.
   const monthAggByCat = new Map<string, Map<string, Map<string, number>>>();
   let hasCategoryDays = false;
-  for (const d of profile.providerDays) {
+  for (const d0 of profile.providerDays) {
+    const d = { ...d0, provider: canonicalProvider(d0.provider) };
     const ym = d.date.slice(0, 7);
     const per = monthAgg.get(ym) ?? new Map<string, number>();
     per.set(d.provider, (per.get(d.provider) ?? 0) + d.usd);
@@ -601,7 +605,8 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const modelsByTrait = new Map<string, Map<string, { ops: number; usd: number }>>();
   const provsByTrait = new Map<string, Set<string>>();
   const provOpsByTrait = new Map<string, Map<string, number>>();
-  for (const m of profile.providerModels) {
+  for (const m0 of profile.providerModels) {
+    const m = { ...m0, provider: canonicalProvider(m0.provider) };
     const trait = m.category ?? traitOfModel(m.provider, m.model);
     const name = prettyModel(m.model);
     if (!modelsByTrait.has(trait)) modelsByTrait.set(trait, new Map());
@@ -624,13 +629,12 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     // exact lane first: category-tagged daily rows sum ops per provider for this trait
     const exact = new Map<string, number>();
     for (const d of profile.providerDays) {
-      if (d.category === cat && d.ops > 0) exact.set(d.provider, (exact.get(d.provider) ?? 0) + d.ops);
+      if (d.category === cat && d.ops > 0) { const pv = canonicalProvider(d.provider); exact.set(pv, (exact.get(pv) ?? 0) + d.ops); }
     }
     const byProv = exact.size ? exact : new Map<string, number>(provOpsByTrait.get(cat) ?? []);
     for (const p of profile.providers) {
-      if (!byProv.has(p.provider) && primaryCategory(p.provider) === cat && p.ops > 0) {
-        byProv.set(p.provider, p.ops);
-      }
+      const pv = canonicalProvider(p.provider);
+      if (!byProv.has(pv) && primaryCategory(pv) === cat && p.ops > 0) byProv.set(pv, p.ops);
     }
     const total = [...byProv.values()].reduce((s, v) => s + v, 0);
     return [...byProv.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([prov, ops], i) => ({
@@ -653,13 +657,31 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     if (!byModel) return [];
     const byCost = traitWeighsByCost(cat);
     const weightOf = (v: { ops: number; usd: number }) => (byCost ? v.usd : v.ops);
-    const total = [...byModel.values()].reduce((s, v) => s + weightOf(v), 0);
-    return [...byModel.entries()].sort((a, b) => weightOf(b[1]) - weightOf(a[1])).slice(0, 10).map(([model, v], i) => ({
-      // keep the END of long model ids — "…nano-banana" and "…nano-banana-pro" must stay distinct
+    const ranked = [...byModel.entries()].sort((a, b) => weightOf(b[1]) - weightOf(a[1]));
+    const modelTotal = ranked.reduce((s, [, v]) => s + weightOf(v), 0);
+    // reconcile with the trait circle (audit #4): the circle is ops; when the hex is ops-weighted,
+    // records with no model (lifetime backfills) or tail models beyond the top 9 become one honest
+    // "other / unlisted" coil so the coils sum to the trait's real total, never a subset.
+    const catOps = categorySource.find((c) => c.id === cat)?.ops ?? 0;
+    const denom = byCost ? modelTotal : Math.max(modelTotal, catOps);
+    const HEAD = 9;
+    const head = ranked.slice(0, HEAD);
+    const tail = ranked.slice(HEAD).reduce((s, [, v]) => s + weightOf(v), 0);
+    const unattributed = byCost ? 0 : Math.max(catOps - modelTotal, 0);
+    const otherWeight = tail + unattributed;
+    const coils = head.map(([model, v], i) => ({
       label: model.length > 18 ? `…${model.slice(-17)}` : model,
-      pct: total > 0 && (weightOf(v) / total) * 100 >= 1 ? `${Math.round((weightOf(v) / total) * 100)}%` : "<1%",
+      pct: denom > 0 && (weightOf(v) / denom) * 100 >= 1 ? `${Math.round((weightOf(v) / denom) * 100)}%` : "<1%",
       color: INFO_RAMP[i % INFO_RAMP.length],
     }));
+    if (otherWeight > 0 && denom > 0) {
+      coils.push({
+        label: unattributed > 0 && tail === 0 ? "unlisted (no model tag)" : "other models",
+        pct: (otherWeight / denom) * 100 >= 1 ? `${Math.round((otherWeight / denom) * 100)}%` : "<1%",
+        color: "rgba(217,255,242,0.3)",
+      });
+    }
+    return coils;
   };
   // one BoardSpec per trait + the overview — the hex, story and bars switch on circle click
   const specs: Record<string, BoardSpec> = {
