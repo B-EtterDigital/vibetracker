@@ -226,7 +226,8 @@ export function handleIngest(payload: unknown, opts: { userId?: string; identity
 
   // Per-provider daily series: group accepted records by provider+day (composite key aggregate()
   // does not offer). Sorted by provider then date so the client can slice contiguous runs.
-  const qtyOf = (r: NormalizedRecord) => (Number.isFinite(r.quantity) && r.quantity > 0 ? r.quantity : 1);
+  // same rule as core/aggregate.ts: token-unit records count as ONE operation each
+  const qtyOf = (r: NormalizedRecord) => (r.unit === "token" ? 1 : Number.isFinite(r.quantity) && r.quantity > 0 ? r.quantity : 1);
   const providerDayMap = new Map<string, ProviderDailyRollup>();
   for (const r of accepted) {
     const date = r.ts.slice(0, 10);

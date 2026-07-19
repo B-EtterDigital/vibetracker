@@ -39,7 +39,9 @@ export function aggregate(records: NormalizedRecord[], by: GroupBy): AggRow[] {
     row.count += 1;
     // A record's `quantity` is how many operations it represents (1 per generation/message, but a
     // per-day rollup can carry hundreds). Sum it for the real op count; fall back to 1 if absent.
-    row.ops += Number.isFinite(r.quantity) && r.quantity > 0 ? r.quantity : 1;
+    // token-unit records store MAGNITUDE in quantity (a codex session = 2.69B "ops" — SMOA audit
+    // 2026-07-19, mixed-unit shares): one token-record = ONE operation; tokens live in rawAmount.
+    row.ops += r.unit === "token" ? 1 : Number.isFinite(r.quantity) && r.quantity > 0 ? r.quantity : 1;
     row.raw += r.rawAmount;
     if (r.rawUnit === "credits") row.credits += r.rawAmount;
     if (r.usdEst != null) row.usd = Number(((row.usd ?? 0) + r.usdEst).toFixed(4));
