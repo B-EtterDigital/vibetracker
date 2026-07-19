@@ -27,6 +27,7 @@ const apiCmd = $("api-cmd");
 const captureBtn = $("capture");
 const scanBtn = $("scan");
 const scanResults = $("scan-results");
+const copyReportBtn = $("copy-report");
 
 function brand(from, to, ink) {
   document.documentElement.style.setProperty("--brand-from", from);
@@ -239,7 +240,6 @@ connectBtn.addEventListener("click", async () => {
 
 // Shared renderer for both sweep flows (pull open tabs / open everything then pull).
 let lastSweep = null; // kept so "Copy sweep report" can hand the full per-source detail to support
-const copyReportBtn = $("copy-report");
 
 function sweepReport() {
   if (!lastSweep) return "";

@@ -60,6 +60,20 @@ test("every mapped provider logo asset exists on disk, and logoFor resolves -web
   assert.equal(logoFor("haiper"), null, "unknown id → monogram fallback");
 });
 
+test("popup.js declares every element ref before first use (TDZ regression guard)", () => {
+  // Real incident 2026-07-19: `copyReportBtn.addEventListener(...)` ran before
+  // `const copyReportBtn = $(...)` — a temporal-dead-zone ReferenceError that killed the whole
+  // popup module on load. Tests never execute popup.js (it needs a DOM), so guard statically:
+  // every `const X = $("...")` declaration must appear before X is used anywhere else.
+  const source = readFileSync(new URL("../popup.js", import.meta.url), "utf8");
+  for (const match of source.matchAll(/const (\w+) = \$\("[\w-]+"\);/g)) {
+    const name = match[1];
+    const declAt = match.index ?? 0;
+    const firstUse = source.search(new RegExp(`\\b${name}\\b(?! = \\$\\()`));
+    assert.ok(firstUse === -1 || firstUse >= declAt, `${name} is used at ${firstUse} before its declaration at ${declAt}`);
+  }
+});
+
 test("browser extension manifest and popup load the module cockpit", () => {
   const manifest = JSON.parse(readFileSync(new URL("../manifest.json", import.meta.url), "utf8"));
   const popup = readFileSync(new URL("../popup.html", import.meta.url), "utf8");
