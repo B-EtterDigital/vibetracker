@@ -621,6 +621,39 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     const pb = provOpsByTrait.get(trait)!;
     pb.set(m.provider, (pb.get(m.provider) ?? 0) + m.ops);
   }
+  // Attribute model-LESS category operations to a provider-named coil (user report: "Midjourney
+  // missing from the image hex" — its lifetime_images record carries no model). For each category,
+  // any provider whose category-exact ops exceed what its model rows accounted for gets the
+  // remainder as a "<Provider>" coil, so every real source is named in the hex, never dropped.
+  const providerModelOps = new Map<string, Map<string, number>>(); // cat -> provider -> ops in models
+  for (const m0 of profile.providerModels) {
+    const m = { ...m0, provider: canonicalProvider(m0.provider) };
+    const trait = m.category ?? traitOfModel(m.provider, m.model);
+    const pm = providerModelOps.get(trait) ?? new Map<string, number>();
+    pm.set(m.provider, (pm.get(m.provider) ?? 0) + m.ops);
+    providerModelOps.set(trait, pm);
+  }
+  const catProviderOps = new Map<string, Map<string, number>>(); // cat -> provider -> category-exact ops
+  for (const d0 of profile.providerDays) {
+    if (!d0.category || d0.ops <= 0) continue;
+    const prov = canonicalProvider(d0.provider);
+    const cm = catProviderOps.get(d0.category) ?? new Map<string, number>();
+    cm.set(prov, (cm.get(prov) ?? 0) + d0.ops);
+    catProviderOps.set(d0.category, cm);
+  }
+  for (const [cat, provs] of catProviderOps) {
+    const bucket = modelsByTrait.get(cat) ?? new Map<string, { ops: number; usd: number }>();
+    const modelled = providerModelOps.get(cat);
+    for (const [prov, ops] of provs) {
+      const untagged = ops - (modelled?.get(prov) ?? 0);
+      if (untagged <= 0) continue;
+      const label = providerLabel(prov); // name the SOURCE (Midjourney, Higgsfield) as its own coil
+      const cur = bucket.get(label) ?? { ops: 0, usd: 0 };
+      cur.ops += untagged;
+      bucket.set(label, cur);
+    }
+    modelsByTrait.set(cat, bucket);
+  }
   // Second click state (user order 2026-07-19): the provider distribution behind a trait —
   // "who powers my image gen" as coils, one per SOURCE. Per-model rows are the primary weight;
   // sources whose category records carry no model split fall back to their total ops so every
