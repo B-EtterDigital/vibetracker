@@ -226,7 +226,10 @@ export function oauthCredentialsFromTokenResponse(
 export function oauthCredentialsNeedRefresh(
   credentials: StoredOAuthCredentials,
   now = Date.now(),
-  skewMs = 60_000,
+  // A paced full-history crawl runs for many minutes; a token that merely OUTLIVES the check
+  // still dies mid-crawl (live incident 2026-07-19: 4 min of life left → 401 at ~page 90).
+  // Refresh whenever less than 30 min remains — rotating refresh grants make this cheap.
+  skewMs = 30 * 60_000,
 ): boolean {
   if (!credentials.expiresAt) return false;
   const expiresAt = Date.parse(credentials.expiresAt);
