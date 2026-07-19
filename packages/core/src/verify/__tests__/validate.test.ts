@@ -67,6 +67,39 @@ test("native media metrics survive the whitelist without changing operation quan
   assert.equal(res.sanitized!.durationSeconds, 241.25);
 });
 
+test("token usage rejects malformed classes and drops unknown nested keys", () => {
+  const valid = validateRecord({
+    ...good,
+    tokenUsage: {
+      input: 10,
+      output: 2,
+      cacheRead: 7,
+      cacheCreate: 1,
+      reasoningOutput: 0.5,
+      injected: "drop-me",
+    },
+  });
+  assert.equal(valid.ok, true);
+  assert.deepEqual(valid.sanitized!.tokenUsage, {
+    input: 10,
+    output: 2,
+    cacheRead: 7,
+    cacheCreate: 1,
+    reasoningOutput: 0.5,
+  });
+  assert.equal("injected" in (valid.sanitized!.tokenUsage as object), false);
+
+  for (const tokenUsage of [
+    null,
+    { input: -1, output: 0, cacheRead: 0, cacheCreate: 0 },
+    { input: 1, output: Infinity, cacheRead: 0, cacheCreate: 0 },
+    { input: 1, output: 1, cacheRead: 0 },
+    { input: 1, output: 1, cacheRead: 0, cacheCreate: 0, reasoningOutput: Number.NaN },
+  ]) {
+    assert.equal(validateRecord({ ...good, tokenUsage }).ok, false, JSON.stringify(tokenUsage));
+  }
+});
+
 test("tool and stable event provenance survive the whitelist as bounded inert data", () => {
   const res = validateRecord({
     ...good,

@@ -103,6 +103,12 @@ test("profile first read compresses lifetime scale and puts current evidence bef
   assert.match(heroStyles, /@media \(max-width: 620px\) \{[\s\S]*grid-template-columns: repeat\(2/);
 });
 
+test("profile headline counts days with operations, preserved spend, or credits", () => {
+  assert.match(page, /const activeDays = profile\.usageDays\.filter\(\(day\) => day\.ops > 0 \|\| day\.usd > 0 \|\| day\.credits > 0\)\.length/);
+  assert.match(page, /label: "days active",[\s\S]*?value: String\(activeDays\)/);
+  assert.doesNotMatch(page, /value: String\(profile\.usageDays\.length\)/);
+});
+
 test("profile expands into a fixed-format 4K instrument without changing ordinary viewports", () => {
   assert.match(page, /import "\.\/profile-4k\.css"/);
   assert.match(largeDisplayStyles, /@media \(min-width: 2200px\) and \(min-height: 1200px\)/);

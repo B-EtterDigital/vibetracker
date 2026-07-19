@@ -2,7 +2,18 @@
 // deps; a SQLite-backed store (node:sqlite / better-sqlite3) can implement the same
 // two functions later. Records live under ~/.vibetracker (git-ignored).
 
-import { appendFileSync, writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
+import {
+  appendFileSync,
+  closeSync,
+  existsSync,
+  fsyncSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
 import { dirname } from "node:path";
 import type { NormalizedRecord } from "../schema/record.ts";
@@ -56,11 +67,31 @@ export function appendRecords(path: string, records: NormalizedRecord[]): void {
   appendFileSync(path, payload, "utf8");
 }
 
-/** Overwrite the whole store (used by `import`, which replaces a provider's history). */
-export function writeRecords(path: string, records: NormalizedRecord[]): void {
-  mkdirSync(dirname(path), { recursive: true });
+export interface AtomicWriteOptions {
+  /** Fault-injection/coordination hook after the durable temp write and before rename. */
+  beforeRename?: (tempPath: string, destinationPath: string) => void;
+}
+
+/** Atomically replace the whole store without ever truncating the live ledger in place. */
+export function writeRecords(path: string, records: NormalizedRecord[], options: AtomicWriteOptions = {}): void {
+  const directory = dirname(path);
+  mkdirSync(directory, { recursive: true });
   const payload = records.length ? records.map((r) => JSON.stringify(r)).join("\n") + "\n" : "";
-  writeFileSync(path, isEncrypted(path) ? encryptText(payload) : payload, "utf8");
+  const persisted = isEncrypted(path) ? encryptText(payload) : payload;
+  const tempPath = `${path}.${process.pid}.${randomBytes(8).toString("hex")}.tmp`;
+  let descriptor: number | undefined;
+  try {
+    descriptor = openSync(tempPath, "wx", 0o600);
+    writeFileSync(descriptor, persisted, "utf8");
+    fsyncSync(descriptor);
+    closeSync(descriptor);
+    descriptor = undefined;
+    options.beforeRename?.(tempPath, path);
+    renameSync(tempPath, path);
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+    if (existsSync(tempPath)) unlinkSync(tempPath);
+  }
 }
 
 export function readRecords(path: string): NormalizedRecord[] {

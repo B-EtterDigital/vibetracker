@@ -25,6 +25,12 @@ test("toRecords computes token total and per-type USD estimate", () => {
   const recs = toRecords(collectEntries(FIX));
   const opus = recs.find((r) => /opus/.test(r.model!))!;
   assert.equal(opus.rawAmount, 5700);          // 1000+500+200+4000
+  assert.deepEqual(opus.tokenUsage, {
+    input: 1000,
+    output: 500,
+    cacheRead: 4000,
+    cacheCreate: 200,
+  });
   assert.equal(opus.category, "coding");
   assert.equal(opus.source, "log");
   // opus-4-8 tier: 1000*5 + 500*25 + 200*6.25 + 4000*0.5 per MTok = 20,750 / 1e6 = 0.02075

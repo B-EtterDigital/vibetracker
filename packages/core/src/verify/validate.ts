@@ -10,6 +10,7 @@ import type {
   Confidence,
   Unit,
   NativeOutputUnit,
+  TokenUsage,
 } from "../schema/record.ts";
 
 const CATEGORIES = new Set<Category>(["llm", "coding", "image", "video", "music", "audio", "3d", "other"]);
@@ -98,6 +99,38 @@ export function validateRecord(input: unknown, opts: IngestOpts = {}): Validatio
     errors.push("durationSeconds requires an outputQuantity and outputUnit");
   }
 
+  let tokenUsage: TokenUsage | undefined;
+  if (rec.tokenUsage !== undefined) {
+    if (typeof rec.tokenUsage !== "object" || rec.tokenUsage === null || Array.isArray(rec.tokenUsage)) {
+      errors.push("tokenUsage is not an object");
+    } else {
+      const usage = rec.tokenUsage as Record<string, unknown>;
+      const input = finiteAmount(usage.input);
+      const output = finiteAmount(usage.output);
+      const cacheRead = finiteAmount(usage.cacheRead);
+      const cacheCreate = finiteAmount(usage.cacheCreate);
+      const hasReasoningOutput = usage.reasoningOutput !== undefined;
+      const reasoningOutput = hasReasoningOutput ? finiteAmount(usage.reasoningOutput) : undefined;
+      if (input === null) errors.push("tokenUsage.input not a valid non-negative finite number");
+      if (output === null) errors.push("tokenUsage.output not a valid non-negative finite number");
+      if (cacheRead === null) errors.push("tokenUsage.cacheRead not a valid non-negative finite number");
+      if (cacheCreate === null) errors.push("tokenUsage.cacheCreate not a valid non-negative finite number");
+      if (hasReasoningOutput && reasoningOutput === null) {
+        errors.push("tokenUsage.reasoningOutput not a valid non-negative finite number");
+      }
+      if (input !== null && output !== null && cacheRead !== null && cacheCreate !== null
+        && reasoningOutput !== null) {
+        tokenUsage = {
+          input,
+          output,
+          cacheRead,
+          cacheCreate,
+          ...(reasoningOutput != null ? { reasoningOutput } : {}),
+        };
+      }
+    }
+  }
+
   if (errors.length) return { ok: false, errors };
 
   // usdEst is a derived convenience field: drop it if malformed rather than reject.
@@ -124,6 +157,7 @@ export function validateRecord(input: unknown, opts: IngestOpts = {}): Validatio
   }
   if (durationSeconds != null) sanitized.durationSeconds = durationSeconds;
   if (usdEst != null) sanitized.usdEst = usdEst;
+  if (tokenUsage) sanitized.tokenUsage = tokenUsage;
   if (rec.toolId != null) {
     const toolId = sanitizeText(rec.toolId, 64);
     if (toolId) sanitized.toolId = toolId;

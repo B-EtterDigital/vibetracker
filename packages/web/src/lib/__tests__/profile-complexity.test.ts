@@ -82,6 +82,22 @@ test("ember tier: empty and sparse profiles stay ember with the chart gated unde
   assert.equal(sparse.reveal.providerMix, true);
 });
 
+test("active-day facts exclude zero rows while preserving spend-only and credits-only days", () => {
+  const read = readComplexity(
+    profile({
+      usageDays: [
+        { date: "2026-03-01", ops: 0, credits: 0, usd: 0 },
+        { date: "2026-03-02", ops: 4, credits: 0, usd: 0 },
+        { date: "2026-03-03", ops: 0, credits: 0, usd: 2.5 },
+        { date: "2026-03-04", ops: 0, credits: 8, usd: 0 },
+      ],
+    }),
+    REGISTRY,
+  );
+
+  assert.equal(read.facts.days, 3);
+});
+
 test("spark tier: six sources, three categories, a month, media + local score 22 and open the chart + insights", () => {
   const read = readComplexity(
     profile({ providers: [usage("openai"), usage("mistral"), usage("claude-code"), usage("cursor"), usage("ollama"), usage("higgsfield")], usageDays: days(30) }),

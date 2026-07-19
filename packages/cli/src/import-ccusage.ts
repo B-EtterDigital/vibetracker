@@ -47,10 +47,16 @@ export function ccusageToRecords(cc: CcJson): NormalizedRecord[] {
       if (total <= 0) continue;
       const { provider, model } = providerForModel(mb.modelName);
       out.push({
-        // "import-day" marks a day-level aggregate: sync uses it as a cutoff so live-log
-        // records for already-imported days are never double-counted.
+        // "import-day" marks a day-level aggregate: sync replaces it only when a current
+        // full-log scan covers this exact provider-day.
         ts, provider, category: "coding", operation: "import-day", model,
         quantity: 1, unit: "token", rawAmount: total, rawUnit: "tokens",
+        tokenUsage: {
+          input: mb.inputTokens ?? 0,
+          output: mb.outputTokens ?? 0,
+          cacheRead: mb.cacheReadTokens ?? 0,
+          cacheCreate: mb.cacheCreationTokens ?? 0,
+        },
         usdEst: Number((mb.cost ?? 0).toFixed(6)),
         source: "log", confidence: "high", verified: false,
       });

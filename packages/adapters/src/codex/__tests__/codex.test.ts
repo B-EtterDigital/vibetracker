@@ -26,6 +26,7 @@ test("parseSession uses the LAST cumulative total, resolves model, computes non-
   assert.equal(e.nonCachedInput, 6000);    // max(0, 10000 - 4000)
   assert.equal(e.cachedInput, 4000);
   assert.equal(e.output, 2000);            // output already folds in reasoning
+  assert.equal(e.reasoningOutput, 500);    // informational subset; not added to raw total
   assert.equal(e.ts, "2026-03-27T10:05:01.000Z"); // last line timestamp
 });
 
@@ -39,6 +40,13 @@ test("toRecords normalizes to a coding session record with a priced USD estimate
   assert.equal(rec.unit, "token");
   assert.equal(rec.rawAmount, 12000);
   assert.equal(rec.rawUnit, "tokens");
+  assert.deepEqual(rec.tokenUsage, {
+    input: 6000,
+    output: 2000,
+    cacheRead: 4000,
+    cacheCreate: 0,
+    reasoningOutput: 500,
+  });
   assert.equal(rec.source, "log");
   assert.equal(rec.confidence, "medium");
   assert.equal(rec.verified, false);

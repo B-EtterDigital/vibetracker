@@ -38,10 +38,14 @@ export function aggregate(records: NormalizedRecord[], by: GroupBy): AggRow[] {
     const row = map.get(k) ?? { key: k, count: 0, ops: 0, credits: 0, raw: 0 };
     row.count += 1;
     // A record's `quantity` is how many operations it represents (1 per generation/message, but a
-    // per-day rollup can carry hundreds). Sum it for the real op count; fall back to 1 if absent.
-    // token-unit records store MAGNITUDE in quantity (a codex session = 2.69B "ops" — SMOA audit
-    // 2026-07-19, mixed-unit shares): one token-record = ONE operation; tokens live in rawAmount.
-    row.ops += r.unit === "token" ? 1 : Number.isFinite(r.quantity) && r.quantity > 0 ? r.quantity : 1;
+    // per-day rollup can carry hundreds). Non-positive quantities are inactive synthetic/history
+    // rows, not operations. Token-unit records collapse any positive quantity or rawAmount
+    // magnitude to one operation because their quantities represent token volume, not op counts.
+    const hasPositiveQuantity = Number.isFinite(r.quantity) && r.quantity > 0;
+    const hasPositiveRawAmount = Number.isFinite(r.rawAmount) && r.rawAmount > 0;
+    row.ops += r.unit === "token"
+      ? (hasPositiveQuantity || hasPositiveRawAmount ? 1 : 0)
+      : (hasPositiveQuantity ? r.quantity : 0);
     row.raw += r.rawAmount;
     if (r.rawUnit === "credits") row.credits += r.rawAmount;
     if (r.usdEst != null) row.usd = Number(((row.usd ?? 0) + r.usdEst).toFixed(4));

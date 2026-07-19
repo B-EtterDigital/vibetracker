@@ -18,6 +18,12 @@ export function toRecords(entries: ClaudeUsageEntry[]): NormalizedRecord[] {
       unit: "token",
       rawAmount: total,
       rawUnit: "tokens",
+      tokenUsage: {
+        input: e.input,
+        output: e.output,
+        cacheRead: e.cacheRead,
+        cacheCreate: e.cacheWrite,
+      },
       source: "log",
       confidence: "high",
       verified: false,

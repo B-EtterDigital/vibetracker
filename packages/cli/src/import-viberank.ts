@@ -163,6 +163,8 @@ export function decomposeViberank(input: ViberankDecomposeInput, opts: Decompose
     const rem = cents - base * nDays;
     for (let i = 0; i < nDays; i++) {
       const dayCents = base + (i < rem ? 1 : 0);
+      // These are synthetic spend-history buckets, not observed operations. Keep both operation
+      // magnitudes at zero while retaining the reconciled USD share in `usdEst`.
       out.push({
         ts: days[i],
         provider,

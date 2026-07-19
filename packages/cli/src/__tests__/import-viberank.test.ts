@@ -9,6 +9,7 @@ import {
   VIBERANK_PROVIDER,
   type ViberankDecomposeInput,
 } from "../import-viberank.ts";
+import { aggregate } from "../../../core/src/aggregate.ts";
 
 // Mirrors the packet's mock: itemized models sum to $90,485.25, header total $201,519 —
 // so a residual of $111,033.75 must be synthesized to reconcile.
@@ -75,6 +76,23 @@ test("decomposeViberank → real providers, reconciled to header total, never vi
     const shares = rs.map((r) => r.usdEst || 0);
     assert.ok(Math.max(...shares) - Math.min(...shares) <= 0.01 + 1e-9, `${model} shares must be even to within a cent`);
   }
+});
+
+test("decomposeViberank interpolation preserves USD without fabricating operations", () => {
+  const recs = decomposeViberank({
+    total: 3,
+    joined: "2026-07-17",
+    end: "2026-07-19",
+    models: [{ model: "gpt-5.5", usd: 3 }],
+  });
+
+  assert.equal(recs.length, 3);
+  assert.ok(recs.every((r) => r.quantity === 0 && r.rawAmount === 0));
+
+  const days = aggregate(recs, "day");
+  assert.equal(days.length, 3);
+  assert.ok(days.every((day) => day.ops === 0));
+  assert.equal(days.reduce((sum, day) => sum + (day.usd ?? 0), 0), 3);
 });
 
 test("decomposeViberank reads end from the payload when opts is omitted, and needs no residual when itemized ≥ total", () => {

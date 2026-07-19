@@ -17,6 +17,13 @@ export function toRecords(entries: CodexUsageEntry[]): NormalizedRecord[] {
       unit: "token",
       rawAmount: e.totalTokens,
       rawUnit: "tokens",
+      tokenUsage: {
+        input: e.nonCachedInput,
+        output: e.output,
+        cacheRead: e.cachedInput,
+        cacheCreate: 0,
+        reasoningOutput: e.reasoningOutput,
+      },
       source: "log",
       confidence: "medium",
       verified: false,

@@ -11,6 +11,7 @@ export interface CodexUsageEntry {
   nonCachedInput: number; // input_tokens - cached_input_tokens (never negative)
   cachedInput: number;    // cached_input_tokens
   output: number;         // output_tokens (already includes reasoning_output_tokens)
+  reasoningOutput: number; // informational subset of output; never added to totalTokens
   totalTokens: number;    // cumulative total_tokens for the whole session
 }
 
@@ -56,6 +57,7 @@ export function parseSession(text: string, fallbackTs = ""): CodexUsageEntry | n
   const input = usage.input_tokens ?? 0;
   const cachedInput = usage.cached_input_tokens ?? 0;
   const output = usage.output_tokens ?? 0;
+  const reasoningOutput = usage.reasoning_output_tokens ?? 0;
   const totalTokens = usage.total_tokens ?? 0;
   if (totalTokens === 0) return null; // zero-token session — no real spend, skip
   return {
@@ -64,6 +66,7 @@ export function parseSession(text: string, fallbackTs = ""): CodexUsageEntry | n
     nonCachedInput: Math.max(0, input - cachedInput),
     cachedInput,
     output,
+    reasoningOutput,
     totalTokens,
   };
 }

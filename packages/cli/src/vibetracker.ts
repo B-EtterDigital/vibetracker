@@ -20,7 +20,12 @@ import { appendRecords, readRecords, writeRecords } from "../../core/src/store/j
 import { ingestRecords } from "../../core/src/verify/validate.ts";
 import { PROVIDERS, createAdapterFromConfig, providersInDomain, getProvider, type Domain } from "../../adapters/src/index.ts";
 import { runSync, type SyncTarget } from "./sync.ts";
-import { shouldReplaceSyncRecord, syncRecordKey } from "./sync-dedupe.ts";
+import {
+  reconcileFullScanProviders,
+  reconcileImportDayRows,
+  shouldReplaceSyncRecord,
+  syncRecordKey,
+} from "./sync-dedupe.ts";
 import { runProxy } from "./proxy.ts";
 import { planSetup, runWizard, localLogsPresent, GUIDE, fieldLabel, maskKey, setupPlanSurpriseTargets } from "./wizard.ts";
 import { showBanner, showWelcome, withSpinner, typeLine, rule, icon, bar, dim, paint, ok, bad, gold, human } from "./banner.ts";
@@ -102,6 +107,7 @@ import type { CreatorPlatform } from "../../core/src/schema/trust-signal.ts";
 
 // fixture-backed adapters used only by `sync --demo`
 import { createClaudeCodeAdapter } from "../../adapters/src/claude-code/index.ts";
+import { createCodexAdapter } from "../../adapters/src/codex/index.ts";
 import { createHiggsfieldAdapter, createFixtureClient as hgFixture } from "../../adapters/src/higgsfield/index.ts";
 import { createOpenAIAdapter, createFixtureClient as oaFixture } from "../../adapters/src/openai/index.ts";
 import { createSunoAdapter, createFixtureClient as sunoFixture } from "../../adapters/src/suno/index.ts";
@@ -163,6 +169,7 @@ const USAGE = [
   "  studio [--provider a,b] [--out dir] [--open]   static offline GUI studio pack",
   "  launch-kit | kit | wow | impress | vibe [--provider a,b] [--out dir] [--open]   offline demo launch pack",
   "  sync [--demo] [--receipt --out dir]",
+  "  reconcile --coding [--dry-run]   replace coding log histories with current parser truth",
   "  receipts [--dir path] [--json] [--html --out path] [--open]   local sync receipt vault",
   "  mission | pulse | now [--budget N] [--json] [--html --out path] [--open] [--no-trust]   read-only operating picture",
   "  live | watch [--once] [--interval N] [--budget N] [--no-trust]   auto-refresh local usage console",
@@ -307,17 +314,11 @@ function syncRunId(generatedAt: string): string {
 }
 
 async function syncTargets(targets: SyncTarget[], ctx: AdapterCtxLike): Promise<SyncRunSummary> {
-  // Dedupe state: exact keys make re-running `sync` idempotent; import-day cutoffs stop
-  // live-log records from double-counting days already covered by a ccusage import.
+  // Exact keys make re-running `sync` idempotent. Full-log rows replace ccusage aggregates
+  // only on the exact provider-days they cover, preserving older import-only history.
   const generatedAt = new Date().toISOString();
   const existing = readRecords(STORE);
   const recordsByKey = new Map(existing.map((record) => [syncRecordKey(record), record]));
-  const cutoff: Record<string, string> = {};
-  for (const r of existing) {
-    if (r.operation !== "import-day") continue;
-    const d = r.ts.slice(0, 10);
-    if (!cutoff[r.provider] || d > cutoff[r.provider]) cutoff[r.provider] = d;
-  }
 
   let total = 0;
   const checkpoints: CollectionCheckpoint[] = [];
@@ -369,20 +370,18 @@ async function syncTargets(targets: SyncTarget[], ctx: AdapterCtxLike): Promise<
         }
         return false;
       }
-      const c = cutoff[r.provider];
-      if (c && r.ts.slice(0, 10) <= c) return false; // day already covered by import
       recordsByKey.set(k, r);
       return true;
     });
     // Snapshot semantics: a lifetime-total record REPLACES this provider's previous
     // snapshot(s) (incl. legacy "usage" balance rows) rather than stacking on top.
     const snaps = new Set(fresh.filter((r) => r.operation === "snapshot").map((r) => r.provider));
-    if (replacementKeys.size) {
-      const kept = readRecords(STORE).filter((r) => !replacementKeys.has(syncRecordKey(r)));
-      writeRecords(STORE, [...kept, ...fresh]);
-    } else if (snaps.size) {
-      const kept = readRecords(STORE).filter((r) =>
-        !(snaps.has(r.provider) && (r.operation === "snapshot" || (r.operation === "usage" && r.source === "balance_delta"))));
+    const current = readRecords(STORE);
+    const importDays = reconcileImportDayRows(current, accepted);
+    if (replacementKeys.size || snaps.size || importDays.superseded.length) {
+      const kept = importDays.kept.filter((r) =>
+        !replacementKeys.has(syncRecordKey(r))
+        && !(snaps.has(r.provider) && (r.operation === "snapshot" || (r.operation === "usage" && r.source === "balance_delta"))));
       writeRecords(STORE, [...kept, ...fresh]);
     } else {
       appendRecords(STORE, fresh);
@@ -1882,6 +1881,43 @@ async function main() {
       console.log(`  ${dim("local HTML + JSON; no upload, no prompt/output export, no secret export")}`);
     }
     console.log(`\nsynced ${sync.totalFresh} records → ${STORE}\nrun \`vibetracker total\` to view.`);
+    return;
+  }
+
+  if (cmd === "reconcile" && argv.includes("--coding")) {
+    const targets: SyncTarget[] = [
+      { id: "claude-code", adapter: createClaudeCodeAdapter() },
+      { id: "codex", adapter: createCodexAdapter() },
+    ];
+    const results = await runSync(targets, RANGE, ctx);
+    for (const result of results) {
+      if (result.error) console.error(`  ${bad("✗")} ${result.provider}: ${shortErr(result.error)}`);
+    }
+    const received = results.flatMap((result) => result.records);
+    const { accepted, rejected } = ingestRecords(received, { untrustedSource: true });
+    const current = readRecords(STORE);
+    const reconciliation = reconcileFullScanProviders(current, accepted);
+    const next = [...reconciliation.kept, ...accepted];
+    for (const provider of reconciliation.providers) {
+      const before = current
+        .filter((record) => record.provider === provider)
+        .reduce((sum, record) => sum + record.rawAmount, 0);
+      const after = accepted
+        .filter((record) => record.provider === provider)
+        .reduce((sum, record) => sum + record.rawAmount, 0);
+      console.log(`  ${provider.padEnd(13)} ${human(before)} → ${human(after)} tokens · parser truth`);
+    }
+    if (!reconciliation.providers.length) {
+      console.error(`  ${bad("✗")} no coding parser returned usable records; ledger unchanged`);
+      return;
+    }
+    if (argv.includes("--dry-run")) {
+      console.log(`  ${dim(`dry run · would replace ${human(reconciliation.superseded.length)} rows with ${human(accepted.length)} parser records · ledger unchanged`)}`);
+      return;
+    }
+    writeRecords(STORE, next);
+    console.log(`  ${ok("✓")} reconciled ${reconciliation.providers.join(" · ")} in one ledger rewrite`);
+    if (rejected.length) console.log(`  ${dim(`${human(rejected.length)} invalid parser records rejected`)}`);
     return;
   }
 

@@ -111,7 +111,7 @@ function readFacts(profile: ProfileView, matched: readonly MatchedProvider[]): C
     categories: profile.categories.length > 0
       ? profile.categories.length
       : new Set(descriptors.map(primaryCategory)).size,
-    days: profile.usageDays.length,
+    days: profile.usageDays.filter((day) => day.ops > 0 || day.usd > 0 || day.credits > 0).length,
     // usd/ops prefer the reviewed submission totals; the provider sum is the fallback and spans
     // every provider row (matched or not) because spend is spend regardless of registry coverage.
     usd: profile.latest?.total_usd ?? sumBy(profile.providers, (provider) => provider.usd),

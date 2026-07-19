@@ -256,6 +256,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const commits = Number(
     (profile.trustSignals.find((s) => s.kind === "github_activity") as { totalContributions?: number } | undefined)?.totalContributions ?? 0,
   );
+  const activeDays = profile.usageDays.filter((day) => day.ops > 0 || day.usd > 0 || day.credits > 0).length;
   const cards = [
     commits > 0
       ? {
@@ -275,7 +276,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     {
       label: "days active",
       mark: "days" as const,
-      value: String(facts.days),
+      value: String(activeDays),
       sub: `since ${fmtDate(profile.usageDays[0]?.date ?? profile.created_at)}`,
       accent: "#9f7cff",
     },

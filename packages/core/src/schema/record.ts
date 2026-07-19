@@ -23,6 +23,15 @@ export type Source =
 
 export type Confidence = "high" | "medium" | "low";
 
+/** Provider-reported token classes, preserved alongside the backwards-compatible total. */
+export interface TokenUsage {
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheCreate: number;
+  reasoningOutput?: number;
+}
+
 export interface NormalizedRecord {
   ts: string;            // ISO8601 — when the usage happened
   provider: string;      // adapter id, e.g. "higgsfield"
@@ -33,6 +42,7 @@ export interface NormalizedRecord {
   unit: Unit;
   rawAmount: number;     // native cost (credits / tokens / seconds)
   rawUnit: string;       // "credits" | "tokens" | ...
+  tokenUsage?: TokenUsage; // additive token-class detail; rawAmount keeps existing semantics
   outputQuantity?: number; // provider-native outputs created by this operation
   outputUnit?: NativeOutputUnit;
   durationSeconds?: number; // duration of those outputs, when the provider reports it
