@@ -202,14 +202,23 @@ async function readActivePage(tab, scriptingApi) {
   }
   if (!tab?.id) return { ok: false, error: "No active tab to read." };
   scriptingApi = scriptingApi ?? (typeof chrome !== "undefined" ? chrome.scripting : undefined);
-  let result = null;
-  try {
+  const inject = async () => {
     const injection = await scriptingApi.executeScript({
       target: { tabId: tab.id },
       func: pageStatExtractor,
       args: [reader.stats],
     });
-    result = injection?.[0]?.result ?? null;
+    return injection?.[0]?.result ?? null;
+  };
+  let result = null;
+  try {
+    result = await inject();
+    // SPA settle: "complete" tabs often haven't rendered yet (live sweep 2026-07-19: Leonardo /
+    // Runway / Perplexity read at 280–360 chars). One retry after 2.5s catches the rendered page.
+    if (result?.miss && result.textLen < 500) {
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      result = await inject();
+    }
   } catch (error) {
     return { ok: false, provider: reader.id, label: reader.label, error: `Couldn't read the ${reader.label} page — ${String(error?.message || error).slice(0, 120)}` };
   }

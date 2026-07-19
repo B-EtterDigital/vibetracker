@@ -26,6 +26,9 @@ test("cookie spec matching handles exact and prefix+suffix (Udio's sb-<ref>-auth
   assert.equal(cookieMatchesSpec("sb-abcd1234-auth-token", udio), true);
   assert.equal(cookieMatchesSpec("sb-abcd1234-refresh-token", udio), false); // wrong suffix
   assert.equal(cookieMatchesSpec("session", udio), false);
+  // tensor.art's real session cookie, verified from a live sweep report 2026-07-19
+  const ta = CONNECTORS.find((c) => c.id === "tensorart")!.cookies[0];
+  assert.equal(cookieMatchesSpec("ta_token_prod", ta), true);
 });
 
 test("every connector host is declared for the manifest allowlist", () => {

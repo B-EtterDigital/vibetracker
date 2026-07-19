@@ -46,7 +46,8 @@ export const CONNECTORS = [
     brand: { from: "#f59e0b", to: "#ef4444", ink: "#1a0800" },
     hosts: ["tensor.art", "www.tensor.art"],
     url: "https://tensor.art", // page to open for one-click connect (any page works once logged in)
-    cookies: [{ name: "_tusd", field: "sessionToken", match: "exact" }],
+    // verified from a live sweep report 2026-07-19: the session cookie is ta_token_prod
+    cookies: [{ name: "ta_token_prod", field: "sessionToken", match: "exact" }],
     pending: true,
   },
   {

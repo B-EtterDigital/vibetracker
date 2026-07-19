@@ -35,7 +35,9 @@ export const READERS = [
     label: "Higgsfield",
     category: "video",
     hosts: ["higgsfield.ai", "www.higgsfield.ai"],
-    url: "https://higgsfield.ai", // app root — /account 404s; the logged-in UI surfaces the credit balance
+    url: "https://higgsfield.ai", // app root — /account 404s
+    autoOpen: false, // live sweep 2026-07-19: root page text carries no credit figure — and the
+    // CLI's MCP adapter already syncs higgsfield balance/transactions, so auto-opening only adds noise
     // account/credits surface shows a credit balance
     stats: [
       { operation: "credit_balance", unit: "credit", patterns: ["([\\d,]+(?:\\.\\d+)?)\\s*credits?\\b", "credits?[:\\s]*([\\d,]+(?:\\.\\d+)?)"] },
@@ -61,8 +63,15 @@ export const READERS = [
     category: "voice",
     hosts: ["elevenlabs.io"],
     url: "https://elevenlabs.io/app/usage", // the page that shows the usage number
+    // broadened 2026-07-19 (live sweep: "credit" present but no pattern matched): also accept
+    // bare "N credits" and "credits: N" phrasings.
     stats: [
-      { operation: "character_usage", unit: "credit", patterns: ["([\\d,]+)\\s*/\\s*[\\d,]+\\s*credits?", "([\\d,]+)\\s*characters?\\s*used"] },
+      { operation: "character_usage", unit: "credit", patterns: [
+        "([\\d,]+)\\s*/\\s*[\\d,]+\\s*credits?",
+        "([\\d,]+)\\s*characters?\\s*used",
+        "([\\d,]+)\\s*credits?\\s*(?:remaining|left|used)?\\b",
+        "credits?[:\\s]+([\\d,]+)",
+      ] },
     ],
     hint: "Open your ElevenLabs usage page so the character/credit count is visible, then read it.",
   },
