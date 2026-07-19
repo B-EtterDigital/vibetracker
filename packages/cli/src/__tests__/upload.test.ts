@@ -1,5 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   renderSecretScan,
   renderUploadBlocked,
@@ -12,6 +16,7 @@ import {
 } from "../upload.ts";
 import type { UsageAudit } from "../audit.ts";
 import type { SecretFinding } from "../../../core/src/security/secrets.ts";
+import { writeRecords } from "../../../core/src/store/jsonl.ts";
 
 const audit: UsageAudit = {
   generatedAt: "2026-07-05T00:00:00Z",
@@ -152,4 +157,75 @@ test("large default uploads bypass the single-domain body limit without rewritin
     resolveUploadEndpoint("https://collector.example.test/ingest", defaultUrl, SINGLE_DOMAIN_UPLOAD_LIMIT + 1),
     "https://collector.example.test/ingest",
   );
+});
+
+test("CLI upload emits complete ledger token scopes without invoking the ccusage scanner", () => {
+  const home = mkdtempSync(join(tmpdir(), "vibetracker-upload-token-scopes-"));
+  try {
+    const storeDir = join(home, ".vibetracker");
+    mkdirSync(storeDir, { recursive: true });
+    writeRecords(join(storeDir, "records.jsonl"), [
+      {
+        ts: "2026-07-19T10:00:00.000Z",
+        provider: "claude-code",
+        category: "coding",
+        operation: "session",
+        quantity: 1,
+        unit: "token",
+        rawAmount: 200,
+        rawUnit: "tokens",
+        tokenUsage: { input: 100, output: 20, cacheRead: 70, cacheCreate: 10 },
+        source: "log",
+        confidence: "high",
+        verified: false,
+      },
+      {
+        ts: "2026-07-19T11:00:00.000Z",
+        provider: "hermes",
+        category: "coding",
+        operation: "session",
+        quantity: 1,
+        unit: "token",
+        rawAmount: 22,
+        rawUnit: "tokens",
+        tokenUsage: { input: 7, output: 6, cacheRead: 5, cacheCreate: 4 },
+        source: "log",
+        confidence: "high",
+        verified: false,
+      },
+    ]);
+    // If the scanner is invoked despite complete ledger coverage, this malformed file emits VTRS.
+    writeFileSync(join(home, "cc.json"), "{not-json");
+
+    const entry = join(process.cwd(), "bin", "vibetracker.mjs");
+    const result = spawnSync(process.execPath, [
+      entry,
+      "upload",
+      "--url",
+      "http://127.0.0.1:1/ingest",
+      "--no-orchestration",
+    ], {
+      cwd: home,
+      env: { ...process.env, HOME: home, VT_NO_ANIM: "1", VT_NO_SURPRISES: "1", NO_COLOR: "1" },
+      encoding: "utf8",
+      timeout: 20_000,
+    });
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.doesNotMatch(result.stderr, /cli\.coding-telemetry\.snapshot/);
+    const bundle = JSON.parse(readFileSync(join(storeDir, "upload-bundle.json"), "utf8")) as {
+      tokenBreakdown: unknown;
+      totalTokens: number;
+    };
+    assert.deepEqual(bundle.tokenBreakdown, {
+      total: { input: 107, output: 26, cacheRead: 75, cacheCreation: 14 },
+      byProvider: [
+        { provider: "claude-code", input: 100, output: 20, cacheRead: 70, cacheCreation: 10 },
+        { provider: "hermes", input: 7, output: 6, cacheRead: 5, cacheCreation: 4 },
+      ],
+    });
+    assert.equal(bundle.totalTokens, 222);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
 });

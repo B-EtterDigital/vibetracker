@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import test from "node:test";
 
 const page = readFileSync("packages/web/src/app/u/[handle]/page.tsx", "utf8");
@@ -26,6 +27,36 @@ const accessibilityStyles = readFileSync("packages/web/src/app/u/[handle]/profil
 const largeDisplayStyles = readFileSync("packages/web/src/app/u/[handle]/profile-4k.css", "utf8");
 const layout = readFileSync("packages/web/src/app/u/[handle]/layout.tsx", "utf8");
 const nextConfig = readFileSync("packages/web/next.config.ts", "utf8");
+const usefulData = readFileSync("packages/web/src/app/u/[handle]/profile-useful-data.tsx", "utf8");
+const usefulDataStyles = readFileSync("packages/web/src/app/u/[handle]/profile-useful-data.css", "utf8");
+const globalStyles = readFileSync("packages/web/src/app/globals.css", "utf8");
+
+function loadUsefulDataModule() {
+  const projectRequire = createRequire(import.meta.url);
+  const ts = projectRequire("typescript");
+  const jsxRuntime = projectRequire("react/jsx-runtime");
+  const source = ts.transpileModule(usefulData, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      jsx: ts.JsxEmit.ReactJSX,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  const loaded = { exports: {} as Record<string, unknown> };
+  const stubRequire = (id: string) => {
+    if (id === "react/jsx-runtime") return jsxRuntime;
+    if (id === "../../../lib/leaderboard") return { formatInt: (value: number) => Math.round(value).toLocaleString("en-US") };
+    if (id === "../../../lib/native-usage-metrics") return { nativeUsageLine: () => null };
+    if (id === "../../../lib/provider-brand") return { providerBrand: (id: string) => ({ mark: id.slice(0, 2).toUpperCase(), from: "#2ee8d6", to: "#2ee8d6", ink: "#0d1419" }) };
+    if (id === "../../../lib/provider-logos") return { logoPath: (id: string) => id === "suno" ? "/provider-logos/suno.svg" : null };
+    if (id === "../../../../../adapters/src/index") return { PROVIDERS: [{ id: "suno", label: "Suno", categories: ["music"] }, { id: "openai", label: "OpenAI", categories: ["coding"] }] };
+    if (id === "./profile-infographic") return { INFO_RAMP: ["#2ee8d6"] };
+    throw new Error(`unexpected profile-useful-data import: ${id}`);
+  };
+  new Function("require", "exports", "module", source)(stubRequire, loaded.exports, loaded);
+  return { exports: loaded.exports, jsxRuntime, renderToStaticMarkup: projectRequire("react-dom/server").renderToStaticMarkup as (node: unknown) => string };
+}
 
 test("public profile route reveals panels from deterministic signal depth", () => {
   assert.match(page, /import \{ PROVIDERS \} from "\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/adapters\/src\/index"/);
@@ -123,8 +154,8 @@ test("vibe state ranks by spend, lists top 5 models, and explains the signal tie
   // Op-count made cheap high-volume haiku read as top model and mis-ranked the top source; spend
   // is the honest headline and stays consistent with the money everywhere.
   assert.match(page, /const topSource = byUsd\[0\]/);
-  assert.match(page, /sort\(\(a, b\) => b\.usd - a\.usd \|\| b\.ops - a\.ops\)/);
-  assert.match(page, /\.slice\(0, 5\)/);
+  assert.match(usefulData, /sort\(\(a, b\) => b\.usd - a\.usd \|\| b\.ops - a\.ops/);
+  assert.match(usefulData, /rows\.slice\(0, 5\)/);
   assert.match(hero, /top 5 models/);
   assert.match(hero, /topModels\.map/);
   // signal tier is explained inline (answers "what is signal surge")
@@ -134,8 +165,8 @@ test("vibe state ranks by spend, lists top 5 models, and explains the signal tie
 
 test("sources are a labelled big-logo row with the brand on hover, and a bio can be added", () => {
   // every lane that proves a tool was used feeds the list (tools ∪ providers ∪ agents), complete
-  assert.match(page, /if \(p\.usd > 0 \|\| p\.ops > 0\) bumpTool/);
-  assert.match(page, /profile\.agents \?\? \[\]/);
+  assert.match(usefulData, /if \(provider\.usd > 0 \|\| provider\.ops > 0\) bump/);
+  assert.match(usefulData, /profile\.agents \?\? \[\]/);
   assert.match(hero, /vhero-sources/);
   assert.match(hero, /vhero-sources-head/);
   assert.match(hero, />\s*Tracked sources\s*<span>/);
@@ -174,11 +205,11 @@ test("skill signals lead the profile and reframe money as API-equivalent referen
 
 test("profile infographic owns measured traits while identity owns honestly earned archetype badges", () => {
   assert.match(page, /import \{ ViberIdentity \} from "\.\/profile-identity"/);
-  assert.match(page, /import \{ SourceToolbar, INFO_RAMP, type StackMonth \} from "\.\/profile-infographic"/);
-  assert.match(page, /import \{ InfographicBoard, type BoardSpec \} from "\.\/profile-board"/);
+  assert.match(usefulData, /import \{ INFO_RAMP, type StackMonth, type TraitPie \} from "\.\/profile-infographic"/);
+  assert.match(page, /import \{ InfographicBoard \} from "\.\/profile-board"/);
   assert.match(page, /import "\.\/profile-identity\.css"/);
   assert.match(page, /<InfographicBoard traits=\{traits\} specs=\{specs\}/);
-  assert.match(page, /all: \{[\s\S]*spiral: cliSpiral/);
+  assert.match(usefulData, /all: \{[\s\S]*spiral: cliSpiral/);
   assert.match(page, /<ViberIdentity signals=\{signals\} opsValue=\{opsCompact\}/);
   assert.match(infographic, /export function TraitPies/);
   assert.match(infographic, /aria-label=\{`Trait mix:/);
@@ -381,4 +412,139 @@ test("profile route-local styling stays responsive and motion-safe", () => {
   assert.match(styles, /\.vprofile-bar-amount \{[\s\S]*flex: 1 1 0;[\s\S]*text-overflow: ellipsis;/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(accessibilityStyles, /Profile-only AA contrast corrections/);
+});
+
+test("models by cost renders ranked fixture data and disappears without model usage", () => {
+  const runtime = loadUsefulDataModule();
+  const module = runtime.exports as {
+    buildModelUsage: (rows: Array<{ provider: string; model: string; category?: string; ops: number; credits: number; usd: number }>) => Array<{ model: string; ops: number; usd: number }>;
+    ModelsByCost: (props: { rows: Array<{ model: string; ops: number; usd: number }> }) => unknown;
+  };
+  const fixture = [
+    { provider: "openai-web", model: "gpt-5", category: "coding", ops: 40, credits: 0, usd: 75_600 },
+    { provider: "openai", model: "gpt-5", category: "other", ops: 10, credits: 0, usd: 200 },
+    ...Array.from({ length: 10 }, (_, index) => ({
+      provider: index % 2 ? "openai" : "openai-web",
+      model: `model-${index}`,
+      category: index % 2 ? "coding" : "other",
+      ops: index === 9 ? 500 : 20 - index,
+      credits: 0,
+      usd: 1_000 - index * 50,
+    })),
+  ];
+  const rows = module.buildModelUsage(fixture);
+  const html = runtime.renderToStaticMarkup(runtime.jsxRuntime.jsx(module.ModelsByCost, { rows }));
+  assert.equal(rows[0].model, "gpt-5");
+  assert.equal(rows[0].usd, 75_800);
+  assert.equal(rows[0].ops, 50);
+  assert.match(html, /Models by cost/);
+  assert.match(html, /Most used/);
+  assert.match(html, /\$75\.8K/);
+  assert.match(html, /\+1 more models/);
+  assert.match(html, /<th scope="col">/);
+  assert.match(html, /<th scope="row"/);
+  assert.match(html, /<td/);
+  assert.match(html, /aria-hidden="true"/);
+  assert.equal(runtime.renderToStaticMarkup(runtime.jsxRuntime.jsx(module.ModelsByCost, { rows: [] })), "");
+  assert.match(page, /if \(modelUsage\.length > 0\) add\("usage", "full", <ModelsByCost/);
+  assert.match(usefulDataStyles, /height: 28px/);
+  assert.match(usefulDataStyles, /height: 2px/);
+});
+
+test("native output ledger groups fixture units by provider and disappears without outputs", () => {
+  const runtime = loadUsefulDataModule();
+  const module = runtime.exports as {
+    buildNativeLedgerRows: (rows: Array<{ provider: string; category: string; outputUnit: string; outputs: number; durationSeconds: number }>) => Array<{ provider: string; label: string; logo: string | null; mark: string; counts: string }>;
+    NativeOutputLedger: (props: { rows: Array<{ provider: string; label: string; logo: string | null; mark: string; counts: string }> }) => unknown;
+  };
+  const rows = module.buildNativeLedgerRows([
+    { provider: "suno", category: "music", outputUnit: "track", outputs: 831, durationSeconds: 45 * 3_600 + 12 * 60 },
+    { provider: "suno", category: "music", outputUnit: "variation", outputs: 8_917, durationSeconds: 0 },
+  ]);
+  const html = runtime.renderToStaticMarkup(runtime.jsxRuntime.jsx(module.NativeOutputLedger, { rows }));
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].counts, "831 tracks · 8,917 variations · 45h 12m");
+  assert.match(html, /Native output ledger/);
+  assert.match(html, /created things, counted natively - not tokens/);
+  assert.match(html, /\/provider-logos\/suno\.svg/);
+  assert.match(html, /width="18" height="18"/);
+  assert.match(html, /<th scope="col">/);
+  assert.match(html, /<th scope="row">/);
+  assert.match(html, /<td>831 tracks · 8,917 variations · 45h 12m<\/td>/);
+  assert.doesNotMatch(rows[0].counts, /audio|video/);
+  const empty = module.buildNativeLedgerRows([{ provider: "suno", category: "music", outputUnit: "track", outputs: 0, durationSeconds: 120 }]);
+  assert.deepEqual(empty, []);
+  assert.equal(runtime.renderToStaticMarkup(runtime.jsxRuntime.jsx(module.NativeOutputLedger, { rows: empty })), "");
+  assert.match(page, /if \(nativeLedger\.length > 0\) add\("usage", "full", <NativeOutputLedger/);
+});
+
+test("usage facts use UTC day keys across extreme viewer offsets", () => {
+  const runtime = loadUsefulDataModule();
+  type Day = { date: string; ops: number; credits: number; usd: number };
+  const dayKeyUTC = runtime.exports.dayKeyUTC as (date: Date) => string;
+  const summarize = runtime.exports.summarizeUsageDays as (days: Day[], now: Date) => { currentStreak: number; lastActive: string | null; showLastActive: boolean };
+  const active = (date: string): Day => ({ date, ops: 1, credits: 0, usd: 0 });
+  assert.match(usefulData, /export function dayKeyUTC\(date: Date\)/);
+  assert.match(usefulData, /const today = dayKeyUTC\(now\)/);
+  assert.match(usefulData, /byDate\.get\(dayKeyUTC\(new Date\(cursor\)\)\)/);
+
+  // UTC+14 has already crossed local midnight into Jul 21, but the usage calendar is still Jul 20 UTC.
+  const plus14Now = new Date("2026-07-21T00:30:00+14:00");
+  assert.equal(dayKeyUTC(plus14Now), "2026-07-20");
+  assert.equal(summarize([active("2026-07-20")], plus14Now).showLastActive, false);
+  assert.equal(summarize([active("2026-07-21")], plus14Now).showLastActive, true);
+
+  // UTC-11 is still on local Jul 19, while the same canonical UTC calendar day is Jul 20.
+  const minus11Now = new Date("2026-07-19T23:30:00-11:00");
+  assert.equal(dayKeyUTC(minus11Now), "2026-07-20");
+  assert.equal(summarize([active("2026-07-20")], minus11Now).showLastActive, false);
+  assert.equal(summarize([active("2026-07-19")], minus11Now).showLastActive, true);
+});
+
+test("usage streak handles empty, single, inactive-gap, and duplicate-date windows", () => {
+  const runtime = loadUsefulDataModule();
+  type Day = { date: string; ops: number; credits: number; usd: number };
+  const summarize = runtime.exports.summarizeUsageDays as (days: Day[], now: Date) => { currentStreak: number; lastActive: string | null; showLastActive: boolean };
+  const now = new Date("2026-07-20T12:00:00Z");
+  const active = (date: string): Day => ({ date, ops: 1, credits: 0, usd: 0 });
+  const inactive = (date: string): Day => ({ date, ops: 0, credits: 0, usd: 0 });
+
+  assert.deepEqual(summarize([], now), { currentStreak: 0, lastActive: null, showLastActive: false });
+  assert.deepEqual(summarize([active("2026-07-20")], now), { currentStreak: 1, lastActive: "2026-07-20", showLastActive: false });
+  assert.deepEqual(summarize([active("2026-07-17"), inactive("2026-07-18"), active("2026-07-19")], now), {
+    currentStreak: 1,
+    lastActive: "2026-07-19",
+    showLastActive: true,
+  });
+  assert.deepEqual(summarize([active("2026-07-17"), active("2026-07-17"), active("2026-07-18")], now), {
+    currentStreak: 2,
+    lastActive: "2026-07-18",
+    showLastActive: true,
+  });
+});
+
+test("profile useful facts, model coverage, banner removal, and file budget stay exact", () => {
+  const runtime = loadUsefulDataModule();
+  const summarize = runtime.exports.summarizeUsageDays as (days: Array<{ date: string; ops: number; credits: number; usd: number }>, now?: Date) => { currentStreak: number; lastActive: string | null; showLastActive: boolean };
+  assert.deepEqual(summarize([
+    { date: "2026-07-16", ops: 1, credits: 0, usd: 0 },
+    { date: "2026-07-17", ops: 0, credits: 1, usd: 0 },
+    { date: "2026-07-18", ops: 0, credits: 0, usd: 2 },
+  ], new Date("2026-07-20T12:00:00Z")), { currentStreak: 3, lastActive: "2026-07-18", showLastActive: true });
+  assert.match(page, /label: "Current streak"/);
+  assert.match(page, /summarizeUsageDays\(profile\.usageDays, new Date\(\)\)/);
+  assert.match(page, /activity\.lastActive && activity\.showLastActive/);
+  assert.match(page, /label: "Last active"/);
+  assert.match(page, /label: "Credits burned"[\s\S]*value: formatInt\(totalCredits\)/);
+  assert.match(usefulData, /const catProviderOps = new Map/);
+  assert.match(usefulData, /const providerModelOps = new Map/);
+  assert.match(usefulData, /const coverage = categoryOps > 0[\s\S]*Math\.max\(0, Math\.min\(100, Math\.round\(\(taggedOps \/ categoryOps\) \* 100\)\)\)/);
+  assert.match(usefulData, /model tags on \$\{coverage\}% of ops/);
+  assert.match(usefulData, /foot: categoryOps > 0/);
+  assert.doesNotMatch(globalStyles, /VTK:\/\/PUBLIC-BOARD/);
+  assert.match(globalStyles, /VTK:\/\/LANE/);
+  assert.doesNotMatch(`${page}\n${usefulData}`, /Cynaps3[^\n]*(success|failure)|(success|failure)[^\n]*Cynaps3/i);
+  assert.ok(page.split("\n").length <= 600, `page.tsx is ${page.split("\n").length} lines`);
+  assert.doesNotMatch(usefulDataStyles, /--vuse/);
+  assert.doesNotMatch(usefulDataStyles, /@keyframes|animation:/);
 });

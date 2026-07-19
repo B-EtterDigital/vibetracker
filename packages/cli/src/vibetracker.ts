@@ -64,7 +64,7 @@ import {
   type StoredOAuthCredentials,
 } from "./oauth.ts";
 import { ccusageToRecords, findCcJson, CCUSAGE_PROVIDERS } from "./import-ccusage.ts";
-import { collectCodingTelemetry } from "./coding-telemetry.ts";
+import { collectCodingTelemetry, resolveCodingTelemetry } from "./coding-telemetry.ts";
 import { collectOrchestrationHours } from "./orchestration-hours.ts";
 import { fetchViberankProfile, decomposeViberank, VIBERANK_PROVIDER } from "./import-viberank.ts";
 import { buildMidjourneyLifetimeRecord, isMidjourneyLifetimeImport, parseMidjourneyInfo } from "./import-midjourney.ts";
@@ -2131,11 +2131,14 @@ async function main() {
     const url = flag(argv, "--url") || cfg.uploadUrl || process.env.VT_UPLOAD_URL || DEFAULT_UPLOAD_URL;
     const trustSignals = collectTrustSignals();
     const audit = buildUsageAudit({ records: accepted, providers: PROVIDERS, config: cfg, trustSignals });
-    // Attach the newest local cc.json aggregate without launching ccusage or blocking upload.
-    // Model tokens and per-day agent presence are measured; per-agent spend is not inferred.
-    const coding = argv.includes("--no-ccusage")
-      ? null
-      : collectCodingTelemetry({ telemetry: createConsoleTelemetry() });
+    // Persisted, post-reconcile token classes are the source of truth. A fresh ledger falls back
+    // to the newest local cc.json aggregate without launching ccusage or blocking upload.
+    const coding = resolveCodingTelemetry(
+      accepted,
+      () => argv.includes("--no-ccusage")
+        ? null
+        : collectCodingTelemetry({ telemetry: createConsoleTelemetry() }),
+    );
     // Recent, byte-budgeted local trace reconstructed from bounded session-event gaps.
     const orchestration = argv.includes("--no-orchestration")
       ? null

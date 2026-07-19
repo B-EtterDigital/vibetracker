@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { cache, type CSSProperties, type ReactNode } from "react";
+import { cache, type ReactNode } from "react";
 import { getProfile } from "../../../lib/data";
 import { buildDemoProfile, DEMO_HANDLE } from "../../../lib/demo-profile";
 import { formatInt, formatUsd } from "../../../lib/leaderboard";
@@ -32,17 +32,29 @@ import { SyncRhythm, GitHubContributions } from "./profile-heatmap";
 import { TokenBreakdown, Delegation } from "./profile-tokens";
 import { OrchestrationHours } from "./profile-orchestration";
 import { ViberIdentity } from "./profile-identity";
-import { SourceToolbar, INFO_RAMP, type StackMonth } from "./profile-infographic";
-import { InfographicBoard, type BoardSpec } from "./profile-board";
+import { InfographicBoard } from "./profile-board";
 import { ToolbarDock } from "./profile-toolbar";
 import { SkillSignals } from "./profile-signals";
 import { computeProfileSignals } from "../../../lib/profile-signals";
 import { levelFor, fmtMeasure } from "../../../lib/viber-levels";
-import { nativeUsageLine } from "../../../lib/native-usage-metrics";
 import { FlipToC0vibe } from "./profile-flip";
 import { UsageTelemetry } from "./profile-telemetry";
 import { buildTelemetryModel } from "./profile-telemetry-model";
 import { ProfileReadout } from "./profile-readout";
+import {
+  ModelsByCost,
+  NativeOutputLedger,
+  ProfilePanelGrid,
+  buildModelUsage,
+  buildNativeLedgerRows,
+  buildProfileBoardData,
+  buildProfileChartSeries,
+  buildToolBrands,
+  canonicalProvider,
+  heroTopModels,
+  summarizeUsageDays,
+  type ProfilePanel,
+} from "./profile-useful-data";
 import "./profile.css";
 import "./profile-readout.css";
 import "./profile-hero.css";
@@ -53,6 +65,7 @@ import "./profile-identity.css";
 import "./profile-infographic.css";
 import "./profile-orchestration.css";
 import "./profile-telemetry.css";
+import "./profile-useful-data.css";
 import "./profile-accessibility.css";
 import "./profile-4k.css";
 
@@ -64,18 +77,6 @@ const C0VIBE_MIGRATE_HREF = "/cli-login";
 export const revalidate = 60;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-// Distinguishable colours for the stacked / 3D "all together" chart series (user-specified):
-// Codex blue, Claude orange, Suno a second distinct orange, OpenClaw red, fal.ai a second distinct
-// red, Higgsfield yellow. Sources not listed here fall back to their brand colour.
-const CHART_SERIES_COLOR: Record<string, string> = {
-  codex: "#3b82f6",          // blue
-  "claude-code": "#ea7317",  // orange
-  suno: "#ff9e64",           // lighter, distinct orange
-  falai: "#d1345b",          // red, distinct from OpenClaw
-  openclaw: "#ef4444",       // red
-  higgsfield: "#f5d020",     // yellow
-};
 
 // One profile fetch per request, shared by generateMetadata and the page.
 // The bundled demo profile renders the full dashboard without touching the DB.
@@ -101,11 +102,6 @@ function providerLabel(id: string): string {
   return PROVIDERS.find((d) => d.id === id)?.label ?? id;
 }
 
-// Model ids carry a build date suffix (claude-haiku-4-5-20251001); the rail wants the model.
-function prettyModel(model: string): string {
-  return model.replace(/-\d{8}$/, "");
-}
-
 function compactNumber(value: number): string {
   return new Intl.NumberFormat("en-US", {
     notation: "compact",
@@ -113,11 +109,6 @@ function compactNumber(value: number): string {
   }).format(value);
 }
 
-// browser-capture ids carry a "-web" suffix — the same tool as the base id (audit #10). Canonicalize
-// everywhere we aggregate or label so a source never splits into two coils/rows.
-function canonicalProvider(id: string): string {
-  return id.endsWith("-web") ? id.slice(0, -4) : id;
-}
 function primaryCategory(id: string): string {
   return PROVIDERS.find((d) => d.id === canonicalProvider(id) || d.id === id)?.categories[0] ?? "other";
 }
@@ -149,106 +140,10 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const usageTier = tierRaw === "verified" || tierRaw === "attested" ? tierRaw : "self_reported";
   const byUsd = profile.providers.slice().sort((a, b) => b.usd - a.usd);
 
-  // The toolbar is a toolchain, not a billing-provider list. New submissions carry an explicit
-  // aggregate for orchestrators such as Cynaps3; older submissions safely fall back to providers.
-  // "My Tools" is the UNION of every lane that proves a tool was used (user order 2026-07-19):
-  // submission tool rows ∪ providers with any usage ∪ CLI agents with active days (Hermes etc.).
-  // `content` is Cynaps3's content app — alias it to the Cynaps3 brand so the neuron shows.
-  const TOOL_ALIAS: Record<string, string> = { content: "cynaps3", musicmation: "cynaps3" };
-  const toolRowMap = new Map<string, number>();
-  const bumpTool = (rawId: string, ops: number) => {
-    // browser captures track as "<provider>-web" — the SAME tool as its base id; merge so a tool
-    // never appears twice in the rail (real report 2026-07-19: OpenAI showed two chips)
-    const aliased = TOOL_ALIAS[rawId] ?? rawId;
-    const id = aliased.endsWith("-web") ? aliased.slice(0, -4) : aliased;
-    toolRowMap.set(id, (toolRowMap.get(id) ?? 0) + ops);
-  };
-  for (const row of profile.tools ?? []) bumpTool(row.tool, row.ops);
-  for (const p of byUsd) if (p.usd > 0 || p.ops > 0) bumpTool(p.provider, toolRowMap.has(p.provider) ? 0 : p.ops);
-  for (const a of profile.agents ?? []) if (a.activeDays > 0 && !toolRowMap.has(a.agent)) bumpTool(a.agent, a.activeDays);
-  // per-tool stats for the unfold panel — provider aggregates where they exist
-  const provById = new Map(profile.providers.map((p) => [p.provider, p]));
-  const TOOL_BLURBS: Record<string, string> = {
-    "claude-code": "Anthropic's agentic coding CLI — this viber's heavy-lift pair programmer.",
-    claude: "Anthropic's Claude — long-form reasoning and building.",
-    codex: "OpenAI's Codex agent — autonomous implementation runs.",
-    "gemini-cli": "Antigravity CLI — Google's agentic coding CLI (successor to Gemini CLI).",
-    hermes: "Nous Research's Hermes agent — open-model agentic runs.",
-    openclaw: "OpenClaw — autonomous browser-native agent work.",
-    opencode: "OpenCode — open-source terminal coding agent.",
-    higgsfield: "Cinematic AI image, video, audio & 3D studio — credits burned on real renders.",
-    falai: "fal.ai — fast hosted inference for image, video and audio models.",
-    openai: "OpenAI API — models metered by the Costs API.",
-    openrouter: "OpenRouter — one key, every frontier model; balance-verified.",
-    browserbase: "Browserbase — headless browsers for agent automation.",
-    runpod: "RunPod — rented GPUs for heavy jobs.",
-    comfyui: "ComfyUI — local node-graph diffusion; $0 API, GPU-time real.",
-    suno: "Suno — AI music generation, tracked from the creator feed.",
-    sunoapi: "SunoAPI — programmatic Suno music runs.",
-    udio: "Udio — AI music generation.",
-    cynaps3: "Cynaps3 Musicmation — this viber's own music automation platform; tracks, audio seconds and credits from its usage ledger.",
-    elevenlabs: "ElevenLabs — AI voice and speech synthesis.",
-    leonardo: "Leonardo.ai — production image generation.",
-    runway: "Runway — pro AI video generation.",
-    perplexity: "Perplexity — AI answer engine and research.",
-    midjourney: "Midjourney — image generation; lifetime total imported from /info.",
-    replicate: "Replicate — hosted open-model inference per GPU-second.",
-    seaart: "SeaArt — AI image creation suite.",
-    tensorart: "Tensor.Art — community model image generation.",
-    pixverse: "PixVerse — AI video generation.",
-    vidu: "Vidu — AI video generation.",
-  };
-  const brands = [...toolRowMap.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([id]) => {
-      const brand = providerBrand(id);
-      const prov = provById.get(id);
-      return {
-        id,
-        label: providerLabel(id),
-        mark: brand.mark,
-        from: brand.from,
-        to: brand.to,
-        ink: brand.ink,
-        logo: brand.logo,
-        blurb: TOOL_BLURBS[id] ?? `${providerLabel(id)} — part of this viber's tracked AI stack.`,
-        stats: prov ? { ops: prov.ops, credits: prov.credits, usd: prov.usd } : undefined,
-      };
-    });
-
-  // Per-provider daily series for the interactive chart. Ranked by ops (activity), not spend, so
-  // the media powerhouse (Higgsfield, high ops / ~$0 spend) surfaces alongside the coding sources;
-  // brand-coloured so each reads as its own curve when clicked into the big chart or stacked.
-  const providerDaysById = new Map<string, Array<{ date: string; ops: number; credits: number; usd: number }>>();
-  for (const row of profile.providerDays) {
-    const list = providerDaysById.get(row.provider) ?? [];
-    list.push({ date: row.date, ops: row.ops, credits: row.credits, usd: row.usd });
-    providerDaysById.set(row.provider, list);
-  }
-  // Distinguishable series colours for the stacked / 3D "all together" view. Two oranges (Claude,
-  // Suno) and two reds (OpenClaw, fal.ai) are kept clearly apart; unspecified sources fall back to
-  // their brand colour.
-  // Per-provider model breakdown for the "click a source, see its models" list, ops-ranked.
-  const providerModelsById = new Map<string, Array<{ model: string; ops: number; usd: number }>>();
-  for (const m of profile.providerModels) {
-    const list = providerModelsById.get(m.provider) ?? [];
-    list.push({ model: m.model, ops: m.ops, usd: m.usd });
-    providerModelsById.set(m.provider, list);
-  }
-  for (const list of providerModelsById.values()) list.sort((a, b) => b.usd - a.usd || b.ops - a.ops);
-
-  const chartSeries = profile.providers
-    .slice()
-    .sort((a, b) => b.ops - a.ops)
-    .filter((p) => providerDaysById.has(p.provider))
-    .slice(0, 7)
-    .map((p) => ({
-      id: p.provider,
-      label: providerLabel(p.provider),
-      color: CHART_SERIES_COLOR[p.provider] ?? providerBrand(p.provider).from,
-      days: providerDaysById.get(p.provider) ?? [],
-      models: providerModelsById.get(p.provider) ?? [],
-    }));
+  const brands = buildToolBrands(profile, byUsd);
+  const chartSeries = buildProfileChartSeries(profile);
+  const modelUsage = buildModelUsage(profile.providerModels);
+  const nativeLedger = buildNativeLedgerRows(profile.nativeMetrics ?? []);
 
   // The headline stat cards carry NON-money values — money is not the flex (it lives in the Signal
   // read reference box and the token panels). These say what the viber has done and how broadly:
@@ -410,19 +305,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     if (magnitude >= 1_000) return `${sign}$${(magnitude / 1_000).toFixed(1)}k`;
     return formatUsd(n);
   };
-  // sum each model across ALL its provider/category rows before ranking, so a model used in more
-  // than one lane isn't split into two smaller entries and under-ranked.
-  const modelSpend = new Map<string, { usd: number; ops: number }>();
-  for (const m of profile.providerModels) {
-    const name = prettyModel(m.model);
-    const cur = modelSpend.get(name) ?? { usd: 0, ops: 0 };
-    cur.usd += m.usd; cur.ops += m.ops;
-    modelSpend.set(name, cur);
-  }
-  const topModels = [...modelSpend.entries()]
-    .sort((a, b) => b[1].usd - a[1].usd || b[1].ops - a[1].ops)
-    .slice(0, 5)
-    .map(([model, v]) => ({ model, spend: compactUsd(v.usd) }));
+  const topModels = heroTopModels(modelUsage);
   const exactOps = Math.round(facts.ops).toLocaleString("en-US");
   const heroState: HeroState[] = [
     { label: "signal", value: read.tier },
@@ -468,6 +351,32 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       title: "What this usage would cost at published API list prices without a subscription — an estimate for scale, not money spent",
     },
   ];
+  const activity = summarizeUsageDays(profile.usageDays, new Date());
+  const totalCredits = profile.latest?.total_credits ?? profile.providers.reduce((sum, provider) => sum + provider.credits, 0);
+  if (activity.currentStreak > 0) {
+    heroMetrics.push({
+      label: "Current streak",
+      value: formatInt(activity.currentStreak),
+      note: "consecutive active days",
+      title: `${formatInt(activity.currentStreak)} consecutive days ending on the most recent tracked usage day`,
+    });
+  }
+  if (activity.lastActive && activity.showLastActive) {
+    heroMetrics.push({
+      label: "Last active",
+      value: fmtDate(activity.lastActive),
+      note: "most recent tracked usage",
+      title: `Last tracked usage was ${fmtDate(activity.lastActive)}`,
+    });
+  }
+  if (totalCredits > 0) {
+    heroMetrics.push({
+      label: "Credits burned",
+      value: formatInt(totalCredits),
+      note: "native provider credits",
+      title: `${formatInt(totalCredits)} provider credits burned`,
+    });
+  }
   // A viber's own bio (set with `npx vibetrack profile --bio`), shown below the sources. Empty for
   // most profiles today, which surfaces the "add a bio" affordance instead.
   const userBio = (profile.bio ?? "").trim();
@@ -500,297 +409,18 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   // queries (the chart, the delta rail, the heatmaps) stay full-width; the two that read cleanly at
   // half (specialization, trust) pair 2-up. Movement order is fixed, so a panel's push position no
   // longer dictates where it lands.
-  type Span = "full" | "half";
-  interface Panel { key: string; group: string; span: Span; node: ReactNode; }
-  const panels: Panel[] = [];
-  const add = (group: string, span: Span, node: ReactNode) => {
+  const panels: ProfilePanel[] = [];
+  const add = (group: string, span: ProfilePanel["span"], node: ReactNode) => {
     panels.push({ key: (node as { key?: string }).key ?? group, group, span, node });
   };
 
-  // ---- Infographic board data (user reference 2026-07-15: hero → logo toolbar → the composed
-  // board). Traits = disciplines with real usage; spiral = CLI distribution by active days;
-  // columns = monthly spend stacked by source. Reference palette via INFO_RAMP. ----------------
-  const traits = categories.map((c, i) => ({
-    id: c.id,
-    label: c.label.replace(/^AI\s+/i, ""),
-    color: INFO_RAMP[i % INFO_RAMP.length],
-    pct: c.share,
-  }));
-  const opsCompact = facts.ops >= 1e9 ? `${(facts.ops / 1e9).toFixed(1)}B`
-    : facts.ops >= 1e6 ? `${Math.round(facts.ops / 1e6)}M`
-      : formatInt(Math.round(facts.ops));
-  const AGENT_NAME: Record<string, string> = {
-    codex: "Codex", claude: "Claude", "claude-code": "Claude", hermes: "Hermes",
-    openclaw: "OpenClaw", gemini: "Gemini", "gemini-cli": "Antigravity", opencode: "OpenCode",
-  };
-  const agentRows = (profile.agents ?? []).filter((a) => a.activeDays > 0);
-  const agentDaysTotal = agentRows.reduce((s, a) => s + a.activeDays, 0);
-  const cliSpiral = agentRows
-    .slice().sort((a, b) => b.activeDays - a.activeDays).slice(0, 10)
-    .map((a, i) => {
-      const share = agentDaysTotal > 0 ? (a.activeDays / agentDaysTotal) * 100 : 0;
-      return {
-        label: AGENT_NAME[a.agent] ?? a.agent,
-        pct: share >= 1 ? `${Math.round(share)}%` : "<1%",
-        color: INFO_RAMP[i % INFO_RAMP.length],
-      };
-    });
-  // monthly spend stacked by source — last 12 months, filterable to one trait's sources
-  const monthAgg = new Map<string, Map<string, number>>();
-  // category-exact series (schema correction 2026-07-19): new submissions persist each daily
-  // row's category, so a trait's bars show ONLY that trait's spend — a multi-category provider
-  // (Higgsfield, fal.ai) can no longer paint its full total into every trait it touches.
-  const monthAggByCat = new Map<string, Map<string, Map<string, number>>>();
-  let hasCategoryDays = false;
-  for (const d0 of profile.providerDays) {
-    const d = { ...d0, provider: canonicalProvider(d0.provider) };
-    const ym = d.date.slice(0, 7);
-    const per = monthAgg.get(ym) ?? new Map<string, number>();
-    per.set(d.provider, (per.get(d.provider) ?? 0) + d.usd);
-    monthAgg.set(ym, per);
-    if (d.category) {
-      hasCategoryDays = true;
-      const catMap = monthAggByCat.get(d.category) ?? new Map<string, Map<string, number>>();
-      const catPer = catMap.get(ym) ?? new Map<string, number>();
-      catPer.set(d.provider, (catPer.get(d.provider) ?? 0) + d.usd);
-      catMap.set(ym, catPer);
-      monthAggByCat.set(d.category, catMap);
-    }
-  }
-  const monthsFrom = (agg: Map<string, Map<string, number>>, provs?: Set<string>): StackMonth[] => {
-    const yms = [...agg.keys()].sort().slice(-12);
-    const rowsOf = (ym: string) => [...agg.get(ym)!.entries()].filter(([p, v]) => v > 0 && (!provs || provs.has(p)));
-    const totals = yms.map((ym) => rowsOf(ym).reduce((s, [, v]) => s + v, 0));
-    const windowSum = totals.reduce((s, v) => s + v, 0);
-    const provWindow = new Map<string, number>();
-    for (const ym of yms) for (const [p, v] of rowsOf(ym)) provWindow.set(p, (provWindow.get(p) ?? 0) + v);
-    const topProv = [...provWindow.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([p]) => p);
-    return yms.map((ym, i) => {
-      const rows = rowsOf(ym);
-      const segments = topProv
-        .filter((p) => rows.some(([q]) => q === p))
-        .map((p) => ({ id: p, label: providerLabel(p), value: rows.find(([q]) => q === p)![1], color: INFO_RAMP[topProv.indexOf(p) % INFO_RAMP.length] }));
-      const other = rows.filter(([p]) => !topProv.includes(p)).reduce((s, [, v]) => s + v, 0);
-      if (other > 0) segments.push({ id: "other", label: "Other sources", value: other, color: "rgba(217,255,242,0.25)" });
-      return {
-        label: MONTHS[Number(ym.slice(5)) - 1] ?? ym,
-        sharePct: windowSum > 0 ? (totals[i] / windowSum) * 100 : 0,
-        segments,
-      };
-    });
-  };
-  const monthsFor = (provs?: Set<string>): StackMonth[] => monthsFrom(monthAgg, provs);
-  // exact per-trait bars from persisted categories; legacy submissions fall back to the
-  // provider-filtered series (never the global one — audit finding #6)
-  const monthsForCat = (cat: string, provs?: Set<string>): StackMonth[] => {
-    const catAgg = monthAggByCat.get(cat);
-    if (catAgg) return monthsFrom(catAgg);
-    if (hasCategoryDays) return []; // categories exist but not this one → honestly empty
-    return provs?.size ? monthsFrom(monthAgg, provs) : [];
-  };
-  // sources per trait (by each source's primary discipline — the fallback map)
-  const provsByCat = new Map<string, Set<string>>();
-  for (const p of profile.providers) {
-    const cat = primaryCategory(p.provider);
-    if (!provsByCat.has(cat)) provsByCat.set(cat, new Set());
-    provsByCat.get(cat)!.add(p.provider);
-  }
-  // Per-MODEL trait classification: a multi-discipline source (Higgsfield spans image, video, 3D;
-  // fal.ai image + video) carries models from several traits, so mapping by the source's primary
-  // discipline put video/music/3D models under "image" and left those specs falling back to the
-  // CLI hex. The model name decides its trait; unmatched models ride the source's primary.
-  const MODEL_TRAIT_HINTS: Array<[RegExp, string]> = [
-    // NOTE: bare "minimax" is their LLM family (m2.5 etc.) — only Hailuo/video-01 are video
-    [/kling|veo|sora|runway|hailuo|minimax.?video|video-0\d|luma|pixverse|wan[-_ ]?2|hunyuan.?video|ltx|mochi|seedance|dream.?machine|video/i, "video"],
-    [/hunyuan.?3d|trellis|tripo|meshy|rodin|3d/i, "3d"],
-    [/suno|\budio\b|lyria|riffusion|music/i, "music"],
-    [/eleven|tts|voice|speech|chatterbox|dubbing|whisper|audio/i, "audio"],
-    [/flux|banana|imagen|dall|gpt-image|seedream|ideogram|recraft|sdxl|stable.?diff|photon|midjourney|image|upscal|aura-sr|sam-?\d|sam2|florence|vector/i, "image"],
-  ];
-  const traitOfModel = (providerId: string, model: string): string => {
-    for (const [re, trait] of MODEL_TRAIT_HINTS) if (re.test(model)) return trait;
-    return primaryCategory(providerId);
-  };
-  const modelsByTrait = new Map<string, Map<string, { ops: number; usd: number }>>();
-  const provsByTrait = new Map<string, Set<string>>();
-  const provOpsByTrait = new Map<string, Map<string, number>>();
-  for (const m0 of profile.providerModels) {
-    const m = { ...m0, provider: canonicalProvider(m0.provider) };
-    const trait = m.category ?? traitOfModel(m.provider, m.model);
-    const name = prettyModel(m.model);
-    if (!modelsByTrait.has(trait)) modelsByTrait.set(trait, new Map());
-    const bucket = modelsByTrait.get(trait)!;
-    const cur = bucket.get(name) ?? { ops: 0, usd: 0 };
-    cur.ops += m.ops;
-    cur.usd += m.usd;
-    bucket.set(name, cur);
-    if (!provsByTrait.has(trait)) provsByTrait.set(trait, new Set());
-    provsByTrait.get(trait)!.add(m.provider);
-    if (!provOpsByTrait.has(trait)) provOpsByTrait.set(trait, new Map());
-    const pb = provOpsByTrait.get(trait)!;
-    pb.set(m.provider, (pb.get(m.provider) ?? 0) + m.ops);
-  }
-  // Attribute model-LESS category operations to a provider-named coil (user report: "Midjourney
-  // missing from the image hex" — its lifetime_images record carries no model). For each category,
-  // any provider whose category-exact ops exceed what its model rows accounted for gets the
-  // remainder as a "<Provider>" coil, so every real source is named in the hex, never dropped.
-  const providerModelOps = new Map<string, Map<string, number>>(); // cat -> provider -> ops in models
-  for (const m0 of profile.providerModels) {
-    const m = { ...m0, provider: canonicalProvider(m0.provider) };
-    const trait = m.category ?? traitOfModel(m.provider, m.model);
-    const pm = providerModelOps.get(trait) ?? new Map<string, number>();
-    pm.set(m.provider, (pm.get(m.provider) ?? 0) + m.ops);
-    providerModelOps.set(trait, pm);
-  }
-  const catProviderOps = new Map<string, Map<string, { ops: number; usd: number }>>(); // cat -> prov -> {ops,usd}
-  for (const d0 of profile.providerDays) {
-    if (!d0.category || (d0.ops <= 0 && d0.usd <= 0)) continue;
-    const prov = canonicalProvider(d0.provider);
-    const cm = catProviderOps.get(d0.category) ?? new Map<string, { ops: number; usd: number }>();
-    const cur = cm.get(prov) ?? { ops: 0, usd: 0 };
-    cur.ops += d0.ops; cur.usd += d0.usd;
-    cm.set(prov, cur);
-    catProviderOps.set(d0.category, cm);
-  }
-  const providerModelUsd = new Map<string, Map<string, number>>();
-  for (const m0 of profile.providerModels) {
-    const m = { ...m0, provider: canonicalProvider(m0.provider) };
-    const trait = m.category ?? traitOfModel(m.provider, m.model);
-    const pm = providerModelUsd.get(trait) ?? new Map<string, number>();
-    pm.set(m.provider, (pm.get(m.provider) ?? 0) + m.usd);
-    providerModelUsd.set(trait, pm);
-  }
-  for (const [cat, provs] of catProviderOps) {
-    const bucket = modelsByTrait.get(cat) ?? new Map<string, { ops: number; usd: number }>();
-    const modelledOps = providerModelOps.get(cat);
-    const modelledUsd = providerModelUsd.get(cat);
-    for (const [prov, tot] of provs) {
-      const untaggedOps = tot.ops - (modelledOps?.get(prov) ?? 0);
-      const untaggedUsd = tot.usd - (modelledUsd?.get(prov) ?? 0);
-      if (untaggedOps <= 0 && untaggedUsd <= 0) continue;
-      const label = providerLabel(prov); // name the SOURCE (Midjourney, Higgsfield) as its own coil
-      const cur = bucket.get(label) ?? { ops: 0, usd: 0 };
-      cur.ops += Math.max(untaggedOps, 0);
-      cur.usd += Math.max(untaggedUsd, 0); // carry USD so cost-weighted traits keep this source
-      bucket.set(label, cur);
-    }
-    modelsByTrait.set(cat, bucket);
-  }
-  // Second click state (user order 2026-07-19): the provider distribution behind a trait —
-  // "who powers my image gen" as coils, one per SOURCE. Per-model rows are the primary weight;
-  // sources whose category records carry no model split fall back to their total ops so every
-  // contributing platform still appears.
-  const providerDistFor = (cat: string) => {
-    // exact lane first: category-tagged daily rows sum ops per provider for this trait
-    const exact = new Map<string, number>();
-    for (const d of profile.providerDays) {
-      if (d.category === cat && d.ops > 0) { const pv = canonicalProvider(d.provider); exact.set(pv, (exact.get(pv) ?? 0) + d.ops); }
-    }
-    const byProv = exact.size ? exact : new Map<string, number>(provOpsByTrait.get(cat) ?? []);
-    for (const p of profile.providers) {
-      const pv = canonicalProvider(p.provider);
-      if (!byProv.has(pv) && primaryCategory(pv) === cat && p.ops > 0) byProv.set(pv, p.ops);
-    }
-    const total = [...byProv.values()].reduce((s, v) => s + v, 0);
-    return [...byProv.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([prov, ops], i) => ({
-      label: providerLabel(prov),
-      pct: total > 0 && (ops / total) * 100 >= 1 ? `${Math.round((ops / total) * 100)}%` : "<1%",
-      color: INFO_RAMP[i % INFO_RAMP.length],
-    }));
-  };
-  // Model share weighting (user report 2026-07-19: "haiku is definitely not my nr.1"): record
-  // COUNT misrepresents coding — Haiku fires many tiny calls while one Codex session is a single
-  // record worth ~200M tokens. When a trait carries real spend, COST is the honest weight (matches
-  // the reference "Models by cost"); zero-spend media traits keep operations.
-  const traitWeighsByCost = (cat: string): boolean => {
-    const byModel = modelsByTrait.get(cat);
-    if (!byModel) return false;
-    return [...byModel.values()].reduce((s, v) => s + v.usd, 0) >= 1;
-  };
-  const spiralForCat = (cat: string) => {
-    const byModel = modelsByTrait.get(cat);
-    if (!byModel) return [];
-    const byCost = traitWeighsByCost(cat);
-    const weightOf = (v: { ops: number; usd: number }) => (byCost ? v.usd : v.ops);
-    const ranked = [...byModel.entries()].sort((a, b) => weightOf(b[1]) - weightOf(a[1]));
-    const modelTotal = ranked.reduce((s, [, v]) => s + weightOf(v), 0);
-    // reconcile with the trait circle (audit #4): the circle is ops; when the hex is ops-weighted,
-    // records with no model (lifetime backfills) or tail models beyond the top 9 become one honest
-    // "other / unlisted" coil so the coils sum to the trait's real total, never a subset.
-    const catOps = categorySource.find((c) => c.id === cat)?.ops ?? 0;
-    const denom = byCost ? modelTotal : Math.max(modelTotal, catOps);
-    const HEAD = 9;
-    const head = ranked.slice(0, HEAD);
-    const tail = ranked.slice(HEAD).reduce((s, [, v]) => s + weightOf(v), 0);
-    const unattributed = byCost ? 0 : Math.max(catOps - modelTotal, 0);
-    const otherWeight = tail + unattributed;
-    const coils = head.map(([model, v], i) => ({
-      label: model.length > 18 ? `…${model.slice(-17)}` : model,
-      pct: denom > 0 && (weightOf(v) / denom) * 100 >= 1 ? `${Math.round((weightOf(v) / denom) * 100)}%` : "<1%",
-      color: INFO_RAMP[i % INFO_RAMP.length],
-    }));
-    if (otherWeight > 0 && denom > 0) {
-      coils.push({
-        label: unattributed > 0 && tail === 0 ? "unlisted (no model tag)" : "other models",
-        pct: (otherWeight / denom) * 100 >= 1 ? `${Math.round((otherWeight / denom) * 100)}%` : "<1%",
-        color: "rgba(217,255,242,0.3)",
-      });
-    }
-    return coils;
-  };
-  // one BoardSpec per trait + the overview — the hex, story and bars switch on circle click
-  const specs: Record<string, BoardSpec> = {
-    all: {
-      id: "all",
-      label: "Overview",
-      spiralTitle: "CLI distribution, share of active days",
-      spiral: cliSpiral,
-      months: monthsFor(),
-      story: {
-        title: "the whole practice",
-        intro: userBio || undefined,
-        bullets: [
-          `${facts.categories} disciplines across ${facts.providers} sources`,
-          `${opsCompact} operations · ${formatUsd(facts.usd)} API-equivalent`,
-          `${formatInt(facts.days)} active days`,
-        ],
-        foot: "click a circle to open that specialization — click again for its sources, once more to come back",
-      },
-    },
-  };
-  for (const c of categories) {
-    const provs = provsByTrait.get(c.id) ?? provsByCat.get(c.id);
-    const spiral = spiralForCat(c.id);
-    const sourceNames = provs ? [...provs].map((p) => providerLabel(p)) : [];
-    const topModelNames = spiral.slice(0, 3).map((s) => s.label);
-    const raw = categorySource.find((s) => s.id === c.id);
-    const nativeLine = nativeUsageLine(profile.nativeMetrics, c.id);
-    specs[c.id] = {
-      id: c.id,
-      label: c.label,
-      spiralTitle: `${c.label} — model distribution by ${traitWeighsByCost(c.id) ? "cost" : "operations"}`,
-      // a thin trait NEVER borrows the CLI coils (that read as wrong content): one model = one
-      // coil, zero models = no hexagon at all, and the story says so
-      spiral,
-      // second click: the SOURCE distribution behind this trait (who powers it)
-      providerDist: providerDistFor(c.id),
-      months: monthsForCat(c.id, provs),
-      story: {
-        title: c.label.toLowerCase(),
-        bullets: [
-          `${c.share >= 1 ? Math.round(c.share) : "<1"}% of all operations — ${formatInt(Math.round(raw?.ops ?? 0))} ops · ${formatInt(raw?.credits ?? 0)} credits · ${formatUsd(raw?.usd ?? 0)} API-equivalent`,
-          ...(nativeLine ? [nativeLine] : []),
-          ...(topModelNames.length ? [`top models: ${topModelNames.join(" · ")}`] : []),
-          ...(sourceNames.length ? [`sources: ${sourceNames.join(" · ")}`] : []),
-        ],
-        foot: spiral.length >= 2
-          ? "the hexagon and bars are filtered to this specialization"
-          : spiral.length === 1
-            ? "one model recorded here so far — the single coil is that model"
-            : "no per-model split recorded for this trait yet — the bars are still filtered to its sources",
-      },
-    };
-  }
+  const { traits, opsCompact, specs } = buildProfileBoardData({
+    profile,
+    categories,
+    categorySource,
+    facts,
+    userBio,
+  });
 
   if (isDemo) add("hero", "full", <DemoBanner key="demo" />);
   add("hero", "full",
@@ -885,6 +515,8 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   } else if (showProviderMix || reveal.insights) {
     add("usage", "full", <MixRow mix={showProviderMix ? mix : null} insights={reveal.insights ? insights : null} key="mix" />);
   }
+  if (modelUsage.length > 0) add("usage", "full", <ModelsByCost rows={modelUsage} key="models-by-cost" />);
+  if (nativeLedger.length > 0) add("usage", "full", <NativeOutputLedger rows={nativeLedger} key="native-output-ledger" />);
   // Token breakdown (input/output/cache) + cross-provider delegation — the SMOA orchestration
   // surface. Both are additive aggregates; shown only when the upload carried them.
   const tokenBreakdown = profile.tokenBreakdown ?? [];
@@ -916,55 +548,12 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     add("join", "full", <LockedPanels note="more panels unlock as your data deepens" items={locked} key="locked" />);
   }
 
-  // A lone half-panel has no partner to sit beside — promote it to full so it never leaves a gap.
-  for (const group of new Set(panels.map((p) => p.group))) {
-    const halves = panels.filter((p) => p.group === group && p.span === "half");
-    if (halves.length === 1) halves[0].span = "full";
-  }
-
-  const GROUP_ORDER = climbing
-    ? ["hero", "join", "overview", "usage", "activity", "who"]
-    : ["hero", "overview", "usage", "activity", "who", "join"];
-  const GROUP_LABEL: Record<string, string> = {
-    overview: "Overview",
-    usage: "Usage",
-    activity: "Activity",
-    who: "Identity & trust",
-  };
-  const ordered = panels.slice().sort((a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group));
-
-  // Walk the ordered panels, opening a movement (an eyebrow + a hairline rule) whenever a labelled
-  // group begins. --panel-i keeps the staggered reveal animation continuous across the whole grid.
-  const grid: ReactNode[] = [];
-  let lastGroup = "";
-  let i = 0;
-  for (const panel of ordered) {
-    if (panel.group !== lastGroup) {
-      lastGroup = panel.group;
-      const label = GROUP_LABEL[panel.group];
-      if (label) {
-        grid.push(
-          <div className="vprofile-movement" style={{ "--panel-i": i } as CSSProperties} key={`mv-${panel.group}`}>
-            <span>{label}</span>
-          </div>,
-        );
-        i += 1;
-      }
-    }
-    grid.push(
-      <div className={`vprofile-slot vprofile-slot--${panel.span}`} style={{ "--panel-i": i } as CSSProperties} key={panel.key}>
-        {panel.node}
-      </div>,
-    );
-    i += 1;
-  }
-
   return (
     <section className="vprofile">
       <a className="vprofile-back" href="/">
         <span aria-hidden="true">&#8592;</span> Leaderboard
       </a>
-      <div className="vprofile-grid">{grid}</div>
+      <ProfilePanelGrid panels={panels} climbing={climbing} />
     </section>
   );
 }

@@ -47,9 +47,6 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: 
 .app-shell-dock__totals span { color: #d9fff2; border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--line));
   border-radius: 999px; padding: 4px 6px; background: rgba(0,0,0,.22); font: 900 8px/1 ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; }
 .wrap { position: relative; z-index: 1; max-width: min(1680px, 95vw); margin: 0 auto; padding: 34px 24px 72px; }
-.wrap::before { content: "VTK://PUBLIC-BOARD//LOCAL-FIRST//NO-CONFETTI//PROOF-LEDGER"; display: block; margin-bottom: 16px;
-  color: #88ffe0; border: 1px solid rgba(46,232,214,.2); background: #061014; border-radius: 8px; padding: 7px 10px;
-  font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .14em; overflow: hidden; white-space: nowrap; }
 .ftr { position: relative; z-index: 1; text-align: center; color: var(--muted); padding: 24px; border-top: 1px solid var(--line);
   background: rgba(4,6,7,.78); }
 

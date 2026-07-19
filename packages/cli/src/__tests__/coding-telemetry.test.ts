@@ -3,7 +3,12 @@ import { mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { ccusageToCodingTelemetry, collectCodingTelemetry } from "../coding-telemetry.ts";
+import {
+  ccusageToCodingTelemetry,
+  collectCodingTelemetry,
+  ledgerTokenBreakdown,
+  resolveCodingTelemetry,
+} from "../coding-telemetry.ts";
 import { findCcJson } from "../import-ccusage.ts";
 
 test("ccusage snapshot -> measured tokens and honest agent-presence aggregates", () => {
@@ -45,6 +50,89 @@ test("cross-provider days require multiple measured model providers on the same 
 
 test("empty ccusage input yields null (no fabricated aggregates)", () => {
   assert.equal(ccusageToCodingTelemetry([]), null);
+});
+
+test("ledger token usage is summed into coding-provider and total scopes", () => {
+  const breakdown = ledgerTokenBreakdown([
+    { provider: "claude-code", category: "coding", unit: "token", tokenUsage: { input: 100, output: 20, cacheRead: 70, cacheCreate: 10 } },
+    { provider: "claude-code", category: "coding", unit: "token", tokenUsage: { input: 50, output: 5, cacheRead: 30, cacheCreate: 2 } },
+    { provider: "codex", category: "coding", unit: "token", tokenUsage: { input: 80, output: 30, cacheRead: 40, cacheCreate: 0 } },
+    { provider: "openclaw", category: "coding", unit: "token", tokenUsage: { input: 10, output: 4, cacheRead: 3, cacheCreate: 2 } },
+    { provider: "gemini-cli", category: "coding", unit: "token", tokenUsage: { input: 9, output: 8, cacheRead: 7, cacheCreate: 6 } },
+    { provider: "hermes", category: "coding", unit: "token", tokenUsage: { input: 7, output: 6, cacheRead: 5, cacheCreate: 4 } },
+    { provider: "openai", category: "coding", unit: "token", tokenUsage: { input: 999, output: 999, cacheRead: 999, cacheCreate: 999 } },
+  ])!;
+
+  assert.deepEqual(breakdown.total, {
+    input: 256,
+    output: 73,
+    cacheRead: 155,
+    cacheCreation: 24,
+  });
+  assert.deepEqual(breakdown.byProvider, [
+    { provider: "claude-code", input: 150, output: 25, cacheRead: 100, cacheCreation: 12 },
+    { provider: "codex", input: 80, output: 30, cacheRead: 40, cacheCreation: 0 },
+    { provider: "gemini-cli", input: 9, output: 8, cacheRead: 7, cacheCreation: 6 },
+    { provider: "hermes", input: 7, output: 6, cacheRead: 5, cacheCreation: 4 },
+    { provider: "openclaw", input: 10, output: 4, cacheRead: 3, cacheCreation: 2 },
+  ]);
+});
+
+test("fresh ledgers use the existing coding-telemetry scan as fallback", () => {
+  const fallback = ccusageToCodingTelemetry([{
+    modelBreakdowns: [{ modelName: "gpt-5.5", inputTokens: 12, outputTokens: 3 }],
+  }])!;
+  let fallbackCalls = 0;
+  const resolved = resolveCodingTelemetry(
+    [],
+    () => { fallbackCalls += 1; return fallback; },
+  );
+
+  assert.equal(fallbackCalls, 1);
+  assert.equal(resolved, fallback);
+  assert.equal(resolved!.tokenBreakdown.byProvider[0].provider, "codex");
+});
+
+test("same-provider partial coverage falls back for that provider while complete providers stay ledger-sourced", () => {
+  let fallbackCalls = 0;
+  const resolved = resolveCodingTelemetry([
+    { provider: "claude-code", category: "coding", unit: "token", tokenUsage: { input: 100, output: 20, cacheRead: 70, cacheCreate: 10 } },
+    { provider: "codex", category: "coding", unit: "token", tokenUsage: { input: 25, output: 5, cacheRead: 0, cacheCreate: 0 } },
+    { provider: "codex", category: "coding", unit: "token", tokenUsage: undefined },
+  ], () => {
+    fallbackCalls += 1;
+    return ccusageToCodingTelemetry([{
+      modelBreakdowns: [
+        { modelName: "claude-opus-4-8", inputTokens: 1_000 },
+        { modelName: "gpt-5.5", inputTokens: 2_000 },
+      ],
+    }]);
+  })!;
+
+  assert.equal(fallbackCalls, 1);
+  assert.equal(resolved.totalTokens, 2_200);
+  assert.deepEqual(resolved.tokenBreakdown.byProvider, [
+    { provider: "codex", input: 2_000, output: 0, cacheRead: 0, cacheCreation: 0 },
+    { provider: "claude-code", input: 100, output: 20, cacheRead: 70, cacheCreation: 10 },
+  ]);
+});
+
+test("all-zero ledger token usage is uncovered and uses the provider fallback", () => {
+  let fallbackCalls = 0;
+  const resolved = resolveCodingTelemetry([
+    { provider: "codex", category: "coding", unit: "token", tokenUsage: { input: 0, output: 0, cacheRead: 0, cacheCreate: 0 } },
+  ], () => {
+    fallbackCalls += 1;
+    return ccusageToCodingTelemetry([{
+      modelBreakdowns: [{ modelName: "gpt-5.5", inputTokens: 12, outputTokens: 3 }],
+    }]);
+  })!;
+
+  assert.equal(fallbackCalls, 1);
+  assert.equal(resolved.totalTokens, 15);
+  assert.deepEqual(resolved.tokenBreakdown.byProvider, [
+    { provider: "codex", input: 12, output: 3, cacheRead: 0, cacheCreation: 0 },
+  ]);
 });
 
 test("findCcJson selects the newest existing snapshot", (t) => {
