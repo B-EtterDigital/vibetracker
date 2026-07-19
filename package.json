@@ -4,16 +4,47 @@
   "description": "Track all your AI usage and spend — coding agents, LLM APIs, local models, and generative media (image/video/music/audio/3D) — in one CLI. ccusage + viberank, but universal.",
   "type": "module",
   "homepage": "https://vibeusage.c0vibe.app",
-  "repository": { "type": "git", "url": "git+https://github.com/B-EtterDigital/vibetracker.git" },
-  "bugs": { "url": "https://github.com/B-EtterDigital/vibetracker/issues" },
-  "publishConfig": { "access": "public" },
-  "bin": { "vibetracker": "dist/vibetracker.js", "vibetrack": "dist/vibetracker.js" },
-  "files": ["dist", "README.md", "LICENSE"],
-  "engines": { "node": ">=18" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/B-EtterDigital/vibetracker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/B-EtterDigital/vibetracker/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "vibetracker": "dist/vibetracker.js",
+    "vibetrack": "dist/vibetracker.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "packageManager": "pnpm@10.12.4",
   "license": "MIT",
-  "devDependencies": { "esbuild": "^0.28.1" },
-  "keywords": ["ai", "usage", "cost", "tracker", "cli", "llm", "ccusage", "higgsfield", "openai", "anthropic", "replicate", "credits"],
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  },
+  "keywords": [
+    "ai",
+    "usage",
+    "cost",
+    "tracker",
+    "cli",
+    "llm",
+    "ccusage",
+    "higgsfield",
+    "openai",
+    "anthropic",
+    "replicate",
+    "credits"
+  ],
   "scripts": {
     "vibetracker": "node bin/vibetracker.mjs",
     "sma:gen3": "node scripts/sma-gen3.mjs",
@@ -31,12 +62,15 @@
     "build": "node scripts/build.mjs",
     "prepublishOnly": "node scripts/build.mjs"
   },
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "dependencies": {
     "ascii-globe": "^0.4.4",
     "cli-spinners": "^3.4.0",
     "drawille": "^2.0.2",
-    "parquetjs-lite": "^0.8.7"
+    "parquetjs-lite": "^0.8.7",
+    "undici": "^8.7.0"
   },
   "pnpm": {
     "overrides": {
