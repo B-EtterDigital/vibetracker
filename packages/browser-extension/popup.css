@@ -15,6 +15,10 @@
 }
 
 * { box-sizing: border-box; }
+/* The `hidden` attribute MUST win: several elements below set `display` via id/class selectors
+   (#api-cmd, .scan-results, cards), which otherwise beat the UA [hidden] rule and leave toggled-off
+   elements visible (this caused the setup button to overlap the status text). */
+[hidden] { display: none !important; }
 body {
   width: 360px;
   margin: 0;
@@ -43,6 +47,9 @@ body {
 
 header, .provider-card, pre, .rails, button, output, footer { position: relative; z-index: 1; }
 header { margin-bottom: 12px; }
+.brand-lockup { display: flex; align-items: center; gap: 11px; margin-bottom: 9px; }
+.brand-mark { flex: none; border-radius: 9px; filter: drop-shadow(0 0 12px rgba(46,232,214,.25)); }
+.brand-text { min-width: 0; }
 header span {
   display: block;
   color: var(--self);
@@ -50,9 +57,9 @@ header span {
   letter-spacing: .12em;
 }
 h1 {
-  margin: 8px 0 7px;
+  margin: 5px 0 0;
   color: #f4fffb;
-  font: 900 25px/.95 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 900 23px/.95 ui-monospace, SFMono-Regular, Menlo, monospace;
   letter-spacing: 0;
 }
 p { margin: 0; color: var(--muted); }
@@ -237,23 +244,28 @@ button.primary:disabled { opacity: 0.6; cursor: default; transform: none; }
 .capture-fold[open] > summary::before { content: "▾ "; }
 
 /* ---- API status banner + read card + setup command ---- */
+/* Grid so the dot + copy share row 1 and the setup button (when shown) spans its OWN full-width row
+   below — the button can never crowd the text into a one-word-per-line column again. */
 .api-banner {
-  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  display: grid; grid-template-columns: auto 1fr; align-items: center;
+  gap: 6px 10px; margin-bottom: 12px;
   padding: 10px 12px; border-radius: 10px;
   border: 1px solid rgba(217,255,242,0.12); background: rgba(217,255,242,0.03);
 }
-.api-banner .api-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: rgba(217,255,242,0.35); }
+.api-banner .api-dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(217,255,242,0.35); }
 .api-banner[data-state="up"] { border-color: rgba(54,227,155,0.4); }
 .api-banner[data-state="up"] .api-dot { background: #36e39b; box-shadow: 0 0 10px #36e39b; }
 .api-banner[data-state="down"] { border-color: rgba(255,157,77,0.45); }
 .api-banner[data-state="down"] .api-dot { background: #ff9d4d; box-shadow: 0 0 10px #ff9d4d; }
-.api-copy { flex: 1; min-width: 0; }
+.api-copy { grid-column: 2; min-width: 0; }
 .api-copy b { display: block; font: 700 12px/1.2 var(--font, ui-monospace, monospace); color: #eafff8; }
-.api-copy small { font: 500 10px/1.4 var(--font, ui-monospace, monospace); color: rgba(217,255,242,0.55); }
+.api-copy small { display: block; font: 500 10px/1.4 var(--font, ui-monospace, monospace); color: rgba(217,255,242,0.55); }
 #api-cmd {
-  cursor: pointer; display: inline-flex; align-items: center; gap: 7px; flex: none;
-  padding: 7px 9px; border-radius: 7px; border: 1px solid rgba(46,232,214,0.35);
+  grid-column: 1 / -1; width: 100%; margin-top: 2px;
+  cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 7px;
+  padding: 8px 10px; border-radius: 7px; border: 1px solid rgba(46,232,214,0.35);
   background: #04110d; color: #2ee8d6; font: 700 10.5px/1 var(--font, ui-monospace, monospace);
+  text-transform: none;
 }
 #api-cmd code { color: #2ee8d6; background: none; }
 .read-card { border-color: rgba(159,124,255,0.35); background: linear-gradient(145deg, rgba(159,124,255,0.06), transparent); }

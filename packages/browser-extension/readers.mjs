@@ -15,11 +15,18 @@ export const READERS = [
     label: "Midjourney",
     category: "image",
     hosts: ["midjourney.com", "www.midjourney.com"],
-    // the /info panel and account page both print "Lifetime Usage: 3,982 images"
+    // Midjourney prints "Lifetime Usage: 3,982 images" via the Discord /info command; some account
+    // pages echo a "Lifetime" total. Match those anchored phrasings only — never a bare "N images",
+    // which would grab an unrelated gallery/explore count.
     stats: [
-      { operation: "lifetime_images", unit: "image", patterns: ["Lifetime Usage[:\\s]*([\\d,]+)\\s*images?"] },
+      { operation: "lifetime_images", unit: "image", patterns: [
+        "Lifetime Usage[:\\s]*([\\d,]+)\\s*images?",
+        "Lifetime\\s+Images?[:\\s]*([\\d,]+)",
+        "Lifetime[^\\d]{0,20}([\\d,]+)\\s*images?",
+        "([\\d,]+)\\s*images?\\s*generated\\s*(?:in\\s*total|all[\\s-]*time|lifetime)",
+      ] },
     ],
-    hint: "Open Midjourney and run /info (or your account page) so the lifetime total is visible, then read it.",
+    hint: "Midjourney shows this via /info in Discord — the web account page usually doesn't. If a 'Lifetime' image total is visible on the page, read it; otherwise run: vibetracker import midjourney --images <number from /info>.",
   },
   {
     id: "higgsfield",

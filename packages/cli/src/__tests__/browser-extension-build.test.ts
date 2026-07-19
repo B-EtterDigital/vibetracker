@@ -34,6 +34,10 @@ test("buildBrowserExtension produces a clean, Chrome-loadable copy (no __tests__
     for (const f of ["manifest.json", "background.js", "popup.html", "popup.js", "popup.css", "popup-model.mjs", "connectors.mjs", "readers.mjs"]) {
       assert.equal(existsSync(join(dest, f)), true, `missing runtime file: ${f}`);
     }
+    // the branded icons (a whole subdirectory) must survive the copy
+    for (const size of ["16", "32", "48", "128"]) {
+      assert.equal(existsSync(join(dest, "icons", `icon-${size}.png`)), true, `missing icon-${size}.png`);
+    }
     // the entries Chrome rejects or doesn't need are gone — this is the regression lock
     assert.equal(existsSync(join(dest, "__tests__")), false, "__tests__ must never be copied");
     assert.equal(existsSync(join(dest, "module.sweetspot.json")), false);

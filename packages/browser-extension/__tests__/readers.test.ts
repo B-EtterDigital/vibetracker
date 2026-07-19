@@ -19,6 +19,14 @@ test("extractStat pulls Midjourney lifetime images, comma-stripped", () => {
   assert.deepEqual(out, { operation: "lifetime_images", unit: "image", value: 3982 });
 });
 
+test("extractStat reads Midjourney web-page 'Lifetime' phrasings but ignores a bare gallery count", () => {
+  const mj = READERS.find((r) => r.id === "midjourney")!;
+  assert.equal(extractStat("Lifetime Images: 4,120", mj)?.value, 4120);
+  assert.equal(extractStat("12,000 images generated all-time", mj)?.value, 12000);
+  // a bare "N images" (an explore/gallery count) must NOT be mistaken for the lifetime total
+  assert.equal(extractStat("Showing 240 images in your gallery", mj), null);
+});
+
 test("extractStat reads a Higgsfield credit balance", () => {
   const hf = READERS.find((r) => r.id === "higgsfield")!;
   const out = extractStat("Plan: Ultra\nCredits: 5,848.5 remaining", hf);

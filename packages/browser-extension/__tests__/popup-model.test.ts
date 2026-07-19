@@ -68,8 +68,13 @@ test("browser extension manifest and popup load the module cockpit", () => {
     assert.ok(manifest.host_permissions.includes(`http://127.0.0.1:${port}/*`), `missing host_permission for 127.0.0.1:${port}`);
     assert.ok(manifest.host_permissions.includes(`http://localhost:${port}/*`), `missing host_permission for localhost:${port}`);
   }
+  // branded toolbar/extension icons must be declared at every size (no generic puzzle piece)
+  for (const size of ["16", "32", "48", "128"]) {
+    assert.equal(manifest.icons?.[size], `icons/icon-${size}.png`, `manifest.icons missing ${size}`);
+  }
   assert.match(popup, /popup\.css/);
   assert.match(popup, /type="module" src="popup\.js"/);
+  assert.match(popup, /class="brand-mark"/); // the header brand lockup
   assert.match(popup, /Nothing leaves your machine/);
   assert.match(popup, /Connect this site/);
   assert.match(popup, /Read usage from this page/);

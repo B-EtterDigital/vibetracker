@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- VibeTRACKER Bridge mark: a bold "V" (Vibe) rising into a tracker tick, gold node at the peak.
+       Brand palette: OLED tile #050708, cyan->green c0vibe gradient, gold accent. Reads at 16px. -->
+  <defs>
+    <linearGradient id="mark" x1="20" y1="24" x2="108" y2="104" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2ee8d6"/>
+      <stop offset="1" stop-color="#36e39b"/>
+    </linearGradient>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b161a"/>
+      <stop offset="1" stop-color="#050708"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="120" height="120" rx="30" fill="url(#tile)"
+        stroke="#d9fff2" stroke-opacity="0.14" stroke-width="2"/>
+  <!-- soft glow under the mark -->
+  <path d="M30 42 L60 92 L98 30" fill="none" stroke="#2ee8d6" stroke-opacity="0.22"
+        stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- main stroke: V into a rising tick -->
+  <path d="M30 42 L60 92 L98 30" fill="none" stroke="url(#mark)"
+        stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- gold node at the peak -->
+  <circle cx="98" cy="30" r="9" fill="#ffc64d"/>
+  <circle cx="98" cy="30" r="9" fill="none" stroke="#050708" stroke-opacity="0.55" stroke-width="2.5"/>
+</svg>

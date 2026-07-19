@@ -1565,7 +1565,16 @@ async function main() {
     console.log(`  ${ok("1")} Load the extension (once):`);
     console.log(`     ${dim("chrome://extensions → Developer mode (top-right) → Load unpacked →")}`);
     console.log(`     ${paint(extDir, 190)}`);
-    if (copied) console.log(`     ${gold("↑ path copied to your clipboard")} ${dim("— just paste it in the folder picker")}`);
+    if (copied) {
+      // The path is on the clipboard, but GTK/macOS file dialogs hide the path field and ~/.vibetracker
+      // is a hidden folder, so "just paste" doesn't work — give the exact keystrokes for this OS.
+      const pasteHint = process.platform === "darwin"
+        ? "in the file dialog press Cmd+Shift+G, then Cmd+V, then Enter"
+        : process.platform === "win32"
+          ? "in the file dialog click the address bar, then Ctrl+V, then Enter"
+          : "in the file dialog press Ctrl+L, then Ctrl+V, then Enter";
+      console.log(`     ${gold("↑ path copied to your clipboard")} ${dim("— " + pasteHint)}`);
+    }
     console.log(`  ${ok("2")} Then open Suno / Udio / Midjourney / Higgsfield, log in, and click the extension.`);
     console.log(`  ${dim("Leaving this window running keeps the local bridge on http://127.0.0.1:" + session.port)}`);
     // best-effort: open the extensions page so step 1 is one click (never blocks the server)
