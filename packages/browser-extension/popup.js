@@ -86,7 +86,20 @@ function setStatus(next) {
 }
 
 function send(message) {
-  return new Promise((resolve) => chrome.runtime.sendMessage(message, resolve));
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage(message, (response) => {
+      // Reading lastError ACKNOWLEDGES it — otherwise Chrome logs "Unchecked runtime.lastError:
+      // The message port closed before a response was received" on the extension card. A closed
+      // port means a stale/asleep worker; resolve undefined and the callers' self-heal takes over.
+      const err = chrome.runtime.lastError;
+      if (err) {
+        console.debug("[vibetracker] message port closed", {
+          area: "browser-extension.popup", type: message?.type, message: String(err.message || err).slice(0, 120),
+        });
+      }
+      resolve(response);
+    });
+  });
 }
 
 // Self-heal a stale service worker. Chrome serves popup files live from disk, but the background
@@ -125,7 +138,11 @@ async function loadBoard() {
     li.dataset.state = tile.state;
     const glyph = tile.logo ? `<img src="${tile.logo}" alt="">` : `<span class="tmark">${tile.mark}</span>`;
     li.innerHTML = `<button type="button" class="tile" title="${tile.label} — ${STATE_HINT[tile.state] || tile.state}">${glyph}</button><span class="tile-tick" aria-hidden="true">✓</span>`;
-    li.querySelector("button").addEventListener("click", () => chrome.tabs.create({ url: tile.url, active: true }));
+    li.querySelector("button").addEventListener("click", () => {
+      chrome.tabs.create({ url: tile.url, active: true }).catch((error) => console.debug("[vibetracker] tile open failed", {
+        area: "browser-extension.board", provider: tile.id, message: String(error?.message || error).slice(0, 120),
+      }));
+    });
     sourceBoard.appendChild(li);
   }
 }
