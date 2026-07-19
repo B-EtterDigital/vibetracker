@@ -8,6 +8,7 @@ import { readComplexity } from "../../../lib/profile-complexity";
 import { trustSignalMark, trustSignalMetric, trustSignalTitle, trustSignalWindow } from "../../../lib/profile-trust";
 import { PROVIDERS } from "../../../../../adapters/src/index";
 import { vibeCategoryFor, vibeColor, vibeLabel } from "../../../../../core/src/vibe-categories";
+import { createConsoleTelemetry } from "../../../../../core/src/telemetry";
 import {
   CategoryMix,
   DemoBanner,
@@ -32,6 +33,8 @@ import { SyncRhythm, GitHubContributions } from "./profile-heatmap";
 import { TokenBreakdown, Delegation } from "./profile-tokens";
 import { OrchestrationHours } from "./profile-orchestration";
 import { ViberIdentity } from "./profile-identity";
+import { ProfileRankings } from "./profile-rankings";
+import { fetchCategoryRanks } from "../../../lib/leaderboard-data";
 import { InfographicBoard } from "./profile-board";
 import { ToolbarDock } from "./profile-toolbar";
 import { SkillSignals } from "./profile-signals";
@@ -52,6 +55,7 @@ import {
   buildToolBrands,
   canonicalProvider,
   canonicalToolBrandId,
+  formatNativeCounts,
   heroTopModels,
   summarizeUsageDays,
   type ProfilePanel,
@@ -69,6 +73,7 @@ import "./profile-telemetry.css";
 import "./profile-useful-data.css";
 import "./profile-accessibility.css";
 import "./profile-4k.css";
+import "./profile-rankings.css";
 
 // The two C0VIBE doors on every profile: a free account, and the device-auth flow that
 // migrates a CLI-uploaded (self-reported) board onto that account as attested.
@@ -128,12 +133,15 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
     title: `${profile.handle} — ${read.identity.label} · VibeUsage`,
   };
 }
-
+// Category placements load independently: a rejection degrades to no rankings panel, never a crash. fetchRanks injected for testability, mirroring loadBoard(sp, fetch).
+export const loadCategoryRanks = (handle: string, fetchRanks: (h: string) => ReturnType<typeof fetchCategoryRanks>) => fetchRanks(handle).catch((error) => { createConsoleTelemetry().addBreadcrumb("profile.rankings.fallback", { area: "web.profile.optional-data", message: error instanceof Error ? error.message : String(error) }, "warn"); return []; });
 export default async function Profile({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
   const isDemo = handle === DEMO_HANDLE;
   const profile = await loadProfile(handle);
   if (!profile) notFound();
+
+  const categoryRanks = isDemo ? [] : await loadCategoryRanks(profile.handle, fetchCategoryRanks);
 
   const read = readComplexity(profile, PROVIDERS);
   const { facts, reveal } = read;
@@ -151,10 +159,27 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     const brandId = canonicalToolBrandId(s.toolId);
     if (!statementByBrandId.has(brandId) || s.toolId === brandId) statementByBrandId.set(brandId, s.statement);
   }
-  const brands = buildToolBrands(profile, byUsd).map((brand) => ({
-    ...brand,
-    statement: statementByBrandId.get(brand.id),
-  }));
+  // Per-tool DEEP STATS for the My Tools dock — from providerDays + providerModels already on the
+  // profile, folded by the SAME canonicalToolBrandId the chips key by (no fetch, no fabrication).
+  const deepAcc = new Map<string, { ops: number; usd: number; byDay: Map<string, number>; active: Set<string>; models: Map<string, number> }>();
+  const accFor = (id: string) => deepAcc.get(id) ?? deepAcc.set(id, { ops: 0, usd: 0, byDay: new Map(), active: new Set(), models: new Map() }).get(id)!;
+  for (const r of profile.providerDays) {
+    const a = accFor(canonicalToolBrandId(r.provider));
+    a.ops += r.ops; a.usd += r.usd; a.byDay.set(r.date, (a.byDay.get(r.date) ?? 0) + r.ops);
+    if (r.ops > 0 || r.usd > 0 || r.credits > 0) a.active.add(r.date);
+  }
+  for (const r of profile.providerModels) { const m = accFor(canonicalToolBrandId(r.provider)).models; m.set(r.model, (m.get(r.model) ?? 0) + r.ops); }
+  const brands = buildToolBrands(profile, byUsd).map((brand) => {
+    const a = deepAcc.get(brand.id);
+    const active = a ? [...a.active].sort() : [];
+    return { ...brand, statement: statementByBrandId.get(brand.id), deep: a ? {
+      ops: a.ops, usd: a.usd, activeDays: active.length, firstDay: active[0] ?? null, lastDay: active.at(-1) ?? null,
+      topModel: [...a.models.entries()].sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]))[0]?.[0] ?? null,
+      models: a.models.size,
+      daily: [...a.byDay.entries()].sort((x, y) => x[0].localeCompare(y[0])).slice(-90).map(([day, ops]) => ({ day, ops })),
+      nativeCounts: formatNativeCounts((profile.nativeMetrics ?? []).filter((m) => canonicalToolBrandId(m.provider) === brand.id)) || undefined,
+    } : undefined };
+  });
   const chartSeries = buildProfileChartSeries(profile);
   const modelUsage = buildModelUsage(profile.providerModels);
   const nativeLedger = buildNativeLedgerRows(profile.nativeMetrics ?? []);
@@ -478,6 +503,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     .sort((a, b) => b.level - a.level || b.progress - a.progress);
   add("hero", "full",
     <ViberIdentity signals={signals} opsValue={opsCompact} traitLevels={traitLevels} key="identity" />);
+  if (categoryRanks.length) add("hero", "full", <ProfileRankings ranks={categoryRanks} key="rankings" />);
   // A migrated (account-linked) profile carries the door to its C0VIBE face: the cube flip.
   if (profile.accountLinked) {
     add("hero", "full", <FlipToC0vibe handle={profile.handle} key="flip" />);

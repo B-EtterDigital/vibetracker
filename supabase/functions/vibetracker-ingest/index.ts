@@ -119,6 +119,27 @@ async function sha256Hex(input: string): Promise<string> {
     await admin.from("vibetracker_members").upsert({ user_id: userId }, { onConflict: "user_id" });
   }
 
+  // Country is identity-owned profile metadata. It is accepted only for an attested immutable
+  // identity and only in the exact lowercase alpha-2 shape enforced by the database migration.
+  // Invalid or unattested values never affect the submission, and are surfaced to the caller.
+  const profileWarnings: string[] = [];
+  const rawProfile = (payload as { profile?: unknown } | null)?.profile;
+  const rawCountry = rawProfile && typeof rawProfile === "object" && !Array.isArray(rawProfile)
+    ? (rawProfile as { country?: unknown }).country
+    : undefined;
+  if (rawCountry !== undefined) {
+    if (typeof rawCountry !== "string" || !/^[a-z]{2}$/.test(rawCountry)) {
+      profileWarnings.push("profile.country ignored: expected a lowercase ISO 3166-1 alpha-2 code");
+    } else if (!identityId) {
+      profileWarnings.push("profile.country ignored: an attested identity is required");
+    } else {
+      const { error: countryError } = await admin.from("vibetracker_identities")
+        .update({ country: rawCountry, updated_at: new Date().toISOString() })
+        .eq("id", identityId);
+      if (countryError) profileWarnings.push(`profile.country update failed: ${countryError.message}`);
+    }
+  }
+
   // The viber's own bio: client-supplied free text, capped and stripped of control chars. It is
   // profile decoration only — never usage — so it rides on the submission row, not the aggregates.
   const rawBio = (payload as { bio?: unknown } | null)?.bio;
@@ -400,6 +421,7 @@ async function sha256Hex(input: string): Promise<string> {
     store: statementStore,
     now: new Date().toISOString(),
   });
+  const warnings = [...profileWarnings, ...toolStatementResult.warnings];
 
   return json({
     ok: result.ok, handle: publicHandle, tier: result.tier,
@@ -431,7 +453,7 @@ async function sha256Hex(input: string): Promise<string> {
     crossProviderDays,
     toolStatementsPersisted: toolStatementResult.persisted,
     toolStatementsDeleted: toolStatementResult.deleted,
-    ...(toolStatementResult.warnings.length ? { warnings: toolStatementResult.warnings } : {}),
+    ...(warnings.length ? { warnings } : {}),
     profileUrl: `/u/${publicHandle}`,
   });
 });

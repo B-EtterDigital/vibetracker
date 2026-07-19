@@ -163,27 +163,39 @@ function pluralUnit(unit: string, count: number): string {
   return `${normalized || "output"}s`;
 }
 
+// The native-counts formatter — pluralized units · middle-dot joined · neutral Nh Nm duration,
+// in row-encounter order. Extracted so the native output ledger AND the My Tools dock's per-tool
+// deep stats render the exact same line from ONE place, with no duplicated formatting that can drift.
+export function formatNativeCounts(metrics: readonly NonNullable<ProfileView["nativeMetrics"]>[number][]): string {
+  const units = new Map<string, number>();
+  let durationSeconds = 0;
+  for (const source of metrics) {
+    if (Number.isFinite(source.outputs) && source.outputs > 0) units.set(source.outputUnit, (units.get(source.outputUnit) ?? 0) + source.outputs);
+    if (Number.isFinite(source.durationSeconds) && source.durationSeconds > 0) durationSeconds += source.durationSeconds;
+  }
+  const parts = [...units.entries()].map(([unit, count]) => `${formatInt(count)} ${pluralUnit(unit, count)}`);
+  if (durationSeconds > 0) {
+    const minutes = Math.max(1, Math.round(durationSeconds / 60));
+    parts.push(`${Math.floor(minutes / 60)}h ${minutes % 60}m`);
+  }
+  return parts.join(" · ");
+}
+
 export function buildNativeLedgerRows(metrics: readonly NonNullable<ProfileView["nativeMetrics"]>[number][]): NativeLedgerRow[] {
-  const providers = new Map<string, { units: Map<string, number>; durationSeconds: number; outputs: number }>();
+  const providers = new Map<string, NonNullable<ProfileView["nativeMetrics"]>[number][]>();
   for (const source of metrics) {
     const provider = canonicalProvider(source.provider);
-    const current = providers.get(provider) ?? { units: new Map<string, number>(), durationSeconds: 0, outputs: 0 };
-    if (Number.isFinite(source.outputs) && source.outputs > 0) {
-      current.units.set(source.outputUnit, (current.units.get(source.outputUnit) ?? 0) + source.outputs);
-      current.outputs += source.outputs;
-    }
-    if (Number.isFinite(source.durationSeconds) && source.durationSeconds > 0) current.durationSeconds += source.durationSeconds;
-    providers.set(provider, current);
+    const list = providers.get(provider) ?? [];
+    list.push(source);
+    providers.set(provider, list);
   }
-  return [...providers.entries()].filter(([, row]) => row.outputs > 0).map(([provider, row]) => {
-    const parts = [...row.units.entries()].map(([unit, count]) => `${formatInt(count)} ${pluralUnit(unit, count)}`);
-    if (row.durationSeconds > 0) {
-      const minutes = Math.max(1, Math.round(row.durationSeconds / 60));
-      parts.push(`${Math.floor(minutes / 60)}h ${minutes % 60}m`);
-    }
-    const brand = providerBrand(provider);
-    return { provider, label: providerLabel(provider), logo: logoPath(provider), mark: brand.mark, counts: parts.join(" · ") };
-  }).sort((a, b) => a.label.localeCompare(b.label));
+  return [...providers.entries()]
+    .filter(([, rows]) => rows.some((row) => Number.isFinite(row.outputs) && row.outputs > 0))
+    .map(([provider, rows]) => {
+      const brand = providerBrand(provider);
+      return { provider, label: providerLabel(provider), logo: logoPath(provider), mark: brand.mark, counts: formatNativeCounts(rows) };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label));
 }
 
 export function NativeOutputLedger({ rows }: { rows: readonly NativeLedgerRow[] }) {

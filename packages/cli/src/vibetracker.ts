@@ -110,6 +110,7 @@ import { computeUsageInsights } from "../../core/src/analytics/insights.ts";
 import { scanSecrets, redactSecrets } from "../../core/src/security/secrets.ts";
 import { amortizeSubscription } from "../../core/src/subscriptions/amortize.ts";
 import { privateAggregate } from "../../core/src/privacy/differential.ts";
+import { estimateNativeUsd } from "../../core/src/pricing/native-rates.ts";
 import type { Category, Source } from "../../core/src/schema/record.ts";
 import type { CreatorPlatform } from "../../core/src/schema/trust-signal.ts";
 
@@ -364,7 +365,13 @@ async function syncTargets(targets: SyncTarget[], ctx: AdapterCtxLike): Promise<
       await showCollectionCheckpoint(checkpoint);
       continue;
     }
-    const { accepted } = ingestRecords(records, { untrustedSource: true });
+    const { accepted: validated } = ingestRecords(records, { untrustedSource: true });
+    const accepted = validated.map((record) => {
+      const usdEst = estimateNativeUsd(record);
+      return record.usdEst === undefined && usdEst !== undefined
+        ? { ...record, usdEst }
+        : record;
+    });
     const replacementKeys = new Set<string>();
     const fresh = accepted.filter((r) => {
       const k = syncRecordKey(r);
@@ -1350,16 +1357,30 @@ async function main() {
   }
 
   if (cmd === "profile") {
-    // `profile --bio "..."` sets the bio; `--parallel-agents N` / `--subs "..."` self-report the
-    // truths the usage data can't reveal. All upload on your next `vibetracker upload`.
+    // `profile --bio "..."` sets the bio; `--country cc` sets attested profile metadata;
+    // `--parallel-agents N` / `--subs "..."` self-report truths usage data can't reveal.
+    // All upload on your next `vibetracker upload`.
     const bioFlag = flag(argv, "--bio");
+    const countryFlag = flag(argv, "--country");
     const agentsFlag = flag(argv, "--parallel-agents");
     const subsFlag = flag(argv, "--subs");
     const clears = argv.includes("--clear-bio") || argv.includes("--clear-agents") || argv.includes("--clear-subs");
-    if (bioFlag !== undefined || agentsFlag !== undefined || subsFlag !== undefined || clears) {
-      const cfg = loadConfig();
+    if (argv.includes("--country") && countryFlag === undefined) {
+      console.error("usage: vibetracker profile --country <iso-alpha-2>");
+      process.exit(2);
+    }
+    if (bioFlag !== undefined || countryFlag !== undefined || agentsFlag !== undefined || subsFlag !== undefined || clears) {
+      const cfg = loadConfig() as ReturnType<typeof loadConfig> & { country?: string };
       if (bioFlag !== undefined || argv.includes("--clear-bio")) {
         cfg.bio = argv.includes("--clear-bio") ? undefined : bioFlag!.replace(/\s+/g, " ").trim().slice(0, 280) || undefined;
+      }
+      if (countryFlag !== undefined) {
+        const country = countryFlag.trim().toLowerCase();
+        if (!/^[a-z]{2}$/.test(country)) {
+          console.error("country must be an ISO 3166-1 alpha-2 code, for example ch or us");
+          process.exit(2);
+        }
+        cfg.country = country;
       }
       if (agentsFlag !== undefined || argv.includes("--clear-agents")) {
         const n = Math.floor(Number(agentsFlag));
@@ -1369,7 +1390,8 @@ async function main() {
         cfg.subs = argv.includes("--clear-subs") ? undefined : subsFlag!.replace(/\s+/g, " ").trim().slice(0, 200) || undefined;
       }
       saveConfig(cfg);
-      console.log(`  ${ok("✓")} profile self-report saved — uploads on your next \`vibetracker upload\``);
+      console.log(`  ${ok("✓")} profile saved — uploads on your next \`vibetracker upload\``);
+      if (cfg.country) console.log(`    ${dim("country:")} ${cfg.country}`);
       if (cfg.parallelAgents) console.log(`    ${dim("parallel agents:")} ${cfg.parallelAgents}`);
       if (cfg.subs) console.log(`    ${dim("subscription stack:")} ${cfg.subs}`);
       return;
@@ -2177,7 +2199,7 @@ async function main() {
   }
 
   if (cmd === "upload") {
-    const cfg = loadConfig();
+    const cfg = loadConfig() as ReturnType<typeof loadConfig> & { country?: string };
     const records = readRecords(STORE);
     if (!records.length) { console.log("nothing to upload — run `vibetracker sync` first."); return; }
     // Trust boundary: uploads are self-reported by construction (verified forced false).
@@ -2217,6 +2239,9 @@ async function main() {
       records: accepted,
       trustSignals,
       ...(cfg.bio ? { bio: cfg.bio } : {}),
+      ...(cfg.token && typeof cfg.country === "string" && /^[a-z]{2}$/.test(cfg.country)
+        ? { profile: { country: cfg.country } }
+        : {}),
       ...(cfg.parallelAgents || cfg.subs ? { selfReported: { parallelAgents: cfg.parallelAgents, subs: cfg.subs } } : {}),
       ...toolStatementsForUpload(Boolean(cfg.token), statementsFileExists, toolStatements),
       ...(coding ? { tokenBreakdown: coding.tokenBreakdown, agents: coding.agents, totalTokens: coding.totalTokens } : {}),

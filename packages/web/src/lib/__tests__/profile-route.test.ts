@@ -701,6 +701,75 @@ test("My Tools dock renders a statement + @handle byline, the add-a-statement hi
   assert.match(infographicStyles, /\.vtooldock-byline \{[\s\S]*var\(--vmono, ui-monospace, monospace\)/);
 });
 
+test("My Tools dock renders per-tool deep stats: metric grid, ops sparkline, and the native counts line", () => {
+  const runtime = loadToolbarModule();
+  const ToolbarDock = runtime.exports.ToolbarDock as (props: unknown) => unknown;
+  const render = (props: Record<string, unknown>) => runtime.renderToStaticMarkup(runtime.jsxRuntime.jsx(ToolbarDock, props));
+  const base = { id: "codex", label: "Codex", mark: "CX", from: "#000000", blurb: "OpenAI's Codex agent." };
+  const deep = {
+    ops: 4210, usd: 128, activeDays: 37, firstDay: "2026-01-04", lastDay: "2026-07-19",
+    topModel: "gpt-5-codex", models: 3,
+    daily: [
+      { day: "2026-07-16", ops: 12 },
+      { day: "2026-07-17", ops: 40 },
+      { day: "2026-07-18", ops: 8 },
+      { day: "2026-07-19", ops: 61 },
+    ],
+    nativeCounts: "831 tracks · 45h 12m",
+  };
+
+  // (1) active brand WITH deep stats: the OPS + ACTIVE DAYS cells, the top model, the ops sparkline,
+  // and the native-outputs line all render beside the statement.
+  const html = render({ handle: "cyrill-etter", defaultActiveId: "codex", brands: [{ ...base, deep }] });
+  assert.match(html, /vtooldock-grid/);
+  assert.match(html, />ops<\/dt>/);
+  assert.match(html, /<dd>4,210<\/dd>/);              // OPS via fmtInt
+  assert.match(html, />active days<\/dt>/);
+  assert.match(html, /<dd>37<\/dd>/);                 // ACTIVE DAYS value
+  assert.match(html, />top model<\/dt><dd>gpt-5-codex<\/dd>/);
+  assert.match(html, /<polyline /);                   // 90-day ops sparkline
+  assert.match(html, /preserveAspectRatio="none"/);
+  assert.match(html, /stroke-width="2"/);
+  assert.match(html, /831 tracks · 45h 12m/);         // native counts line
+  assert.match(html, /vtooldock-head[\s\S]*<b>Codex<\/b>/); // the card still names the tool
+
+  // (2) a zero-ops AND zero-usd brand renders NO stats grid and NO sparkline (deep block suppressed).
+  const zero = render({ defaultActiveId: "codex", brands: [{ ...base, deep: { ...deep, ops: 0, usd: 0 } }] });
+  assert.doesNotMatch(zero, /vtooldock-grid/);
+  assert.doesNotMatch(zero, /<polyline /);
+
+  // (3) the API-EQ cell drops when usd == 0, but the ops-bearing grid still renders.
+  const noUsd = render({ defaultActiveId: "codex", brands: [{ ...base, deep: { ...deep, usd: 0 } }] });
+  assert.match(noUsd, /vtooldock-grid/);
+  assert.doesNotMatch(noUsd, />api-eq<\/dt>/);
+
+  // the deep-stats CSS is additive and honors the existing spacing rhythm (10/14px gaps).
+  assert.match(infographicStyles, /\.vtooldock-grid \{[\s\S]*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(infographicStyles, /\.vtooldock-body \{[\s\S]*flex-wrap: wrap/);
+  assert.match(infographicStyles, /@media \(max-width: 767px\) \{ \.vtooldock-deep \{ flex-basis: 100%; \} \}/);
+});
+
+test("formatNativeCounts reuses the ledger formatting and page.tsx folds it onto the brand", () => {
+  const runtime = loadUsefulDataModule();
+  const formatNativeCounts = runtime.exports.formatNativeCounts as (rows: Array<{ provider: string; category: string; outputUnit: string; outputs: number; durationSeconds: number }>) => string;
+  assert.equal(
+    formatNativeCounts([
+      { provider: "suno", category: "music", outputUnit: "track", outputs: 831, durationSeconds: 45 * 3_600 + 12 * 60 },
+      { provider: "suno", category: "music", outputUnit: "variation", outputs: 8_917, durationSeconds: 0 },
+    ]),
+    "831 tracks · 8,917 variations · 45h 12m",
+  );
+  // no measured outputs → empty string, so the dock renders nothing.
+  assert.equal(formatNativeCounts([{ provider: "suno", category: "music", outputUnit: "track", outputs: 0, durationSeconds: 0 }]), "");
+
+  // page.tsx aggregates deep stats by the shared brand fold and feeds the SAME formatter into deep.
+  assert.match(page, /Per-tool DEEP STATS for the My Tools dock/);
+  assert.match(page, /for \(const r of profile\.providerDays\)/);
+  assert.match(page, /for \(const r of profile\.providerModels\)/);
+  assert.match(page, /formatNativeCounts\(\(profile\.nativeMetrics \?\? \[\]\)\.filter\(\(m\) => canonicalToolBrandId\(m\.provider\) === brand\.id\)\)/);
+  assert.match(page, /<ToolbarDock brands=\{brands\} handle=\{profile\.handle\}/);
+});
+
 test("toolStatementsFor loads identity tool statements from a mocked supabase client", async () => {
   const rows = [
     { tool_id: "codex", statement: "codex writes my boring migrations" },

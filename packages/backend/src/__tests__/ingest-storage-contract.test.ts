@@ -9,6 +9,7 @@ const orchestrationMigration = readFileSync("supabase/migrations/013_vibetracker
 const nativeMetricsMigration = readFileSync("supabase/migrations/20260715131500_vibetracker_native_metrics.sql", "utf8");
 const toolsMigration = readFileSync("supabase/migrations/20260716183000_vibetracker_submission_tools.sql", "utf8");
 const toolStatementsMigration = readFileSync("supabase/migrations/20260720000000_vibetracker_tool_statements.sql", "utf8");
+const identityCountryMigration = readFileSync("supabase/migrations/20260720120000_vibetracker_identity_country.sql", "utf8");
 const edgeBytes = readFileSync("supabase/functions/vibetracker-ingest/index.ts");
 const edge = edgeBytes.toString("utf8");
 
@@ -87,4 +88,15 @@ test("identity tool statements are public-read, service-write, and reconciled by
   assert.doesNotMatch(toolStatementsMigration, /for (insert|update|delete|all)/i);
   assert.match(edge, /reconcileIdentityToolStatements/);
   assert.match(edge, /serverIdentityId: identityId/);
+});
+
+test("identity country is constrained, publicly readable, and updated only from attested lowercase profile metadata", () => {
+  assert.match(identityCountryMigration, /add column if not exists country text/);
+  assert.match(identityCountryMigration, /country ~ '\^\[a-z\]\{2\}\$' or country is null/);
+  assert.match(identityCountryMigration, /vibetracker_public_identities[\s\S]*i\.country/);
+  assert.match(edge, /rawProfile[\s\S]*profile\?: unknown/);
+  assert.match(edge, /typeof rawCountry !== "string" \|\| !\/\^\[a-z\]\{2\}\$\//);
+  assert.match(edge, /else if \(!identityId\)/);
+  assert.match(edge, /vibetracker_identities"\)[\s\S]*\.update\(\{ country: rawCountry/);
+  assert.match(edge, /profile\.country ignored: expected a lowercase ISO 3166-1 alpha-2 code/);
 });

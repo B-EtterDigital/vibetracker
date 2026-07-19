@@ -300,6 +300,18 @@
 .vtoolbar-item[data-active="true"] { outline: 2px solid rgba(46, 232, 214, 0.6); outline-offset: 2px; border-radius: 8px; }
 button.vtoolbar-item { background: none; border: 0; padding: 0; cursor: pointer; transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1); }
 button.vtoolbar-item:hover { transform: translateY(-2px); }
+/* Per-tool deep stats: the statement sits left, the measured numbers right; they wrap under <768px. */
+.vtooldock-body { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 14px; margin-top: 8px; }
+.vtooldock-say { flex: 1 1 260px; min-width: 0; }
+.vtooldock-say .vtooldock-text { margin-top: 0; }
+.vtooldock-deep { flex: 1 1 300px; min-width: 0; }
+.vtooldock-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 14px; margin: 0; }
+.vtooldock-cell { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vtooldock-cell dt { margin: 0; color: rgba(217, 255, 242, 0.42); font: 700 10px/1.2 var(--vmono, ui-monospace, monospace); text-transform: uppercase; letter-spacing: 0.04em; }
+.vtooldock-cell dd { margin: 0; color: #f4fffb; font: 700 14px/1.25 var(--vmono, ui-monospace, monospace); overflow-wrap: anywhere; }
+.vtooldock-spark { display: block; width: 220px; max-width: 100%; height: 36px; margin-top: 12px; }
+.vtooldock-native { margin: 10px 0 0; color: rgba(217, 255, 242, 0.82); font: 600 11px/1.4 var(--vmono, ui-monospace, monospace); }
+@media (max-width: 767px) { .vtooldock-deep { flex-basis: 100%; } }
 @media (prefers-reduced-motion: reduce) {
   .vtooldock-panel, .vtooldock-card, .vinfo-pie-mode, .vinfo-pie-item[data-active="true"] .vinfo-pie { transition: none; animation: none; }
 }

@@ -1,0 +1,234 @@
+/* Category-aware leaderboard — VTK terminal aesthetic (SMOA lane M redesign, 2026-07-20).
+   Every colour value here already exists elsewhere in the codebase (globals.css :root and
+   home.css tokens): bone ink #eef7f4 / rgba(217,255,242,*), mint accent #2ee8d6 /
+   rgba(46,232,214,*), panel #0d1419 / #06090b. No new fonts, no new hex, no animation libs. */
+
+.vlb {
+  --vlb-mono: var(--font-data), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --vlb-line: rgba(217, 255, 242, 0.14);
+  --vlb-ink: #eef7f4;
+  --vlb-dim: rgba(217, 255, 242, 0.55);
+  --vlb-dim-2: rgba(217, 255, 242, 0.4);
+  --vlb-accent: #2ee8d6;
+  display: block;
+  border: 1px solid var(--vlb-line);
+  border-radius: 8px;
+  background: #06090b;
+  color: var(--vlb-ink);
+  overflow: hidden;
+}
+
+/* ---- masthead ---- */
+.vlb-mast {
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--vlb-line);
+}
+.vlb-eyebrow {
+  margin: 0 0 7px;
+  color: var(--vlb-accent);
+  font: 700 11px/1.2 var(--vlb-mono);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.vlb h1 {
+  margin: 0;
+  color: #f3fff9;
+  font: 650 3rem/0.95 var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0;
+}
+.vlb-dek {
+  margin: 8px 0 0;
+  max-width: 60ch;
+  color: var(--vlb-dim);
+  font: 400 13px/1.5 var(--vlb-mono);
+}
+
+/* ---- filter rail ---- */
+.vlb-rail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 24px;
+  border-bottom: 1px dashed var(--vlb-line);
+}
+.vlb-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.vlb-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--vlb-line);
+  background: transparent;
+  color: var(--vlb-dim);
+  font: 600 11px/1 var(--vlb-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: border-color 0.16s var(--motion, ease), color 0.16s var(--motion, ease);
+}
+.vlb-pill:hover { color: var(--vlb-ink); border-color: rgba(46, 232, 214, 0.4); }
+.vlb-pill[data-active="true"] {
+  color: #05201d;
+  background: var(--vlb-accent);
+  border-color: var(--vlb-accent);
+}
+
+.vlb-sort {
+  display: inline-flex;
+  gap: 0;
+  border: 1px solid var(--vlb-line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.vlb-sort-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  color: var(--vlb-dim);
+  font: 600 11px/1 var(--vlb-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.vlb-sort-toggle:hover { color: var(--vlb-ink); }
+.vlb-sort-toggle[data-active="true"] { color: #05201d; background: var(--vlb-accent); }
+
+/* ---- board rows ---- */
+.vlb-rows { display: block; }
+
+.vlb-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 64px;
+  padding: 10px 24px;
+  border-bottom: 1px dashed var(--vlb-line);
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.16s var(--motion, ease);
+}
+.vlb-row:last-child { border-bottom: 0; }
+.vlb-row:hover { background: rgba(46, 232, 214, 0.05); }
+
+.vlb-rank {
+  flex: 0 0 auto;
+  min-width: 34px;
+  color: var(--vlb-dim-2);
+  font: 500 22px/1 var(--vlb-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.vlb-flag {
+  flex: 0 0 auto;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.vlb-id {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.vlb-handle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--vlb-ink);
+  font: 700 20px/1.1 var(--vlb-mono);
+  text-transform: lowercase;
+  overflow-wrap: anywhere;
+}
+.vlb-attested {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(46, 232, 214, 0.4);
+  color: var(--vlb-accent);
+  font: 700 9px/1 var(--vlb-mono);
+}
+.vlb-info {
+  color: var(--vlb-dim);
+  font: 400 11.5px/1.3 var(--vlb-mono);
+}
+
+.vlb-figures {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+}
+.vlb-usd {
+  color: var(--vlb-accent);
+  font: 600 22px/1 var(--vlb-mono);
+  font-variant-numeric: tabular-nums;
+}
+.vlb-ops {
+  color: var(--vlb-dim-2);
+  font: 400 11px/1 var(--vlb-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- top-3 emphasis (mint rank digits + subtle mint-tinted rail) ---- */
+.vlb-row--top {
+  background: rgba(46, 232, 214, 0.04);
+  box-shadow: inset 2px 0 0 rgba(46, 232, 214, 0.55);
+}
+.vlb-row--top .vlb-rank { color: var(--vlb-accent); }
+
+/* ---- empty state ---- */
+.vlb-empty {
+  margin: 0;
+  padding: 40px 24px;
+  color: var(--vlb-dim);
+  font: 400 13px/1.5 var(--vlb-mono);
+  text-align: center;
+}
+
+/* ---- mobile: rank + flag + handle on one line, info under, figures wrap under ---- */
+@media (max-width: 767px) {
+  .vlb h1 { font-size: 2.2rem; }
+  .vlb-row {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    grid-template-areas:
+      "rank flag id"
+      "figures figures figures";
+    align-items: center;
+    gap: 6px 12px;
+    padding: 12px 16px;
+  }
+  .vlb-rank { grid-area: rank; }
+  .vlb-flag { grid-area: flag; }
+  .vlb-id { grid-area: id; }
+  .vlb-figures {
+    grid-area: figures;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 10px;
+    text-align: left;
+  }
+  .vlb-usd { font-size: 18px; }
+  .vlb-mast { padding: 18px 16px 14px; }
+  .vlb-rail { padding: 12px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vlb-pill,
+  .vlb-sort-toggle,
+  .vlb-row { transition: none; }
+}

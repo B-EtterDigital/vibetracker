@@ -22,7 +22,7 @@ test("root layout and home stay route-neutral while the legacy signal dock remai
   assert.match(layout, /<main className="wrap">\{children\}<\/main>/);
 
   assert.doesNotMatch(home, /UsageSignalDock|app-shell-dock/);
-  assert.match(home, /<LeaderboardConsole boards=\{\[verified, selfReported\]\} \/>/);
+  assert.match(home, /<LeaderboardBoard filters=\{filters\} rows=\{rows\} \/>/);
 });
 
 test("root shell owns reliability styles without route-boundary preload duplication", () => {

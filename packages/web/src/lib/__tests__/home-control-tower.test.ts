@@ -66,6 +66,6 @@ test("home control tower terminal labels routes, side effects, and c0vibe relay"
 test("home route retires the control tower from the default leaderboard instrument", () => {
   const page = readFileSync("packages/web/src/app/page.tsx", "utf8");
 
-  assert.match(page, /LeaderboardConsole/);
+  assert.match(page, /LeaderboardBoard/);
   assert.doesNotMatch(page, /buildHomeControlTower|HomeBootPanoramaPanel|HomeControlTowerPanel|home-control-tower/);
 });

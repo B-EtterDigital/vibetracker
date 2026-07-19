@@ -1,86 +1,52 @@
-import { getLeaderboard } from "../lib/data";
-import {
-  buildLeaderboardArena,
-  formatInt,
-  formatUsd,
-  type Tier,
-} from "../lib/leaderboard";
-import {
-  LeaderboardConsole,
-  type HomeBoardSnapshot,
-} from "./home/leaderboard-console";
+// Home = the category-aware public leaderboard (SMOA lane M redesign, 2026-07-20). A server
+// component: it reads the shareable URL search params (?cat=music&sort=ops), parses them into the
+// planner-contract LeaderboardFilters, and hands those straight to fetchLeaderboard. The board is
+// rendered exactly from what the data layer returns — no invented rows, flags, or ranks.
+//
+// Resilience: the leaderboard is optional data. If fetchLeaderboard rejects, the route does NOT
+// crash — it breadcrumbs the failure (mirroring data.ts's reportOptionalFallback) and renders the
+// existing empty-board state. loadBoard(sp, fetchLeaderboard) is the injected-fetch seam.
+import { fetchLeaderboard } from "../lib/leaderboard-data";
+import type { LeaderboardRow } from "../lib/leaderboard-contract";
+import { LeaderboardBoard } from "./home/leaderboard-board";
+import { loadBoard, parseLeaderboardFilters } from "./leaderboard-params";
+import { createConsoleTelemetry } from "../../../core/src/telemetry";
 import "./home/home.css";
-import "./home/identity-claim-rail.css";
-import "./home/leaderboard-brief.css";
-import "./home/leaderboard-field-instrument.css";
-import "./home/signal-uplink.css";
+import "./home/leaderboard.css";
+
+const telemetry = createConsoleTelemetry();
+
+// Mirrors data.ts's reportOptionalFallback: a degraded optional data load is a warn breadcrumb
+// routed to VTRS, never a thrown page.
+function reportOptionalFallback(event: string, error: unknown): void {
+  const e = error as { message?: string; code?: string };
+  telemetry.addBreadcrumb(event, {
+    area: "web.home.optional-data",
+    code: e?.code ?? "unknown",
+    message: e?.message ?? String(error),
+  }, "warn");
+}
 
 export const revalidate = 60;
 
-function unavailableBoard(tier: Tier): HomeBoardSnapshot {
-  return {
-    tier,
-    label: tier === "verified" ? "Verified" : "Self-reported",
-    signal: tier === "verified" ? "GITHUB / C0VIBE" : "UNVERIFIED HANDLE",
-    blurb: tier === "verified"
-      ? "The operator identity is proven. Usage remains explicitly attested or provider-verified."
-      : "Handle-only CLI uploads. Identity is not proven and ranks never mix with verified identities.",
-    status: "error",
-    rows: [],
-    totals: {
-      operators: "0",
-      usd: "$0.00",
-      credits: "0",
-      ops: "0",
-    },
-  };
-}
-
-async function loadBoard(tier: Tier): Promise<HomeBoardSnapshot> {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  // Optional data: a failed board load degrades to the empty state, never a crashed route.
+  let filters = parseLeaderboardFilters(sp);
+  let rows: LeaderboardRow[] = [];
   try {
-    const arena = buildLeaderboardArena(tier, await getLeaderboard(tier));
-    return {
-      tier,
-      label: arena.label,
-      signal: tier === "verified" ? "GITHUB / C0VIBE" : "UNVERIFIED HANDLE",
-      blurb: arena.blurb,
-      status: arena.rows.length ? "live" : "waiting",
-      totals: {
-        operators: formatInt(arena.rows.length),
-        usd: formatUsd(arena.totalUsd),
-        credits: formatInt(arena.totalCredits),
-        ops: formatInt(arena.totalOps),
-      },
-      rows: arena.rows.map((row) => ({
-        handle: row.handle,
-        rank: row.rank,
-        medal: row.medal,
-        usd: row.total_usd,
-        credits: row.total_credits,
-        ops: row.record_count,
-        usdLabel: formatUsd(row.total_usd),
-        creditsLabel: formatInt(row.total_credits),
-        opsLabel: formatInt(row.record_count),
-        identityVerified: Boolean(row.identity_verified),
-        identityProvider: row.identity_provider ?? null,
-        usageTier: row.usage_tier ?? (tier === "verified" ? "attested" : "self_reported"),
-      })),
-    };
-  } catch {
-    // getLeaderboard records the diagnostic through VTRS; this is the safe public state.
-    return unavailableBoard(tier);
+    ({ filters, rows } = await loadBoard(sp, fetchLeaderboard));
+  } catch (error) {
+    reportOptionalFallback("home.leaderboard.fallback", error);
   }
-}
-
-export default async function Home() {
-  const [verified, selfReported] = await Promise.all([
-    loadBoard("verified"),
-    loadBoard("self_reported"),
-  ]);
 
   return (
     <div className="home-surface">
-      <LeaderboardConsole boards={[verified, selfReported]} />
+      <LeaderboardBoard filters={filters} rows={rows} />
     </div>
   );
 }

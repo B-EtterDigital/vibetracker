@@ -301,7 +301,7 @@ test("home datastream reactor shows the reviewed stream feeding score profile he
 test("home route retires the mission-spine theatre from the default leaderboard surface", () => {
   const page = readFileSync("packages/web/src/app/page.tsx", "utf8");
 
-  assert.match(page, /LeaderboardConsole/);
+  assert.match(page, /LeaderboardBoard/);
   assert.doesNotMatch(page, /buildHomeMissionSpine|buildHomeDatastreamReactor|HomeMissionSpinePanel|HomeCommandPalettePanel/);
 });
 

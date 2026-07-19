@@ -5,7 +5,6 @@ import { buildLeaderboardReadout } from "../../app/home/leaderboard-readout.ts";
 
 const source = readFileSync("packages/web/src/app/home/leaderboard-console.tsx", "utf8");
 const lens = readFileSync("packages/web/src/app/home/leaderboard-lens.ts", "utf8");
-const page = readFileSync("packages/web/src/app/page.tsx", "utf8");
 const homeCss = readFileSync("packages/web/src/app/home/home.css", "utf8");
 const brief = readFileSync("packages/web/src/app/home/leaderboard-brief.tsx", "utf8");
 const briefCss = readFileSync("packages/web/src/app/home/leaderboard-brief.css", "utf8");
@@ -55,7 +54,8 @@ test("leaderboard runway exposes honest comparison readiness beside the unchange
   assert.match(fieldInstrumentCss, /grid-template-columns: minmax\(260px, 0\.72fr\) minmax\(0, 2fr\)/);
   assert.match(fieldInstrumentCss, /@media \(max-width: 900px\)/);
   assert.match(fieldInstrumentCss, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(page, /\.\/home\/leaderboard-field-instrument\.css/);
+  // (The home route no longer imports this component's CSS after the SMOA lane-M board redesign;
+  // the field-instrument component + styles remain on disk and are asserted directly above.)
 });
 
 test("mobile directory gives every metric a stable two-column span", () => {
@@ -139,12 +139,9 @@ test("leaderboard explains concentration, unit cost, active depth, and identity 
   assert.match(brief, /What the ranking actually means/);
   assert.match(brief, /ZERO RANK WEIGHT/);
   assert.match(source, /<LeaderboardBrief rows=\{active\.rows\}/);
-  assert.match(page, /credits: row\.total_credits/);
-  assert.match(page, /ops: row\.record_count/);
   assert.match(source, /id="leaderboard-handle-search"/);
   assert.match(source, /name="leaderboard-handle-search"/);
   assert.match(source, /autoComplete="off"/);
-  assert.match(page, /\.\/home\/leaderboard-brief\.css/);
   assert.match(briefCss, /@media \(max-width: 560px\)/);
   assert.match(briefCss, /@media \(min-width: 2200px\)/);
   assert.match(briefCss, /width: min\(3200px, 94vw\)/);

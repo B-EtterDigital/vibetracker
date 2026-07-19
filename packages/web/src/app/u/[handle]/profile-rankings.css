@@ -1,0 +1,60 @@
+/* Leaderboard placements panel (SMOA lane M, 2026-07-20). Reuses the profile's existing panel
+   chrome (.vprofile-panel) and only existing colour values: bone #eef7f4 / rgba(217,255,242,*),
+   mint accent #2ee8d6 / rgba(46,232,214,*). Mono via --vp-mono (defined in profile.css). */
+
+.vrank {
+  --vrank-mono: var(--vp-mono, var(--font-data), ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+.vrank-head { margin-bottom: 14px; }
+
+.vrank-eyebrow {
+  display: block;
+  color: #2ee8d6;
+  font: 700 11px/1.2 var(--vrank-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.vrank-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.vrank-card {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid rgba(217, 255, 242, 0.14);
+  border-radius: 6px;
+  background: #0d1419;
+}
+.vrank-card--top { border-color: rgba(46, 232, 214, 0.4); }
+
+.vrank-pos {
+  color: #eef7f4;
+  font: 700 28px/1 var(--vrank-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+.vrank-pos[data-top3="true"] { color: #2ee8d6; }
+
+.vrank-cat {
+  color: rgba(217, 255, 242, 0.55);
+  font: 600 10px/1.2 var(--vrank-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.vrank-of {
+  color: rgba(217, 255, 242, 0.4);
+  font: 400 11px/1.3 var(--vrank-mono);
+}
+
+.vrank-usd {
+  margin-top: 2px;
+  color: rgba(217, 255, 242, 0.7);
+  font: 500 12px/1 var(--vrank-mono);
+  font-variant-numeric: tabular-nums;
+}

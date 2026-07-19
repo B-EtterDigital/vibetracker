@@ -8,6 +8,22 @@
 
 import { useState } from "react";
 
+// Per-tool DEEP STATS: the tool's real footprint, every value aggregated in page.tsx from data
+// ALREADY loaded on the profile (providerDays + providerModels + nativeMetrics) — no fetch, no new
+// backend, nothing fabricated. Any field that is absent renders nothing.
+export interface DeepStats {
+  ops: number;
+  usd: number;
+  activeDays: number;
+  firstDay: string | null;
+  lastDay: string | null;
+  topModel: string | null;
+  models: number;
+  daily: Array<{ day: string; ops: number }>;
+  // pre-formatted native-outputs line (built with the shared native-counts formatter), when present
+  nativeCounts?: string;
+}
+
 export interface DockBrand {
   id: string;
   label: string;
@@ -18,6 +34,7 @@ export interface DockBrand {
   statement?: string;
   blurb: string;
   stats?: { ops: number; credits: number; usd: number };
+  deep?: DeepStats;
 }
 
 function fmtInt(n: number): string {
@@ -25,6 +42,61 @@ function fmtInt(n: number): string {
 }
 function fmtUsd(n: number): string {
   return n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${Math.round(n)}`;
+}
+
+const DOCK_MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function fmtMonthYear(iso: string): string {
+  const m = /^(\d{4})-(\d{2})/.exec(iso);
+  return m ? `${DOCK_MON[Number(m[2]) - 1]} ${m[1]}` : iso;
+}
+function fmtDayShort(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return iso;
+  return iso === new Date().toISOString().slice(0, 10) ? "today" : `${DOCK_MON[Number(m[2]) - 1]} ${Number(m[3])}`;
+}
+
+// 90-day ops sparkline: a bare 2px polyline in the existing mint accent, no axes/dots, decorative
+// (aria-hidden). Rendered only with 2+ day-points that carry at least one operation.
+function DockSparkline({ daily }: { daily: DeepStats["daily"] }) {
+  if (daily.length < 2 || !daily.some((d) => d.ops > 0)) return null;
+  const w = 220, h = 36, pad = 2;
+  const max = Math.max(...daily.map((d) => d.ops), 1);
+  const points = daily
+    .map((d, i) => `${((i / (daily.length - 1)) * w).toFixed(1)},${(pad + (1 - d.ops / max) * (h - pad * 2)).toFixed(1)}`)
+    .join(" ");
+  return (
+    <svg className="vtooldock-spark" width={w} height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
+      <polyline points={points} fill="none" stroke="rgba(46, 232, 214, 0.6)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// The per-tool numbers beside the statement: a 3×2 grid of measured facts, the ops sparkline, and
+// the native-outputs line. Suppressed entirely for a tool with no measured operations or spend.
+function DockDeep({ deep }: { deep: DeepStats }) {
+  if (deep.ops <= 0 && deep.usd <= 0) return null;
+  const cells: Array<{ k: string; v: string }> = [
+    { k: "ops", v: fmtInt(deep.ops) },
+    ...(deep.usd > 0 ? [{ k: "api-eq", v: fmtUsd(deep.usd) }] : []),
+    { k: "active days", v: fmtInt(deep.activeDays) },
+    ...(deep.firstDay ? [{ k: "first used", v: fmtMonthYear(deep.firstDay) }] : []),
+    ...(deep.lastDay ? [{ k: "last used", v: fmtDayShort(deep.lastDay) }] : []),
+    ...(deep.topModel ? [{ k: "top model", v: deep.topModel }] : []),
+  ];
+  return (
+    <div className="vtooldock-deep">
+      <dl className="vtooldock-grid">
+        {cells.map((c) => (
+          <div className="vtooldock-cell" key={c.k}>
+            <dt>{c.k}</dt>
+            <dd>{c.v}</dd>
+          </div>
+        ))}
+      </dl>
+      <DockSparkline daily={deep.daily} />
+      {deep.nativeCounts ? <p className="vtooldock-native">{deep.nativeCounts}</p> : null}
+    </div>
+  );
 }
 
 // `defaultActiveId` only seeds the initially-open chip (the useState initial value); omitting it
@@ -73,12 +145,17 @@ export function ToolbarDock({ brands, handle, defaultActiveId }: { brands: DockB
                 </span>
               ) : null}
             </div>
-            <p className="vtooldock-text">{active.statement ?? active.blurb}</p>
-            {active.statement ? (
-              handle ? <p className="vtooldock-byline">— @{handle}</p> : null
-            ) : (
-              <p className="vtooldock-hint">no personal statement yet — the profile owner can add one: vibetracker statement &lt;tool-id&gt;</p>
-            )}
+            <div className="vtooldock-body">
+              <div className="vtooldock-say">
+                <p className="vtooldock-text">{active.statement ?? active.blurb}</p>
+                {active.statement ? (
+                  handle ? <p className="vtooldock-byline">— @{handle}</p> : null
+                ) : (
+                  <p className="vtooldock-hint">no personal statement yet — the profile owner can add one: vibetracker statement &lt;tool-id&gt;</p>
+                )}
+              </div>
+              {active.deep ? <DockDeep deep={active.deep} /> : null}
+            </div>
           </div>
         ) : null}
       </div>

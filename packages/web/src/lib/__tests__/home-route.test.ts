@@ -7,12 +7,13 @@ const consoleSource = readFileSync("packages/web/src/app/home/leaderboard-consol
 const styles = readFileSync("packages/web/src/app/home/home.css", "utf8");
 
 test("home route is a compact server-owned leaderboard surface", () => {
-  assert.match(page, /Promise\.all\(\[/);
-  assert.match(page, /loadBoard\("verified"\)/);
-  assert.match(page, /loadBoard\("self_reported"\)/);
-  assert.match(page, /buildLeaderboardArena\(tier, await getLeaderboard\(tier\)\)/);
-  assert.match(page, /<LeaderboardConsole boards=\{\[verified, selfReported\]\} \/>/);
-  assert.match(page, /getLeaderboard records the diagnostic through VTRS/);
+  // Redesigned (SMOA lane M): the category-aware board. The server route reads the shareable
+  // URL params, parses them into planner-contract filters, and hands them to fetchLeaderboard.
+  assert.match(page, /const sp = await searchParams/);
+  assert.match(page, /\{ filters, rows \} = await loadBoard\(sp, fetchLeaderboard\)/);
+  assert.match(page, /from "\.\.\/lib\/leaderboard-data"/);
+  assert.match(page, /<LeaderboardBoard filters=\{filters\} rows=\{rows\} \/>/);
+  assert.doesNotMatch(page, /"use client"/);
   assert.doesNotMatch(page, /UsageSignalDock|HomeViberSpectrum|LeaderboardPodiumWavePanel|HomeControlTowerPanel/);
   assert.ok(page.split("\n").length <= 110, "home route should remain an orchestration seam");
 });

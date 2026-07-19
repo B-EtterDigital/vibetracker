@@ -322,10 +322,11 @@ test("home leaderboard route retires the multi-theatre board for one calm instru
   const page = readFileSync("packages/web/src/app/page.tsx", "utf8");
   const consoleSource = readFileSync("packages/web/src/app/home/leaderboard-console.tsx", "utf8");
 
-  assert.match(page, /buildLeaderboardArena/);
-  assert.match(page, /loadBoard\("verified"\)/);
-  assert.match(page, /loadBoard\("self_reported"\)/);
-  assert.match(page, /LeaderboardConsole/);
+  // Redesigned to a single category-aware board (SMOA lane M): the server route parses the
+  // shareable URL params and hands them to fetchLeaderboard, rendering one calm instrument.
+  assert.match(page, /fetchLeaderboard/);
+  assert.match(page, /loadBoard\(sp, fetchLeaderboard\)/);
+  assert.match(page, /LeaderboardBoard/);
   assert.doesNotMatch(page, /buildLeaderboardPodiumWave|buildLeaderboardHeatgrid|buildLeaderboardBroadcastWall|buildLeaderboardProofTower/);
   assert.doesNotMatch(page, /LeaderboardPodiumWavePanel|LeaderboardHeatgridPanel|LeaderboardBroadcastWallPanel|LeaderboardProofTowerPanel/);
   assert.match(consoleSource, /TRUST \+0 \/\/ MIXED RANKS 0/);
