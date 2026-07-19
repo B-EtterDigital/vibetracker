@@ -36,3 +36,4 @@ PLAN.md
 packages/web/public/deploy-stamp.json
 .deploy-guard-test-dirty-*
 logs/
+.smarch/agent-context/
