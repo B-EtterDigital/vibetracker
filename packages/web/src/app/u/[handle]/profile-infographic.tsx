@@ -50,36 +50,44 @@ function SharePie({ pct, color, size = 72 }: { pct: number; color: string; size?
   );
 }
 
-// Clickable when onSelect is provided: each circle opens its specialization (hex + story + bars
-// switch); clicking the active circle returns to the overview. data-active drives the ring.
+// Clickable when onSelect is provided: click 1 opens the trait's MODEL view, click 2 its SOURCE
+// view (which platforms power it), click 3 returns to the overview. data-active drives the ring;
+// the active circle wears a mode chip so every click answers with visible feedback.
 export function TraitPies({
   traits,
   activeId,
+  mode,
   onSelect,
 }: {
   traits: TraitPie[];
   activeId?: string | null;
+  mode?: "models" | "sources";
   onSelect?: (id: string) => void;
 }) {
   return (
     <div className="vinfo-pies" data-selected={activeId ? "true" : undefined}
       aria-label={`Trait mix: ${traits.map((t) => `${t.label} ${t.pct >= 1 ? Math.round(t.pct) : "<1"}%`).join(", ")}`}>
-      {traits.map((trait, i) => (
-        <button
-          type="button"
-          className="vinfo-pie-item"
-          key={trait.id}
-          data-active={trait.id === activeId ? "true" : undefined}
-          onClick={onSelect ? () => onSelect(trait.id) : undefined}
-          style={{ "--i": i } as React.CSSProperties}
-          aria-pressed={trait.id === activeId}
-          title={`${trait.label} — ${trait.pct >= 1 ? `${Math.round(trait.pct)}%` : "under 1%"} of all your operations. Click to open this specialization (the hexagon, story and bars switch to it); click again for the overview.`}
-        >
-          <SharePie pct={trait.pct} color={trait.color} />
-          <strong>{trait.pct >= 1 ? `${Math.round(trait.pct)}%` : "<1%"}</strong>
-          <span>{trait.label}</span>
-        </button>
-      ))}
+      {traits.map((trait, i) => {
+        const isActive = trait.id === activeId;
+        return (
+          <button
+            type="button"
+            className="vinfo-pie-item"
+            key={trait.id}
+            data-active={isActive ? "true" : undefined}
+            data-mode={isActive ? mode : undefined}
+            onClick={onSelect ? () => onSelect(trait.id) : undefined}
+            style={{ "--i": i } as React.CSSProperties}
+            aria-pressed={isActive}
+            title={`${trait.label} — ${trait.pct >= 1 ? `${Math.round(trait.pct)}%` : "under 1%"} of all your operations. Click to see its models; click again to see which platforms power it; a third click returns to the overview.`}
+          >
+            <SharePie pct={trait.pct} color={trait.color} />
+            <strong>{trait.pct >= 1 ? `${Math.round(trait.pct)}%` : "<1%"}</strong>
+            <span>{trait.label}</span>
+            {isActive ? <em className="vinfo-pie-mode">{mode === "sources" ? "sources" : "models"}</em> : null}
+          </button>
+        );
+      })}
     </div>
   );
 }

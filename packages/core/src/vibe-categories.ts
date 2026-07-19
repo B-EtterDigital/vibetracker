@@ -33,7 +33,7 @@ export const VIBE_CATEGORIES: Record<VibeCategoryId, VibeCategory> = {
   voice: { id: "voice", label: "AI Voice & Audio", short: "Voice", color: "#4de0b3" },
   threed: { id: "threed", label: "AI 3D", short: "3D", color: "#3ec9ff" },
   research: { id: "research", label: "AI Chat & Research", short: "Research", color: "#36e39b" },
-  tooling: { id: "tooling", label: "AI Tooling", short: "Tooling", color: "#7a8a93" },
+  tooling: { id: "tooling", label: "AI Automation", short: "Automation", color: "#7a8a93" },
 };
 
 // Primitive Category -> vibe id. Every primitive maps to exactly one vibe;

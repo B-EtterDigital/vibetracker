@@ -127,8 +127,9 @@ test("vibe state ranks by spend, lists top 5 models, and explains the signal tie
 });
 
 test("sources are a labelled big-logo row with the brand on hover, and a bio can be added", () => {
-  // every source with real activity is shown (not a top-6 slice), so the list is complete
-  assert.match(page, /\.filter\(\(p\) => p\.usd > 0 \|\| p\.ops > 0\)/);
+  // every lane that proves a tool was used feeds the list (tools ∪ providers ∪ agents), complete
+  assert.match(page, /if \(p\.usd > 0 \|\| p\.ops > 0\) bumpTool/);
+  assert.match(page, /profile\.agents \?\? \[\]/);
   assert.match(hero, /vhero-sources/);
   assert.match(hero, /vhero-sources-head/);
   assert.match(hero, />\s*Tracked sources\s*<span>/);

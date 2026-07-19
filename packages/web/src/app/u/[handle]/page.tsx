@@ -34,6 +34,7 @@ import { OrchestrationHours } from "./profile-orchestration";
 import { ViberIdentity } from "./profile-identity";
 import { SourceToolbar, INFO_RAMP, type StackMonth } from "./profile-infographic";
 import { InfographicBoard, type BoardSpec } from "./profile-board";
+import { ToolbarDock } from "./profile-toolbar";
 import { SkillSignals } from "./profile-signals";
 import { computeProfileSignals } from "../../../lib/profile-signals";
 import { levelFor, fmtMeasure } from "../../../lib/viber-levels";
@@ -145,14 +146,66 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
 
   // The toolbar is a toolchain, not a billing-provider list. New submissions carry an explicit
   // aggregate for orchestrators such as Cynaps3; older submissions safely fall back to providers.
-  const toolbarRows = profile.tools?.length
-    ? profile.tools.map((row) => ({ id: row.tool, ops: row.ops }))
-    : byUsd.filter((p) => p.usd > 0 || p.ops > 0).map((p) => ({ id: p.provider, ops: p.ops }));
-  const brands = toolbarRows
-    .sort((a, b) => b.ops - a.ops || a.id.localeCompare(b.id))
-    .map((row) => {
-      const brand = providerBrand(row.id);
-      return { id: row.id, label: providerLabel(row.id), mark: brand.mark, from: brand.from, to: brand.to, ink: brand.ink, logo: brand.logo };
+  // "My Tools" is the UNION of every lane that proves a tool was used (user order 2026-07-19):
+  // submission tool rows ∪ providers with any usage ∪ CLI agents with active days (Hermes etc.).
+  // `content` is Cynaps3's content app — alias it to the Cynaps3 brand so the neuron shows.
+  const TOOL_ALIAS: Record<string, string> = { content: "cynaps3", musicmation: "cynaps3" };
+  const toolRowMap = new Map<string, number>();
+  const bumpTool = (rawId: string, ops: number) => {
+    const id = TOOL_ALIAS[rawId] ?? rawId;
+    toolRowMap.set(id, (toolRowMap.get(id) ?? 0) + ops);
+  };
+  for (const row of profile.tools ?? []) bumpTool(row.tool, row.ops);
+  for (const p of byUsd) if (p.usd > 0 || p.ops > 0) bumpTool(p.provider, toolRowMap.has(p.provider) ? 0 : p.ops);
+  for (const a of profile.agents ?? []) if (a.activeDays > 0 && !toolRowMap.has(a.agent)) bumpTool(a.agent, a.activeDays);
+  // per-tool stats for the unfold panel — provider aggregates where they exist
+  const provById = new Map(profile.providers.map((p) => [p.provider, p]));
+  const TOOL_BLURBS: Record<string, string> = {
+    "claude-code": "Anthropic's agentic coding CLI — this viber's heavy-lift pair programmer.",
+    claude: "Anthropic's Claude — long-form reasoning and building.",
+    codex: "OpenAI's Codex agent — autonomous implementation runs.",
+    "gemini-cli": "Google's Gemini CLI agent for terminal-first coding.",
+    hermes: "Nous Research's Hermes agent — open-model agentic runs.",
+    openclaw: "OpenClaw — autonomous browser-native agent work.",
+    opencode: "OpenCode — open-source terminal coding agent.",
+    higgsfield: "Cinematic AI image, video, audio & 3D studio — credits burned on real renders.",
+    falai: "fal.ai — fast hosted inference for image, video and audio models.",
+    openai: "OpenAI API — models metered by the Costs API.",
+    openrouter: "OpenRouter — one key, every frontier model; balance-verified.",
+    browserbase: "Browserbase — headless browsers for agent automation.",
+    runpod: "RunPod — rented GPUs for heavy jobs.",
+    comfyui: "ComfyUI — local node-graph diffusion; $0 API, GPU-time real.",
+    suno: "Suno — AI music generation, tracked from the creator feed.",
+    sunoapi: "SunoAPI — programmatic Suno music runs.",
+    udio: "Udio — AI music generation.",
+    cynaps3: "Cynaps3 Musicmation — this viber's own music automation platform; tracks, audio seconds and credits from its usage ledger.",
+    elevenlabs: "ElevenLabs — AI voice and speech synthesis.",
+    leonardo: "Leonardo.ai — production image generation.",
+    runway: "Runway — pro AI video generation.",
+    perplexity: "Perplexity — AI answer engine and research.",
+    midjourney: "Midjourney — image generation; lifetime total imported from /info.",
+    replicate: "Replicate — hosted open-model inference per GPU-second.",
+    seaart: "SeaArt — AI image creation suite.",
+    tensorart: "Tensor.Art — community model image generation.",
+    pixverse: "PixVerse — AI video generation.",
+    vidu: "Vidu — AI video generation.",
+  };
+  const brands = [...toolRowMap.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([id]) => {
+      const brand = providerBrand(id);
+      const prov = provById.get(id);
+      return {
+        id,
+        label: providerLabel(id),
+        mark: brand.mark,
+        from: brand.from,
+        to: brand.to,
+        ink: brand.ink,
+        logo: brand.logo,
+        blurb: TOOL_BLURBS[id] ?? `${providerLabel(id)} — part of this viber's tracked AI stack.`,
+        stats: prov ? { ops: prov.ops, credits: prov.credits, usd: prov.usd } : undefined,
+      };
     });
 
   // Per-provider daily series for the interactive chart. Ranked by ops (activity), not spend, so
@@ -270,7 +323,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     { label: "Most expensive day", value: maxUsdDay ? `${formatUsd(maxUsdDay.usd)} on ${fmtDate(maxUsdDay.date)}` : "—" },
     { label: "Average daily cost", value: formatUsd(facts.usd / Math.max(facts.days, 1)) },
     { label: "Busiest day", value: maxOpsDay ? `${formatInt(maxOpsDay.ops)} ops on ${fmtDate(maxOpsDay.date)}` : "—" },
-    { label: "Days tracked", value: String(facts.days) },
+    { label: "Active days", value: String(facts.days) },
     { label: "Last sync", value: profile.latest ? fmtDate(profile.latest.created_at) : "—" },
   ];
 
@@ -520,6 +573,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   };
   const modelsByTrait = new Map<string, Map<string, number>>();
   const provsByTrait = new Map<string, Set<string>>();
+  const provOpsByTrait = new Map<string, Map<string, number>>();
   for (const m of profile.providerModels) {
     const trait = traitOfModel(m.provider, m.model);
     const name = prettyModel(m.model);
@@ -528,7 +582,28 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     bucket.set(name, (bucket.get(name) ?? 0) + m.ops);
     if (!provsByTrait.has(trait)) provsByTrait.set(trait, new Set());
     provsByTrait.get(trait)!.add(m.provider);
+    if (!provOpsByTrait.has(trait)) provOpsByTrait.set(trait, new Map());
+    const pb = provOpsByTrait.get(trait)!;
+    pb.set(m.provider, (pb.get(m.provider) ?? 0) + m.ops);
   }
+  // Second click state (user order 2026-07-19): the provider distribution behind a trait —
+  // "who powers my image gen" as coils, one per SOURCE. Per-model rows are the primary weight;
+  // sources whose category records carry no model split fall back to their total ops so every
+  // contributing platform still appears.
+  const providerDistFor = (cat: string) => {
+    const byProv = new Map<string, number>(provOpsByTrait.get(cat) ?? []);
+    for (const p of profile.providers) {
+      if (!byProv.has(p.provider) && primaryCategory(p.provider) === cat && p.ops > 0) {
+        byProv.set(p.provider, p.ops);
+      }
+    }
+    const total = [...byProv.values()].reduce((s, v) => s + v, 0);
+    return [...byProv.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([prov, ops], i) => ({
+      label: providerLabel(prov),
+      pct: total > 0 && (ops / total) * 100 >= 1 ? `${Math.round((ops / total) * 100)}%` : "<1%",
+      color: INFO_RAMP[i % INFO_RAMP.length],
+    }));
+  };
   const spiralForCat = (cat: string) => {
     const byModel = modelsByTrait.get(cat);
     if (!byModel) return [];
@@ -556,7 +631,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
           `${opsCompact} operations · ${formatUsd(facts.usd)} API-equivalent`,
           `${formatInt(facts.days)} active days`,
         ],
-        foot: "click a circle to open that specialization — click it again to come back",
+        foot: "click a circle to open that specialization — click again for its sources, once more to come back",
       },
     },
   };
@@ -574,6 +649,8 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       // a thin trait NEVER borrows the CLI coils (that read as wrong content): one model = one
       // coil, zero models = no hexagon at all, and the story says so
       spiral,
+      // second click: the SOURCE distribution behind this trait (who powers it)
+      providerDist: providerDistFor(c.id),
       months: provs?.size ? monthsFor(provs) : monthsFor(),
       story: {
         title: c.label.toLowerCase(),
@@ -609,7 +686,7 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
     />);
   // Directly under the hero: the flat logo toolbar, then the composed infographic board
   // (pies=traits · bio · spiral=CLI distribution · columns=monthly spend) — the reference, 1:1.
-  add("hero", "full", <SourceToolbar brands={brands} key="toolbar" />);
+  add("hero", "full", <ToolbarDock brands={brands} key="toolbar" />);
   add("hero", "full", <InfographicBoard traits={traits} specs={specs} key="board" />);
   // User-ordered flow (2026-07-15): identity plate (archetype + badges) directly under the board,
   // then the two activity heatmaps — the poster's "who is this + how steady" chapter, up top.
