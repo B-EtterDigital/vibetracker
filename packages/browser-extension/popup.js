@@ -1,4 +1,4 @@
-import { previewForTab, statusForCapture, statusForConnect, statusForRead } from "./popup-model.mjs";
+import { BRIDGE_BUILD, previewForTab, statusForCapture, statusForConnect, statusForRead, logoFor } from "./popup-model.mjs";
 
 const $ = (id) => document.getElementById(id);
 const status = $("status");
@@ -15,6 +15,8 @@ const readBtn = $("read");
 const readLabel = $("read-label");
 const readHint = $("read-hint");
 const readCta = $("read-cta");
+const providerCard = $("provider-card");
+const sourceBoard = $("source-board");
 const apiBanner = $("api-banner");
 const apiTitle = $("api-title");
 const apiDetail = $("api-detail");
@@ -29,9 +31,16 @@ function brand(from, to, ink) {
   document.documentElement.style.setProperty("--brand-ink", ink || "#071013");
 }
 
+// Real brand logo when the extension ships one; two-letter gradient monogram otherwise.
+// ids/marks/paths all come from our own registries — never from page content.
+function brandGlyph(id, markText, cssClass) {
+  const logo = logoFor(id);
+  return logo ? `<img class="${cssClass}" src="${logo}" alt="">` : markText;
+}
+
 function setProvider(preview) {
   brand(preview.from, preview.to, preview.ink);
-  mark.textContent = preview.mark;
+  mark.innerHTML = brandGlyph(preview.id, preview.mark, "orb-logo");
   host.textContent = preview.host || "active tab";
   label.textContent = preview.label;
   category.textContent = `${preview.category} // local low-confidence`;
@@ -41,7 +50,8 @@ function setProvider(preview) {
 function setConnector(connector) {
   if (!connector) { connectCard.hidden = true; return; }
   connectCard.hidden = false;
-  connectLabel.textContent = connector.pending ? `${connector.label} (importer coming)` : connector.label;
+  const logo = logoFor(connector.id);
+  connectLabel.innerHTML = `${logo ? `<img class="mini-logo" src="${logo}" alt="">` : ""}${connector.pending ? `${connector.label} (importer coming)` : connector.label}`;
   connectCta.textContent = `Connect ${connector.label}`;
   if (connector.brand) brand(connector.brand.from, connector.brand.to, connector.brand.ink);
   connectBtn.disabled = false;
@@ -50,7 +60,8 @@ function setConnector(connector) {
 function setReader(reader) {
   if (!reader) { readCard.hidden = true; return; }
   readCard.hidden = false;
-  readLabel.textContent = reader.label;
+  const logo = logoFor(reader.id);
+  readLabel.innerHTML = `${logo ? `<img class="mini-logo" src="${logo}" alt="">` : ""}${reader.label}`;
   readHint.textContent = reader.hint || "Open the page that shows your usage number, then read it.";
   readCta.textContent = `Read ${reader.label} usage`;
   readBtn.disabled = false;
@@ -78,12 +89,57 @@ function send(message) {
   return new Promise((resolve) => chrome.runtime.sendMessage(message, resolve));
 }
 
+// Self-heal a stale service worker. Chrome serves popup files live from disk, but the background
+// worker keeps running OLD code until the extension reloads — after any rebuild the two silently
+// drift and every message returns undefined ("nothing found"). On mismatch, reload the extension
+// once (loop-guarded via localStorage) so the user never has to know chrome://extensions exists.
+function healStaleWorker(workerBuild) {
+  if (workerBuild === BRIDGE_BUILD) return false;
+  const last = Number(localStorage.getItem("vt-self-reload-at") || 0);
+  if (Date.now() - last < 15000) {
+    // reloaded moments ago and still mismatched — stop looping, ask for the manual step
+    setStatus({ state: "error", label: "update stuck", detail: "Open chrome://extensions and click ↻ on VibeTRACKER Bridge." });
+    return false;
+  }
+  localStorage.setItem("vt-self-reload-at", String(Date.now()));
+  setStatus({ state: "", label: "updating", detail: "New Bridge version detected — reloading the extension…" });
+  chrome.runtime.reload();
+  return true;
+}
+
+// The source board: one tile per supported source — real logo, green tick when its data is in the
+// local ledger. Click a tile to jump to that source (e.g. to log in before pulling).
+const STATE_HINT = {
+  synced: "synced — data is in your local ledger",
+  connected: "connected — session stored, syncs on the next pull",
+  open: "tab open — ready to pull",
+  idle: "not connected yet — click to open, log in, then pull",
+};
+async function loadBoard() {
+  const board = await send({ type: "source-board" });
+  if (!board?.tiles?.length) { sourceBoard.hidden = true; return; }
+  sourceBoard.hidden = false;
+  sourceBoard.textContent = "";
+  for (const tile of board.tiles) {
+    const li = document.createElement("li");
+    li.dataset.state = tile.state;
+    const glyph = tile.logo ? `<img src="${tile.logo}" alt="">` : `<span class="tmark">${tile.mark}</span>`;
+    li.innerHTML = `<button type="button" class="tile" title="${tile.label} — ${STATE_HINT[tile.state] || tile.state}">${glyph}</button><span class="tile-tick" aria-hidden="true">✓</span>`;
+    li.querySelector("button").addEventListener("click", () => chrome.tabs.create({ url: tile.url, active: true }));
+    sourceBoard.appendChild(li);
+  }
+}
+
 async function refresh() {
   const response = await send({ type: "preview-active-tab" });
+  if (healStaleWorker(response?.build)) return; // extension is reloading — this popup is closing
   setProvider(response?.preview || previewForTab(null));
   setConnector(response?.connector || null);
   setReader(response?.reader || null);
+  // the contextual connect/read card already names the active source — hide the duplicate preview
+  providerCard.hidden = Boolean(response?.connector || response?.reader);
   setApi(Boolean(response?.apiUp));
+  loadBoard().catch(() => { sourceBoard.hidden = true; });
 }
 
 apiCmd.addEventListener("click", async () => {
@@ -129,7 +185,8 @@ function renderSweep(res, emptyDetail) {
   for (const r of results) {
     const li = document.createElement("li");
     li.dataset.ok = r.ok ? "true" : "false";
-    li.innerHTML = `<b>${r.label}</b><span>${r.ok ? (r.kind === "read" ? "read " : "connected · ") : ""}${r.detail || ""}</span>`;
+    const logo = logoFor(r.provider);
+    li.innerHTML = `${logo ? `<img class="mini-logo" src="${logo}" alt="">` : ""}<b>${r.label}</b><span>${r.ok ? (r.kind === "read" ? "read " : "connected · ") : ""}${r.detail || ""}</span>`;
     scanResults.appendChild(li);
   }
   scanResults.hidden = false;
@@ -150,11 +207,21 @@ async function runSweep(messageType, busyText, emptyDetail, btn) {
   scanResults.hidden = true;
   scanResults.textContent = "";
   try {
-    renderSweep(await send({ type: messageType }), emptyDetail);
+    const res = await send({ type: messageType });
+    if (res === undefined) {
+      // stale worker doesn't know this message — self-heal instead of a misleading "nothing found"
+      if (!healStaleWorker("stale")) setStatus({ state: "error", label: "bridge outdated", detail: "Open chrome://extensions and click ↻ on VibeTRACKER Bridge, then try again." });
+      return;
+    }
+    renderSweep(res, emptyDetail);
   } catch (error) {
     setStatus({ state: "error", label: "sweep failed", detail: String(error?.message || error) });
   } finally {
     btn.disabled = false;
+    // ticks reflect the pull that just happened; a board hiccup is cosmetic — breadcrumb only
+    loadBoard().catch((error) => console.debug("[vibetracker] board refresh failed", {
+      area: "browser-extension.board", message: String(error?.message || error).slice(0, 120),
+    }));
   }
 }
 

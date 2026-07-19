@@ -1,4 +1,4 @@
-import { CANDIDATE_PORTS, pathUrl, buildCapturePayload, previewForTab } from "./popup-model.mjs";
+import { CANDIDATE_PORTS, BRIDGE_BUILD, pathUrl, buildCapturePayload, previewForTab, logoFor } from "./popup-model.mjs";
 import { CONNECTORS, connectorForUrl, cookieMatchesSpec } from "./connectors.mjs";
 import { READERS, readerForUrl } from "./readers.mjs";
 
@@ -245,6 +245,51 @@ async function scanAllTabs({ tabsApi, cookieApi, scriptingApi } = {}) {
   return { ok: true, results, connected: okCount, total: results.length };
 }
 
+// Token-free GET against the local bridge (health-tier endpoints only: /sources).
+async function getJson(path) {
+  const port = await resolveApiPort();
+  if (port === null) return null;
+  try {
+    const res = await fetch(pathUrl(port, path), { method: "GET" });
+    return res.ok ? await res.json() : null;
+  } catch {
+    resolvedPort = null; // cached port died — re-probe on the next call
+    return null;
+  }
+}
+
+// The source board: EVERY supported source as one tile — logo (or monogram), its page URL, and a
+// sync state for the green tick. Precedence: synced (local ledger has data) > connected (creds
+// stored, importer pending/next sync) > open (a tab is open, ready to pull) > idle.
+export function buildSourceBoard(apiSources, openIds) {
+  const sources = [
+    ...CONNECTORS.map((c) => ({ id: c.id, label: c.label, url: c.url, mark: c.label.slice(0, 2).toUpperCase() })),
+    ...READERS.map((r) => ({ id: r.id, label: r.label, url: r.url, mark: r.label.slice(0, 2).toUpperCase() })),
+  ];
+  return sources.map((s) => {
+    const api = apiSources?.[s.id];
+    const state = api?.hasData ? "synced" : api?.connected ? "connected" : openIds?.has?.(s.id) ? "open" : "idle";
+    return { ...s, logo: logoFor(s.id), state, lastTs: api?.lastTs };
+  });
+}
+
+// Assemble the live board: bridge sync-state + which sources already have an open tab.
+async function sourceBoard({ tabsApi } = {}) {
+  tabsApi = tabsApi ?? (typeof chrome !== "undefined" ? chrome.tabs : undefined);
+  const [api, tabs] = await Promise.all([
+    getJson("/sources"),
+    tabsApi ? tabsApi.query({}).catch(() => []) : [],
+  ]);
+  const openIds = new Set();
+  for (const tab of tabs || []) {
+    const c = connectorForUrl(tab?.url);
+    if (c) openIds.add(c.id);
+    const r = readerForUrl(tab?.url);
+    if (r) openIds.add(r.id);
+  }
+  return { ok: true, apiUp: api !== null, tiles: buildSourceBoard(api?.sources ?? {}, openIds) };
+}
+
 // Every source worth auto-opening: all cookie connectors (a login cookie works from any page of the
 // site) plus the readers whose usage number actually appears on the web (autoOpen !== false —
 // Midjourney/ChatGPT keep their numbers off the web, so opening them would only report misses).
@@ -343,12 +388,36 @@ if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
   chrome.runtime?.onStartup?.addListener(() => refreshBadge());
   refreshBadge();
 
+  // Quiet auto-pull every 30 minutes: re-pull ONLY tabs that are already open — never opens tabs,
+  // never wakes anything when the local bridge is down (one refused fetch per candidate port and
+  // it goes back to sleep). Snapshot dedupe on the CLI side makes repeated reads free of
+  // double-counting, so this keeps the ledger fresh at near-zero resource cost. chrome.alarms
+  // (not setInterval) so the MV3 service worker can sleep between runs.
+  if (chrome.alarms) {
+    chrome.alarms.create("vt-auto-pull", { periodInMinutes: 30 });
+    chrome.alarms.onAlarm.addListener((alarm) => {
+      if (alarm.name !== "vt-auto-pull") return;
+      localApiHealth()
+        .then((health) => (health.up ? scanAllTabs() : null))
+        .catch((error) => {
+          console.warn("[vibetracker] auto-pull failed", {
+            area: "browser-extension.auto-pull", message: String(error?.message || error).slice(0, 120),
+          });
+        });
+    });
+  }
+
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    const known = ["capture-active-tab", "preview-active-tab", "connect-active-site", "read-active-page", "scan-all-tabs", "open-and-pull-all"];
+    const known = ["capture-active-tab", "preview-active-tab", "connect-active-site", "read-active-page", "scan-all-tabs", "open-and-pull-all", "source-board"];
     if (!known.includes(message?.type)) return false;
 
     if (message.type === "scan-all-tabs") {
       scanAllTabs().then(sendResponse).catch((error) => sendResponse({ ok: false, error: String(error?.message || error) }));
+      return true;
+    }
+
+    if (message.type === "source-board") {
+      sourceBoard().then(sendResponse).catch((error) => sendResponse({ ok: false, error: String(error?.message || error) }));
       return true;
     }
 
@@ -363,6 +432,7 @@ if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
           const health = await localApiHealth();
           return {
             ok: true,
+            build: BRIDGE_BUILD, // popup compares against its own build — mismatch = stale worker
             preview: previewForTab(tab),
             connector: connectorSummary(connectorForUrl(tab?.url)),
             reader: readerSummary(readerForUrl(tab?.url)),
@@ -380,4 +450,4 @@ if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
   });
 }
 
-export { readConnectorCookies, connectActiveSite, connectorSummary, readActivePage, pageStatExtractor, scanAllTabs, openAllSources, openAndPullAll, CONNECTORS, READERS };
+export { readConnectorCookies, connectActiveSite, connectorSummary, readActivePage, pageStatExtractor, scanAllTabs, openAllSources, openAndPullAll, sourceBoard, CONNECTORS, READERS };

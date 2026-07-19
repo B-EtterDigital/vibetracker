@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { CONNECTORS, connectorForUrl, cookieMatchesSpec, connectorHosts } from "../connectors.mjs";
-import { readConnectorCookies, connectActiveSite, scanAllTabs, autoOpenSources, openAllSources, openAndPullAll, resetBridgePort } from "../background.js";
+import { readConnectorCookies, connectActiveSite, scanAllTabs, autoOpenSources, openAllSources, openAndPullAll, buildSourceBoard, resetBridgePort } from "../background.js";
 
 // The bridge auto-discovers its port by probing /health across candidates; the first is 8799.
 // A fetch mock must answer the GET /health probe (ok) before the POST it actually asserts on.
@@ -131,6 +131,25 @@ test("every auto-open URL's host is granted in the manifest (so its tab is conne
     const host = new URL(s.url).hostname;
     assert.ok(granted.includes(host), `manifest missing host_permission for ${s.id}'s ${host}`);
   }
+});
+
+test("buildSourceBoard covers every source with the right state precedence and real logos", () => {
+  const tiles = buildSourceBoard(
+    { suno: { hasData: true, connected: true }, udio: { hasData: false, connected: true } },
+    new Set(["udio", "midjourney"]),
+  );
+  const byId = Object.fromEntries(tiles.map((t: { id: string }) => [t.id, t]));
+  assert.equal(byId.suno.state, "synced", "data in ledger beats everything → green tick");
+  assert.equal(byId.udio.state, "connected", "creds stored beats open-tab");
+  assert.equal(byId.midjourney.state, "open", "open tab beats idle");
+  assert.equal(byId.higgsfield.state, "idle");
+  // every tile carries a URL (click-to-open) and the ones with shipped assets carry real logos
+  for (const t of tiles) assert.match(t.url, /^https:\/\//, `${t.id} tile needs a URL`);
+  assert.match(byId.suno.logo, /suno\.svg$/);
+  assert.match(byId.midjourney.logo, /midjourney\.png$/);
+  assert.equal(byId.haiper.logo, null, "no asset → monogram tile");
+  // ALL connectors + ALL readers appear — the board is the complete source map
+  assert.equal(tiles.length, CONNECTORS.length + 7, "7 readers + all connectors");
 });
 
 test("openAllSources opens one background tab per missing source and skips already-open ones", async () => {

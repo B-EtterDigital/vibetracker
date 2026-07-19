@@ -18,13 +18,17 @@ test("resolver returns a path only for ids with a real asset", () => {
   // OpenAI/Codex (svgrepo) and Runway (svgl) were sourced beyond Simple Icons.
   assert.equal(logoPath("runway"), "/provider-logos/runway.svg");
 
-  // Brands with no public SVG use their original-colour apple-touch-icon PNG.
+  // Brands with no public SVG use their original-colour favicon/apple-touch-icon PNG.
   assert.equal(logoPath("higgsfield"), "/provider-logos/higgsfield.png");
   assert.equal(logoPath("falai"), "/provider-logos/falai.png");
   assert.equal(logoPath("openclaw"), "/provider-logos/openclaw.png");
+  // 2026-07-19: real brand favicons landed for the browser-Bridge sources too.
+  for (const id of ["midjourney", "udio", "leonardo", "seaart", "tensorart", "pixverse", "vidu"]) {
+    assert.equal(logoPath(id), `/provider-logos/${id}.png`, `${id} now has a real logo`);
+  }
 
   // Providers with no available brand asset resolve to null -> monogram fallback.
-  for (const missing of ["kling", "udio", "luma", "devin", "not-a-provider"]) {
+  for (const missing of ["kling", "haiper", "luma", "devin", "not-a-provider"]) {
     assert.equal(hasLogo(missing), false, `${missing} should have no logo`);
     assert.equal(logoPath(missing), null, `${missing} should resolve to null`);
   }

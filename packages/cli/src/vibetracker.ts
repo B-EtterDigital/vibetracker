@@ -678,6 +678,20 @@ function bridgeDeps(): LocalApiDeps {
       saveConfig(cfg);
       return { stored: Object.keys(fields), keyring };
     },
+    // Source-board state for the extension grid: which providers have local data / are connected.
+    // Booleans + a timestamp only — usage counts and values never cross this endpoint.
+    sourceStatus: () => {
+      const status: Record<string, { hasData: boolean; connected: boolean; lastTs?: string }> = {};
+      for (const record of readRecords(STORE)) {
+        const cur = (status[record.provider] ??= { hasData: false, connected: false });
+        cur.hasData = true;
+        if (!cur.lastTs || record.ts > cur.lastTs) cur.lastTs = record.ts;
+      }
+      for (const id of loadConfig().enabled ?? []) {
+        (status[id] ??= { hasData: false, connected: false }).connected = true;
+      }
+      return status;
+    },
   };
 }
 
@@ -1577,11 +1591,32 @@ async function main() {
     }
     console.log(`  ${ok("2")} Then open Suno / Udio / Midjourney / Higgsfield, log in, and click the extension.`);
     console.log(`  ${dim("Leaving this window running keeps the local bridge on http://127.0.0.1:" + session.port)}`);
+    console.log(`  ${dim("Auto-sync: configured sources refresh hourly while this runs (VibeTRACKER feeds your VibeUsage profile).")}`);
     // best-effort: open the extensions page so step 1 is one click (never blocks the server)
     try {
       const opener = process.platform === "darwin" ? "open" : process.platform === "win32" ? "explorer" : "xdg-open";
       spawnSync(opener, ["chrome://extensions"], { stdio: "ignore", timeout: 3000 });
     } catch { /* opener unavailable — the printed path is the fallback */ }
+    // Hourly quiet auto-sync of the configured adapters while the bridge runs — one line per run,
+    // overlap-guarded, and unref'd so it can never keep the process alive on its own. Resource
+    // cost is one adapter pass per hour; failures degrade to a dim note, never a crash.
+    let autoSyncBusy = false;
+    const autoSync = setInterval(async () => {
+      if (autoSyncBusy) return;
+      autoSyncBusy = true;
+      try {
+        const targets = await configTargets();
+        if (targets.length) {
+          const summary = await syncTargets(targets, ctx);
+          console.log(dim(`  auto-sync: ${targets.length} source(s) checked, ${summary.totalFresh} fresh record(s)`));
+        }
+      } catch (error) {
+        console.log(dim(`  auto-sync skipped: ${shortErr(String((error as Error)?.message || error))}`));
+      } finally {
+        autoSyncBusy = false;
+      }
+    }, 60 * 60 * 1000);
+    autoSync.unref?.();
     return;
   }
 

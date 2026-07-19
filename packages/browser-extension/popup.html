@@ -9,23 +9,12 @@
 <body>
   <main class="capture-shell" aria-label="VibeTRACKER browser cockpit">
     <header>
-      <div class="brand-lockup">
-        <svg class="brand-mark" viewBox="0 0 128 128" width="34" height="34" aria-hidden="true" focusable="false">
-          <defs>
-            <linearGradient id="bm" x1="20" y1="24" x2="108" y2="104" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stop-color="#2ee8d6"/><stop offset="1" stop-color="#36e39b"/>
-            </linearGradient>
-          </defs>
-          <rect x="4" y="4" width="120" height="120" rx="30" fill="#070f12" stroke="#d9fff2" stroke-opacity="0.14" stroke-width="2"/>
-          <path d="M30 42 L60 92 L98 30" fill="none" stroke="url(#bm)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="98" cy="30" r="9" fill="#ffc64d"/>
-        </svg>
-        <div class="brand-text">
-          <span>VTK://BROWSER-BRIDGE</span>
-          <h1>Vibe Bridge</h1>
-        </div>
-      </div>
-      <p>Connect cookie-only AI sources in one click — or mark any AI tab as usage.</p>
+      <span class="eyebrow">VTK://BROWSER-BRIDGE</span>
+      <h1 class="brand-row">
+        <img class="brand-emblem" src="icons/icon-48.png" alt="" width="26" height="26">
+        VibeTRACKER <span class="brand-sub">Bridge</span>
+      </h1>
+      <p>Pull every AI source in one click — feeds your <b>VibeUsage</b> profile. Nothing leaves your machine.</p>
     </header>
 
     <!-- API status banner — the whole "is it set up?" answer, one glance. When the local API is
@@ -48,11 +37,19 @@
       <span>Pull from all open tabs</span>
       <i aria-hidden="true">⟲</i>
     </button>
-    <small class="scan-hint"><button id="open-all" type="button" class="linklike"
-      title="Open a tab for every supported AI source, wait for them to load, then connect &amp; read them all automatically.">Open all sources first ↗</button> — or pull just the AI tabs already open.</small>
+    <button id="open-all" type="button" class="secondary open-all-btn"
+            title="Open a tab for every supported AI source, wait for them to load, then connect &amp; read them all automatically.">
+      <span>Open all sources + pull</span>
+      <i aria-hidden="true">↗</i>
+    </button>
+
+    <!-- The source board: every supported source, its real logo, and a green tick once synced.
+         Click a tile to open that source's page (e.g. to log in). Auto-pull refreshes half-hourly. -->
+    <ul id="source-board" class="source-board" aria-label="All sources — green tick means synced"></ul>
+
     <ul id="scan-results" class="scan-results" hidden aria-label="Scan results"></ul>
 
-    <section class="provider-card" aria-label="Active provider preview">
+    <section class="provider-card" id="provider-card" aria-label="Active provider preview">
       <div class="provider-orb" id="provider-mark">AI</div>
       <div>
         <span id="provider-host">checking active tab</span>
@@ -85,12 +82,6 @@
       </button>
     </section>
 
-    <div class="rails" aria-label="Boundaries">
-      <div><b>Local</b><span>127.0.0.1 only</span></div>
-      <div><b>Keyring</b><span>→ your OS keyring</span></div>
-      <div><b>Explicit</b><span>this site's cookie only</span></div>
-    </div>
-
     <details class="capture-fold">
       <summary>Mark this tab as usage (manual)</summary>
       <button id="capture" type="button">
@@ -100,7 +91,7 @@
     </details>
 
     <output id="status" role="status">Run: vibetracker start</output>
-    <footer>Vibers Unite · c0vibe.app</footer>
+    <footer title="Cookies go straight to your OS keyring; only the site you're on; nothing leaves your machine.">127.0.0.1 only · cookies → OS keyring · Vibers Unite · c0vibe.app</footer>
   </main>
   <script type="module" src="popup.js"></script>
 </body>

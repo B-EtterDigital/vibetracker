@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { buildCapturePayload, inferProvider, previewForTab, statusForCapture, CANDIDATE_PORTS } from "../popup-model.mjs";
+import { buildCapturePayload, inferProvider, previewForTab, statusForCapture, CANDIDATE_PORTS, BRIDGE_BUILD, PROVIDER_LOGOS, logoFor } from "../popup-model.mjs";
 
 test("browser extension infers branded AI providers without scraping content", () => {
   assert.deepEqual(
@@ -49,6 +49,17 @@ test("browser extension preview and status copy keep privacy boundaries visible"
   assert.match(statusForCapture({ ok: false, status: 503 }).detail, /vibetracker start/);
 });
 
+test("every mapped provider logo asset exists on disk, and logoFor resolves -web ids", () => {
+  for (const [id, path] of Object.entries(PROVIDER_LOGOS)) {
+    const stat = (() => { try { return readFileSync(new URL(`../${path}`, import.meta.url)); } catch { return null; } })();
+    assert.ok(stat && stat.length > 100, `logo asset missing or empty for ${id}: ${path}`);
+  }
+  assert.equal(logoFor("suno"), "icons/providers/suno.svg");
+  assert.equal(logoFor("openai-web"), "icons/providers/openai.svg", "-web suffix resolves");
+  assert.equal(logoFor("midjourney-web"), "icons/providers/midjourney.png");
+  assert.equal(logoFor("haiper"), null, "no asset → monogram fallback");
+});
+
 test("browser extension manifest and popup load the module cockpit", () => {
   const manifest = JSON.parse(readFileSync(new URL("../manifest.json", import.meta.url), "utf8"));
   const popup = readFileSync(new URL("../popup.html", import.meta.url), "utf8");
@@ -72,9 +83,15 @@ test("browser extension manifest and popup load the module cockpit", () => {
   for (const size of ["16", "32", "48", "128"]) {
     assert.equal(manifest.icons?.[size], `icons/icon-${size}.png`, `manifest.icons missing ${size}`);
   }
+  // the popup ↔ worker handshake only works if the two builds can ever match — lock them together
+  assert.equal(manifest.version, BRIDGE_BUILD, "manifest.json version must equal BRIDGE_BUILD");
   assert.match(popup, /popup\.css/);
   assert.match(popup, /type="module" src="popup\.js"/);
-  assert.match(popup, /class="brand-mark"/); // the header brand lockup
+  // two-brand system (user decision 2026-07-19): VibeTRACKER = the tool, VibeUsage = the profile
+  assert.match(popup, /icons\/icon-48\.png/); // the real emblem from the site logo
+  assert.match(popup, /VibeTRACKER\s*<span class="brand-sub">Bridge<\/span>/);
+  assert.match(popup, /VibeUsage<\/b> profile/);
+  assert.match(popup, /id="source-board"/);   // the all-sources grid with sync ticks
   assert.match(popup, /127\.0\.0\.1 only/);   // privacy boundary rail
   assert.match(popup, /Connect this site/);
   assert.match(popup, /Read usage from this page/);

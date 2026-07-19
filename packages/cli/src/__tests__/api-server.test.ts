@@ -199,6 +199,30 @@ test("local API /capture replaces snapshots (re-reading a lifetime total never d
   }
 });
 
+test("local API /sources serves boolean sync-state to the extension, token-free, values never", async () => {
+  const session = await startLocalApiServer({
+    port: 0, token: "t",
+    deps: {
+      readRecords: () => [], appendRecords: () => {}, log: () => {},
+      sourceStatus: () => ({ suno: { hasData: true, connected: true, lastTs: "2026-07-19T00:00:00.000Z" }, udio: { hasData: false, connected: true } }),
+    },
+  });
+  const base = `http://127.0.0.1:${session.port}`;
+  try {
+    // the extension origin reads it with NO bearer token
+    const res = await fetch(`${base}/sources`, { headers: { origin: "chrome-extension://x" } });
+    assert.equal(res.status, 200);
+    const body = await res.json() as { sources: Record<string, { hasData: boolean }> };
+    assert.equal(body.sources.suno.hasData, true);
+    assert.equal(body.sources.udio.hasData, false);
+    // a hostile web origin cannot reach it at all
+    const hostile = await fetch(`${base}/sources`, { headers: { origin: "https://hostile.example" } });
+    assert.equal(hostile.status, 403);
+  } finally {
+    await new Promise<void>((resolve, reject) => session.server.close((error) => error ? reject(error) : resolve()));
+  }
+});
+
 test("local API /health answers the extension's token-free liveness probe", async () => {
   const session = await startLocalApiServer({
     port: 0, token: "t",

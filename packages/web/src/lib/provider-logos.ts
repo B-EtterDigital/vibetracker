@@ -36,6 +36,13 @@ const LOGO_FILES: Readonly<Record<string, string>> = {
   falai: "falai.png",
   fal: "fal.png",
   openclaw: "openclaw.png",
+  midjourney: "midjourney.png",
+  udio: "udio.png",
+  leonardo: "leonardo.png",
+  seaart: "seaart.png",
+  tensorart: "tensorart.png",
+  pixverse: "pixverse.png",
+  vidu: "vidu.png",
 };
 
 /** True when a real brand logo asset exists for this provider id. */

@@ -1,3 +1,11 @@
+// Build stamp for the popup ↔ service-worker handshake. Chrome serves popup files live from disk,
+// but the background service worker keeps running the OLD code until the extension is reloaded —
+// so after any rebuild the two silently drift (new popup sends a message the old worker doesn't
+// know → undefined replies → "nothing found"). The popup compares its own build against the
+// worker's and triggers chrome.runtime.reload() on mismatch. MUST equal manifest.json "version"
+// (locked by a test).
+export const BRIDGE_BUILD = "0.7.0";
+
 // Candidate ports the local bridge may bind, in preference order. The CLI binds the first FREE
 // one; the extension probes for the first that answers /health. This makes a port collision (a
 // user's other service already on 8765 — watchdog_bd, etc.) self-heal instead of dead-ending.
@@ -10,6 +18,32 @@ export const pathUrl = (port, path) => `http://127.0.0.1:${port}${path}`;
 export const CAPTURE_ENDPOINT = pathUrl(CANDIDATE_PORTS[0], "/capture");
 export const CONNECT_ENDPOINT = pathUrl(CANDIDATE_PORTS[0], "/connect");
 export const HEALTH_ENDPOINT = pathUrl(CANDIDATE_PORTS[0], "/health");
+
+// Real brand logos packaged with the extension (mirrors the site's provider-logos approach:
+// bone-recoloured SVG glyphs where a public SVG exists, original-colour favicons otherwise).
+// Sources without a shipped asset (haiper) fall back to their two-letter gradient monogram.
+export const PROVIDER_LOGOS = {
+  "suno": "icons/providers/suno.svg",
+  "udio": "icons/providers/udio.png",
+  "seaart": "icons/providers/seaart.png",
+  "tensorart": "icons/providers/tensorart.png",
+  "pixverse": "icons/providers/pixverse.png",
+  "vidu": "icons/providers/vidu.png",
+  "midjourney": "icons/providers/midjourney.png",
+  "higgsfield": "icons/providers/higgsfield.png",
+  "openai": "icons/providers/openai.svg",
+  "elevenlabs": "icons/providers/elevenlabs.svg",
+  "leonardo": "icons/providers/leonardo.png",
+  "runway": "icons/providers/runway.svg",
+  "perplexity": "icons/providers/perplexity.svg",
+};
+
+// Resolve a provider/connector/reader id to its packaged logo, tolerating the "-web" suffix the
+// capture-preview provider ids carry (openai-web → openai). Null = render the monogram fallback.
+export function logoFor(id) {
+  const key = String(id || "").toLowerCase();
+  return PROVIDER_LOGOS[key] ?? PROVIDER_LOGOS[key.replace(/-web$/, "")] ?? null;
+}
 
 // Human line for a page-read usage snapshot — the number and unit, never any page content.
 export function statusForRead(response) {
