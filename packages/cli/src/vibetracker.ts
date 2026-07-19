@@ -1945,7 +1945,14 @@ async function main() {
       saveConfig(cfg);
       console.log(`OAuth token stored for ${provider} ${inKeyring ? "in the OS keyring" : `in ${CONFIG_PATH} (mode 600)`}.`);
     } catch (err) {
-      console.error(`OAuth failed: ${(err as Error).message}`);
+      const message = (err as Error).message;
+      if (message.includes("EADDRINUSE")) {
+        console.error("OAuth failed: another `vibetracker oauth start` is already waiting on this port.");
+        console.error("Press Ctrl+C in that other terminal first, then run this command again —");
+        console.error("each run has its own one-time state, so only the NEWEST window can succeed.");
+      } else {
+        console.error(`OAuth failed: ${message}`);
+      }
       process.exit(1);
     }
     return;
