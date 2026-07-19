@@ -224,6 +224,11 @@ export function createHttpClient(opts: Cynaps3HttpOpts): Cynaps3Client {
   }
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  // The endpoint enforces 120 req/300s per IP and 60 req/60s per account — an unpaced ~100-page
+  // history crawl trips them mid-run (live incident 2026-07-19). Pace every request so a full
+  // crawl stays inside both budgets by construction.
+  const MIN_REQUEST_INTERVAL_MS = 2_600;
+  let lastRequestAt = 0;
   return {
     async stats(args) {
       const url = new URL(baseUrl);
@@ -233,24 +238,66 @@ export function createHttpClient(opts: Cynaps3HttpOpts): Cynaps3Client {
       if (args.cursor) url.searchParams.set("cursor", args.cursor);
       // The producer's auth path is nondeterministic (its Clerk metadata fetch flakes → sporadic
       // 401 with a VALID token — verified live 2026-07-19: same token, 401 then 200 twice). Retry
-      // 401/5xx twice with backoff before failing, so one flake can't sink a whole sync.
+      // The producer's auth path can flake in bursts (transient PostgREST failures read as 401
+      // server-side, live incident 2026-07-19) — ride out a burst with a patient exponential
+      // ladder (2s, 4s, 8s, 16s, 30s ≈ one minute of cover) instead of failing a 50-page sync.
       let lastError: Error | undefined;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        if (attempt > 0) await sleep(attempt * 2_000);
-        const response = await doFetch(url, {
+      let lastStatus = 0;
+      const backoffMs = [0, 2_000, 4_000, 8_000, 16_000, 30_000];
+      for (let attempt = 0; attempt < backoffMs.length; attempt++) {
+        if (attempt > 0) await sleep(backoffMs[attempt]);
+        // 401 bursts are sticky per keep-alive connection: the pinned edge instance keeps
+        // rejecting while a FRESH connection succeeds immediately (verified live 2026-07-19 —
+        // probe processes 200'd during the same minute the pooled connection 401'd every try).
+        // On 401 retries, break the pin with a one-shot undici Agent when the runtime has it.
+        let freshAgent: { close(): Promise<void> } | undefined;
+        let attemptFetch = doFetch;
+        const init: Record<string, unknown> = {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,
             Accept: "application/json",
           },
-        });
-        if (response.ok) return parseStatsPage(await response.json());
-        const detail = (await response.text()).slice(0, 500);
-        lastError = new Error(
-          `Cynaps3 stats request failed: ${response.status} ${response.statusText}` +
-            (detail ? ` - ${detail}` : ""),
-        );
-        if (response.status !== 401 && response.status < 500) break; // real client errors don't retry
+        };
+        if (attempt > 0 && lastStatus === 401) {
+          try {
+            // undici's Agent only composes with undici's OWN fetch — Node's built-in fetch
+            // rejects a foreign dispatcher, so both come from the package for this attempt.
+            const undici = (await import("undici")) as unknown as {
+              Agent: new (o: object) => { close(): Promise<void> };
+              fetch: typeof fetch;
+            };
+            freshAgent = new undici.Agent({ pipelining: 0 });
+            init.dispatcher = freshAgent;
+            attemptFetch = undici.fetch as typeof doFetch;
+          } catch (undiciMissing) {
+            freshAgent = undefined; // non-Node runtime — retry rides the default dispatcher
+          }
+        }
+        try {
+          const wait = lastRequestAt + MIN_REQUEST_INTERVAL_MS - Date.now();
+          if (wait > 0) await sleep(wait);
+          lastRequestAt = Date.now();
+          const response = await attemptFetch(url, init as RequestInit);
+          if (response.ok) return parseStatsPage(await response.json());
+          lastStatus = response.status;
+          if (response.status === 429) {
+            // honest rate limit — honor retry-after and keep going
+            const retryAfter = Number(response.headers.get("retry-after")) || 30;
+            await response.body?.cancel();
+            lastError = new Error(`Cynaps3 stats request failed: 429 rate limited`);
+            await sleep(Math.min(retryAfter, 120) * 1_000);
+            continue;
+          }
+          const detail = (await response.text()).slice(0, 500);
+          lastError = new Error(
+            `Cynaps3 stats request failed: ${response.status} ${response.statusText}` +
+              (detail ? ` - ${detail}` : ""),
+          );
+          if (response.status !== 401 && response.status < 500) break; // real client errors don't retry
+        } finally {
+          if (freshAgent) await freshAgent.close();
+        }
       }
       throw lastError ?? new Error("Cynaps3 stats request failed");
     },

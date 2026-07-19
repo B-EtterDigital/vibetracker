@@ -167,9 +167,14 @@ export interface StackMonth {
 
 export function StackColumns({ months, ariaLabel }: { months: StackMonth[]; ariaLabel: string }) {
   const barW = 28;
-  // viewBox ends AT the last bar's right edge — the SVG's right edge is the alignment line the
-  // trait pies share, so "flush right" is truly flush.
-  const W = 26 + (months.length - 1) * 74 + barW + 2;
+  // The SVG stretches to container width (CSS width:100%), so the viewBox width must NOT shrink
+  // with the month count — a 2-month trait would render its bars at ~9× scale (real incident
+  // 2026-07-19: "the bars scale super big massive"). Pad the viewBox to a fixed 12-slot width and
+  // right-align the bars: every trait renders at the same scale, and the last bar's right edge
+  // stays the alignment line the trait pies share, so "flush right" is truly flush.
+  const slots = Math.max(months.length, 12);
+  const xOffset = (slots - months.length) * 74;
+  const W = 26 + (slots - 1) * 74 + barW + 2;
   const H = 400;
   const plotTop = 48;
   const plotBottom = 322;
@@ -178,7 +183,7 @@ export function StackColumns({ months, ariaLabel }: { months: StackMonth[]; aria
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="vinfo-stack" role="img" aria-label={ariaLabel}>
       {months.map((month, i) => {
-        const x = 26 + i * 74;
+        const x = 26 + xOffset + i * 74;
         const total = month.segments.reduce((s, seg) => s + seg.value, 0);
         const fullH = (total / max) * (plotBottom - plotTop);
         let y = plotBottom;

@@ -57,6 +57,7 @@ export function createCynaps3Adapter(client: Cynaps3Client, opts: Cynaps3Adapter
       const cursors = new Set<string>();
       let cursor: string | undefined;
       let accountId: string | undefined;
+      let windowFetched = 0; // real per-window event count — the server may clamp limit below pageSize
       let rangeSummary: Cynaps3StatsSummary | undefined;
       let exhausted = false;
 
@@ -98,6 +99,7 @@ export function createCynaps3Adapter(client: Cynaps3Client, opts: Cynaps3Adapter
             winEnd = Math.min(winStart + WINDOW_MS, effTo);
             cursors.clear();
             rangeSummary = undefined;
+            windowFetched = 0;
             continue;
           }
           throw error;
@@ -140,6 +142,7 @@ export function createCynaps3Adapter(client: Cynaps3Client, opts: Cynaps3Adapter
           }
           billedEventIds.add(billedEventKey);
         }
+        windowFetched += page.events.length;
         records.push(...normalizeEvents(page.events, accountId));
         ctx.telemetry.addBreadcrumb("adapter.cynaps3.page", {
           page: pageNumber,
@@ -150,8 +153,7 @@ export function createCynaps3Adapter(client: Cynaps3Client, opts: Cynaps3Adapter
         if (!page.page.hasMore) {
           // audit #11: when a window is exhausted, its summary must reconcile with what it
           // actually delivered — a contradictory producer (summary 72 / events 18) must be VISIBLE
-          const windowFetched = cursors.size * pageSize + page.events.length; // pages before + this one
-          if (rangeSummary && rangeSummary.operations !== windowFetched && page.events.length < pageSize) {
+          if (rangeSummary && rangeSummary.operations !== windowFetched) {
             ctx.telemetry.captureError(new Error(`Cynaps3 window summary/events mismatch: summary ${rangeSummary.operations} vs fetched ${windowFetched}`), {
               area: "adapter.cynaps3.reconcile", severity: "warn",
               window: `${new Date(winStart).toISOString()}..${new Date(winEnd).toISOString()}`,
@@ -167,6 +169,7 @@ export function createCynaps3Adapter(client: Cynaps3Client, opts: Cynaps3Adapter
           cursor = undefined;
           cursors.clear();
           rangeSummary = undefined; // summary consistency is a per-window contract
+          windowFetched = 0;
           continue;
         }
         const nextCursor = page.page.nextCursor!;
