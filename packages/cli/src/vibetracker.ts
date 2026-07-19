@@ -591,6 +591,8 @@ async function authorizeOAuthProvider(
   const callbackHost = redirect.hostname === "localhost" ? null : undefined;
   const bundle = buildOAuthUrl({ ...preset, scope, redirectUri });
   console.log(`OAuth URL for ${preset.provider}: ${bundle.url}`);
+  // terminals make long URLs painful to select — put it on the clipboard too
+  if (copyToClipboard(bundle.url)) console.log("(the URL is on your clipboard — paste it in any browser if no tab opened)");
   console.log(`listening on ${redirectUri}`);
   const pendingCallback = waitForOAuthCallback({ port: callbackPort, host: callbackHost, state: bundle.state });
   openBrowser(bundle.url);
