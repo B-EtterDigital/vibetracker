@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { NormalizedRecord } from "../../../core/src/schema/record.ts";
-import { startLocalApiServer, BRIDGE_PORTS } from "../api-server.ts";
+import { startLocalApiServer, BRIDGE_PORTS, DEFAULT_DASHBOARD_ORIGIN } from "../api-server.ts";
 
 const record: NormalizedRecord = {
   ts: "2026-07-14T00:00:00.000Z",
@@ -22,6 +22,15 @@ test("BRIDGE_PORTS is the canonical candidate list the extension mirrors (8799 f
   // MUST stay in sync with CANDIDATE_PORTS in packages/browser-extension/popup-model.mjs.
   assert.deepEqual(BRIDGE_PORTS, [8799, 8765, 8787, 8123]);
   assert.equal(BRIDGE_PORTS[0], 8799, "first candidate is the default the CLI prefers");
+});
+
+test("the default dashboard link is the canonical vibeusage.c0vibe.app host, not the stale build alias", () => {
+  // Regression lock: a bridge that printed https://vibetracker-betterdigital.netlify.app once shipped
+  // to a user. The user-facing link must be the canonical production host. (c0vibe.app is itself
+  // Netlify-hosted, so "netlify" is not the problem — the specific stale build alias is.)
+  assert.equal(DEFAULT_DASHBOARD_ORIGIN, "https://vibeusage.c0vibe.app");
+  assert.equal(new URL(DEFAULT_DASHBOARD_ORIGIN).hostname, "vibeusage.c0vibe.app");
+  assert.doesNotMatch(DEFAULT_DASHBOARD_ORIGIN, /vibetracker-betterdigital\.netlify\.app/);
 });
 
 test("local API protects usage reads and issues a fragment-only dashboard session", async () => {
@@ -82,7 +91,9 @@ test("local API protects usage reads and issues a fragment-only dashboard sessio
     assert.equal(appended.length, 1);
 
     const url = new URL(session.dashboardUrl);
-    assert.equal(url.origin, origin);
+    // the printed dashboard link must ALWAYS use the canonical production domain, never the netlify
+    // alias that the request `origin` above uses (that alias is only a valid CORS origin).
+    assert.equal(url.origin, "https://vibeusage.c0vibe.app");
     assert.equal(url.search, "");
     assert.equal(url.hash, `#local=${session.token}&port=${session.port}`);
     assert.equal(logs.some((line) => line.includes(session.dashboardUrl)), true);

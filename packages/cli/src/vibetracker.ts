@@ -44,6 +44,7 @@ import { providerCapabilityChecks, renderCapabilityChecks } from "./capability-c
 import { redactFixture, renderFixtureRedaction } from "./fixture.ts";
 import { createRoiNote, loadRoiNotes, renderRoiNotes, saveRoiNotes } from "./roi-notes.ts";
 import { startLocalApiServer, BRIDGE_PORTS, type LocalApiDeps, type LocalApiSession } from "./api-server.ts";
+import { buildBrowserExtension } from "./browser-extension-build.ts";
 import { desktopActivitiesToRecords, renderDesktopActivity, scanDesktopActivity } from "./desktop-activity.ts";
 import {
   buildOAuthUrl,
@@ -120,6 +121,14 @@ function browserExtensionDir(): string {
     join(dirname(fileURLToPath(import.meta.url)), "..", "..", "packages", "browser-extension"),
   ];
   return candidates.find((candidate) => existsSync(join(candidate, "manifest.json"))) ?? candidates[0];
+}
+
+// The Chrome-loadable extension directory: a clean, rebuilt-each-time copy of the source that holds
+// ONLY runtime files. Chrome rejects the source package directly because it contains `__tests__/`
+// (reserved "_" name). Built under ~/.vibetracker (always writable, even when the package lives in a
+// read-only npx cache). This is the path `start` copies to the clipboard and tells users to load.
+function buildLoadableExtension(): string {
+  return buildBrowserExtension(browserExtensionDir(), join(homedir(), ".vibetracker", "extension"));
 }
 function pluginsDir(): string {
   const candidates = [
@@ -1532,7 +1541,8 @@ async function main() {
   }
 
   if (cmd === "browser-extension" && (argv[1] === "path" || !argv[1])) {
-    console.log(browserExtensionDir());
+    // Print the clean, Chrome-loadable build path (not the source package, which Chrome rejects).
+    console.log(buildLoadableExtension());
     console.log("Run `vibetracker start`, then load this folder as an unpacked extension.");
     return;
   }
@@ -1543,7 +1553,8 @@ async function main() {
   // This is the whole "easy install" story in one verb — as automated as Chrome's dev-mode allows.
   if (cmd === "start") {
     const portFlag = flag(argv, "--port");
-    const extDir = browserExtensionDir();
+    // Build a clean, Chrome-loadable copy (the source package can't be loaded — it holds __tests__).
+    const extDir = buildLoadableExtension();
     // The ASCII splash — the same animated VIBE·USAGE logo the top-level banner shows (TTY only).
     await showBanner();
     // Bind FIRST so we can print the real port (and prove the bridge is live before the guide).

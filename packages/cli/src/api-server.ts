@@ -69,7 +69,11 @@ interface StartLocalApiOptions {
   dashboardOrigin?: string;
 }
 
-const DEFAULT_DASHBOARD_ORIGIN = "https://vibetracker-betterdigital.netlify.app";
+// The canonical, user-facing production host. Every printed dashboard link uses this — never the
+// stale build alias `vibetracker-betterdigital.netlify.app` (which stays allowed as a CORS origin
+// below for preview deploys only; c0vibe.app is itself Netlify-hosted, so the netlify platform is
+// fine — only that specific alias is wrong to show a user). Locked by a test in api-server.test.ts.
+export const DEFAULT_DASHBOARD_ORIGIN = "https://vibeusage.c0vibe.app";
 
 function isDashboardOrigin(origin: string): boolean {
   try {
