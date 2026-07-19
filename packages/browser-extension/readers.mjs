@@ -21,11 +21,11 @@ export const READERS = [
     // broadened 2026-07-19 (live sweep: "credit" present but no pattern matched): also accept
     // bare "N credits" and "credits: N" phrasings.
     stats: [
-      { operation: "character_usage", unit: "credit", patterns: [
-        "([\\d,]+)\\s*/\\s*[\\d,]+\\s*credits?",
-        "([\\d,]+)\\s*characters?\\s*used",
-        "([\\d,]+)\\s*credits?\\s*(?:remaining|left|used)?\\b",
-        "credits?[:\\s]+([\\d,]+)",
+      { operation: "character_usage", unit: "credit", keywords: ["credit", "character"], patterns: [
+        "([\\d,]+(?:\\.\\d+)?)\\s*(?:/|of)\\s*[\\d,]+(?:\\.\\d+)?\\s*credits?",
+        "([\\d,]+(?:\\.\\d+)?)\\s*characters?\\s*used",
+        "([\\d,]+(?:\\.\\d+)?)\\s*credits?\\s*(?:remaining|left|used)?\\b",
+        "credits?(?:\\s+(?:remaining|left|used))?[:\\s]+([\\d,]+(?:\\.\\d+)?)",
       ] },
     ],
     hint: "Open your ElevenLabs usage page so the character/credit count is visible, then read it.",
@@ -38,7 +38,7 @@ export const READERS = [
     url: "https://app.leonardo.ai", // app root — /account 404s; the app header shows the token balance
     // web credit balance — the API adapter needs a key, so page-read is the no-key fallback
     stats: [
-      { operation: "credit_balance", unit: "credit", patterns: ["([\\d,]+)\\s*(?:API\\s*)?(?:training\\s*)?tokens?\\b", "([\\d,]+)\\s*credits?\\b"] },
+      { operation: "credit_balance", unit: "credit", keywords: ["token", "credit"], patterns: ["([\\d,]+(?:\\.\\d+)?)\\s*(?:API\\s*)?(?:training\\s*)?tokens?\\b", "tokens?[:\\s]+([\\d,]+(?:\\.\\d+)?)", "([\\d,]+(?:\\.\\d+)?)\\s*credits?\\b"] },
     ],
     hint: "Open your Leonardo account/subscription page so the token/credit balance is visible, then read it.",
   },
@@ -60,7 +60,7 @@ export const READERS = [
     hosts: ["perplexity.ai", "www.perplexity.ai"],
     url: "https://www.perplexity.ai/settings/account", // the page that shows the usage number
     stats: [
-      { operation: "pro_searches", unit: "request", patterns: ["([\\d,]+)\\s*(?:Pro\\s*)?searches?\\s*(?:used|remaining|left)", "([\\d,]+)\\s*/\\s*[\\d,]+\\s*searches?"] },
+      { operation: "pro_searches", unit: "request", keywords: ["search", "request"], patterns: ["([\\d,]+)\\s*(?:Pro\\s*)?searches?\\s*(?:used|remaining|left)", "([\\d,]+)\\s*/\\s*[\\d,]+\\s*searches?", "searches?[:\\s]+([\\d,]+)"] },
     ],
     hint: "Open Perplexity Settings so the Pro-search count is visible, then read it.",
   },

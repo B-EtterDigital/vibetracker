@@ -21,6 +21,7 @@ test("readerForUrl matches only sources that expose a number over the web", () =
 test("extractStat reads ElevenLabs credit phrasings (slash, bare, labelled)", () => {
   const el = READERS.find((r) => r.id === "elevenlabs")!;
   assert.equal(extractStat("Usage 11,201 / 100,000 credits this month", el)?.value, 11201);
+  assert.equal(extractStat("9821 of 100000 credits monthly", el)?.value, 9821, "usage, never the quota");
   assert.equal(extractStat("You have 11,201 credits remaining", el)?.value, 11201);
   assert.equal(extractStat("Credits: 11,201", el)?.value, 11201);
 });
@@ -49,6 +50,24 @@ test("pageStatExtractor (the injected function) works over a fake document body"
   }
 });
 
+test("pageStatExtractor shapes mask every digit and only keyword-bearing lines ship", () => {
+  const restore = globalThis.document;
+  const el = READERS.find((r) => r.id === "elevenlabs")!;
+  try {
+    // a format none of the patterns match — the shape must come back digit-masked
+    // @ts-expect-error shim
+    globalThis.document = { body: { innerText: "Plan\ncredit level A9821 max\nsecret user text 4242" } };
+    const out = pageStatExtractor(el.stats) as { miss: boolean; shapes: string[] };
+    assert.equal(out.miss, true);
+    assert.equal(out.shapes.length, 1, "only the keyword-bearing line ships");
+    assert.equal(out.shapes[0], "credit level A#### max");
+    assert.equal(JSON.stringify(out).includes("9821"), false, "digits never leak");
+    assert.equal(JSON.stringify(out).includes("secret"), false, "non-keyword lines never leak");
+  } finally {
+    globalThis.document = restore;
+  }
+});
+
 test("pageStatExtractor returns content-free miss diagnostics (length + keyword only)", () => {
   const restore = globalThis.document;
   const rw = READERS.find((r) => r.id === "runway")!;
@@ -56,10 +75,11 @@ test("pageStatExtractor returns content-free miss diagnostics (length + keyword 
     // keyword present but number unreadable
     // @ts-expect-error shim
     globalThis.document = { body: { innerText: "Your credits are shown in the widget above. ".repeat(10) } };
-    const withKeyword = pageStatExtractor(rw.stats) as { miss: boolean; keywordFound: boolean; textLen: number };
+    const withKeyword = pageStatExtractor(rw.stats) as { miss: boolean; keywordFound: boolean; textLen: number; shapes: string[] };
     assert.equal(withKeyword.miss, true);
     assert.equal(withKeyword.keywordFound, true, "the unit keyword was on the page");
     assert.ok(withKeyword.textLen > 200);
+    assert.equal(withKeyword.shapes.length, 0, "no digit-bearing keyword line → no shapes");
     // wrong page entirely
     // @ts-expect-error shim
     globalThis.document = { body: { innerText: "welcome to the homepage with lots of unrelated text ".repeat(10) } };

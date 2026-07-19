@@ -181,15 +181,28 @@ function pageStatExtractor(stats) {
       }
     }
   }
-  // MISS diagnostics — content-free by construction: only the text LENGTH and whether the stat's
-  // unit keyword (e.g. "credit") appears anywhere. Tells us "wrong page" vs "number not readable"
-  // without ever shipping page content.
-  const keyword = stats[0] && stats[0].unit ? stats[0].unit : "";
+  // MISS diagnostics — content-free by construction: the text LENGTH, whether any stat keyword
+  // (e.g. "credit"/"token") appears, and up to two DIGIT-MASKED fragments of the lines carrying
+  // the keyword ("##,### / ###,### credits used") so a mismatched pattern can be fixed from the
+  // FORMAT alone. Digits are masked, fragments are keyword-anchored UI labels, 60 chars max —
+  // page content never ships.
+  const keywords = (stats[0] && (stats[0].keywords || [stats[0].unit])) || [];
+  const keywordRe = keywords.length ? new RegExp(keywords.join("|"), "i") : null;
+  const shapes = [];
+  if (keywordRe) {
+    for (const line of text.split("\n")) {
+      if (shapes.length >= 2) break;
+      if (keywordRe.test(line) && /\d/.test(line)) {
+        shapes.push(line.trim().replace(/\d/g, "#").slice(0, 60));
+      }
+    }
+  }
   return {
     miss: true,
     textLen: text.length,
-    keywordFound: keyword ? new RegExp(keyword, "i").test(text) : false,
-    keyword,
+    keywordFound: keywordRe ? keywordRe.test(text) : false,
+    keyword: keywords.join("/"),
+    shapes,
   };
 }
 
@@ -224,11 +237,12 @@ async function readActivePage(tab, scriptingApi) {
   }
   if (!result || result.miss) {
     // Content-free diagnostics: distinguishes "wrong page open" from "number not machine-readable"
+    const shapeNote = result?.shapes?.length ? ` formats seen: ${result.shapes.join(" · ")}` : "";
     const diag = result?.miss
       ? (result.textLen < 200
         ? " [diag: page nearly empty — still loading or not logged in]"
         : result.keywordFound
-          ? ` [diag: the word “${result.keyword}” is on the page but no number pattern matched — copy the report below so we can fix the pattern]`
+          ? ` [diag: “${result.keyword}” is on the page but no pattern matched.${shapeNote}]`
           : ` [diag: page loaded (${result.textLen} chars) but no “${result.keyword}” text — the usage view isn't on this page]`)
       : "";
     return { ok: false, provider: reader.id, label: reader.label, error: `No ${reader.label} usage number visible. ${reader.hint}${diag}` };
