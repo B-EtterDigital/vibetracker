@@ -43,6 +43,23 @@ export async function getLeaderboard(tier: Tier): Promise<LeaderRow[]> {
   return (data ?? []) as LeaderRow[];
 }
 
+// Browser-capture provider ids carry a "-web" suffix — the same source as the base id. Merge them
+// at the loading boundary so EVERY downstream (breadth count, complexity, provider mix, charts)
+// sees one canonical source, not two (SMOA re-audit #6).
+function canonicalProviderId(id: string): string {
+  return id.endsWith("-web") ? id.slice(0, -4) : id;
+}
+function mergeByCanonicalProvider<T extends { provider: string; ops: number; credits: number; usd: number }>(rows: T[]): T[] {
+  const merged = new Map<string, T>();
+  for (const row of rows) {
+    const provider = canonicalProviderId(row.provider);
+    const cur = merged.get(provider);
+    if (cur) { cur.ops += row.ops; cur.credits += row.credits; cur.usd += row.usd; }
+    else merged.set(provider, { ...row, provider });
+  }
+  return [...merged.values()];
+}
+
 export interface ProfileView {
   handle: string;
   created_at: string;
@@ -106,15 +123,18 @@ async function usageDaysFor(submissionId: string): Promise<ProfileView["usageDay
     .from("vibetracker_submission_daily_usage")
     .select("day,ops,credits,usd")
     .eq("submission_id", submissionId)
-    .order("day", { ascending: true })
-    .limit(366);
+    // DESC so a >366-day viber keeps their RECENT days (busiest day, current streak, "since"),
+    // not their oldest 366 (SMOA re-audit #5); 800 covers the 730-day complexity tier. Restored to
+    // chronological order below for the charts.
+    .order("day", { ascending: false })
+    .limit(800);
   // Older C0VIBE deployments may not have this additive table yet; profile pages should
   // fall back to the upload-day aggregate instead of failing the public profile.
   if (error) {
     reportOptionalFallback("profile.daily-usage.fallback", error);
     return [];
   }
-  return (data ?? []).map((row) => {
+  return (data ?? []).slice().reverse().map((row) => {
     const r = row as { day?: string; ops?: number; credits?: number; usd?: number };
     return {
       date: String(r.day ?? ""),
@@ -329,7 +349,7 @@ export async function getProfile(handle: string): Promise<ProfileView | null> {
         .select("provider,ops,credits,usd")
         .eq("submission_id", latest.id);
       if (error) throw queryFailure("profile.providers", error);
-      providers = (data ?? []) as ProfileView["providers"];
+      providers = mergeByCanonicalProvider((data ?? []) as ProfileView["providers"]);
     }
 
     const usageDays = latest ? await usageDaysFor(latest.id) : [];
