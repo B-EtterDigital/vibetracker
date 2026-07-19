@@ -35,7 +35,7 @@ export interface StoredOAuthCredentials {
 }
 
 const CYNAPS3_OAUTH_BASE =
-  "https://tvsvttguftnatztsedyx.supabase.co/functions/v1/oauth-server";
+  "https://tnsaqsqajpjbvlpasojt.supabase.co/functions/v1/oauth-server";
 
 export function oauthProviderPreset(
   provider: string,

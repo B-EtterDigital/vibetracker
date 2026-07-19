@@ -91,11 +91,11 @@ test("Cynaps3 preset pins the read-only producer contract and allows staged clie
   assert.equal(preset.requireRotatingRefresh, true);
   assert.equal(
     preset.authUrl,
-    "https://tvsvttguftnatztsedyx.supabase.co/functions/v1/oauth-server/authorize",
+    "https://tnsaqsqajpjbvlpasojt.supabase.co/functions/v1/oauth-server/authorize",
   );
   assert.equal(
     preset.tokenUrl,
-    "https://tvsvttguftnatztsedyx.supabase.co/functions/v1/oauth-server/token",
+    "https://tnsaqsqajpjbvlpasojt.supabase.co/functions/v1/oauth-server/token",
   );
   assert.equal(
     oauthProviderPreset("cynaps3", { VT_CYNAPS3_OAUTH_CLIENT_ID: "staged-client" })?.clientId,

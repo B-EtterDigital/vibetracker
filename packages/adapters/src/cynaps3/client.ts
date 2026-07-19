@@ -1,5 +1,5 @@
 export const CYNAPS3_STATS_URL =
-  "https://tvsvttguftnatztsedyx.supabase.co/functions/v1/vibeusage-stats";
+  "https://tnsaqsqajpjbvlpasojt.supabase.co/functions/v1/vibeusage-stats";
 
 export type Cynaps3UsageStatus = "completed" | "failed";
 export type Cynaps3BillingOwner = "cynaps3" | "upstream-provider";
