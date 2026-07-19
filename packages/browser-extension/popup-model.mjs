@@ -4,7 +4,7 @@
 // know → undefined replies → "nothing found"). The popup compares its own build against the
 // worker's and triggers chrome.runtime.reload() on mismatch. MUST equal manifest.json "version"
 // (locked by a test).
-export const BRIDGE_BUILD = "0.7.3";
+export const BRIDGE_BUILD = "0.7.4";
 
 // Candidate ports the local bridge may bind, in preference order. The CLI binds the first FREE
 // one; the extension probes for the first that answers /health. This makes a port collision (a
@@ -21,7 +21,7 @@ export const HEALTH_ENDPOINT = pathUrl(CANDIDATE_PORTS[0], "/health");
 
 // Real brand logos packaged with the extension (mirrors the site's provider-logos approach:
 // bone-recoloured SVG glyphs where a public SVG exists, original-colour favicons otherwise).
-// Sources without a shipped asset (haiper) fall back to their two-letter gradient monogram.
+// Sources without a shipped asset fall back to their two-letter gradient monogram.
 export const PROVIDER_LOGOS = {
   "suno": "icons/providers/suno.svg",
   "udio": "icons/providers/udio.png",

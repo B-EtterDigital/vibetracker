@@ -43,7 +43,7 @@ import { loadOrCreateSigningKey, readSignedBundle, signBundle, verifySignedBundl
 import { providerCapabilityChecks, renderCapabilityChecks } from "./capability-check.ts";
 import { redactFixture, renderFixtureRedaction } from "./fixture.ts";
 import { createRoiNote, loadRoiNotes, renderRoiNotes, saveRoiNotes } from "./roi-notes.ts";
-import { startLocalApiServer, BRIDGE_PORTS, type LocalApiDeps, type LocalApiSession } from "./api-server.ts";
+import { startLocalApiServer, BRIDGE_PORTS, DEFAULT_DASHBOARD_ORIGIN, type LocalApiDeps, type LocalApiSession } from "./api-server.ts";
 import { buildBrowserExtension } from "./browser-extension-build.ts";
 import { desktopActivitiesToRecords, renderDesktopActivity, scanDesktopActivity } from "./desktop-activity.ts";
 import {
@@ -658,9 +658,45 @@ function copyToClipboard(text: string): boolean {
 
 // The dependency wiring the bridge needs — identical for `start` and `api serve`. Reads/writes the
 // local ledger, dedupes snapshots, and stores one-click cookie connects straight to the keyring
-// (values never logged). Factored out so the two commands can't drift apart.
-function bridgeDeps(): LocalApiDeps {
+// (values never logged). Factored out so the two commands can't drift apart. `ctx` powers the
+// extension's "Sync now" (same adapter pass as `vibetracker sync`).
+function bridgeDeps(ctx: AdapterCtxLike): LocalApiDeps {
+  // Lazily resolve the active user's public handle ONCE per server run: explicit config handle
+  // first, then the gh CLI identity (matches where keyring-auth uploads actually land).
+  let profileHandle: string | null | undefined;
+  const resolveHandle = (): string | null => {
+    if (profileHandle !== undefined) return profileHandle;
+    try {
+      const cfg = loadConfig();
+      if (cfg.handle) return (profileHandle = cfg.handle);
+    } catch { profileHandle = null; }
+    try {
+      const r = spawnSync("gh", ["api", "user", "-q", ".login"], { encoding: "utf8", timeout: 4000 });
+      const login = r.status === 0 ? r.stdout.trim() : "";
+      profileHandle = login ? login.toLowerCase() : null;
+    } catch { profileHandle = null; }
+    return profileHandle ?? null;
+  };
+  let syncBusy = false;
   return {
+    // Extension "Sync now": one overlap-guarded adapter pass; concurrent presses coalesce.
+    runSync: async () => {
+      if (syncBusy) return { fresh: 0, targets: 0 };
+      syncBusy = true;
+      try {
+        const targets = await configTargets();
+        if (!targets.length) return { fresh: 0, targets: 0 };
+        const summary = await syncTargets(targets, ctx);
+        return { fresh: summary.totalFresh, targets: targets.length };
+      } finally {
+        syncBusy = false;
+      }
+    },
+    // The active user's public VibeUsage profile for the extension's profile button.
+    profile: () => {
+      const handle = resolveHandle();
+      return { handle, url: handle ? `${DEFAULT_DASHBOARD_ORIGIN}/u/${handle}` : DEFAULT_DASHBOARD_ORIGIN };
+    },
     readRecords: () => readRecords(STORE),
     appendRecords: (records) => appendRecords(STORE, records),
     // Snapshot dedupe: a lifetime/balance read replaces the prior same provider+operation record.
@@ -699,12 +735,12 @@ function bridgeDeps(): LocalApiDeps {
 // collision). Otherwise walk BRIDGE_PORTS and take the first FREE one, so a busy 8765 (watchdog_bd
 // and friends) self-heals to 8799/8787/8123 instead of dead-ending with EADDRINUSE. The extension
 // probes the same list, so discovery stays consistent without any config.
-async function serveBridgeOnFreePort(requestedPort: number | null): Promise<LocalApiSession> {
+async function serveBridgeOnFreePort(requestedPort: number | null, ctx: AdapterCtxLike): Promise<LocalApiSession> {
   const candidates = requestedPort ? [requestedPort] : BRIDGE_PORTS;
   let lastErr: unknown;
   for (const port of candidates) {
     try {
-      return await startLocalApiServer({ port, deps: bridgeDeps() });
+      return await startLocalApiServer({ port, deps: bridgeDeps(ctx) });
     } catch (err) {
       lastErr = err;
       if ((err as NodeJS.ErrnoException)?.code === "EADDRINUSE" && !requestedPort) {
@@ -1539,7 +1575,7 @@ async function main() {
 
   if (cmd === "api" && argv[1] === "serve") {
     const portFlag = flag(argv, "--port");
-    await serveBridgeOnFreePort(portFlag ? Number(portFlag) : null);
+    await serveBridgeOnFreePort(portFlag ? Number(portFlag) : null, ctx);
     return;
   }
 
@@ -1572,7 +1608,7 @@ async function main() {
     // The ASCII splash — the same animated VIBE·USAGE logo the top-level banner shows (TTY only).
     await showBanner();
     // Bind FIRST so we can print the real port (and prove the bridge is live before the guide).
-    const session = await serveBridgeOnFreePort(portFlag ? Number(portFlag) : null);
+    const session = await serveBridgeOnFreePort(portFlag ? Number(portFlag) : null, ctx);
     const copied = copyToClipboard(extDir);
     console.log("");
     console.log(rule("VIBETRACKER START"));

@@ -35,7 +35,7 @@ export const READERS = [
     label: "Higgsfield",
     category: "video",
     hosts: ["higgsfield.ai", "www.higgsfield.ai"],
-    url: "https://higgsfield.ai/account", // the page that shows the usage number
+    url: "https://higgsfield.ai", // app root — /account 404s; the logged-in UI surfaces the credit balance
     // account/credits surface shows a credit balance
     stats: [
       { operation: "credit_balance", unit: "credit", patterns: ["([\\d,]+(?:\\.\\d+)?)\\s*credits?\\b", "credits?[:\\s]*([\\d,]+(?:\\.\\d+)?)"] },
@@ -71,7 +71,7 @@ export const READERS = [
     label: "Leonardo.ai",
     category: "image",
     hosts: ["app.leonardo.ai", "leonardo.ai"],
-    url: "https://app.leonardo.ai/account", // the page that shows the usage number
+    url: "https://app.leonardo.ai", // app root — /account 404s; the app header shows the token balance
     // web credit balance — the API adapter needs a key, so page-read is the no-key fallback
     stats: [
       { operation: "credit_balance", unit: "credit", patterns: ["([\\d,]+)\\s*(?:API\\s*)?(?:training\\s*)?tokens?\\b", "([\\d,]+)\\s*credits?\\b"] },

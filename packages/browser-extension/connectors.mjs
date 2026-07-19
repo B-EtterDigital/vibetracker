@@ -69,16 +69,8 @@ export const CONNECTORS = [
     cookies: [{ name: "JWT-TOKEN", field: "sessionToken", match: "exact" }],
     pending: true,
   },
-  {
-    id: "haiper",
-    label: "Haiper",
-    category: "video",
-    brand: { from: "#34d399", to: "#10b981", ink: "#001a10" },
-    hosts: ["haiper.ai", "app.haiper.ai"],
-    url: "https://app.haiper.ai", // page to open for one-click connect (any page works once logged in)
-    cookies: [{ name: "haiper.session-token", field: "sessionToken", match: "exact" }],
-    pending: true,
-  },
+  // haiper was removed 2026-07-19: haiper.ai serves a blank page (service appears shut down).
+  // Re-add with verified hosts + cookie shape if it comes back.
 ];
 
 // The exact origins the extension is allowed to read cookies from — mirrors the manifest's

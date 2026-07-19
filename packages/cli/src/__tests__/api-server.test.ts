@@ -223,6 +223,48 @@ test("local API /sources serves boolean sync-state to the extension, token-free,
   }
 });
 
+test("local API POST /sync runs the adapter pass for the extension and reports profile info", async () => {
+  let syncs = 0;
+  const session = await startLocalApiServer({
+    port: 0, token: "t",
+    deps: {
+      readRecords: () => [], appendRecords: () => {}, log: () => {},
+      runSync: async () => { syncs += 1; return { fresh: 4, targets: 2 }; },
+      profile: () => ({ handle: "b-etterdigital", url: "https://vibeusage.c0vibe.app/u/b-etterdigital" }),
+    },
+  });
+  const base = `http://127.0.0.1:${session.port}`;
+  const ext = "chrome-extension://x";
+  try {
+    const res = await fetch(`${base}/sync`, { method: "POST", headers: { origin: ext, "content-type": "application/json" }, body: "{}" });
+    assert.equal(res.status, 200);
+    const body = await res.json() as { ok: boolean; fresh: number; targets: number };
+    assert.deepEqual([body.ok, body.fresh, body.targets, syncs], [true, 4, 2, 1]);
+    // /sources carries the active user's profile for the extension's Profile button
+    const sources = await fetch(`${base}/sources`, { headers: { origin: ext } });
+    const sBody = await sources.json() as { profile: { handle: string; url: string } };
+    assert.equal(sBody.profile.url, "https://vibeusage.c0vibe.app/u/b-etterdigital");
+    // hostile origins can't trigger syncs
+    const hostile = await fetch(`${base}/sync`, { method: "POST", headers: { origin: "https://hostile.example" } });
+    assert.equal(hostile.status, 403);
+  } finally {
+    await new Promise<void>((resolve, reject) => session.server.close((error) => error ? reject(error) : resolve()));
+  }
+});
+
+test("local API POST /sync answers 501 when the CLI provides no runSync dep", async () => {
+  const session = await startLocalApiServer({
+    port: 0, token: "t",
+    deps: { readRecords: () => [], appendRecords: () => {}, log: () => {} },
+  });
+  try {
+    const res = await fetch(`http://127.0.0.1:${session.port}/sync`, { method: "POST", headers: { origin: "chrome-extension://x" } });
+    assert.equal(res.status, 501);
+  } finally {
+    await new Promise<void>((resolve, reject) => session.server.close((error) => error ? reject(error) : resolve()));
+  }
+});
+
 test("local API /health answers the extension's token-free liveness probe", async () => {
   const session = await startLocalApiServer({
     port: 0, token: "t",

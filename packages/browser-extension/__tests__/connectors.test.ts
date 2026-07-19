@@ -143,11 +143,14 @@ test("buildSourceBoard covers every source with the right state precedence and r
   assert.equal(byId.udio.state, "connected", "creds stored beats open-tab");
   assert.equal(byId.midjourney.state, "open", "open tab beats idle");
   assert.equal(byId.higgsfield.state, "idle");
-  // every tile carries a URL (click-to-open) and the ones with shipped assets carry real logos
-  for (const t of tiles) assert.match(t.url, /^https:\/\//, `${t.id} tile needs a URL`);
+  // every tile carries a URL (click-to-open) and a REAL brand logo (haiper, the one monogram
+  // holdout, was removed 2026-07-19 when haiper.ai went dark)
+  for (const t of tiles) {
+    assert.match(t.url, /^https:\/\//, `${t.id} tile needs a URL`);
+    assert.ok(t.logo, `${t.id} tile needs a real logo`);
+  }
   assert.match(byId.suno.logo, /suno\.svg$/);
   assert.match(byId.midjourney.logo, /midjourney\.png$/);
-  assert.equal(byId.haiper.logo, null, "no asset → monogram tile");
   // ALL connectors + ALL readers appear — the board is the complete source map
   assert.equal(tiles.length, CONNECTORS.length + 7, "7 readers + all connectors");
 });

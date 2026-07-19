@@ -121,7 +121,12 @@ async function connectActiveSite(tab, cookieApi = chrome.cookies) {
   }
   const { fields, missing } = await readConnectorCookies(connector, cookieApi);
   if (!Object.keys(fields).length) {
-    return { ok: false, provider: connector.id, label: connector.label, error: `No ${connector.label} session cookie found — log in at ${connector.hosts[0]} first, then click Connect.` };
+    // Pending sources have UNVERIFIED cookie shapes — if the user is logged in and we still find
+    // nothing, that's on us, not them. Say so instead of sending them to log in again.
+    const error = connector.pending
+      ? `Couldn't find a ${connector.label} session cookie. If you ARE logged in, this source's cookie shape needs an update on our side — it will land in a future version.`
+      : `No ${connector.label} session cookie found — log in at ${connector.hosts[0]} first, then pull again.`;
+    return { ok: false, provider: connector.id, label: connector.label, error };
   }
   const result = await postJson("/connect", { provider: connector.id, fields });
   return {
@@ -287,7 +292,12 @@ async function sourceBoard({ tabsApi } = {}) {
     const r = readerForUrl(tab?.url);
     if (r) openIds.add(r.id);
   }
-  return { ok: true, apiUp: api !== null, tiles: buildSourceBoard(api?.sources ?? {}, openIds) };
+  return {
+    ok: true,
+    apiUp: api !== null,
+    tiles: buildSourceBoard(api?.sources ?? {}, openIds),
+    profile: api?.profile ?? null, // the active user's VibeUsage profile (handle + url)
+  };
 }
 
 // Every source worth auto-opening: all cookie connectors (a login cookie works from any page of the
@@ -416,7 +426,7 @@ if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
   }
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    const known = ["capture-active-tab", "preview-active-tab", "connect-active-site", "read-active-page", "scan-all-tabs", "open-and-pull-all", "source-board"];
+    const known = ["capture-active-tab", "preview-active-tab", "connect-active-site", "read-active-page", "scan-all-tabs", "open-and-pull-all", "source-board", "sync-now"];
     if (!known.includes(message?.type)) return false;
 
     if (message.type === "scan-all-tabs") {
@@ -426,6 +436,11 @@ if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
 
     if (message.type === "source-board") {
       sourceBoard().then(sendResponse).catch((error) => sendResponse({ ok: false, error: String(error?.message || error) }));
+      return true;
+    }
+
+    if (message.type === "sync-now") {
+      postJson("/sync", {}).then(sendResponse).catch((error) => sendResponse({ ok: false, error: String(error?.message || error) }));
       return true;
     }
 

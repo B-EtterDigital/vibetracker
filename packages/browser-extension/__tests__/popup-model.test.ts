@@ -57,7 +57,7 @@ test("every mapped provider logo asset exists on disk, and logoFor resolves -web
   assert.equal(logoFor("suno"), "icons/providers/suno.svg");
   assert.equal(logoFor("openai-web"), "icons/providers/openai.svg", "-web suffix resolves");
   assert.equal(logoFor("midjourney-web"), "icons/providers/midjourney.png");
-  assert.equal(logoFor("haiper"), null, "no asset → monogram fallback");
+  assert.equal(logoFor("haiper"), null, "unknown id → monogram fallback");
 });
 
 test("browser extension manifest and popup load the module cockpit", () => {
@@ -100,6 +100,8 @@ test("browser extension manifest and popup load the module cockpit", () => {
   assert.match(popup, /Read usage from this page/);
   assert.match(popup, /Pull from all open tabs/); // the clarified sweep label
   assert.match(popup, /id="open-all"/);           // one-click "open every source, then pull" flow
+  assert.match(popup, /id="sync-now"/);           // banner chip: run a full sync from the popup
+  assert.match(popup, /id="view-profile"/);       // banner chip: open the active user's VibeUsage profile
   assert.match(popup, /Vibers Unite/);
   // the redundant decorative terminal was removed to fit Chrome's 600px popup cap (no scrollbar);
   // popup.js no longer references it, so it must not reappear.

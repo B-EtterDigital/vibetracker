@@ -37,6 +37,12 @@ export interface LocalApiDeps {
   // Per-provider sync state for the extension's source board: booleans + a timestamp only —
   // never counts, never values. Absent → /sources returns an empty map.
   sourceStatus?: () => Record<string, { hasData: boolean; connected: boolean; lastTs?: string }>;
+  // Run a full adapter sync (same as `vibetracker sync`) on request from the extension's
+  // "Sync now" button. Absent → POST /sync answers 501.
+  runSync?: () => Promise<{ fresh: number; targets: number }>;
+  // The active user's public profile (handle + canonical URL) for the extension's profile button.
+  // Absent or null handle → the extension links to the site root instead.
+  profile?: () => { handle: string | null; url: string };
 }
 
 // The cookie-only sources the extension may connect. Kept here (not from the adapter registry) so
@@ -48,7 +54,6 @@ const CONNECTABLE_PROVIDERS: Record<string, string[]> = {
   tensorart: ["sessionToken"],
   pixverse: ["sessionToken"],
   vidu: ["sessionToken"],
-  haiper: ["sessionToken"],
 };
 
 // Candidate ports the local bridge tries to bind, in preference order. The CLI walks this list and
@@ -98,9 +103,9 @@ function requestOrigin(req: IncomingMessage): string | undefined {
 function originAllowed(origin: string | undefined, pathname: string): boolean {
   if (!origin) return true;
   if (isDashboardOrigin(origin)) return true;
-  // the extension talks to /capture, /connect, /sources (board state), and the /health liveness
-  // probe from its chrome-extension:// origin (the popup's "is the app running?" banner needs it)
-  return (pathname === "/capture" || pathname === "/connect" || pathname === "/health" || pathname === "/sources")
+  // the extension talks to /capture, /connect, /sync, /sources (board state), and the /health
+  // liveness probe from its chrome-extension:// origin (the popup banner + board need them)
+  return (pathname === "/capture" || pathname === "/connect" || pathname === "/sync" || pathname === "/health" || pathname === "/sources")
     && origin.startsWith("chrome-extension://");
 }
 
@@ -221,7 +226,7 @@ export async function startLocalApiServer(opts: StartLocalApiOptions): Promise<L
     // /sources is equally token-free but boolean-only (which providers have data — no counts,
     // no values) and originAllowed already restricts it to extension/dashboard origins.
     const healthPing = req.method === "GET" && (url.pathname === "/health" || url.pathname === "/sources");
-    const extensionWrite = (url.pathname === "/capture" || url.pathname === "/connect")
+    const extensionWrite = (url.pathname === "/capture" || url.pathname === "/connect" || url.pathname === "/sync")
       && origin?.startsWith("chrome-extension://");
     if (!healthPing && !extensionWrite && !bearerMatches(req, token)) {
       json(req, res, 401, { error: "session token required" }, url.pathname);
@@ -234,7 +239,17 @@ export async function startLocalApiServer(opts: StartLocalApiOptions): Promise<L
         return;
       }
       if (req.method === "GET" && url.pathname === "/sources") {
-        json(req, res, 200, { sources: opts.deps.sourceStatus ? opts.deps.sourceStatus() : {} }, url.pathname);
+        json(req, res, 200, {
+          sources: opts.deps.sourceStatus ? opts.deps.sourceStatus() : {},
+          profile: opts.deps.profile ? opts.deps.profile() : null,
+        }, url.pathname);
+        return;
+      }
+      // "Sync now" from the extension — runs the same adapter pass as `vibetracker sync`.
+      if (req.method === "POST" && url.pathname === "/sync") {
+        if (!opts.deps.runSync) { json(req, res, 501, { error: "sync not available in this session" }, url.pathname); return; }
+        const result = await opts.deps.runSync();
+        json(req, res, 200, { ok: true, ...result }, url.pathname);
         return;
       }
       if (req.method === "GET" && url.pathname === "/records") {

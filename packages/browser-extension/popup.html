@@ -25,6 +25,10 @@
         <b id="api-title">Checking local app…</b>
         <small id="api-detail">One command starts the local bridge.</small>
       </div>
+      <span class="api-actions" id="api-actions" hidden>
+        <button id="sync-now" type="button" class="chip" title="Run a full sync of your connected sources now (same as `vibetracker sync`).">⟳ Sync</button>
+        <button id="view-profile" type="button" class="chip" title="Open your public VibeUsage profile.">Profile ↗</button>
+      </span>
       <button id="api-cmd" type="button" hidden title="Copy the start command">
         <code>vibetracker start</code>
         <i aria-hidden="true">⧉</i>
@@ -33,7 +37,7 @@
 
     <!-- Top action: open every supported source, then pull them all automatically -->
     <button id="open-all" type="button" class="primary open-all-btn"
-            title="Open a tab for every supported AI source, wait for them to load, then connect &amp; read them all automatically.">
+            title="Opens a tab for every supported AI source, waits for them to load, then connects &amp; reads them all. Log in on any tab that misses, then hit “Pull from all open tabs”.">
       <span>Open all sources + pull</span>
       <i aria-hidden="true">↗</i>
     </button>

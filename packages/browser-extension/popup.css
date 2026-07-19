@@ -264,11 +264,20 @@ button.primary:disabled { opacity: 0.6; cursor: default; transform: none; }
 /* Grid so the dot + copy share row 1 and the setup button (when shown) spans its OWN full-width row
    below — the button can never crowd the text into a one-word-per-line column again. */
 .api-banner {
-  display: grid; grid-template-columns: auto 1fr; align-items: center;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center;
   gap: 6px 10px; margin-bottom: 10px;
   padding: 9px 12px; border-radius: 10px;
   border: 1px solid rgba(217,255,242,0.12); background: rgba(217,255,242,0.03);
 }
+.api-actions { display: flex; gap: 6px; }
+button.chip {
+  width: auto; min-height: 0; display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 9px; border-radius: 7px; border: 1px solid rgba(46,232,214,0.35);
+  background: #04110d; color: #2ee8d6;
+  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: none;
+}
+button.chip:hover { background: rgba(46,232,214,.12); }
+button.chip:disabled { opacity: .55; cursor: wait; filter: none; }
 .api-banner .api-dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(217,255,242,0.35); }
 .api-banner[data-state="up"] { border-color: rgba(54,227,155,0.4); }
 .api-banner[data-state="up"] .api-dot { background: #36e39b; box-shadow: 0 0 10px #36e39b; }

@@ -18,6 +18,9 @@ const readCta = $("read-cta");
 const providerCard = $("provider-card");
 const sourceBoard = $("source-board");
 const apiBanner = $("api-banner");
+const apiActions = $("api-actions");
+const syncNowBtn = $("sync-now");
+const viewProfileBtn = $("view-profile");
 const apiTitle = $("api-title");
 const apiDetail = $("api-detail");
 const apiCmd = $("api-cmd");
@@ -69,6 +72,7 @@ function setReader(reader) {
 
 function setApi(up) {
   apiBanner.dataset.state = up ? "up" : "down";
+  apiActions.hidden = !up; // Sync / Profile chips only make sense with a live bridge
   if (up) {
     apiTitle.textContent = "Local app connected";
     apiDetail.textContent = "Connect a source or read a usage page below.";
@@ -130,8 +134,11 @@ const STATE_HINT = {
   open: "tab open — ready to pull",
   idle: "not connected yet — click to open, log in, then pull",
 };
+let profileUrl = null; // the active user's VibeUsage profile, resolved by the local bridge
+
 async function loadBoard() {
   const board = await send({ type: "source-board" });
+  profileUrl = board?.profile?.url ?? profileUrl;
   if (!board?.tiles?.length) { sourceBoard.hidden = true; return; }
   sourceBoard.hidden = false;
   sourceBoard.textContent = "";
@@ -160,6 +167,33 @@ async function refresh() {
   setApi(Boolean(response?.apiUp));
   loadBoard().catch(() => { sourceBoard.hidden = true; });
 }
+
+syncNowBtn.addEventListener("click", async () => {
+  syncNowBtn.disabled = true;
+  status.dataset.state = "";
+  status.textContent = "syncing all connected sources…";
+  try {
+    const res = await send({ type: "sync-now" });
+    if (res?.ok) {
+      setStatus({ state: "ok", label: "sync complete", detail: `${res.fresh} fresh record${res.fresh === 1 ? "" : "s"} from ${res.targets} source${res.targets === 1 ? "" : "s"}. Your profile updates on the next upload.` });
+    } else {
+      setStatus({ state: "error", label: "sync failed", detail: res?.error || res?.body?.error || "The local app refused the sync — check the terminal running `vibetracker start`." });
+    }
+  } catch (error) {
+    setStatus({ state: "error", label: "sync failed", detail: String(error?.message || error) });
+  } finally {
+    syncNowBtn.disabled = false;
+    loadBoard().catch((error) => console.debug("[vibetracker] board refresh failed", {
+      area: "browser-extension.board", message: String(error?.message || error).slice(0, 120),
+    }));
+  }
+});
+
+viewProfileBtn.addEventListener("click", () => {
+  chrome.tabs.create({ url: profileUrl || "https://vibeusage.c0vibe.app", active: true }).catch((error) => console.debug("[vibetracker] profile open failed", {
+    area: "browser-extension.popup", message: String(error?.message || error).slice(0, 120),
+  }));
+});
 
 apiCmd.addEventListener("click", async () => {
   try {
@@ -210,12 +244,13 @@ function renderSweep(res, emptyDetail) {
   }
   scanResults.hidden = false;
   const openedNote = res.opened?.length ? `Opened ${res.opened.length} source tab${res.opened.length === 1 ? "" : "s"}. ` : "";
+  const misses = res.total - res.connected;
   setStatus({
     state: res.connected ? "ok" : "error",
     label: `${res.connected}/${res.total} pulled`,
-    detail: res.connected
-      ? `${openedNote}Run \`vibetracker sync\` to fetch them all.`
-      : `${openedNote}Log in on the tabs that missed, then pull again.`,
+    detail: misses > 0
+      ? `${openedNote}Now LOG IN on each opened tab (once per source), then click “Pull from all open tabs”.`
+      : `${openedNote}Run \`vibetracker sync\` to fetch them all.`,
   });
 }
 
