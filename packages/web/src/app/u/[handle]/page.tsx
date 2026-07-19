@@ -114,7 +114,9 @@ function compactNumber(value: number): string {
 }
 
 function primaryCategory(id: string): string {
-  return PROVIDERS.find((d) => d.id === id)?.categories[0] ?? "other";
+  // browser-capture ids carry a "-web" suffix; the registry keys are the base ids (audit #10)
+  const base = id.endsWith("-web") ? id.slice(0, -4) : id;
+  return PROVIDERS.find((d) => d.id === base || d.id === id)?.categories[0] ?? "other";
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }) {
@@ -565,9 +567,9 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const MODEL_TRAIT_HINTS: Array<[RegExp, string]> = [
     // NOTE: bare "minimax" is their LLM family (m2.5 etc.) — only Hailuo/video-01 are video
     [/kling|veo|sora|runway|hailuo|minimax.?video|video-0\d|luma|pixverse|wan[-_ ]?2|hunyuan.?video|ltx|mochi|seedance|dream.?machine|video/i, "video"],
-    [/hunyuan.?3d|trellis|tripo|meshy|rodin|3d/i, "threed"],
-    [/suno|udio|lyria|riffusion|music/i, "music"],
-    [/eleven|tts|voice|speech|chatterbox|dubbing|whisper|audio/i, "voice"],
+    [/hunyuan.?3d|trellis|tripo|meshy|rodin|3d/i, "3d"],
+    [/suno|\budio\b|lyria|riffusion|music/i, "music"],
+    [/eleven|tts|voice|speech|chatterbox|dubbing|whisper|audio/i, "audio"],
     [/flux|banana|imagen|dall|gpt-image|seedream|ideogram|recraft|sdxl|stable.?diff|photon|midjourney|image|upscal|aura-sr|sam-?\d|sam2|florence|vector/i, "image"],
   ];
   const traitOfModel = (providerId: string, model: string): string => {
@@ -654,7 +656,9 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
       spiral,
       // second click: the SOURCE distribution behind this trait (who powers it)
       providerDist: providerDistFor(c.id),
-      months: provs?.size ? monthsFor(provs) : monthsFor(),
+      // no resolved sources → NO bars (global months here painted Codex/Claude spend
+      // into empty traits — audit finding #6, "full bars with an empty hex")
+      months: provs?.size ? monthsFor(provs) : [],
       story: {
         title: c.label.toLowerCase(),
         bullets: [
