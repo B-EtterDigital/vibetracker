@@ -152,7 +152,10 @@ export default async function Profile({ params }: { params: Promise<{ handle: st
   const TOOL_ALIAS: Record<string, string> = { content: "cynaps3", musicmation: "cynaps3" };
   const toolRowMap = new Map<string, number>();
   const bumpTool = (rawId: string, ops: number) => {
-    const id = TOOL_ALIAS[rawId] ?? rawId;
+    // browser captures track as "<provider>-web" — the SAME tool as its base id; merge so a tool
+    // never appears twice in the rail (real report 2026-07-19: OpenAI showed two chips)
+    const aliased = TOOL_ALIAS[rawId] ?? rawId;
+    const id = aliased.endsWith("-web") ? aliased.slice(0, -4) : aliased;
     toolRowMap.set(id, (toolRowMap.get(id) ?? 0) + ops);
   };
   for (const row of profile.tools ?? []) bumpTool(row.tool, row.ops);
