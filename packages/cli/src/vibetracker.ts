@@ -111,7 +111,8 @@ import { scanSecrets, redactSecrets } from "../../core/src/security/secrets.ts";
 import { amortizeSubscription } from "../../core/src/subscriptions/amortize.ts";
 import { privateAggregate } from "../../core/src/privacy/differential.ts";
 import { estimateNativeUsd } from "../../core/src/pricing/native-rates.ts";
-import type { Category, Source } from "../../core/src/schema/record.ts";
+import { estimateTokenUsd, unpricedTokenModels } from "../../core/src/pricing/model-rates.ts";
+import type { Category, NormalizedRecord, Source } from "../../core/src/schema/record.ts";
 import type { CreatorPlatform } from "../../core/src/schema/trust-signal.ts";
 
 // fixture-backed adapters used only by `sync --demo`
@@ -178,7 +179,7 @@ const USAGE = [
   "  studio [--provider a,b] [--out dir] [--open]   static offline GUI studio pack",
   "  launch-kit | kit | wow | impress | vibe [--provider a,b] [--out dir] [--open]   offline demo launch pack",
   "  sync [--demo] [--receipt --out dir]",
-  "  reconcile --coding [--dry-run]   replace coding log histories with current parser truth",
+  "  reconcile --coding | --reprice [--dry-run]   replace coding logs and/or price missing token USD",
   "  receipts [--dir path] [--json] [--html --out path] [--open]   local sync receipt vault",
   "  mission | pulse | now [--budget N] [--json] [--html --out path] [--open] [--no-trust]   read-only operating picture",
   "  live | watch [--once] [--interval N] [--budget N] [--no-trust]   auto-refresh local usage console",
@@ -310,6 +311,32 @@ function dominantProvider(records: { provider: string; usdEst?: number }[]): { p
   return provider ? { provider, count: row.count, ...(row.hasUsd ? { usd: row.usd } : {}) } : undefined;
 }
 
+/** Preserve reported USD, then prefer native-output pricing over token-equivalent pricing. */
+function priceRecord(record: NormalizedRecord): NormalizedRecord {
+  if (record.usdEst !== undefined) return record;
+  const usdEst = estimateNativeUsd(record) ?? estimateTokenUsd(record);
+  return usdEst === undefined ? record : { ...record, usdEst };
+}
+
+function repriceRecords(records: readonly NormalizedRecord[]): { records: NormalizedRecord[]; priced: number } {
+  let priced = 0;
+  const next = records.map((record) => {
+    const result = priceRecord(record);
+    if (result !== record) priced += 1;
+    return result;
+  });
+  return { records: next, priced };
+}
+
+function printUnpricedTokenModels(records: readonly NormalizedRecord[]): void {
+  const unpriced = unpricedTokenModels(records);
+  if (!unpriced.length) return;
+  console.error(`  ${bad("✗")} unpriced token models (published rate missing):`);
+  for (const item of unpriced) {
+    console.error(`    ${item.model} · ${human(item.tokens)} tokens`);
+  }
+}
+
 interface SyncRunSummary {
   id: string;
   generatedAt: string;
@@ -366,12 +393,7 @@ async function syncTargets(targets: SyncTarget[], ctx: AdapterCtxLike): Promise<
       continue;
     }
     const { accepted: validated } = ingestRecords(records, { untrustedSource: true });
-    const accepted = validated.map((record) => {
-      const usdEst = estimateNativeUsd(record);
-      return record.usdEst === undefined && usdEst !== undefined
-        ? { ...record, usdEst }
-        : record;
-    });
+    const accepted = validated.map(priceRecord);
     const replacementKeys = new Set<string>();
     const fresh = accepted.filter((r) => {
       const k = syncRecordKey(r);
@@ -1971,10 +1993,12 @@ async function main() {
       if (result.error) console.error(`  ${bad("✗")} ${result.provider}: ${shortErr(result.error)}`);
     }
     const received = results.flatMap((result) => result.records);
-    const { accepted, rejected } = ingestRecords(received, { untrustedSource: true });
+    const { accepted: validated, rejected } = ingestRecords(received, { untrustedSource: true });
+    const accepted = validated.map(priceRecord);
     const current = readRecords(STORE);
     const reconciliation = reconcileFullScanProviders(current, accepted);
-    const next = [...reconciliation.kept, ...accepted];
+    const repriced = repriceRecords([...reconciliation.kept, ...accepted]);
+    const next = repriced.records;
     for (const provider of reconciliation.providers) {
       const before = current
         .filter((record) => record.provider === provider)
@@ -1988,13 +2012,32 @@ async function main() {
       console.error(`  ${bad("✗")} no coding parser returned usable records; ledger unchanged`);
       return;
     }
+    printUnpricedTokenModels(next);
     if (argv.includes("--dry-run")) {
-      console.log(`  ${dim(`dry run · would replace ${human(reconciliation.superseded.length)} rows with ${human(accepted.length)} parser records · ledger unchanged`)}`);
+      console.log(`  ${dim(`dry run · would replace ${human(reconciliation.superseded.length)} rows with ${human(accepted.length)} parser records and price ${human(repriced.priced)} existing rows · ledger unchanged`)}`);
       return;
     }
     writeRecords(STORE, next);
     console.log(`  ${ok("✓")} reconciled ${reconciliation.providers.join(" · ")} in one ledger rewrite`);
+    console.log(`  ${dim(`${human(repriced.priced)} existing ledger rows gained API-equivalent USD`)}`);
     if (rejected.length) console.log(`  ${dim(`${human(rejected.length)} invalid parser records rejected`)}`);
+    return;
+  }
+
+  if (cmd === "reconcile" && argv.includes("--reprice")) {
+    const current = readRecords(STORE);
+    const repriced = repriceRecords(current);
+    printUnpricedTokenModels(repriced.records);
+    if (argv.includes("--dry-run")) {
+      console.log(`  ${dim(`dry run · would price ${human(repriced.priced)} ledger rows in one atomic rewrite · ledger unchanged`)}`);
+      return;
+    }
+    if (!repriced.priced) {
+      console.log(`  ${dim("no ledger rows gained a published model rate · ledger unchanged")}`);
+      return;
+    }
+    writeRecords(STORE, repriced.records);
+    console.log(`  ${ok("✓")} priced ${human(repriced.priced)} ledger rows in one atomic rewrite`);
     return;
   }
 
