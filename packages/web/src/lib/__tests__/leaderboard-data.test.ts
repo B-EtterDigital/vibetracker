@@ -73,7 +73,10 @@ const submissions = [
     handle: "LegacyViber",
     created_at: "2026-07-20T08:00:00.000Z",
     vibetracker_submission_providers: [{ ops: 70, usd: 60 }],
-    vibetracker_submission_provider_daily: [{ category: "image", day: "2026-07-20", ops: 70, credits: 0, usd: 60 }],
+    vibetracker_submission_provider_daily: [
+      { category: "image", day: "2026-07-20", ops: 70, credits: 0, usd: 60 },
+      { category: null, day: "2026-07-19", ops: 2, credits: 0, usd: 5 },
+    ],
     vibetracker_submission_provider_models: [{ category: "image", model: "legacy-image" }],
     vibetracker_submission_daily_usage: [{ day: "2026-07-20", ops: 70, credits: 0, usd: 60 }],
   },
@@ -92,11 +95,11 @@ const submissions = [
     identity_id: "identity-ada",
     handle: null,
     created_at: "2026-07-20T10:00:00.000Z",
-    vibetracker_submission_providers: [{ ops: 5, usd: 20 }, { ops: 10, usd: 80 }],
+    vibetracker_submission_providers: [{ ops: 1, usd: 34.2 }],
     vibetracker_submission_provider_daily: [
       { category: "coding", day: "2026-07-19", ops: 2, credits: 0, usd: 8 },
       { category: "coding", day: "2026-07-20", ops: 3, credits: 0, usd: 12 },
-      { category: "image", day: "2026-07-20", ops: 10, credits: 0, usd: 80 },
+      { category: "image", day: "2026-07-20", ops: 10, credits: 0, usd: 244 },
       { category: "audio", day: "2026-07-20", ops: 0, credits: 0, usd: 1 },
     ],
     vibetracker_submission_provider_models: [
@@ -107,7 +110,7 @@ const submissions = [
     vibetracker_submission_daily_usage: [
       { day: "2026-07-18", ops: 0, credits: 0, usd: 0 },
       { day: "2026-07-19", ops: 2, credits: 0, usd: 8 },
-      { day: "2026-07-20", ops: 13, credits: 0, usd: 92 },
+      { day: "2026-07-20", ops: 13, credits: 0, usd: 257 },
     ],
   },
   {
@@ -133,15 +136,15 @@ function runtime() {
   return { ...mock, exports: loadLeaderboardData(() => mock.client) };
 }
 
-test("fetchLeaderboard uses latest submissions, filters categories, changes sort, and passes country/legacy rows", async () => {
+test("fetchLeaderboard uses latest aggregate rows, filters categories, changes sort, and passes country/legacy rows", async () => {
   const allRuntime = runtime();
   const fetchLeaderboard = allRuntime.exports.fetchLeaderboard as (filters: unknown) => Promise<Array<Record<string, unknown>>>;
   const all = await fetchLeaderboard({ category: "all", sort: "usd" });
 
   assert.deepEqual(all.map((row) => [row.rank, row.handle, row.totalUsd]), [
-    [1, "ada", 100],
+    [1, "ada", 265],
     [2, "bob", 90],
-    [3, "LegacyViber", 60],
+    [3, "LegacyViber", 65],
   ]);
   assert.equal(all[0]?.country, "ch");
   assert.equal(all[0]?.displayName, "Ada Lovelace");
@@ -163,6 +166,19 @@ test("fetchLeaderboard uses latest submissions, filters categories, changes sort
   assert.equal(codingByOps[1]?.modelCount, 1);
 });
 
+test("the all board ranks by provider-daily sums and stays consistent with its category parts", async () => {
+  const testRuntime = runtime();
+  const fetchLeaderboard = testRuntime.exports.fetchLeaderboard as (filters: unknown) => Promise<Array<Record<string, unknown>>>;
+  const all = await fetchLeaderboard({ category: "all", sort: "usd" });
+  const ada = all.find((row) => row.handle === "ada");
+  const legacy = all.find((row) => row.handle === "LegacyViber");
+
+  assert.equal(all[0]?.handle, "ada", "daily aggregate sum must outrank the lower provider total");
+  assert.equal(ada?.totalUsd, 20 + 244 + 1);
+  assert.equal(ada?.totalOps, 5 + 10);
+  assert.equal(legacy?.totalUsd, 65, "legacy null-category rows remain part of the all-board sum");
+});
+
 test("an attested identity suppresses a legacy board entry with the same normalized handle", async () => {
   const testRuntime = runtime();
   const fetchLeaderboard = testRuntime.exports.fetchLeaderboard as (filters: unknown) => Promise<Array<Record<string, unknown>>>;
@@ -171,7 +187,7 @@ test("an attested identity suppresses a legacy board entry with the same normali
 
   assert.equal(adaRows.length, 1);
   assert.equal(adaRows[0]?.attested, true);
-  assert.equal(adaRows[0]?.totalUsd, 100);
+  assert.equal(adaRows[0]?.totalUsd, 265);
 });
 
 test("fetchCategoryRanks ranks only positive-op categories and reports each board size", async () => {
@@ -181,7 +197,7 @@ test("fetchCategoryRanks ranks only positive-op categories and reports each boar
 
   assert.deepEqual(placements, [
     { category: "coding", rank: 2, of: 2, usd: 20, ops: 5 },
-    { category: "image", rank: 1, of: 3, usd: 80, ops: 10 },
+    { category: "image", rank: 1, of: 3, usd: 244, ops: 10 },
   ]);
   assert.deepEqual(testRuntime.calls, ["vibetracker_submissions", "vibetracker_public_identities"]);
 });

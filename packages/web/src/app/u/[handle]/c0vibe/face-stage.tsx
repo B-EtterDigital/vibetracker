@@ -29,8 +29,18 @@ export function C0vibeFaceStage({ handle, children }: { handle: string; children
     flipOut(-1, () => router.push(`/u/${handle.toLowerCase()}`));
   };
 
+  const href = `/u/${handle.toLowerCase()}`;
   return (
     <div className="vc0face-stage">
+      {/* Always-visible way home (user report 2026-07-20: the bottom-right pill alone wasn't
+          found). A real link — works without JS — that upgrades to the card flip when it can. */}
+      <a
+        className="vc0face-return"
+        href={href}
+        onClick={(e) => { e.preventDefault(); back(); }}
+      >
+        ← @{handle.toLowerCase()} · usage face
+      </a>
       {children}
       <button type="button" className="vflip-btn vc0face-back" data-flipping={flipping || undefined} onClick={back}
         title="Flip the card back to the usage face.">

@@ -32,7 +32,6 @@ interface SubmissionRecord {
   identity_id?: unknown;
   handle?: unknown;
   created_at?: unknown;
-  vibetracker_submission_providers?: unknown;
   vibetracker_submission_provider_daily?: unknown;
   vibetracker_submission_provider_models?: unknown;
   vibetracker_submission_daily_usage?: unknown;
@@ -101,7 +100,6 @@ async function fetchLatestEntries(): Promise<LatestEntry[]> {
     sb.from("vibetracker_submissions")
       .select(`
         id,identity_id,handle,created_at,
-        vibetracker_submission_providers(ops,usd),
         vibetracker_submission_provider_daily(category,day,ops,credits,usd),
         vibetracker_submission_provider_models(category,model),
         vibetracker_submission_daily_usage(day,ops,credits,usd)
@@ -151,13 +149,14 @@ async function fetchLatestEntries(): Promise<LatestEntry[]> {
     if (!handle) return [];
     if (!identityId && identityHandles.has(normalizeHandle(handle))) return [];
 
-    const allTotals = records(submission.vibetracker_submission_providers).reduce<CategoryTotals>(
+    const providerDaily = records(submission.vibetracker_submission_provider_daily);
+    const allTotals = providerDaily.reduce<CategoryTotals>(
       (sum, row) => ({ usd: sum.usd + number(row.usd), ops: sum.ops + number(row.ops) }),
       { usd: 0, ops: 0 },
     );
 
     const categoryTotals = new Map<ConcreteCategory, CategoryTotals>();
-    for (const row of records(submission.vibetracker_submission_provider_daily)) {
+    for (const row of providerDaily) {
       const id = category(row.category);
       const current = categoryTotals.get(id) ?? { usd: 0, ops: 0 };
       current.usd += number(row.usd);
@@ -202,7 +201,7 @@ async function fetchLatestEntries(): Promise<LatestEntry[]> {
 }
 
 function rowFor(entry: LatestEntry, selected: LeaderboardCategory): LeaderboardRow {
-  // The all board uses provider totals by design, which may diverge from the category-row sum.
+  // The all board sums provider-daily rows across categories so its totals equal the category parts.
   const totals = selected === "all"
     ? entry.allTotals
     : entry.categoryTotals.get(selected) ?? { usd: 0, ops: 0 };
