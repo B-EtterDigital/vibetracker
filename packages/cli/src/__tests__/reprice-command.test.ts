@@ -56,27 +56,28 @@ function run(home: string, args: string[]) {
   });
 }
 
-test("reconcile --reprice preserves estimates, surfaces unknown models, and atomically replaces the ledger", () => {
+test("reconcile --reprice authoritatively upgrades log estimates without touching billed sources", () => {
   const home = mkdtempSync(join(tmpdir(), "vibetracker-reprice-"));
   const storeDir = join(home, ".vibetracker");
   const store = join(storeDir, "records.jsonl");
   mkdirSync(storeDir, { recursive: true });
   const original = [
-    record(),
+    record({ usdEst: 5 }),
     record({
       model: "mystery-model",
       quantity: 20,
       rawAmount: 20,
       tokenUsage: { input: 10, output: 2, cacheRead: 3, cacheCreate: 5 },
     }),
-    record({ model: "gpt-5.5", usdEst: 99 }),
+    record({ model: "gpt-5.5", source: "manual", usdEst: 99 }),
   ];
   writeRecords(store, original);
 
   try {
     const dryRun = run(home, ["reconcile", "--reprice", "--dry-run"]);
     assert.equal(dryRun.status, 0, dryRun.stderr || dryRun.stdout);
-    assert.match(dryRun.stdout, /would price 1 ledger rows in one atomic rewrite/);
+    assert.match(dryRun.stdout, /would upgrade 1 ledger rows in one atomic rewrite/);
+    assert.match(dryRun.stdout, /total USD delta \+\$30\.50/);
     assert.match(dryRun.stderr, /mystery-model · 20 tokens/);
     assert.deepEqual(readRecords(store), original);
 
@@ -84,15 +85,23 @@ test("reconcile --reprice preserves estimates, surfaces unknown models, and atom
     try {
       const result = run(home, ["reconcile", "--reprice"]);
       assert.equal(result.status, 0, result.stderr || result.stdout);
-      assert.match(result.stdout, /priced 1 ledger rows in one atomic rewrite/);
+      assert.match(result.stdout, /upgraded 1 ledger rows in one atomic rewrite/);
+      assert.match(result.stdout, /total USD delta \+\$30\.50/);
       assert.match(result.stderr, /mystery-model · 20 tokens/);
 
       const persisted = readRecords(store);
       assert.equal(persisted[0]?.usdEst, 35.5);
       assert.equal(persisted[1]?.usdEst, undefined);
       assert.equal(persisted[2]?.usdEst, 99);
-      assert.equal(JSON.parse(readFileSync(oldDescriptor, "utf8").split("\n")[0]!).usdEst, undefined);
+      assert.equal(JSON.parse(readFileSync(oldDescriptor, "utf8").split("\n")[0]!).usdEst, 5);
       assert.equal(readdirSync(storeDir).some((name) => name.endsWith(".tmp")), false);
+
+      const secondRun = run(home, ["reconcile", "--reprice"]);
+      assert.equal(secondRun.status, 0, secondRun.stderr || secondRun.stdout);
+      assert.match(secondRun.stdout, /0 ledger rows upgraded/);
+      assert.match(secondRun.stdout, /total USD delta \$0\.00/);
+      assert.match(secondRun.stdout, /ledger unchanged/);
+      assert.deepEqual(readRecords(store), persisted);
     } finally {
       closeSync(oldDescriptor);
     }

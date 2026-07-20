@@ -311,21 +311,45 @@ function dominantProvider(records: { provider: string; usdEst?: number }[]): { p
   return provider ? { provider, count: row.count, ...(row.hasUsd ? { usd: row.usd } : {}) } : undefined;
 }
 
-/** Preserve reported USD, then prefer native-output pricing over token-equivalent pricing. */
+/**
+ * Log token classes are parser truth, so a published model rate replaces partial parser USD.
+ * Every other source preserves reported/billed USD before considering derived estimates.
+ */
 function priceRecord(record: NormalizedRecord): NormalizedRecord {
+  if (record.source === "log" && record.tokenUsage != null) {
+    const authoritativeTokenUsd = estimateTokenUsd(record);
+    if (authoritativeTokenUsd !== undefined) {
+      return record.usdEst === authoritativeTokenUsd
+        ? record
+        : { ...record, usdEst: authoritativeTokenUsd };
+    }
+  }
   if (record.usdEst !== undefined) return record;
   const usdEst = estimateNativeUsd(record) ?? estimateTokenUsd(record);
   return usdEst === undefined ? record : { ...record, usdEst };
 }
 
-function repriceRecords(records: readonly NormalizedRecord[]): { records: NormalizedRecord[]; priced: number } {
-  let priced = 0;
+function repriceRecords(records: readonly NormalizedRecord[]): {
+  records: NormalizedRecord[];
+  upgraded: number;
+  usdDelta: number;
+} {
+  let upgraded = 0;
+  let usdDelta = 0;
   const next = records.map((record) => {
     const result = priceRecord(record);
-    if (result !== record) priced += 1;
+    if (result !== record) {
+      upgraded += 1;
+      usdDelta += (result.usdEst ?? 0) - (record.usdEst ?? 0);
+    }
     return result;
   });
-  return { records: next, priced };
+  return { records: next, upgraded, usdDelta: Number(usdDelta.toFixed(6)) };
+}
+
+function formatUsdDelta(delta: number): string {
+  const sign = delta > 0 ? "+" : delta < 0 ? "-" : "";
+  return `${sign}$${Math.abs(delta).toFixed(2)}`;
 }
 
 function printUnpricedTokenModels(records: readonly NormalizedRecord[]): void {
@@ -2014,12 +2038,12 @@ async function main() {
     }
     printUnpricedTokenModels(next);
     if (argv.includes("--dry-run")) {
-      console.log(`  ${dim(`dry run · would replace ${human(reconciliation.superseded.length)} rows with ${human(accepted.length)} parser records and price ${human(repriced.priced)} existing rows · ledger unchanged`)}`);
+      console.log(`  ${dim(`dry run · would replace ${human(reconciliation.superseded.length)} rows with ${human(accepted.length)} parser records and upgrade ${human(repriced.upgraded)} ledger rows · total USD delta ${formatUsdDelta(repriced.usdDelta)} · ledger unchanged`)}`);
       return;
     }
     writeRecords(STORE, next);
     console.log(`  ${ok("✓")} reconciled ${reconciliation.providers.join(" · ")} in one ledger rewrite`);
-    console.log(`  ${dim(`${human(repriced.priced)} existing ledger rows gained API-equivalent USD`)}`);
+    console.log(`  ${dim(`${human(repriced.upgraded)} ledger rows upgraded · total USD delta ${formatUsdDelta(repriced.usdDelta)}`)}`);
     if (rejected.length) console.log(`  ${dim(`${human(rejected.length)} invalid parser records rejected`)}`);
     return;
   }
@@ -2029,15 +2053,15 @@ async function main() {
     const repriced = repriceRecords(current);
     printUnpricedTokenModels(repriced.records);
     if (argv.includes("--dry-run")) {
-      console.log(`  ${dim(`dry run · would price ${human(repriced.priced)} ledger rows in one atomic rewrite · ledger unchanged`)}`);
+      console.log(`  ${dim(`dry run · would upgrade ${human(repriced.upgraded)} ledger rows in one atomic rewrite · total USD delta ${formatUsdDelta(repriced.usdDelta)} · ledger unchanged`)}`);
       return;
     }
-    if (!repriced.priced) {
-      console.log(`  ${dim("no ledger rows gained a published model rate · ledger unchanged")}`);
+    if (!repriced.upgraded) {
+      console.log(`  ${dim(`0 ledger rows upgraded · total USD delta ${formatUsdDelta(repriced.usdDelta)} · ledger unchanged`)}`);
       return;
     }
     writeRecords(STORE, repriced.records);
-    console.log(`  ${ok("✓")} priced ${human(repriced.priced)} ledger rows in one atomic rewrite`);
+    console.log(`  ${ok("✓")} upgraded ${human(repriced.upgraded)} ledger rows in one atomic rewrite · total USD delta ${formatUsdDelta(repriced.usdDelta)}`);
     return;
   }
 
