@@ -26,25 +26,25 @@ test("native rate registry contains only the sourced planner rates", () => {
     {
       category: "music",
       unit: "track",
-      usdPerUnit: 0.02,
-      basis: "subscription",
-      source: "Suno Premier $10/2,500 credits, 5 credits per clip",
+      usdPerUnit: 0.055,
+      basis: "api",
+      source: "Suno third-party API market (no official API): EvoLink $0.111/generation of 2 clips, Jul 2026",
       asOf: "2026-07",
     },
     {
       category: "music",
       unit: "variation",
-      usdPerUnit: 0.02,
-      basis: "subscription",
-      source: "Suno Premier $10/2,500 credits, 5 credits per clip",
+      usdPerUnit: 0.055,
+      basis: "api",
+      source: "Suno third-party API market (no official API): EvoLink $0.111/generation of 2 clips, Jul 2026",
       asOf: "2026-07",
     },
     {
       provider: "midjourney",
       unit: "image",
-      usdPerUnit: 0.033,
-      basis: "subscription",
-      source: "Midjourney Standard $30/mo ~900 fast images",
+      usdPerUnit: 0.055,
+      basis: "api",
+      source: "Flux 2 Pro published API rate $0.055/image (comparable quality tier; Midjourney has no API), Jul 2026",
       asOf: "2026-07",
     },
   ]);
@@ -55,9 +55,9 @@ test("provider-specific rates resolve before category-wide rates", () => {
     {
       category: "music",
       unit: "track",
-      usdPerUnit: 0.02,
-      basis: "subscription",
-      source: "Suno Premier $10/2,500 credits, 5 credits per clip",
+      usdPerUnit: 0.055,
+      basis: "api",
+      source: "Suno third-party API market (no official API): EvoLink $0.111/generation of 2 clips, Jul 2026",
       asOf: "2026-07",
     },
     {
@@ -75,18 +75,18 @@ test("provider-specific rates resolve before category-wide rates", () => {
 });
 
 test("native estimates multiply the sourced rate by output quantity", () => {
-  assert.equal(estimateNativeUsd(record({ outputQuantity: 2, outputUnit: "track" })), 0.04);
-  assert.equal(estimateNativeUsd(record({ outputQuantity: 3, outputUnit: "variation" })), 0.06);
+  assert.equal(estimateNativeUsd(record({ outputQuantity: 2, outputUnit: "track" })), 0.11);
+  assert.equal(estimateNativeUsd(record({ outputQuantity: 3, outputUnit: "variation" })), 0.165);
   assert.equal(estimateNativeUsd(record({
     provider: "midjourney",
     category: "image",
     outputQuantity: 3,
     outputUnit: "image",
-  })), 0.099);
+  })), 0.165);
 });
 
 test("native estimates round non-exact binary products to six decimals", () => {
-  assert.equal(estimateNativeUsd(record({ outputQuantity: 35, outputUnit: "track" })), 0.7);
+  assert.equal(estimateNativeUsd(record({ outputQuantity: 35, outputUnit: "track" })), 1.925);
 });
 
 test("an existing USD estimate is preserved", () => {
@@ -113,6 +113,6 @@ test("aggregate rows pick up native USD estimates without aggregate changes", ()
   });
 
   const [row] = aggregate(priced, "category");
-  assert.equal(row?.usd, 0.06);
+  assert.equal(row?.usd, 0.165);
   assert.equal(priced[2]?.usdEst, undefined);
 });
