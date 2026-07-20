@@ -4,6 +4,19 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 let browserClient: SupabaseClient | null = null;
 
+export const SUPABASE_BROWSER_AUTH_OPTIONS = {
+  autoRefreshToken: true,
+  detectSessionInUrl: true,
+  persistSession: true,
+} as const;
+
+export const SUPABASE_BROWSER_COOKIE_OPTIONS = {
+  maxAge: 60 * 60 * 24 * 400,
+  path: "/",
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+} as const;
+
 export function supabaseBrowserConfigured(): boolean {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
@@ -12,7 +25,10 @@ export function supabaseBrowser() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) throw new Error("VibeUsage auth is not configured in this environment");
-  browserClient ??= createBrowserClient(url, key);
+  browserClient ??= createBrowserClient(url, key, {
+    auth: SUPABASE_BROWSER_AUTH_OPTIONS,
+    cookieOptions: SUPABASE_BROWSER_COOKIE_OPTIONS,
+  });
   return browserClient;
 }
 

@@ -5,7 +5,8 @@ import type { Session } from "@supabase/supabase-js";
 import { authProviderAvailability, supabaseBrowser, supabaseBrowserConfigured } from "../../lib/supabase-browser";
 import { c0vibeBridgeMessage } from "../../lib/c0vibe-account-bridge";
 import { cliCommand } from "../../lib/cli-command.ts";
-import { accountIdentityFromSession, accountRedirectUrl, safeNextPath } from "./account-session";
+import { accountIdentityFromSession, accountRedirectUrl, safeAccountOrigin, safeNextPath } from "./account-session";
+import { AccountC0vibeSignIn } from "./account-c0vibe-signin";
 
 type ProviderState = "checking" | "available" | "disabled" | "unavailable";
 type LinkState = "signed-out" | "checking" | "linked" | "unlinked" | "error";
@@ -48,6 +49,7 @@ export function AccountConsole() {
   const [linkState, setLinkState] = useState<LinkState>("signed-out");
   const [linked, setLinked] = useState<LinkedIdentity | null>(null);
   const [bridgeState, setBridgeState] = useState<BridgeState>("idle");
+  const [workosProvider, setWorkosProvider] = useState(false);
   const [proofChannel, setProofChannel] = useState<ProofChannel>("browser");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -101,6 +103,7 @@ export function AccountConsole() {
       .then((availability) => {
         if (!active) return;
         setProvider(availability.github ? "available" : "disabled");
+        setWorkosProvider(availability.workos);
         if (!availability.github) {
           setProofChannel("terminal");
           setMessage("Browser GitHub sign-in is not enabled yet. GitHub CLI verification is live now and does not require a C0VIBE account.");
@@ -194,6 +197,35 @@ export function AccountConsole() {
     }
   }
 
+  // Migrated vibers may return with their C0VIBE (WorkOS) account instead of GitHub.
+  // A returning viber whose browser session persists re-anchors through the existing
+  // WorkOS bridge claim (POST /api/account-bridge builds the URL via c0vibeAuthorizationUrl).
+  // A fully cold sign-in uses the Supabase-native WorkOS provider; this button is render-gated
+  // on workosProvider so it only surfaces once that provider is actually enabled server-side.
+  async function signInWithC0VIBE() {
+    setProofChannel("browser");
+    if (session) {
+      await linkToC0VIBE();
+      return;
+    }
+    if (!workosProvider) {
+      setMessage("C0VIBE sign-in is not enabled in this environment yet. Sign in with GitHub to anchor your identity.");
+      return;
+    }
+    setBusy(true);
+    setMessage("");
+    const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
+    const origin = safeAccountOrigin(window.location.origin);
+    const { error } = await supabaseBrowser().auth.signInWithOAuth({
+      provider: "workos",
+      options: { redirectTo: accountRedirectUrl(origin, next) },
+    });
+    if (error) {
+      setBusy(false);
+      setMessage(error.message);
+    }
+  }
+
   async function copyCliCommand() {
     setProofChannel("terminal");
     try {
@@ -235,7 +267,7 @@ export function AccountConsole() {
               <div className="account-identity__actions">
                 <a className="account-identity__primary-link" href={`/u/${encodeURIComponent(accountHandle)}`}>view public profile</a>
                 {linkState === "unlinked" || linkState === "error" ? <button type="button" onClick={signIn} disabled={busy || provider !== "available"}>reconnect GitHub</button> : null}
-                {linkState === "linked" ? <button type="button" onClick={linkToC0VIBE} disabled={busy || bridgeState === "linked"}>{bridgeState === "linked" ? "✓ C0VIBE linked" : bridgeState === "starting" ? "opening C0VIBE" : "link to C0VIBE"}</button> : null}
+                {linkState === "linked" ? <button className="account-console__c0vibe" type="button" onClick={linkToC0VIBE} disabled={busy || bridgeState === "linked"}>{bridgeState === "linked" ? "✓ C0VIBE linked" : bridgeState === "starting" ? "opening C0VIBE" : "link to C0VIBE"}</button> : null}
                 {returnPath ? <a href={returnPath}>return to previous view</a> : null}
                 <button type="button" onClick={signOut} disabled={busy}>sign out</button>
               </div>
@@ -253,13 +285,17 @@ export function AccountConsole() {
                 <div><h3>Choose where GitHub should sign you in.</h3><p>The browser creates a site session. The CLI verifies this machine. Both attach to the same immutable GitHub identity.</p></div>
               </div>
               <div className="account-console__entry-actions">
-                <button className="account-console__primary" type="button" onClick={signIn} disabled={busy || !browserReady}>
-                  {busy && proofChannel === "browser" ? "opening GitHub" : browserChecking ? "checking GitHub" : browserReady ? "sign in with GitHub" : "browser sign-in unavailable"}
-                </button>
+                <div className="account-console__signins">
+                  <button className="account-console__primary" type="button" onClick={signIn} disabled={busy || !browserReady}>
+                    {busy && proofChannel === "browser" ? "opening GitHub" : browserChecking ? "checking GitHub" : browserReady ? "sign in with GitHub" : "browser sign-in unavailable"}
+                  </button>
+                  <AccountC0vibeSignIn available={workosProvider} disabled={busy} onClick={signInWithC0VIBE} />
+                </div>
                 <button className="account-console__secondary" type="button" onClick={copyCliCommand} disabled={busy}>
                   <span>verify this machine</span><code>{CLI_COMMAND}</code>
                 </button>
               </div>
+              <small className="account-console__c0vibe-note">GitHub or your C0VIBE account — migrated vibers can use either.</small>
               <div className="account-console__entry-map" aria-label="GitHub identity convergence">
                 <span>Browser session<b>site controls</b></span><i aria-hidden="true">+</i>
                 <span>CLI identity<b>existing history</b></span><i aria-hidden="true">-&gt;</i>

@@ -95,7 +95,7 @@
   .control { transition: none; }
 }
 
-/* signed-in shortcut to the viber's own board profile */
+/* session-independent shortcut to the viber's public board profile */
 .profileLink {
   display: inline-flex; align-items: center;
   padding: 8px 12px; margin-right: 2px;
@@ -106,3 +106,12 @@
   transition: border-color 160ms ease, color 160ms ease;
 }
 .profileLink:hover { border-color: #2ee8d6; color: #eafff9; }
+.profileLink[data-state="signed-out"] {
+  border-color: rgba(46, 232, 214, 0.16);
+  color: rgba(217, 255, 242, 0.58);
+}
+.profileLink[data-state="signed-out"]:hover,
+.profileLink[data-state="signed-out"]:focus-visible {
+  border-color: rgba(46, 232, 214, 0.55);
+  color: #d9fff2;
+}

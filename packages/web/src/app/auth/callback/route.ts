@@ -33,11 +33,22 @@ export async function GET(request: Request) {
   try {
     const client = await supabaseServer();
     const { data, error } = await client.auth.exchangeCodeForSession(code);
-    if (error || !data.user?.id || !data.session?.provider_token) {
-      throw error ?? new Error("GitHub OAuth did not return a complete session");
+    if (error || !data.user?.id || !data.session) {
+      throw error ?? new Error("OAuth did not return a complete session");
     }
 
-    await linkGitHubAccount(data.user.id, data.session.provider_token);
+    // GitHub stays the identity anchor: require the provider token and link the immutable
+    // subject. Migrated vibers returning through C0VIBE (WorkOS) complete the same session
+    // exchange without a GitHub token and are not routed through GitHub account linking.
+    const provider = data.user.app_metadata?.provider
+      || data.user.identities?.find((identity) => identity.provider)?.provider
+      || "github";
+    if (provider === "github") {
+      if (!data.session.provider_token) {
+        throw new Error("GitHub OAuth did not return a complete session");
+      }
+      await linkGitHubAccount(data.user.id, data.session.provider_token);
+    }
     return redirect(origin, next, "success");
   } catch (error) {
     telemetry.captureError(error, {

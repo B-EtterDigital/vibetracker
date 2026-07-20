@@ -14,6 +14,12 @@ interface SessionLike {
 }
 
 const CANONICAL_ACCOUNT_ORIGIN = "https://vibeusage.c0vibe.app";
+export const LAST_SIGNED_IN_HANDLE_KEY = "vtk-last-handle";
+
+export interface LastHandleStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+}
 
 function firstForwardedValue(value: string | null): string {
   return value?.split(",", 1)[0]?.trim().toLowerCase() ?? "";
@@ -30,6 +36,19 @@ function cleanText(value: unknown, max: number): string {
 function githubHandle(value: unknown): string {
   const handle = cleanText(value, 39);
   return /^[A-Za-z0-9-]{1,39}$/.test(handle) ? handle : "";
+}
+
+export function readLastSignedInHandle(storage: Pick<LastHandleStorage, "getItem">): string {
+  return githubHandle(storage.getItem(LAST_SIGNED_IN_HANDLE_KEY)).toLowerCase();
+}
+
+export function persistLastSignedInHandle(
+  storage: Pick<LastHandleStorage, "setItem">,
+  handle: unknown,
+): string {
+  const normalized = githubHandle(handle).toLowerCase();
+  if (normalized) storage.setItem(LAST_SIGNED_IN_HANDLE_KEY, normalized);
+  return normalized;
 }
 
 function githubAvatar(value: unknown): string | null {
@@ -82,6 +101,23 @@ export function accountCallbackOrigin(request: Request): string {
   if (requestUrl.hostname === "localhost" || requestUrl.hostname === "127.0.0.1") return requestUrl.origin;
   if (requestUrl.hostname === "vibeusage.c0vibe.app") return CANONICAL_ACCOUNT_ORIGIN;
   return CANONICAL_ACCOUNT_ORIGIN;
+}
+
+// Clamp a browser-supplied origin (e.g. window.location.origin) to the account allowlist
+// before it becomes an OAuth redirectTo: the canonical production origin, the recognized
+// *.netlify.app preview pattern, or local dev. Anything else falls back to canonical so a
+// spoofed host can never be handed to the provider as a return target.
+export function safeAccountOrigin(origin: string): string {
+  try {
+    const url = new URL(origin);
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return url.origin;
+    if (url.protocol !== "https:") return CANONICAL_ACCOUNT_ORIGIN;
+    if (url.hostname === "vibeusage.c0vibe.app") return CANONICAL_ACCOUNT_ORIGIN;
+    if (isVibeUsagePreview(url.hostname)) return url.origin;
+    return CANONICAL_ACCOUNT_ORIGIN;
+  } catch {
+    return CANONICAL_ACCOUNT_ORIGIN;
+  }
 }
 
 export function accountRedirectUrl(origin: string, next?: string | null): string {

@@ -38,10 +38,30 @@
 .account-identity__profile > span { display: grid; place-items: center; width: 58px; height: 58px; border: 1px solid rgba(91, 169, 255, .55); border-radius: 50%; color: #ddecff; background: rgba(91, 169, 255, .08); font: 700 14px/1 var(--font-data), monospace; }
 .account-console__pitch h3 { color: #f5fffc; font-size: 20px; letter-spacing: 0; }
 .account-console__pitch p { margin-top: 5px; color: #8fa4a8; font-size: 13px; line-height: 1.55; }
-.account-console__primary { width: 100%; min-height: 48px; margin-top: 24px; border: 1px solid #5ba9ff; border-radius: 5px; color: #071019; background: #5ba9ff; font: 700 11px/1 var(--font-data), monospace; text-transform: uppercase; cursor: pointer; }
+.account-console__primary { width: 100%; min-height: 48px; margin-top: 24px; padding: 0 14px; border: 1px solid #5ba9ff; border-radius: 5px; color: #071019; background: #5ba9ff; font: 700 11px/1 var(--font-data), monospace; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; }
 .account-console__primary:disabled { border-color: rgba(255, 255, 255, .12); color: #748387; background: rgba(255, 255, 255, .04); cursor: not-allowed; }
 .account-console__entry-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .72fr); gap: 8px; margin-top: 24px; }
 .account-console__entry-actions .account-console__primary { margin-top: 0; }
+.account-console__signins { display: grid; gap: 8px; align-content: start; }
+/* C0VIBE sign-in — identical height/font/padding to .account-console__primary; only the
+   border treatment differs: the exact .vflip-btn gradient border (no new colors). */
+.account-console__c0vibe {
+  width: 100%; min-height: 48px; padding: 0 14px;
+  border: 2px solid transparent; border-radius: 5px;
+  background:
+    linear-gradient(#060a0d, #060a0d) padding-box,
+    linear-gradient(120deg, #2ee8d6, #f28c33, #ffc64d) border-box;
+  color: #eafff8;
+  font: 700 11px/1 var(--font-data), monospace;
+  text-transform: uppercase; letter-spacing: .04em; cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.account-console__c0vibe:hover,
+.account-console__c0vibe:focus-visible { transform: translateY(-1px); box-shadow: 0 10px 34px -12px rgba(46, 232, 214, .5); }
+.account-console__c0vibe:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+/* In the linked-state action row, match the row's compact button metrics but keep the gradient. */
+.account-identity__actions .account-console__c0vibe { width: auto; min-height: 38px; padding: 0 12px; font-size: 10px; letter-spacing: 0; }
+.account-console__c0vibe-note { display: block; margin-top: 12px; color: #8ea2a6; font: 500 10px/1.5 var(--font-data), monospace; }
 .account-console__secondary { display: grid; min-width: 0; min-height: 48px; padding: 8px 12px; border: 1px solid rgba(46, 232, 214, .52); border-radius: 5px; background: rgba(46, 232, 214, .06); color: #b8fff4; text-align: left; cursor: pointer; }
 .account-console__secondary span { font: 700 9px/1 var(--font-data), monospace; text-transform: uppercase; }
 .account-console__secondary code { margin-top: 6px; overflow: hidden; color: #66eadb; font: 500 9px/1 var(--font-data), monospace; text-overflow: ellipsis; white-space: nowrap; }

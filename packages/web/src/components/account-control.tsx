@@ -3,7 +3,12 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
-import { accountIdentityFromSession, accountRedirectUrl } from "../app/account/account-session";
+import {
+  accountIdentityFromSession,
+  accountRedirectUrl,
+  persistLastSignedInHandle,
+  readLastSignedInHandle,
+} from "../app/account/account-session";
 import { supabaseBrowser, supabaseBrowserConfigured } from "../lib/supabase-browser";
 import { createConsoleTelemetry } from "../../../core/src/telemetry";
 import styles from "./account-control.module.css";
@@ -14,13 +19,28 @@ const telemetry = createConsoleTelemetry();
 export function AccountControl() {
   const [state, setState] = useState<ControlState>(supabaseBrowserConfigured() ? "loading" : "signed-out");
   const [handle, setHandle] = useState("");
+  const [lastHandle, setLastHandle] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const pathname = usePathname();
 
   useEffect(() => {
+    try {
+      setLastHandle(readLastSignedInHandle(window.localStorage));
+    } catch (error) {
+      telemetry.captureError(error, { area: "web.auth.last-handle.read", severity: "warn" });
+    }
     if (!supabaseBrowserConfigured()) return;
     const client = supabaseBrowser();
     let active = true;
+
+    function rememberHandle(nextHandle: string) {
+      try {
+        const persisted = persistLastSignedInHandle(window.localStorage, nextHandle);
+        if (active && persisted) setLastHandle(persisted);
+      } catch (error) {
+        telemetry.captureError(error, { area: "web.auth.last-handle.write", severity: "warn" });
+      }
+    }
 
     async function synchronize(session: Session | null) {
       if (!active) return;
@@ -32,6 +52,7 @@ export function AccountControl() {
         return;
       }
       setHandle(identity.handle);
+      rememberHandle(identity.handle);
       setAvatarUrl(identity.avatarUrl || "");
       setState("session");
       try {
@@ -42,16 +63,29 @@ export function AccountControl() {
         if (!active) return;
         const payload = await response.json() as { linked?: boolean; identity?: { handle?: string; avatarUrl?: string | null } };
         if (response.ok && payload.linked) {
-          setHandle(payload.identity?.handle || identity.handle);
+          const linkedHandle = payload.identity?.handle || identity.handle;
+          setHandle(linkedHandle);
+          rememberHandle(linkedHandle);
           setAvatarUrl(payload.identity?.avatarUrl || identity.avatarUrl || "");
           setState("linked");
         }
-      } catch {
+      } catch (error) {
+        telemetry.captureError(error, { area: "web.auth.header-status", severity: "warn" });
         if (active) setState("unavailable");
       }
     }
 
-    void client.auth.getSession().then(({ data }) => synchronize(data.session));
+    void client.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        telemetry.captureError(error, { area: "web.auth.session-read", severity: "warn" });
+        if (active) setState("signed-out");
+        return;
+      }
+      return synchronize(data.session);
+    }).catch((error: unknown) => {
+      telemetry.captureError(error, { area: "web.auth.session-read", severity: "warn" });
+      if (active) setState("unavailable");
+    });
     const { data } = client.auth.onAuthStateChange((_event, session) => {
       window.setTimeout(() => void synchronize(session), 0);
     });
@@ -83,7 +117,7 @@ export function AccountControl() {
       ? `Signed in as @${handle}; finish GitHub linking`
       : state === "loading"
         ? "Checking GitHub session status"
-        : "Sign in with GitHub; no C0VIBE account required";
+        : "GitHub or your C0VIBE account — migrated vibers can use either.";
   const accountHref = pathname === "/account"
     ? "/account"
     : `/account?next=${encodeURIComponent(pathname || "/")}`;
@@ -112,15 +146,15 @@ export function AccountControl() {
     ? startDirectSignIn
     : undefined;
 
-  // Once signed in, the viber's own board profile is one click away in the header.
-  const profileHref = state === "linked" || state === "session"
-    ? `/u/${handle.toLowerCase()}`
-    : null;
+  // The public profile remains reachable after auth expires; only the handle is retained locally.
+  const profileHandle = handle.toLowerCase() || lastHandle;
+  const profileHref = profileHandle ? `/u/${profileHandle}` : null;
+  const profileState = state === "signed-out" ? "signed-out" : "active";
 
   return (
     <>
       {profileHref ? (
-        <a className={styles.profileLink} href={profileHref} title={`Your board profile — /u/${handle.toLowerCase()}`}>
+        <a className={styles.profileLink} data-state={profileState} href={profileHref} title={`Your public board profile — /u/${profileHandle}`}>
           Profile
         </a>
       ) : null}
