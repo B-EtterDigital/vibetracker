@@ -70,3 +70,38 @@ export function estimateNativeUsd(
     ? undefined
     : Number((rate.usdPerUnit * quantity).toFixed(6));
 }
+
+// Credit-denominated providers: the record's rawAmount is the exact credits the generation
+// consumed; the provider publishes a top-up price per credit. API-equivalent = credits x rate.
+export interface CreditRate {
+  provider: string;
+  usdPerCredit: number;
+  basis: "api" | "subscription";
+  source: string;
+  asOf: string;
+}
+
+export const CREDIT_RATES: CreditRate[] = [
+  {
+    provider: "higgsfield",
+    usdPerCredit: 0.05,
+    basis: "subscription",
+    source: "Higgsfield top-up packs ~$5/100 credits, Jul 2026",
+    asOf: "2026-07",
+  },
+];
+
+export function estimateCreditUsd(record: {
+  provider?: string;
+  rawUnit?: string;
+  rawAmount?: number;
+  usdEst?: number;
+}): number | undefined {
+  if (record.usdEst !== undefined) return undefined;
+  if (record.rawUnit !== "credits") return undefined;
+  const amount = record.rawAmount;
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) return undefined;
+  const rate = CREDIT_RATES.find((r) => r.provider === record.provider);
+  if (!rate) return undefined;
+  return Number((amount * rate.usdPerCredit).toFixed(6));
+}
