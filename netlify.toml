@@ -4,3 +4,10 @@ publish = "packages/web/.next"
 
 [[plugins]]
 package = "@netlify/plugin-nextjs"
+
+# Frames: only C0VIBE surfaces may embed (the /u/ "Vibe Usage" tab framing);
+# also closes the previously-open clickjacking gap (no frame policy before).
+[[headers]]
+for = "/*"
+[headers.values]
+Content-Security-Policy = "frame-ancestors 'self' https://c0vibe.app https://*.c0vibe.app https://c0x-web.netlify.app"
