@@ -16,6 +16,18 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return EDGE ? [{ source: "/api/ingest", destination: EDGE }] : [];
   },
+  // Framing: only C0VIBE surfaces may embed (the /u/ "Vibe Usage" tab).
+  // Set here, not netlify.toml — the Next runtime serves SSR/ISR responses
+  // itself, so netlify [[headers]] never reach them.
+  async headers() {
+    return [{
+      source: "/:path*",
+      headers: [{
+        key: "Content-Security-Policy",
+        value: "frame-ancestors 'self' https://c0vibe.app https://*.c0vibe.app https://c0x-web.netlify.app",
+      }],
+    }];
+  },
 };
 
 export default nextConfig;
