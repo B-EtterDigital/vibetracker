@@ -37,3 +37,7 @@ packages/web/public/deploy-stamp.json
 .deploy-guard-test-dirty-*
 logs/
 .smarch/agent-context/
+
+# Local generated landing-film renders and assembly scratch. These are large
+# production artifacts, not VibeTRACKER source and must never block a stamped web deploy.
+landing/
