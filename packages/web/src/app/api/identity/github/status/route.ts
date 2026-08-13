@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "invalid account session" }, { status: 401, headers: noStore });
   }
 
-  const { data, error } = await admin
+  let { data, error } = await admin
     .from("vibetracker_identities")
     .select("id, provider_login, canonical_handle, display_name, avatar_url, verified_at, linked_at")
     .eq("user_id", account.user.id)
@@ -33,6 +33,43 @@ export async function GET(req: Request) {
       userId: account.user.id,
     });
     return NextResponse.json({ error: "identity status failed" }, { status: 500, headers: noStore });
+  }
+
+  if (!data) {
+    const { data: alias, error: aliasError } = await admin
+      .from("vibetracker_identity_session_aliases")
+      .select("identity_id")
+      .eq("user_id", account.user.id)
+      .maybeSingle();
+    if (aliasError) {
+      telemetry.captureError(new Error(aliasError.message), {
+        area: "web.auth.github-status.alias-read",
+        severity: "error",
+        code: aliasError.code,
+        userId: account.user.id,
+      });
+      return NextResponse.json({ error: "identity status failed" }, { status: 500, headers: noStore });
+    }
+
+    if (alias?.identity_id) {
+      const identityResult = await admin
+        .from("vibetracker_identities")
+        .select("id, provider_login, canonical_handle, display_name, avatar_url, verified_at, linked_at")
+        .eq("id", alias.identity_id)
+        .eq("provider", "github")
+        .maybeSingle();
+      data = identityResult.data;
+      error = identityResult.error;
+      if (error) {
+        telemetry.captureError(new Error(error.message), {
+          area: "web.auth.github-status.alias-identity-read",
+          severity: "error",
+          code: error.code,
+          userId: account.user.id,
+        });
+        return NextResponse.json({ error: "identity status failed" }, { status: 500, headers: noStore });
+      }
+    }
   }
   if (!data) return NextResponse.json({ linked: false }, { headers: noStore });
 
