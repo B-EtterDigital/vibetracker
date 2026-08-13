@@ -15,6 +15,7 @@ const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const CONFIG_PATH = join(ROOT, "sma.deploy.json");
 const PACKAGE_PATH = join(ROOT, "package.json");
 const GITIGNORE_PATH = join(ROOT, ".gitignore");
+const EXPECTED_CANONICAL_ROOT = "/home/bdd-main/DEV/Projects/0_1-OPEN-SOURCE/001_VibeTRACKER";
 
 const config = validateDeployConfig(JSON.parse(readFileSync(CONFIG_PATH, "utf8")));
 
@@ -38,7 +39,7 @@ const refusalCodes = (overrides, options) => evaluatePreconditions({
 
 test("deploy config pins the canonical VibeUsage production target", () => {
   assert.equal(config.project, "vibeusage-web");
-  assert.equal(config.canonicalRoot, ROOT);
+  assert.equal(config.canonicalRoot, EXPECTED_CANONICAL_ROOT);
   assert.equal(config.stampPath, "packages/web/public/deploy-stamp.json");
   assert.equal(config.liveStampUrl, "https://vibeusage.c0vibe.app/deploy-stamp.json");
   assert.match(config.deploy, /^netlify deploy --prod --build --site 4c8f274c-f633-4806-9741-bf081773668c\b/);
