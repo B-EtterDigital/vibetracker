@@ -100,14 +100,14 @@ export function AccountControl() {
     : state === "signed-out"
       ? "Sign in with GitHub"
       : state === "session"
-        ? "Finish setup"
+        ? "Continue setup"
         : `@${handle}`;
   const shortLabel = state === "loading"
     ? "Checking"
     : state === "signed-out"
       ? "Sign in"
       : state === "session"
-        ? "Finish"
+        ? "Continue"
         : `@${handle}`;
   const title = state === "linked"
     ? `GitHub identity verified as @${handle}`
@@ -119,7 +119,7 @@ export function AccountControl() {
         ? "Checking GitHub session status"
         : "GitHub or your C0VIBE account — migrated vibers can use either.";
   const accountHref = pathname === "/account"
-    ? "/account"
+    ? state === "session" ? "#c0vibe-connection" : "#account-console-title"
     : `/account?next=${encodeURIComponent(pathname || "/")}`;
 
   // One click, straight to GitHub (user order 2026-07-15): a signed-out click starts the OAuth

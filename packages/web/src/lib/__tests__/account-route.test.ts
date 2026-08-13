@@ -78,6 +78,11 @@ test("account return paths stay same-origin and avoid account loops", () => {
   assert.equal(safeNextPath("//evil.example/path"), null);
   assert.equal(safeNextPath("/account"), null);
   assert.equal(accountRedirectUrl("https://vibeusage.c0vibe.app", "/proof"), "https://vibeusage.c0vibe.app/auth/callback?next=%2Fproof");
+  assert.equal(
+    accountRedirectUrl("https://vibeusage.c0vibe.app", null, "c0vibe-link"),
+    "https://vibeusage.c0vibe.app/auth/callback?intent=c0vibe-link",
+  );
+  assert.equal(accountRedirectUrl("https://vibeusage.c0vibe.app", null, "unsafe"), "https://vibeusage.c0vibe.app/auth/callback");
 });
 
 test("OAuth callbacks prefer the canonical public host over Netlify's deploy URL", () => {
@@ -201,17 +206,18 @@ test("account redirect origin is clamped to the canonical + preview allowlist", 
   assert.equal(safeAccountOrigin("not a url"), "https://vibeusage.c0vibe.app");
 });
 
-test("OAuth callback links GitHub subjects but completes non-GitHub (C0VIBE/WorkOS) sessions without a GitHub token", () => {
+test("OAuth callback links GitHub proofs even for migrated accounts and completes WorkOS sessions without a GitHub token", () => {
   // Provider is derived from the exchanged session, not assumed.
   assert.match(callback, /const provider = data\.user\.app_metadata\?\.provider/);
   assert.match(callback, /data\.user\.identities\?\.find\(\(identity\) => identity\.provider\)\?\.provider/);
-  // GitHub linking (and its provider-token requirement) is guarded behind the github branch.
-  assert.match(callback, /if \(provider === "github"\) \{/);
-  assert.match(callback, /if \(!data\.session\.provider_token\) \{/);
+  // A provider token identifies the current GitHub callback even when app_metadata still
+  // names WorkOS as the migrated account's primary provider.
+  assert.match(callback, /if \(data\.session\.provider_token\) \{/);
   assert.match(callback, /await linkGitHubAccount\(data\.user\.id, data\.session\.provider_token\)/);
+  assert.match(callback, /else if \(provider === "github"\) \{/);
   // A non-GitHub return still reaches the success redirect without being routed through linking.
   const linkIndex = callback.indexOf("linkGitHubAccount(data.user.id");
-  const successIndex = callback.lastIndexOf('return redirect(origin, next, "success")');
+  const successIndex = callback.lastIndexOf('return redirect(origin, next, "success", intent)');
   assert.ok(linkIndex >= 0 && successIndex > linkIndex);
   assert.doesNotMatch(callback, /console\.log|provider_token.*searchParams|github_token/);
 });
@@ -221,7 +227,8 @@ test("global shell exposes an obvious GitHub sign-in control without requiring C
   assert.ok(operatorRouteFor("/account"));
   assert.match(control, /api\/identity\/github\/status/);
   assert.match(control, /\? "Sign in with GitHub"/);
-  assert.match(control, /\? "Finish setup"/);
+  assert.match(control, /\? "Continue setup"/);
+  assert.match(control, /state === "session" \? "#c0vibe-connection"/);
   assert.match(control, /GitHub or your C0VIBE account — migrated vibers can use either\./);
   assert.match(control, /usePathname\(\)/);
   assert.match(control, /account\?next=\$\{encodeURIComponent\(pathname \|\| "\/"\)\}/);
@@ -238,6 +245,11 @@ test("global shell exposes an obvious GitHub sign-in control without requiring C
   assert.match(control, /readLastSignedInHandle\(window\.localStorage\)/);
   assert.match(control, /persistLastSignedInHandle\(window\.localStorage, nextHandle\)/);
   assert.match(control, /const profileHref = profileHandle \? `\/u\/\$\{profileHandle\}` : null/);
+  assert.match(consoleSource, /Connect VibeUsage in four clear steps\./);
+  assert.match(consoleSource, /Verify this GitHub identity/);
+  assert.match(consoleSource, /Link this identity to C0VIBE/);
+  assert.match(consoleSource, /params\.get\("intent"\) === "c0vibe-link"/);
+  assert.match(styles, /\.account-c0vibe-guide/);
   assert.match(control, /data-state=\{profileState\}/);
   assert.match(control, /\{profileHref \? \(/);
   assert.match(control, /<a className=\{styles\.control\}/);

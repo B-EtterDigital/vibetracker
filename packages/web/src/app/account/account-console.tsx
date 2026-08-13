@@ -7,6 +7,7 @@ import { c0vibeBridgeMessage } from "../../lib/c0vibe-account-bridge";
 import { cliCommand } from "../../lib/cli-command.ts";
 import { accountIdentityFromSession, accountRedirectUrl, safeAccountOrigin, safeNextPath } from "./account-session";
 import { AccountC0vibeSignIn } from "./account-c0vibe-signin";
+import { createConsoleTelemetry } from "../../../../core/src/telemetry";
 
 type ProviderState = "checking" | "available" | "disabled" | "unavailable";
 type LinkState = "signed-out" | "checking" | "linked" | "unlinked" | "error";
@@ -21,6 +22,7 @@ interface LinkedIdentity {
 }
 
 const CLI_COMMAND = cliCommand("login");
+const telemetry = createConsoleTelemetry();
 
 const BROWSER_STEPS = [
   ["GitHub consent", "You authenticate on github.com, never in a copied terminal command."],
@@ -54,10 +56,12 @@ export function AccountConsole() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [returnPath, setReturnPath] = useState<string | null>(null);
+  const [bridgeIntent, setBridgeIntent] = useState(false);
   const identity = accountIdentityFromSession(session);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    setBridgeIntent(params.get("intent") === "c0vibe-link");
     setReturnPath(safeNextPath(params.get("next")));
     setMessage(c0vibeBridgeMessage(params.get("c0vibe")) || oauthMessage(params.get("oauth")));
     if (params.get("c0vibe") === "linked") setBridgeState("linked");
@@ -109,8 +113,9 @@ export function AccountConsole() {
           setMessage("Browser GitHub sign-in is not enabled yet. GitHub CLI verification is live now and does not require a C0VIBE account.");
         }
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (!active) return;
+        telemetry.captureError(error, { area: "web.auth.provider-availability", severity: "warn" });
         setProvider("unavailable");
         setProofChannel("terminal");
         setMessage("Browser provider status is unavailable. GitHub CLI verification is still live.");
@@ -141,11 +146,16 @@ export function AccountConsole() {
     }
     setBusy(true);
     setMessage("");
-    const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
+    const params = new URLSearchParams(window.location.search);
+    const next = safeNextPath(params.get("next"));
     const { error } = await supabaseBrowser().auth.signInWithOAuth({
       provider: "github",
       options: {
-        redirectTo: accountRedirectUrl(window.location.origin, next),
+        redirectTo: accountRedirectUrl(
+          window.location.origin,
+          next,
+          params.get("intent") === "c0vibe-link" ? "c0vibe-link" : null,
+        ),
         scopes: "read:user user:email",
       },
     });
@@ -231,7 +241,8 @@ export function AccountConsole() {
     try {
       await navigator.clipboard.writeText(CLI_COMMAND);
       setMessage(`Copied ${CLI_COMMAND}. Run it in a terminal where gh auth status passes.`);
-    } catch {
+    } catch (error) {
+      telemetry.captureError(error, { area: "web.auth.cli-copy", severity: "warn" });
       setMessage(`Clipboard access failed. Run ${CLI_COMMAND} in your terminal.`);
     }
   }
@@ -242,6 +253,14 @@ export function AccountConsole() {
   const linkCopy = linkState === "linked" ? "identity linked" : linkState === "checking" ? "checking account link" : linkState === "unlinked" ? "session ready, link pending" : linkState === "error" ? "link needs attention" : "no browser session";
   const proofSteps = proofChannel === "browser" ? BROWSER_STEPS : CLI_STEPS;
   const accountHandle = linked?.handle || identity?.handle || "";
+  const connectionStep = !session
+    ? 1
+    : linkState !== "linked"
+      ? 2
+      : bridgeState !== "linked"
+        ? 3
+        : 4;
+  const showConnectionGuide = bridgeIntent || (Boolean(session) && linkState !== "linked");
 
   return (
     <section className="account-console" aria-labelledby="account-console-title">
@@ -252,6 +271,34 @@ export function AccountConsole() {
           <span data-tone={linkState === "linked" ? "verified" : "waiting"}>{linkCopy}</span>
         </div>
       </div>
+
+      {showConnectionGuide ? (
+        <section className="account-c0vibe-guide" id="c0vibe-connection" aria-labelledby="c0vibe-connection-title">
+          <div className="account-c0vibe-guide__intro">
+            <p className="eyebrow">Opened from your C0VIBE profile card</p>
+            <h3 id="c0vibe-connection-title">Connect VibeUsage in four clear steps.</h3>
+            <p>Your current state is highlighted. Existing usage stays attached to the immutable GitHub identity; this flow only connects that identity to your C0VIBE card.</p>
+          </div>
+          <ol>
+            <li data-state={connectionStep > 1 ? "done" : connectionStep === 1 ? "active" : "waiting"}><span>01</span><b>Sign in to VibeUsage</b><small>Use the GitHub identity that owns the existing usage.</small></li>
+            <li data-state={connectionStep > 2 ? "done" : connectionStep === 2 ? "active" : "waiting"}><span>02</span><b>Verify the GitHub link</b><small>Your session is active, but this identity still needs the one-time GitHub proof.</small></li>
+            <li data-state={connectionStep > 3 ? "done" : connectionStep === 3 ? "active" : "waiting"}><span>03</span><b>Link to C0VIBE</b><small>Approve the ten-minute WorkOS claim; no provider credentials move.</small></li>
+            <li data-state={connectionStep === 4 ? "done" : "waiting"}><span>04</span><b>Return to the desktop app</b><small>Reopen your card to load tracked days and provider share.</small></li>
+          </ol>
+          <div className="account-c0vibe-guide__action">
+            {connectionStep === 1 ? (
+              <button type="button" onClick={signIn} disabled={busy || !browserReady}>Sign in with GitHub</button>
+            ) : connectionStep === 2 ? (
+              <button type="button" onClick={signIn} disabled={busy || !browserReady}>Verify this GitHub identity</button>
+            ) : connectionStep === 3 ? (
+              <button type="button" onClick={linkToC0VIBE} disabled={busy}>Link this identity to C0VIBE</button>
+            ) : (
+              <strong>Connection complete — return to C0VIBE and reopen your profile card.</strong>
+            )}
+            <small>Signed in as {accountHandle ? `@${accountHandle}` : "no GitHub identity yet"} · step {connectionStep} of 4</small>
+          </div>
+        </section>
+      ) : null}
 
       <div className="account-console__body">
         <div className="account-console__identity">

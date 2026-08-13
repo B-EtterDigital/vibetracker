@@ -120,9 +120,14 @@ export function safeAccountOrigin(origin: string): string {
   }
 }
 
-export function accountRedirectUrl(origin: string, next?: string | null): string {
+export function accountRedirectUrl(
+  origin: string,
+  next?: string | null,
+  intent?: string | null,
+): string {
   const url = new URL("/auth/callback", origin);
   const safe = safeNextPath(next);
   if (safe) url.searchParams.set("next", safe);
+  if (intent === "c0vibe-link") url.searchParams.set("intent", intent);
   return url.toString();
 }
