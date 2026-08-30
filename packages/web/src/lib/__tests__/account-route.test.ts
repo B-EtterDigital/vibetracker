@@ -14,7 +14,12 @@ import {
   safeNextPath,
 } from "../../app/account/account-session.ts";
 import { SUPABASE_BROWSER_AUTH_OPTIONS, SUPABASE_BROWSER_COOKIE_OPTIONS } from "../supabase-browser.ts";
-import { c0vibeAuthorizationUrl, c0vibeBridgeMessage } from "../c0vibe-account-bridge.ts";
+import {
+  c0vibeBridgeMessage,
+  parseWorkosLinkState,
+  workosAuthorizationPath,
+  workosLinkResultFromError,
+} from "../workos-account-link.ts";
 
 const page = readFileSync("packages/web/src/app/account/page.tsx", "utf8");
 const consoleSource = readFileSync("packages/web/src/app/account/account-console.tsx", "utf8");
@@ -26,6 +31,10 @@ const callback = readFileSync("packages/web/src/app/auth/callback/route.ts", "ut
 const browserClient = readFileSync("packages/web/src/lib/supabase-browser.ts", "utf8");
 const serverClient = readFileSync("packages/web/src/lib/supabase-server.ts", "utf8");
 const bridgeRoute = readFileSync("packages/web/src/app/api/account-bridge/route.ts", "utf8");
+const workosLogin = readFileSync("packages/web/src/app/auth/workos/login/route.ts", "utf8");
+const workosCallback = readFileSync("packages/web/src/app/auth/workos/callback/route.ts", "utf8");
+const workosLogout = readFileSync("packages/web/src/app/auth/workos/logout/route.ts", "utf8");
+const workosProxy = readFileSync("packages/web/src/proxy.ts", "utf8");
 const ticker = readFileSync("packages/web/src/components/site-ticker.tsx", "utf8");
 const globalStyles = readFileSync("packages/web/src/app/globals.css", "utf8");
 
@@ -109,15 +118,19 @@ test("OAuth callbacks prefer the canonical public host over Netlify's deploy URL
   assert.doesNotMatch(callback, /redirect\(url\.origin/);
 });
 
-test("C0VIBE migration uses a bounded one-time claim and fixed WorkOS entrypoint", () => {
+test("C0VIBE migration uses a bounded one-time claim and the local AuthKit entrypoint", () => {
   const token = "ab".repeat(32);
-  assert.equal(c0vibeAuthorizationUrl(token), `https://c0vibe.app/auth/workos/authkit?via=vibeusage&bridge=${token}`);
-  assert.throws(() => c0vibeAuthorizationUrl(token, "https://evil.example"), /invalid C0VIBE auth origin/);
+  assert.equal(workosAuthorizationPath(token), `/auth/workos/login?bridge=${token}&returnTo=%2Faccount%3Fc0vibe%3Dlinked`);
+  assert.throws(() => workosAuthorizationPath("invalid"), /invalid WorkOS bridge claim/);
+  assert.deepEqual(parseWorkosLinkState(JSON.stringify({ bridge: token })), { bridge: token });
+  assert.equal(parseWorkosLinkState(JSON.stringify({ bridge: "invalid" })), null);
+  assert.equal(workosLinkResultFromError("claim_expired"), "expired");
+  assert.equal(workosLinkResultFromError("account_link_conflict"), "conflict");
   assert.match(c0vibeBridgeMessage("conflict"), /already linked to another account/);
   assert.match(bridgeRoute, /admin\.auth\.getUser\(authorization\.slice\(7\)\)/);
   assert.match(bridgeRoute, /vibetracker_create_workos_link_claim/);
   assert.match(bridgeRoute, /p_ttl_seconds: 600/);
-  assert.match(bridgeRoute, /c0vibeAuthorizationUrl/);
+  assert.match(bridgeRoute, /workosAuthorizationPath/);
   assert.match(consoleSource, /link to C0VIBE/);
   assert.match(consoleSource, /window\.location\.assign\(payload\.authorizationUrl\)/);
   assert.doesNotMatch(bridgeRoute, /email.*claim|provider_token|localStorage|sessionStorage/);
@@ -153,46 +166,54 @@ function loadC0vibeSignIn() {
   };
 }
 
-test("C0VIBE sign-in renders only when WorkOS availability is true", () => {
+test("C0VIBE AuthKit sign-in is always present and reflects its session", () => {
   const { AccountC0vibeSignIn, createElement, renderToStaticMarkup } = loadC0vibeSignIn();
   const noop = () => {};
 
-  // Availability false (the state today: link-only bridge, WorkOS provider disabled) -> nothing renders.
-  const hidden = renderToStaticMarkup(createElement(AccountC0vibeSignIn, { available: false, disabled: false, onClick: noop }));
-  assert.equal(hidden, "");
-
-  // Availability true -> the C0VIBE button renders with the gradient class and stacked-button label.
-  const visible = renderToStaticMarkup(createElement(AccountC0vibeSignIn, { available: true, disabled: false, onClick: noop }));
+  const visible = renderToStaticMarkup(createElement(AccountC0vibeSignIn, { signedIn: false, disabled: false, onClick: noop }));
   assert.match(visible, /sign in with C0VIBE/);
   assert.match(visible, /class="account-console__c0vibe"/);
   assert.doesNotMatch(visible, /disabled/);
 
-  // Busy state disables the button while it stays visible.
-  const disabled = renderToStaticMarkup(createElement(AccountC0vibeSignIn, { available: true, disabled: true, onClick: noop }));
+  const signedIn = renderToStaticMarkup(createElement(AccountC0vibeSignIn, { signedIn: true, disabled: false, onClick: noop }));
+  assert.match(signedIn, /C0VIBE signed in/);
+  assert.match(signedIn, /disabled/);
+
+  const disabled = renderToStaticMarkup(createElement(AccountC0vibeSignIn, { signedIn: false, disabled: true, onClick: noop }));
   assert.match(disabled, /disabled/);
 });
 
-test("account console offers C0VIBE sign-in beside GitHub through the existing WorkOS bridge", () => {
+test("account console offers dedicated AuthKit beside GitHub and preserves the one-profile bridge", () => {
   // GitHub sign-in and the stacked C0VIBE option share the one signins column.
   assert.match(consoleSource, /sign in with GitHub/);
   assert.match(consoleSource, /className="account-console__signins"/);
-  // The console owns the availability seam and passes it to the render-gated C0VIBE component.
-  assert.match(consoleSource, /setWorkosProvider\(availability\.workos\)/);
-  assert.match(consoleSource, /<AccountC0vibeSignIn available=\{workosProvider\} disabled=\{busy\} onClick=\{signInWithC0VIBE\} \/>/);
-  // The C0VIBE handler drives the existing bridge (POST /api/account-bridge, which builds the URL
-  // via c0vibeAuthorizationUrl) for a returning viber, and the WorkOS provider for a cold sign-in.
+  assert.match(consoleSource, /useAuth\(\)/);
+  assert.match(consoleSource, /<AccountC0vibeSignIn signedIn=\{Boolean\(workosUser\)\}/);
   assert.match(consoleSource, /async function signInWithC0VIBE\(\)/);
   assert.match(consoleSource, /await linkToC0VIBE\(\)/);
   assert.match(consoleSource, /fetch\("\/api\/account-bridge"/);
-  assert.match(consoleSource, /provider: "workos"/);
-  // The cold redirect origin is clamped to the account allowlist before it reaches the provider.
-  assert.match(consoleSource, /safeAccountOrigin\(window\.location\.origin\)/);
-  assert.match(consoleSource, /redirectTo: accountRedirectUrl\(origin, next\)/);
+  assert.match(consoleSource, /window\.location\.assign\(`\/auth\/workos\/login\?returnTo=/);
+  assert.doesNotMatch(consoleSource, /provider: "workos"/);
   // The C0VIBE surface (entry + linked-state bridge button) reuses the exact .vflip-btn gradient.
   assert.match(consoleSource, /className="account-console__c0vibe"/);
   assert.match(styles, /linear-gradient\(120deg, #2ee8d6, #f28c33, #ffc64d\) border-box/);
-  // Helper copy names both identity paths for migrated vibers.
-  assert.match(consoleSource, /GitHub or your C0VIBE account — migrated vibers can use either\./);
+  assert.match(consoleSource, /without matching email/);
+});
+
+test("dedicated WorkOS routes enforce PKCE sessions and consume only the one-time identity claim", () => {
+  assert.match(layout, /<AuthKitProvider>/);
+  assert.match(layout, /<Impersonation \/>/);
+  assert.match(workosProxy, /authkitProxy\(\)/);
+  assert.match(workosProxy, /_next\/static\|_next\/image\|favicon\.ico/);
+  assert.match(workosLogin, /getSignInUrl\(\{/);
+  assert.match(workosLogin, /const hasBridge = validWorkosBridgeClaim\(bridge\)/);
+  assert.match(workosLogin, /state: hasBridge \? JSON\.stringify\(\{ bridge \}\) : undefined/);
+  assert.match(workosCallback, /handleAuth\(\{/);
+  assert.match(workosCallback, /vibetracker_consume_workos_link_claim/);
+  assert.match(workosCallback, /p_claim_token: link\.bridge/);
+  assert.match(workosCallback, /p_workos_user_id: user\.id/);
+  assert.doesNotMatch(workosCallback, /\.email|match.*email|provider_token/);
+  assert.match(workosLogout, /signOut\(\{ returnTo: allowedReturnOrigin\(request\) \}\)/);
 });
 
 test("account redirect origin is clamped to the canonical + preview allowlist", () => {
@@ -228,14 +249,14 @@ test("global shell exposes an obvious GitHub sign-in control without requiring C
   assert.match(control, /api\/identity\/github\/status/);
   assert.match(control, /\? "Sign in with GitHub"/);
   assert.match(control, /\? "Continue setup"/);
-  assert.match(control, /state === "session" \? "#c0vibe-connection"/);
+  assert.match(control, /displayState === "session" \? "#c0vibe-connection"/);
   assert.match(control, /GitHub or your C0VIBE account — migrated vibers can use either\./);
   assert.match(control, /usePathname\(\)/);
   assert.match(control, /account\?next=\$\{encodeURIComponent\(pathname \|\| "\/"\)\}/);
   assert.match(control, /payload\.identity\?\.avatarUrl/);
-  assert.match(control, /state === "linked" && avatarUrl \? <i>✓<\/i>/);
+  assert.match(control, /displayState === "linked" && avatarUrl \? <i>✓<\/i>/);
   assert.match(control, /data-short-label=\{shortLabel\}/);
-  assert.match(control, /state === "linked" \? "✓"/);
+  assert.match(control, /displayState === "linked" \? "✓"/);
   assert.match(control, /signInWithOAuth\(\{/);
   assert.match(control, /provider: "github"/);
   assert.match(control, /accountRedirectUrl\(window\.location\.origin, pathname \|\| "\/"\)/);
@@ -266,9 +287,9 @@ test("signed-out topbar keeps the retained public profile beside the sign-in chi
   const signInChip = control.indexOf("<a className={styles.control}");
 
   assert.ok(profileChip >= 0 && signInChip > profileChip);
-  assert.match(control, /const profileState = state === "signed-out" \? "signed-out" : "active"/);
+  assert.match(control, /const profileState = displayState === "signed-out" \? "signed-out" : "active"/);
   assert.match(control, /data-state=\{profileState\} href=\{profileHref\}/);
-  assert.match(control, /const directSignIn = state === "signed-out"/);
+  assert.match(control, /const directSignIn = displayState === "signed-out"/);
   assert.match(controlCss, /\.profileLink\[data-state="signed-out"\]/);
 });
 
@@ -289,8 +310,8 @@ test("global shell ticker uses live board data and remains motion-safe", () => {
 
 test("account console uses real GitHub OAuth when available and the verified CLI path otherwise", () => {
   assert.match(page, /Sign in with GitHub\. Keep your usage history\./);
-  assert.match(page, /Both resolve to one GitHub identity, not a full C0VIBE account/);
-  assert.match(page, /browser session or existing CLI/);
+  assert.match(page, /Use WorkOS for your C0VIBE session and GitHub for the immutable identity/);
+  assert.match(page, /without matching email, copying credentials, or moving usage/);
   assert.match(page, /blue check.*identity only, NOT usage truth/i);
   assert.match(page, /aria-label="Account migration custody receipt"/);
   assert.match(page, /1 IDENTITY \/ 0 CREDENTIAL COPIES/);
@@ -317,7 +338,7 @@ test("account console uses real GitHub OAuth when available and the verified CLI
   assert.match(consoleSource, /return to previous view/);
   assert.match(consoleSource, /aria-label="Identity ledger"/);
   assert.match(consoleSource, /<small>Usage proof<\/small><b>separate<\/b>/);
-  assert.match(consoleSource, /<small>C0VIBE<\/small><b>\{bridgeState === "linked" \? "linked" : "optional"\}<\/b>/);
+  assert.match(consoleSource, /bridgeState === "conflict" \? "conflict" : "optional"/);
   assert.match(consoleSource, /signOut\(\{ scope: "local" \}\)/);
   assert.doesNotMatch(consoleSource, /localStorage|sessionStorage|provider_refresh_token/);
 });

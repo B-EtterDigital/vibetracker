@@ -3,8 +3,8 @@ import { AccountConsole } from "./account-console";
 import "./account.css";
 
 export const metadata: Metadata = {
-  title: "Sign in with GitHub · VibeUsage",
-  description: "Sign in with GitHub or verify through the existing GitHub CLI, attach VibeTRACKER history, and keep usage proof separate from identity proof.",
+  title: "VibeUsage account · GitHub + C0VIBE",
+  description: "Use WorkOS for the C0VIBE session and GitHub for immutable VibeTRACKER ownership, linked without email matching.",
 };
 
 export default function AccountPage() {
@@ -14,9 +14,9 @@ export default function AccountPage() {
         <div className="account-hero__copy">
           <p className="eyebrow">Identity control room</p>
           <h1 id="account-title">Sign in with GitHub. Keep your usage history.</h1>
-          <p>Start a browser session for site controls or verify the GitHub CLI already authenticated on your machine. Both resolve to one GitHub identity, not a full C0VIBE account, and neither path moves usage.</p>
+          <p>Use WorkOS for your C0VIBE session and GitHub for the immutable identity that owns usage. A one-time claim links their IDs without matching email, copying credentials, or moving usage.</p>
           <div className="account-hero__rails" aria-label="Identity guarantees">
-            <span>browser session</span><span>CLI identity</span><span>no WorkOS gate</span><span>linked history</span>
+            <span>WorkOS session</span><span>GitHub identity</span><span>no email join</span><span>linked history</span>
           </div>
         </div>
         <div className="account-hero__terminal" aria-label="GitHub identity migration terminal">

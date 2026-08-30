@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import type { Session } from "@supabase/supabase-js";
 import { authProviderAvailability, supabaseBrowser, supabaseBrowserConfigured } from "../../lib/supabase-browser";
-import { c0vibeBridgeMessage } from "../../lib/c0vibe-account-bridge";
+import { c0vibeBridgeMessage } from "../../lib/workos-account-link";
 import { cliCommand } from "../../lib/cli-command.ts";
-import { accountIdentityFromSession, accountRedirectUrl, safeAccountOrigin, safeNextPath } from "./account-session";
+import { accountIdentityFromSession, accountRedirectUrl, safeNextPath } from "./account-session";
 import { AccountC0vibeSignIn } from "./account-c0vibe-signin";
 import { createConsoleTelemetry } from "../../../../core/src/telemetry";
 
 type ProviderState = "checking" | "available" | "disabled" | "unavailable";
 type LinkState = "signed-out" | "checking" | "linked" | "unlinked" | "error";
-type BridgeState = "idle" | "starting" | "linked";
+type BridgeState = "idle" | "starting" | "linked" | "conflict";
 type ProofChannel = "browser" | "terminal";
 
 interface LinkedIdentity {
@@ -46,12 +47,12 @@ function oauthMessage(value: string | null): string {
 }
 
 export function AccountConsole() {
+  const { user: workosUser, loading: workosLoading } = useAuth();
   const [provider, setProvider] = useState<ProviderState>(supabaseBrowserConfigured() ? "checking" : "disabled");
   const [session, setSession] = useState<Session | null>(null);
   const [linkState, setLinkState] = useState<LinkState>("signed-out");
   const [linked, setLinked] = useState<LinkedIdentity | null>(null);
   const [bridgeState, setBridgeState] = useState<BridgeState>("idle");
-  const [workosProvider, setWorkosProvider] = useState(false);
   const [proofChannel, setProofChannel] = useState<ProofChannel>("browser");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -90,11 +91,14 @@ export function AccountConsole() {
           headers: { authorization: `Bearer ${next.access_token}` },
           signal: controller.signal,
         });
-        const payload = await response.json() as { linked?: boolean; c0vibeLinked?: boolean; identity?: LinkedIdentity; error?: string };
+        const payload = await response.json() as { linked?: boolean; c0vibeLinked?: boolean; c0vibeSessionMatches?: boolean; identity?: LinkedIdentity; error?: string };
         if (!active) return;
         if (!response.ok) throw new Error(payload.error || `Identity status failed (${response.status})`);
         setLinked(payload.linked ? payload.identity ?? null : null);
-        setBridgeState(payload.c0vibeLinked ? "linked" : "idle");
+        setBridgeState(payload.c0vibeLinked && payload.c0vibeSessionMatches === false ? "conflict" : payload.c0vibeLinked ? "linked" : "idle");
+        if (payload.c0vibeLinked && payload.c0vibeSessionMatches === false) {
+          setMessage("This GitHub identity belongs to a different C0VIBE account. Nothing was changed.");
+        }
         setLinkState(payload.linked ? "linked" : "unlinked");
       } catch (error) {
         if (!active || controller.signal.aborted) return;
@@ -107,7 +111,6 @@ export function AccountConsole() {
       .then((availability) => {
         if (!active) return;
         setProvider(availability.github ? "available" : "disabled");
-        setWorkosProvider(availability.workos);
         if (!availability.github) {
           setProofChannel("terminal");
           setMessage("Browser GitHub sign-in is not enabled yet. GitHub CLI verification is live now and does not require a C0VIBE account.");
@@ -167,7 +170,13 @@ export function AccountConsole() {
 
   async function signOut() {
     setBusy(true);
-    const { error } = await supabaseBrowser().auth.signOut({ scope: "local" });
+    const { error } = supabaseBrowserConfigured()
+      ? await supabaseBrowser().auth.signOut({ scope: "local" })
+      : { error: null };
+    if (!error && workosUser) {
+      window.location.assign("/auth/workos/logout");
+      return;
+    }
     setBusy(false);
     if (error) setMessage(error.message);
     else {
@@ -207,33 +216,23 @@ export function AccountConsole() {
     }
   }
 
-  // Migrated vibers may return with their C0VIBE (WorkOS) account instead of GitHub.
-  // A returning viber whose browser session persists re-anchors through the existing
-  // WorkOS bridge claim (POST /api/account-bridge builds the URL via c0vibeAuthorizationUrl).
-  // A fully cold sign-in uses the Supabase-native WorkOS provider; this button is render-gated
-  // on workosProvider so it only surfaces once that provider is actually enabled server-side.
+  // A returning viber whose GitHub browser session persists starts a one-time
+  // identity claim. A cold sign-in uses this site's dedicated AuthKit app.
   async function signInWithC0VIBE() {
     setProofChannel("browser");
     if (session) {
       await linkToC0VIBE();
       return;
     }
-    if (!workosProvider) {
-      setMessage("C0VIBE sign-in is not enabled in this environment yet. Sign in with GitHub to anchor your identity.");
+    if (workosUser) {
+      setMessage("Your C0VIBE session is active. Sign in with GitHub once to attach the immutable usage identity.");
       return;
     }
     setBusy(true);
     setMessage("");
     const next = safeNextPath(new URLSearchParams(window.location.search).get("next"));
-    const origin = safeAccountOrigin(window.location.origin);
-    const { error } = await supabaseBrowser().auth.signInWithOAuth({
-      provider: "workos",
-      options: { redirectTo: accountRedirectUrl(origin, next) },
-    });
-    if (error) {
-      setBusy(false);
-      setMessage(error.message);
-    }
+    const returnTo = next ?? "/account";
+    window.location.assign(`/auth/workos/login?returnTo=${encodeURIComponent(returnTo)}`);
   }
 
   async function copyCliCommand() {
@@ -269,6 +268,7 @@ export function AccountConsole() {
         <div className="account-console__lights" aria-label="Authentication state">
           <span data-tone={provider === "available" ? "ready" : "waiting"}>{providerCopy}</span>
           <span data-tone={linkState === "linked" ? "verified" : "waiting"}>{linkCopy}</span>
+          <span data-tone={workosUser ? "verified" : "waiting"}>{workosLoading ? "checking C0VIBE" : workosUser ? "C0VIBE signed in" : "C0VIBE ready"}</span>
         </div>
       </div>
 
@@ -314,7 +314,7 @@ export function AccountConsole() {
               <div className="account-identity__actions">
                 <a className="account-identity__primary-link" href={`/u/${encodeURIComponent(accountHandle)}`}>view public profile</a>
                 {linkState === "unlinked" || linkState === "error" ? <button type="button" onClick={signIn} disabled={busy || provider !== "available"}>reconnect GitHub</button> : null}
-                {linkState === "linked" ? <button className="account-console__c0vibe" type="button" onClick={linkToC0VIBE} disabled={busy || bridgeState === "linked"}>{bridgeState === "linked" ? "✓ C0VIBE linked" : bridgeState === "starting" ? "opening C0VIBE" : "link to C0VIBE"}</button> : null}
+                {linkState === "linked" ? <button className="account-console__c0vibe" type="button" onClick={linkToC0VIBE} disabled={busy || bridgeState === "linked"}>{bridgeState === "linked" ? "✓ C0VIBE linked" : bridgeState === "conflict" ? "C0VIBE account mismatch" : bridgeState === "starting" ? "opening C0VIBE" : "link to C0VIBE"}</button> : null}
                 {returnPath ? <a href={returnPath}>return to previous view</a> : null}
                 <button type="button" onClick={signOut} disabled={busy}>sign out</button>
               </div>
@@ -322,27 +322,31 @@ export function AccountConsole() {
                 <span><small>GitHub subject</small><b>{linkState === "linked" ? "verified" : "session"}</b></span>
                 <span><small>CLI history</small><b>retained</b></span>
                 <span><small>Usage proof</small><b>separate</b></span>
-                <span><small>C0VIBE</small><b>{bridgeState === "linked" ? "linked" : "optional"}</b></span>
+                <span><small>C0VIBE</small><b>{bridgeState === "linked" ? "linked" : bridgeState === "conflict" ? "conflict" : "optional"}</b></span>
               </div>
             </>
           ) : (
             <>
               <div className="account-console__pitch">
                 <span className="account-console__github" aria-hidden="true">GH</span>
-                <div><h3>Choose where GitHub should sign you in.</h3><p>The browser creates a site session. The CLI verifies this machine. Both attach to the same immutable GitHub identity.</p></div>
+                <div>
+                  <h3>{workosUser ? `C0VIBE signed in as ${workosUser.email}.` : "Choose where GitHub should sign you in."}</h3>
+                  <p>{workosUser ? "Verify GitHub once to attach this WorkOS user to the immutable usage identity. No email matching is used." : "The browser creates a site session. The CLI verifies this machine. Both attach to the same immutable GitHub identity."}</p>
+                </div>
               </div>
               <div className="account-console__entry-actions">
                 <div className="account-console__signins">
                   <button className="account-console__primary" type="button" onClick={signIn} disabled={busy || !browserReady}>
                     {busy && proofChannel === "browser" ? "opening GitHub" : browserChecking ? "checking GitHub" : browserReady ? "sign in with GitHub" : "browser sign-in unavailable"}
                   </button>
-                  <AccountC0vibeSignIn available={workosProvider} disabled={busy} onClick={signInWithC0VIBE} />
+                  <AccountC0vibeSignIn signedIn={Boolean(workosUser)} disabled={busy || workosLoading} onClick={signInWithC0VIBE} />
                 </div>
                 <button className="account-console__secondary" type="button" onClick={copyCliCommand} disabled={busy}>
                   <span>verify this machine</span><code>{CLI_COMMAND}</code>
                 </button>
+                {workosUser ? <button className="account-console__secondary" type="button" onClick={signOut} disabled={busy}>sign out C0VIBE</button> : null}
               </div>
-              <small className="account-console__c0vibe-note">GitHub or your C0VIBE account — migrated vibers can use either.</small>
+              <small className="account-console__c0vibe-note">GitHub owns usage identity; WorkOS owns the C0VIBE session. A one-time claim joins their IDs without matching email.</small>
               <div className="account-console__entry-map" aria-label="GitHub identity convergence">
                 <span>Browser session<b>site controls</b></span><i aria-hidden="true">+</i>
                 <span>CLI identity<b>existing history</b></span><i aria-hidden="true">-&gt;</i>
@@ -353,7 +357,7 @@ export function AccountConsole() {
               </small>
             </>
           )}
-          <p className="account-console__message" aria-live="polite">{message || "Identity proof and usage proof remain separate at every step."}</p>
+          <p className="account-console__message" aria-live="polite">{message || (workosUser ? "C0VIBE session active. GitHub identity proof remains separate until you link it." : "Identity proof and usage proof remain separate at every step.")}</p>
         </div>
 
         <div className="account-console__oauth" data-channel={proofChannel} aria-label={proofChannel === "browser" ? "GitHub browser sign-in flow" : "GitHub CLI identity flow"}>

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createConsoleTelemetry } from "../../../../../core/src/telemetry";
-import { c0vibeAuthorizationUrl } from "../../../lib/c0vibe-account-bridge";
 import { supabaseAdmin } from "../../../lib/supabase-admin";
+import { workosAuthorizationPath } from "../../../lib/workos-account-link";
 
 export const runtime = "nodejs";
 
@@ -40,7 +41,30 @@ export async function POST(req: Request) {
 
   const claim = Array.isArray(data) ? data[0] : data;
   if (claim?.already_linked === true) {
-    return NextResponse.json({ linked: true }, { headers: noStore });
+    const { data: link, error: linkError } = await admin
+      .from("vibetracker_account_links")
+      .select("workos_user_id")
+      .eq("source_user_id", account.user.id)
+      .maybeSingle();
+    if (linkError || !link?.workos_user_id) {
+      telemetry.captureError(new Error(linkError?.message || "existing WorkOS link receipt is missing"), {
+        area: "web.auth.workos-link.read",
+        severity: "error",
+        code: linkError?.code,
+        userId: account.user.id,
+      });
+      return NextResponse.json({ error: "account bridge unavailable" }, { status: 500, headers: noStore });
+    }
+
+    const { user: workosUser } = await withAuth();
+    if (workosUser && workosUser.id !== link.workos_user_id) {
+      return NextResponse.json({ error: "this GitHub identity is linked to another C0VIBE account" }, { status: 409, headers: noStore });
+    }
+    if (workosUser) return NextResponse.json({ linked: true }, { headers: noStore });
+    return NextResponse.json({
+      linked: false,
+      authorizationUrl: "/auth/workos/login?returnTo=%2Faccount",
+    }, { headers: noStore });
   }
   if (typeof claim?.claim_token !== "string") {
     telemetry.captureError(new Error("C0VIBE bridge claim receipt is incomplete"), {
@@ -54,15 +78,15 @@ export async function POST(req: Request) {
   try {
     return NextResponse.json({
       linked: false,
-      authorizationUrl: c0vibeAuthorizationUrl(claim.claim_token, process.env.C0VIBE_AUTH_ORIGIN),
+      authorizationUrl: workosAuthorizationPath(claim.claim_token),
       expiresAt: claim.expires_at,
     }, { headers: noStore });
   } catch (error) {
     telemetry.captureError(error instanceof Error ? error : new Error(String(error)), {
-      area: "web.auth.c0vibe-bridge.redirect",
+      area: "web.auth.workos-link.redirect",
       severity: "error",
       userId: account.user.id,
     });
-    return NextResponse.json({ error: "C0VIBE auth origin is invalid" }, { status: 500, headers: noStore });
+    return NextResponse.json({ error: "WorkOS authorization path is invalid" }, { status: 500, headers: noStore });
   }
 }

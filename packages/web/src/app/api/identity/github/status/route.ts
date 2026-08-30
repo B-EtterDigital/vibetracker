@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createConsoleTelemetry } from "../../../../../../../core/src/telemetry";
 import { supabaseAdmin } from "../../../../../lib/supabase-admin";
 
@@ -75,7 +76,7 @@ export async function GET(req: Request) {
 
   const { data: c0vibeLink, error: c0vibeError } = await admin
     .from("vibetracker_account_links")
-    .select("identity_id")
+    .select("identity_id, workos_user_id")
     .eq("identity_id", data.id)
     .maybeSingle();
   if (c0vibeError) {
@@ -88,9 +89,12 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "C0VIBE link status failed" }, { status: 500, headers: noStore });
   }
 
+  const { user: workosUser } = await withAuth();
+
   return NextResponse.json({
     linked: true,
     c0vibeLinked: Boolean(c0vibeLink),
+    c0vibeSessionMatches: !workosUser || !c0vibeLink || c0vibeLink.workos_user_id === workosUser.id,
     identity: {
       provider: "github",
       handle: data.canonical_handle,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type MouseEvent } from "react";
+import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import {
@@ -13,10 +14,11 @@ import { supabaseBrowser, supabaseBrowserConfigured } from "../lib/supabase-brow
 import { createConsoleTelemetry } from "../../../core/src/telemetry";
 import styles from "./account-control.module.css";
 
-type ControlState = "loading" | "signed-out" | "session" | "linked" | "unavailable";
+type ControlState = "loading" | "signed-out" | "session" | "linked" | "workos" | "unavailable";
 const telemetry = createConsoleTelemetry();
 
 export function AccountControl() {
+  const { user: workosUser, loading: workosLoading } = useAuth();
   const [state, setState] = useState<ControlState>(supabaseBrowserConfigured() ? "loading" : "signed-out");
   const [handle, setHandle] = useState("");
   const [lastHandle, setLastHandle] = useState("");
@@ -95,31 +97,42 @@ export function AccountControl() {
     };
   }, []);
 
-  const label = state === "loading"
+  const displayState: ControlState = workosUser && (state === "signed-out" || state === "unavailable")
+    ? "workos"
+    : state === "signed-out" && workosLoading
+      ? "loading"
+      : state;
+  const label = displayState === "loading"
     ? "Checking session"
-    : state === "signed-out"
+    : displayState === "signed-out"
       ? "Sign in with GitHub"
-      : state === "session"
+      : displayState === "session"
         ? "Continue setup"
+        : displayState === "workos"
+          ? "C0VIBE account"
         : `@${handle}`;
-  const shortLabel = state === "loading"
+  const shortLabel = displayState === "loading"
     ? "Checking"
-    : state === "signed-out"
+    : displayState === "signed-out"
       ? "Sign in"
-      : state === "session"
+      : displayState === "session"
         ? "Continue"
+        : displayState === "workos"
+          ? "C0VIBE"
         : `@${handle}`;
-  const title = state === "linked"
+  const title = displayState === "linked"
     ? `GitHub identity verified as @${handle}`
-    : state === "unavailable"
+    : displayState === "workos"
+      ? `C0VIBE signed in as ${workosUser?.email}; connect GitHub once to attach usage identity`
+    : displayState === "unavailable"
       ? `Signed in as @${handle}; identity status is unavailable`
-    : state === "session"
+    : displayState === "session"
       ? `Signed in as @${handle}; finish GitHub linking`
-      : state === "loading"
+      : displayState === "loading"
         ? "Checking GitHub session status"
         : "GitHub or your C0VIBE account — migrated vibers can use either.";
   const accountHref = pathname === "/account"
-    ? state === "session" ? "#c0vibe-connection" : "#account-console-title"
+    ? displayState === "session" ? "#c0vibe-connection" : "#account-console-title"
     : `/account?next=${encodeURIComponent(pathname || "/")}`;
 
   // One click, straight to GitHub (user order 2026-07-15): a signed-out click starts the OAuth
@@ -142,14 +155,14 @@ export function AccountControl() {
     }
   }
 
-  const directSignIn = state === "signed-out" && supabaseBrowserConfigured()
+  const directSignIn = displayState === "signed-out" && supabaseBrowserConfigured()
     ? startDirectSignIn
     : undefined;
 
   // The public profile remains reachable after auth expires; only the handle is retained locally.
   const profileHandle = handle.toLowerCase() || lastHandle;
   const profileHref = profileHandle ? `/u/${profileHandle}` : null;
-  const profileState = state === "signed-out" ? "signed-out" : "active";
+  const profileState = displayState === "signed-out" ? "signed-out" : "active";
 
   return (
     <>
@@ -158,12 +171,12 @@ export function AccountControl() {
           Profile
         </a>
       ) : null}
-      <a className={styles.control} data-state={state} href={accountHref} onClick={directSignIn} title={title} aria-label={title} aria-busy={state === "loading"}>
+      <a className={styles.control} data-state={displayState} href={accountHref} onClick={directSignIn} title={title} aria-label={title} aria-busy={displayState === "loading"}>
         <span className={styles.mark} aria-hidden="true">
-          {avatarUrl && state !== "signed-out" && state !== "loading"
+          {avatarUrl && displayState !== "signed-out" && displayState !== "loading"
             ? <img src={avatarUrl} alt="" width={22} height={22} />
-            : state === "linked" ? "✓" : state === "session" ? "·" : state === "unavailable" ? "!" : "GH"}
-          {state === "linked" && avatarUrl ? <i>✓</i> : null}
+            : displayState === "linked" ? "✓" : displayState === "session" ? "·" : displayState === "workos" ? "W" : displayState === "unavailable" ? "!" : "GH"}
+          {displayState === "linked" && avatarUrl ? <i>✓</i> : null}
         </span>
         <span className={styles.label} data-short-label={shortLabel}>{label}</span>
       </a>

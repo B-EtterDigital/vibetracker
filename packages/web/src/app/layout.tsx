@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./reliability.css";
+import { AuthKitProvider, Impersonation } from "@workos-inc/authkit-nextjs/components";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
 import { AccountControl } from "../components/account-control";
@@ -30,34 +31,37 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${displayFont.variable} ${dataFont.variable}`}>
       <body>
-        <SiteTicker />
-        <header className="hdr">
-          <a href="/" className="brand" aria-label="VibeUsage home">
-            <img
-              src="/brand/vibeusage-logo.png"
-              alt="VibeUsage"
-              width="1400"
-              height="299"
-            />
-          </a>
-          {/* Primary destinations, each named for what it is. The board lives at "/" and is now
-              called what it is — Leaderboard — instead of being split into two unexplained
-              tier words ("Verified" / "Self-reported"), which are the two boards ON that page.
-              Everything else moves into the product menu, where a label can carry a sentence. */}
-          <nav className="hdr-primary" aria-label="Primary navigation">
-            <a href="/" title="The public boards: who tracks the most AI usage">Leaderboard</a>
-            <a href="/compare" title="Compare two real public usage receipts without mixing evidence tiers">Compare</a>
-            <a href="/providers" title="Every AI source VibeTRACKER can track, and its status">Sources</a>
-            <a href="/insights" title="What the tracked data says across all AI work, not just coding">Insights</a>
-          </nav>
-          <div className="hdr-actions">
-            <AccountControl />
-            <a className="hdr-cli" href="/how-to" title={`${CLI_RUNNER} — get your usage stats on the board`}>Get your UsageStats</a>
-            <OperatorMenu />
-          </div>
-        </header>
-        <main className="wrap">{children}</main>
-        <footer className="ftr">vibeusage.c0vibe.app · powered by <code>{CLI_RUNNER}</code></footer>
+        <AuthKitProvider>
+          <Impersonation />
+          <SiteTicker />
+          <header className="hdr">
+            <a href="/" className="brand" aria-label="VibeUsage home">
+              <img
+                src="/brand/vibeusage-logo.png"
+                alt="VibeUsage"
+                width="1400"
+                height="299"
+              />
+            </a>
+            {/* Primary destinations, each named for what it is. The board lives at "/" and is now
+                called what it is — Leaderboard — instead of being split into two unexplained
+                tier words ("Verified" / "Self-reported"), which are the two boards ON that page.
+                Everything else moves into the product menu, where a label can carry a sentence. */}
+            <nav className="hdr-primary" aria-label="Primary navigation">
+              <a href="/" title="The public boards: who tracks the most AI usage">Leaderboard</a>
+              <a href="/compare" title="Compare two real public usage receipts without mixing evidence tiers">Compare</a>
+              <a href="/providers" title="Every AI source VibeTRACKER can track, and its status">Sources</a>
+              <a href="/insights" title="What the tracked data says across all AI work, not just coding">Insights</a>
+            </nav>
+            <div className="hdr-actions">
+              <AccountControl />
+              <a className="hdr-cli" href="/how-to" title={`${CLI_RUNNER} — get your usage stats on the board`}>Get your UsageStats</a>
+              <OperatorMenu />
+            </div>
+          </header>
+          <main className="wrap">{children}</main>
+          <footer className="ftr">vibeusage.c0vibe.app · powered by <code>{CLI_RUNNER}</code></footer>
+        </AuthKitProvider>
       </body>
     </html>
   );
